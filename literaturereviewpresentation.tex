@@ -163,15 +163,15 @@
   \begin{itemize}
   \item McCarthy and Painter\cite{mccarthy1967}
     \begin{itemize}
-    \item Shows correctness of a compiler for a simple expression language
-    \item Targets a simple single-register machine
-    \item Correctness defined in terms of partial equality of machine states
+    \item Source: simple single-operator expression language
+    \item Target: simple four-instruction single-register machine
+    \item Definition of Correctness: partial equality of machine states
     \end{itemize}
   \item Burstall and Landin\cite{burstall1969}
     \begin{itemize}
-    \item More algebraic treatment of a compiler for an expression language
-    \item Targets several intermediate machines including a stack machine and a machine similar to McCarthy and Painter's
-    \item Shows correctness by constructing homomorphisms between algebras
+    \item Source: expression language similar to McCarthy and Painter's but allowing for more operators
+    \item Target: several intermediate machines including a stack machine and a machine similar to McCarthy and Painter's
+    \item Definition of Correctness: construction of homomorphisms between algebras
     \end{itemize}
   \end{itemize}
 \end{slide}
@@ -180,9 +180,10 @@
   \begin{itemize}
   \item Milner and Weyhrauch\cite{milner1972}
     \begin{itemize}
-    \item Partially mechanised proof of compiler correctness for a simple ALGOL-like language
-    \item Targets a simple stack machine that allows jumps
-    \item Defines correctness as an equality between the source semantics and the composition of the compilation function, the target semantics and a function to extract the source state of the machine
+    \item Source: simple ALGOL-like language
+    \item Target: stack machine that allows jumps
+    \item Definition of correctness: equality between the source semantics and the composition of the compilation function, the target semantics and a function to extract the source state of the machine
+    \item Partially mechanised proof using LCF
     \end{itemize}
   \end{itemize}
 \end{slide}
@@ -204,9 +205,9 @@
   \end{center}
 \end{slide}
 
-\subsection{Agebraic Approach}
+\subsection{Algebraic Approach}
 
-\begin{slide}{Agebraic Approach}
+\begin{slide}{Algebraic Approach}
   \begin{itemize}
   \item Proposed by Hoare in 1991\cite{hoare1991}
   \item Both the source and target languages are described using the \emph{same specification language} with laws for reasoning about them \cite{hoare1987}.
@@ -215,7 +216,7 @@
   \end{itemize}
 \end{slide}
 
-\begin{slide}{Agebraic Approach}
+\begin{slide}{Algebraic Approach}
   \begin{itemize}
   \item Sampaio\cite{hoare1993, sampaio1993, sampaio1997}
     \begin{itemize}
@@ -270,7 +271,7 @@ St\"{a}rk, Schmid and B\"orger\cite{stark2001}
 ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000}
 \begin{itemize}
 \item Subset of Java with specification features
-\item Verified compiler using the normal form approach\cite{duran2005, duran2010}
+\item Verified compiler using the algebraic approach\cite{duran2005, duran2010}
   \begin{itemize}
   \item Adds class precompilation and redirection of method calls to
 Sampaio’s phases of compilation
@@ -318,9 +319,9 @@ Sampaio’s phases of compilation
 \begin{frame}
 \frametitle{Conclusion}
   \begin{itemize}
-  \item There are two main approaches to compilation
+  \item There are two main approaches to compilation: the algebraic approach and the traditional approach based on commuting diagrams
     \begin{itemize}
-    \item The aglebraic approach offer advantages over the more traditional approach
+    \item The algebraic approach offers advantages over the more traditional approach
     \end{itemize}
   \item Work has been done on verifying compilers for various languages, including Java
   \item There seems to be little work on verifying Java compilers for embedded systems
