@@ -1,0 +1,341 @@
+\documentclass{beamer}
+\usetheme[compress]{Dresden}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor~~(\insertshortinstitute)
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} \hspace*{2ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+} 
+\usecolortheme{rose}
+
+\renewcommand{\insertsectionnumber}{}
+\renewcommand{\sectionname}{}
+
+\newcommand{\beginbackup}{
+   \newcounter{framenumbervorappendix}
+   \setcounter{framenumbervorappendix}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \addtocounter{framenumbervorappendix}{-\value{framenumber}}
+   \addtocounter{framenumber}{\value{framenumbervorappendix}} 
+}
+
+
+%\setbeamertemplate{headline}
+%{%
+%  \begin{beamercolorbox}[ht=3.5ex,dp=1.125ex,%
+%      leftskip=.3cm,rightskip=.3cm plus1fil]{section in head/foot}
+%    \usebeamerfont{section in head/foot}\usebeamercolor[fg]{section in head/foot}%
+%  \insertsectionhead
+% \end{beamercolorbox}%
+%  \begin{beamercolorbox}[colsep=1.5pt]{middle separation line head}
+%  \end{beamercolorbox}
+%  \begin{beamercolorbox}[ht=2.5ex,dp=1.125ex,%
+%    leftskip=.3cm,rightskip=.3cm plus1fil]{subsection in head/foot}
+%    \usebeamerfont{subsection in head/foot}\insertsubsectionhead
+%  \end{beamercolorbox}%
+%  \begin{beamercolorbox}[colsep=1.5pt]{lower separation line head}
+%  \end{beamercolorbox}
+%}
+%{}%remove navigation symbols
+%\useoutertheme[subsection=false]{miniframes}
+
+\usepackage{verbatim}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{amsmath,listings}
+% verbose-note
+\usepackage[backend=bibtex,style=numeric-comp,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\lstset{language=[LaTeX]TeX,
+  basicstyle={\color{red}},
+  morekeywords={%
+    part,chapter,subsection,subsubsection,%
+    paragraph,subparagraph,%
+    appendix}}
+
+\usepackage{tikz}
+
+\title{Correctness of Compilers for Java-like Languages}
+\author{James Baxter}
+\date[2014-12-9]{Literature Review Seminar \\ 9 December 2014}
+
+\renewcommand{\footnotesize}{\tiny}
+\renewcommand{\printbibheading}{}
+\defbibheading{bibliography}{}
+
+\setbeamertemplate{bibliography item}[text]
+\setbeamerfont{bibliography entry author}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography entry title}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography entry journal}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography entry note}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography item}{shape=\scshape,size=\tiny}
+\renewcommand{\bibfont}{\tiny}
+
+\setbeamertemplate{footnote}{\insertfootnotetext}
+
+\setlength{\abovecaptionskip}{-2ex} 
+\setlength{\belowcaptionskip}{-2ex} 
+\newcommand{\tab}{\hspace*{2em}}
+%\bibliographystyle{apalike}  
+\bibliography{literature} 
+\setbeamertemplate{footline}[frame number]
+
+%\newenvironment{slide}[1]%
+%{\begin{refsegment}
+%\begin{frame}[fragile,environment=slide]
+%\frametitle{#1}
+%}%
+%{
+%\footnotetext{\printbibliography[segment=1]}
+%\end{frame}
+%\end{refsegment}
+%}
+\usepackage{xifthen}% provides \isempty test
+\newcommand{\footmake}[1]{
+\ifthenelse{\equal{#1}{}}%
+	{}%
+	{\footnotetext{#1}}%
+}
+
+%\defbibenvironment{bibliography}
+%{\begin{minipage}[b]{\linewidth}}
+%{\end{minipage}}
+%{}
+
+\defbibenvironment{bibliography}
+{
+ \list{\printtext[labelnumberwidth]{%
+    \printfield{prefixnumber}%
+    \printfield{labelnumber}}}
+{\setlength{\bibhang}{0pt}%
+\setlength{\leftmargin}{\bibhang}%
+\setlength{\itemindent}{-\leftmargin}%
+\setlength{\itemsep}{\bibitemsep}%
+\setlength{\parsep}{\bibparsep}}}
+{\endlist}
+{\item}
+
+\newsavebox{\ptbib}
+
+\newenvironment{slide}[2][fragile,environment=slide]
+{\begin{frame}[#1]
+	\frametitle{#2}\begin{refsegment}}
+{\footmake{\printbibliography[segment=\therefsegment]}\end{refsegment}\end{frame}}
+
+\begin{document}
+
+\frame[plain]{\titlepage}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Motivation}
+
+\begin{slide}{Motivation}
+\begin{itemize}
+\item Popularity of Java\cite{gosling2013}
+\item Variants of Java: JavaCard\cite{chen2000}, RTSJ\cite{gosling2000}, SCJ\cite{locke2013}
+\item Program correctness relies on compiler/interpreter correctness.
+\item Testing is usually not sufficient to ensure correctness.
+\end{itemize}
+\end{slide}
+
+\section{Compiler Correctness}
+
+\frame{\sectionpage}
+
+\subsection{Early Work}
+
+\begin{slide}{Early Work}
+  \begin{itemize}
+  \item McCarthy and Painter\cite{mccarthy1967}
+    \begin{itemize}
+    \item Shows correctness of a compiler for a simple expression language
+    \item Targets a simple single-register machine
+    \item Correctness defined in terms of partial equality of machine states
+    \end{itemize}
+  \item Burstall and Landin\cite{burstall1969}
+    \begin{itemize}
+    \item More algebraic treatment of a compiler for an expression language
+    \item Targets several intermediate machines including a stack machine and a machine similar to McCarthy and Painter's
+    \item Shows correctness by constructing homomorphisms between algebras
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Early Work}
+  \begin{itemize}
+  \item Milner and Weyhrauch\cite{milner1972}
+    \begin{itemize}
+    \item Partially mechanised proof of compiler correctness for a simple ALGOL-like language
+    \item Targets a simple stack machine that allows jumps
+    \item Defines correctness as an equality between the source semantics and the composition of the compilation function, the target semantics and a function to extract the source state of the machine
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Early Work}
+  In general, the traditional approach to compilation is based on showing that a diagram of the following form commutes\cite{morris1973, thatcher1979}.
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,3cm) {source\\language};
+      \node[align=center] (T) at (4cm,3cm) {target\\language};
+      \node[align=center] (M) at (0cm,0cm) {source\\meanings};
+      \node[align=center] (U) at (4cm,0cm) {target\\meanings};
+      
+      \path (S) edge[->] node[align=center, above] {compile}           (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics} (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics} (U);
+      \path (M) edge[->] node[align=center, above] {encode}            (U);
+    \end{tikzpicture}
+  \end{center}
+\end{slide}
+
+\subsection{Agebraic Approach}
+
+\begin{slide}{Agebraic Approach}
+  \begin{itemize}
+  \item Proposed by Hoare in 1991\cite{hoare1991}
+  \item Both the source and target languages are described using the \emph{same specification language} with laws for reasoning about them \cite{hoare1987}.
+  \item Uses the concept of a \emph{refinement relation} between programs: $P \sqsubseteq Q$ means the program $Q$ is at least as good as $P$ \cite{back1981, morris1987, morgan1990}.
+  \item Reduces source program to a \emph{normal form} that resembles an interpreter for the target machine.
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Agebraic Approach}
+  \begin{itemize}
+  \item Sampaio\cite{hoare1993, sampaio1993, sampaio1997}
+    \begin{itemize}
+    \item Handles most imperative constructs, including procedures and recursion.
+    \item Performs compilation  using rewrite rules proved from basic laws.
+    \item Mechanises compilation in the OBJ3 term rewriting system\cite{goguen1988}.
+    \end{itemize}
+  \item Perna\cite{perna2010, perna2011} --- Hardware compilation
+    \begin{itemize}
+    \item Handles timed structures and parallelism with shared variables
+    \end{itemize}
+    % \item \cite{hoare1984}\cite{morgan1990}
+  \end{itemize}
+\end{slide}
+
+\subsection{Recent Work}
+
+\begin{slide}{Recent Work}
+  \begin{itemize}
+  \item CompCert\cite{leroy2012}
+    \begin{itemize}
+    \item Project to develop a realistic formally verified compiler
+    \item Produced a formally verified compiler for a large subset of C
+    \item Compiler developed and proved correct in the Coq proof assistant
+    \end{itemize}
+  \item Wang, Cuellar and Chipala\cite{wang2014} --- Verifying compilers that allow linking with other languages
+    \begin{itemize}
+    \item Provides a combined algebraic and operational semantics of the source language
+    \item Allows for algebraic reasoning about calls to programs in other languages
+    \item Mechanised in Coq 
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\section{Compiler Correctness for Java-like Languages}
+
+\frame{\sectionpage}
+\stepcounter{subsection}
+
+\begin{slide}{ASM approach}
+St\"{a}rk, Schmid and B\"orger\cite{stark2001}
+\begin{itemize}
+\item Defines Java and the JVM in terms of abstract state machines (ASMs)
+\item Splits Java into sublanguages: imperative, procedural, object-oriented, exception-handling, concurrent
+\item Requires equivalences between the Java ASM and the JVM ASM to be satisfied for the compilation to be correct
+\item Proves correctness by induction over the structure of Java code
+\end{itemize}
+\end{slide}
+
+\begin{slide}{ROOL}
+%borba2000, borba2004, cavalcanti2000
+ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000}
+\begin{itemize}
+\item Subset of Java with specification features
+\item Verified compiler using the normal form approach\cite{duran2005, duran2010}
+  \begin{itemize}
+  \item Adds class precompilation and redirection of method calls to
+Sampaio’s phases of compilation
+  \item Normal form representing a VM
+  \end{itemize}
+\end{itemize}
+\end{slide}
+
+\begin{slide}{Java Compilers in Isabelle/HOL}
+  \begin{itemize}
+  \item Strecker\cite{strecker2002}
+    \begin{itemize}
+    \item Develops a compiler for $\mu$Java, a subset of Java that contains many core features of Java but removes interfaces, arrays, access modifiers and concurrency
+    \item Correctness is shown via a ``commuting diagram'' argument
+    \end{itemize}
+  \item Klein and Nipkow\cite{klein2006}
+    \begin{itemize}
+    \item Proves correctness of a compiler and JVM for a slightly larger subset of Java called Jinja
+    \end{itemize}
+  \item Lochbihler\cite{lochbihler2010}
+    \begin{itemize}
+    \item Adds support for concurrency to the verified compiler presented by Klein and Nipkow
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+%\begin{slide}{Compilers for Smartcard}
+%barthe2000
+%attali2000 
+%casset2002?, barthe2001
+%\end{slide}
+
+\begin{slide}{Embedded Systems}
+  \begin{itemize}
+  \item Schultz\cite{schultz2003} --- compiling Java to native code
+  \item Varma and Bhattacharyya\cite{varma2004} --- compiling Java to C
+  \item Icecap Hardware Virtual Machine (HVM)\cite{sondergaard2012, korsholm2014} --- compiling SCJ to C
+  \item No formal verification work done
+  \end{itemize}
+%schultz2003, varma2004
+\end{slide}
+
+\section{Conclusion}
+
+\begin{frame}
+\frametitle{Conclusion}
+  \begin{itemize}
+  \item There are two main approaches to compilation
+    \begin{itemize}
+    \item The aglebraic approach offer advantages over the more traditional approach
+    \end{itemize}
+  \item Work has been done on verifying compilers for various languages, including Java
+  \item There seems to be little work on verifying Java compilers for embedded systems
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{}
+\begin{center}
+{\huge Any Questions?}
+\end{center}
+\end{frame}
+
+\beginbackup
+
+\backupend
+
+\end{document}
