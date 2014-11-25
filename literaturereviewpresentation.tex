@@ -53,8 +53,7 @@
 \usepackage{verbatim}
 \usepackage[absolute,overlay]{textpos}
 \usepackage{amsmath,listings}
-% verbose-note
-\usepackage[backend=bibtex,style=numeric-comp,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
+\usepackage[backend=bibtex,style=ieee,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
 \definecolor{darkblue}{rgb}{0,0,0.5}
 \definecolor{darkgreen}{rgb}{0,0.5,0}
 \lstset{language=[LaTeX]TeX,
@@ -147,7 +146,7 @@
 \begin{slide}{Motivation}
 \begin{itemize}
 \item Popularity of Java\cite{gosling2013}
-\item Variants of Java: JavaCard\cite{chen2000}, RTSJ\cite{gosling2000}, SCJ\cite{locke2013}
+\item Variants of Java: JavaCard\cite{chen2000}, RTSJ\cite{gosling2000}, SCJ\cite{locke2013}, Java ME\cite{oracle2014}
 \item Program correctness relies on compiler/interpreter correctness.
 \item Testing is usually not sufficient to ensure correctness.
 \end{itemize}
@@ -254,7 +253,19 @@
 \section{Compiler Correctness for Java-like Languages}
 
 \frame{\sectionpage}
-\stepcounter{subsection}
+
+\subsection{Compilation of Java}
+
+\begin{slide}{Compilation of Java}
+\begin{itemize}
+\item Java is usually compiled to Java bytecode, which is run on the JVM.
+\item The JVM may either interpret the bytecode or compile it to native code.
+\item Both the initial compilation and the JVM must be proved correct
+\item Verifying interpretation is different to verifying compilation
+\end{itemize}
+\end{slide}
+
+\subsection{Compiler Correctness for the whole of Java}
 
 \begin{slide}{ASM approach}
 St\"{a}rk, Schmid and B\"orger\cite{stark2001}
@@ -265,6 +276,8 @@ St\"{a}rk, Schmid and B\"orger\cite{stark2001}
 \item Proves correctness by induction over the structure of Java code
 \end{itemize}
 \end{slide}
+
+\subsection{Compiler Correctness for subsets of Java}
 
 \begin{slide}{ROOL}
 %borba2000, borba2004, cavalcanti2000
