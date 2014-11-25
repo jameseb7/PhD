@@ -53,7 +53,7 @@
 \usepackage{verbatim}
 \usepackage[absolute,overlay]{textpos}
 \usepackage{amsmath,listings}
-\usepackage[backend=bibtex,style=ieee,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
+\usepackage[backend=bibtex,style=numeric-comp,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
 \definecolor{darkblue}{rgb}{0,0,0.5}
 \definecolor{darkgreen}{rgb}{0,0.5,0}
 \lstset{language=[LaTeX]TeX,
@@ -209,11 +209,29 @@
 \begin{slide}{Algebraic Approach}
   \begin{itemize}
   \item Proposed by Hoare in 1991\cite{hoare1991}
-  \item Both the source and target languages are described using the \emph{same specification language} with laws for reasoning about them \cite{hoare1987}.
-  \item Uses the concept of a \emph{refinement relation} between programs: $P \sqsubseteq Q$ means the program $Q$ is at least as good as $P$ \cite{back1981, morris1987, morgan1990}.
-  \item Reduces source program to a \emph{normal form} that resembles an interpreter for the target machine.
+  \item Source and target in the same specification language with laws for reasoning about them \cite{hoare1987}.
+  \item Refinement relation between programs: $P \sqsubseteq Q$ means $Q$ is at least as good as $P$ \cite{back1981, morris1987, morgan1990}.
+  \item Refines source program to a normal form that resembles an interpreter for the target machine.
   \end{itemize}
 \end{slide}
+
+\begin{frame}
+  \frametitle{Algebraic Approach}
+  The following diagram illustrates the structure of the algebraic approach.
+
+  \begin{tikzpicture}
+    \draw (0cm,0cm) |- (10cm,5cm) |- (0cm,0cm);
+    \draw (5cm,4.2cm) node[align=center] {Source Language\\+\\Specification Constructs};
+
+    \draw (2cm,2cm)   circle[radius=1.5cm]               node[align=center] {Source Program\\(in Source\\Language)};
+    \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,0.7cm) node[align=center] {Target\\Machine};
+    \draw (8cm,1.5cm) circle[radius=0.7]                 node[align=center] {Target\\Code};
+
+    \path (3.5cm,2cm) 
+    edge[->] node[align=center, above] {\LARGE $\sqsubseteq$} 
+    node[align=center, below] {Refinement\\Strategy\\(Compilation)}  (6.5cm,2cm);
+  \end{tikzpicture}
+\end{frame}
 
 \begin{slide}{Algebraic Approach}
   \begin{itemize}
@@ -310,12 +328,6 @@ Sampaio’s phases of compilation
     \end{itemize}
   \end{itemize}
 \end{slide}
-
-%\begin{slide}{Compilers for Smartcard}
-%barthe2000
-%attali2000 
-%casset2002?, barthe2001
-%\end{slide}
 
 \begin{slide}{Embedded Systems}
   \begin{itemize}
