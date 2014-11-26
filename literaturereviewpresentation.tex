@@ -304,29 +304,37 @@
 \subsection{Compiler Correctness for the whole of Java}
 
 \begin{slide}{ASM approach}
-St\"{a}rk, Schmid and B\"orger\cite{stark2001}
-\begin{itemize}
-\item Defines Java and the JVM in terms of abstract state machines (ASMs)
-\item Splits Java into sublanguages: imperative, procedural, object-oriented, exception-handling, concurrent
-\item Requires equivalences between the Java ASM and the JVM ASM to be satisfied for the compilation to be correct
-\item Proves correctness by induction over the structure of Java code
-\end{itemize}
+  St\"{a}rk, Schmid and B\"orger\cite{stark2001}
+  \begin{itemize}
+  \item Source: the whole of Java
+  \item Target: JVM with a few instructions not supported
+  \item Definition of Correctness:
+    \begin{itemize}
+    \item Defines Java and the JVM in terms of abstract state machines (ASMs)
+    \item Splits Java into sublanguages: imperative, procedural, object-oriented, exception-handling, concurrent
+    \item Requires equivalences between the Java ASM and the JVM ASM to be satisfied for the compilation to be correct
+    \item Proves correctness by induction over the structure of Java code
+    \end{itemize}
+  \end{itemize}
 \end{slide}
 
 \subsection{Compiler Correctness for subsets of Java}
 
 \begin{slide}{ROOL}
 %borba2000, borba2004, cavalcanti2000
-ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000}
-\begin{itemize}
-\item Subset of Java with specification features
-\item Verified compiler using the algebraic approach\cite{duran2005, duran2010}
+  Duran\cite{duran2005, duran2010}
   \begin{itemize}
-  \item Adds class precompilation and redirection of method calls to
-Sampaio’s phases of compilation
-  \item Normal form representing a VM
+  \item Source: ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000}
+    \begin{itemize}
+    \item Subset of Java with specification features
+    \item Laws developed for reasoning about object-oriented languages\cite{borba2000}
+    \end{itemize}
+  \item Target: RVM (ROOL Virtual Machine)
+    \begin{itemize}
+    \item Similar to a JVM running a subset of Java bytecode
+    \end{itemize}
+  \item Definition of Correctness: algebraic approach
   \end{itemize}
-\end{itemize}
 \end{slide}
 
 \begin{slide}{Java Compilers in Isabelle/HOL}
