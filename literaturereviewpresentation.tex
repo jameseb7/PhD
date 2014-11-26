@@ -225,9 +225,10 @@
     \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,0.7cm) node[align=center] {Target\\Machine};
     \draw (8cm,1.5cm) circle[radius=0.7]                 node[align=center] {Target\\Code};
 
-    \path (3.5cm,2cm) 
-    edge[->] node[align=center, above] {\LARGE $\sqsubseteq$} 
-    node[align=center, below] {Refinement\\Strategy\\(Compilation)}  (6.5cm,2cm);
+    \path (3.5cm,2cm) edge[->] 
+              node[align=center, above] {\LARGE $\sqsubseteq$} 
+              node[align=center, below] {Refinement\\Strategy\\(Compilation)}  
+          (6.5cm,2cm);
   \end{tikzpicture}
 \end{frame}
 
@@ -235,13 +236,23 @@
   \begin{itemize}
   \item Sampaio\cite{hoare1993, sampaio1993, sampaio1997}
     \begin{itemize}
-    \item Handles most imperative constructs, including procedures and recursion.
-    \item Performs compilation  using rewrite rules proved from basic laws.
-    \item Mechanises compilation in the OBJ3 term rewriting system\cite{goguen1988}.
+    \item Source: basic imperative language, including procedures and recursion
+    \item Target: Simple single-register machine with jumps
+    \item Compilation using rewrite rules proved from basic laws.
+    \item Mechanisation in the OBJ3 term rewriting system\cite{goguen1988}.
     \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Algebraic Approach}
+  \begin{itemize}
   \item Perna\cite{perna2010, perna2011} --- Hardware compilation
     \begin{itemize}
+    \item Source: Handel-C
+    \item Target: Hardware components, FPGAs
     \item Handles timed structures and parallelism with shared variables
+    \item Refines complex structures to simple ones for implementation in hardware
+    \item Laws proved from a denotational semantics expressed in the Unifying Theories of Programming\cite{hoare1998}.
     \end{itemize}
     % \item \cite{hoare1984}\cite{morgan1990}
   \end{itemize}
@@ -255,10 +266,11 @@
     \begin{itemize}
     \item Project to develop a realistic formally verified compiler
     \item Formally verified compiler for a large subset of C
-    \item Mechanized in the Coq proof assistant
+    \item Mechanised in the Coq proof assistant
     \end{itemize}
-  \item Wang, Cuellar and Chipala\cite{wang2014} --- Verifying compilers that allow linking with other languages
+  \item Wang, Cuellar and Chipala\cite{wang2014}
     \begin{itemize}
+    \item Verifying compilers that allow linking with other languages
     \item Combined algebraic and operational semantics of the source language
     \item Algebraic reasoning about calls to programs in other languages
     \item Mechanised in Coq 
