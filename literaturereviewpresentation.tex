@@ -168,8 +168,8 @@
     \end{itemize}
   \item Burstall and Landin\cite{burstall1969}
     \begin{itemize}
-    \item Source: expression language similar to McCarthy and Painter's but allowing for more operators
-    \item Target: several intermediate machines including a stack machine and a machine similar to McCarthy and Painter's
+    \item Source: expression language similar to McCarthy and Painter's, but allowing for more operators.
+    \item Target: several intermediate machines, including a stack machine and a machine similar to McCarthy and Painter's.
     \item Definition of Correctness: construction of homomorphisms between algebras
     \end{itemize}
   \end{itemize}
@@ -217,8 +217,6 @@
 
 \begin{frame}
   \frametitle{Algebraic Approach}
-  The following diagram illustrates the structure of the algebraic approach.
-
   \begin{tikzpicture}
     \draw (0cm,0cm) |- (10cm,5cm) |- (0cm,0cm);
     \draw (5cm,4.2cm) node[align=center] {Source Language\\+\\Specification Constructs};
@@ -256,13 +254,13 @@
   \item CompCert\cite{leroy2012}
     \begin{itemize}
     \item Project to develop a realistic formally verified compiler
-    \item Produced a formally verified compiler for a large subset of C
-    \item Compiler developed and proved correct in the Coq proof assistant
+    \item Formally verified compiler for a large subset of C
+    \item Mechanized in the Coq proof assistant
     \end{itemize}
   \item Wang, Cuellar and Chipala\cite{wang2014} --- Verifying compilers that allow linking with other languages
     \begin{itemize}
-    \item Provides a combined algebraic and operational semantics of the source language
-    \item Allows for algebraic reasoning about calls to programs in other languages
+    \item Combined algebraic and operational semantics of the source language
+    \item Algebraic reasoning about calls to programs in other languages
     \item Mechanised in Coq 
     \end{itemize}
   \end{itemize}
