@@ -284,14 +284,22 @@
 
 \subsection{Compilation of Java}
 
-\begin{slide}{Compilation of Java}
-\begin{itemize}
-\item Java is usually compiled to Java bytecode, which is run on the JVM.
-\item The JVM may either interpret the bytecode or compile it to native code.
-\item Both the initial compilation and the JVM must be proved correct
-\item Verifying interpretation is different to verifying compilation
-\end{itemize}
-\end{slide}
+\begin{frame}
+  \frametitle{Compilation of Java}
+  \begin{itemize}
+  \item Java is usually compiled to Java bytecode, which is run on the JVM.
+  \item The JVM may either interpret the bytecode or compile it to native code.
+  \item Both the initial compilation and the JVM must be proved correct
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (3cm,0cm)   circle[radius=1cm]               node[align=center] {Java code};
+      \draw (4cm,0cm) edge[->] node[above] {compile} (7cm,0cm);
+      \draw (8cm,0.3cm) circle[radius=1.5cm] ++(0cm,1cm) node[align=center] {JVM};
+      \draw (8cm,0cm)   circle[radius=1cm]               node[align=center] {Java\\bytecode};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
 
 \subsection{Compiler Correctness for the whole of Java}
 
