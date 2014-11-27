@@ -341,16 +341,16 @@
   \begin{itemize}
   \item Strecker\cite{strecker2002}
     \begin{itemize}
-    \item Develops a compiler for $\mu$Java, a subset of Java that contains many core features of Java but removes interfaces, arrays, access modifiers and concurrency
-    \item Correctness is shown via a ``commuting diagram'' argument
+    \item $\mu$Java --- contains many core features of Java but not interfaces, arrays, access modifiers and concurrency
+    \item Definition of Correctness: ``commuting diagram'' argument
     \end{itemize}
   \item Klein and Nipkow\cite{klein2006}
     \begin{itemize}
-    \item Proves correctness of a compiler and JVM for a slightly larger subset of Java called Jinja
+    \item Slightly larger subset of Java called Jinja
     \end{itemize}
   \item Lochbihler\cite{lochbihler2010}
     \begin{itemize}
-    \item Adds support for concurrency to the verified compiler presented by Klein and Nipkow
+    \item Adds support for concurrency
     \end{itemize}
   \end{itemize}
 \end{slide}
@@ -370,9 +370,10 @@
 \begin{frame}
 \frametitle{Conclusion}
   \begin{itemize}
-  \item There are two main approaches to compilation: the algebraic approach and the traditional approach based on commuting diagrams
+  \item There are two main approaches to compilation:
     \begin{itemize}
-    \item The algebraic approach offers advantages over the more traditional approach
+    \item algebraic approach
+    \item traditional approach based on commuting diagrams
     \end{itemize}
   \item Work has been done on verifying compilers for various languages, including Java
   \item There seems to be little work on verifying Java compilers for embedded systems
