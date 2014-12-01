@@ -159,6 +159,23 @@
 \subsection{Early Work}
 
 \begin{slide}{Early Work}
+  In general, the traditional approach to compilation is based on showing that a diagram of the following form commutes\cite{morris1973, thatcher1979}.
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,3cm) {source\\language};
+      \node[align=center] (T) at (4cm,3cm) {target\\language};
+      \node[align=center] (M) at (0cm,0cm) {source\\meanings};
+      \node[align=center] (U) at (4cm,0cm) {target\\meanings};
+      
+      \path (S) edge[->] node[align=center, above] {compile}           (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics} (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics} (U);
+      \path (M) edge[->] node[align=center, above] {encode}            (U);
+    \end{tikzpicture}
+  \end{center}
+\end{slide}
+
+\begin{slide}{Early Work}
   \begin{itemize}
   \item McCarthy and Painter\cite{mccarthy1967}
     \begin{itemize}
@@ -166,6 +183,24 @@
     \item Target: simple four-instruction single-register machine
     \item Definition of Correctness: partial equality of machine states
     \end{itemize}
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,2.5cm) {expression\\language};
+      \node[align=center] (T) at (6cm,2.5cm) {4-instruction\\machine code};
+      \node[align=center] (M) at (0cm,0cm)   {expression\\value};
+      \node[align=center] (U) at (6cm,0cm)   {machine\\states};
+      
+      \path (S) edge[->] node[align=center, above] {compile}                    (T);
+      \path (S) edge[->] node[align=right, left]   {evaluate\\expression}       (M);
+      \path (T) edge[->] node[align=left, right]   {run\\machine}               (U);
+      \path (M) edge[->] node[align=center, above] {load value\\to accumulator} (U);
+    \end{tikzpicture}
+  \end{center}
+\end{slide}
+
+\begin{slide}{Early Work}
+  \begin{itemize}
   \item Burstall and Landin\cite{burstall1969}
     \begin{itemize}
     \item Source: expression language similar to McCarthy and Painter's, but allowing for more operators.
@@ -185,23 +220,6 @@
     \item Partially mechanised proof using LCF
     \end{itemize}
   \end{itemize}
-\end{slide}
-
-\begin{slide}{Early Work}
-  In general, the traditional approach to compilation is based on showing that a diagram of the following form commutes\cite{morris1973, thatcher1979}.
-  \begin{center}
-    \begin{tikzpicture}
-      \node[align=center] (S) at (0cm,3cm) {source\\language};
-      \node[align=center] (T) at (4cm,3cm) {target\\language};
-      \node[align=center] (M) at (0cm,0cm) {source\\meanings};
-      \node[align=center] (U) at (4cm,0cm) {target\\meanings};
-      
-      \path (S) edge[->] node[align=center, above] {compile}           (T);
-      \path (S) edge[->] node[align=right, left]   {source\\semantics} (M);
-      \path (T) edge[->] node[align=left, right]   {target\\semantics} (U);
-      \path (M) edge[->] node[align=center, above] {encode}            (U);
-    \end{tikzpicture}
-  \end{center}
 \end{slide}
 
 \subsection{Algebraic Approach}
