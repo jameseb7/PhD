@@ -30,26 +30,6 @@
    \addtocounter{framenumber}{\value{framenumbervorappendix}} 
 }
 
-
-%\setbeamertemplate{headline}
-%{%
-%  \begin{beamercolorbox}[ht=3.5ex,dp=1.125ex,%
-%      leftskip=.3cm,rightskip=.3cm plus1fil]{section in head/foot}
-%    \usebeamerfont{section in head/foot}\usebeamercolor[fg]{section in head/foot}%
-%  \insertsectionhead
-% \end{beamercolorbox}%
-%  \begin{beamercolorbox}[colsep=1.5pt]{middle separation line head}
-%  \end{beamercolorbox}
-%  \begin{beamercolorbox}[ht=2.5ex,dp=1.125ex,%
-%    leftskip=.3cm,rightskip=.3cm plus1fil]{subsection in head/foot}
-%    \usebeamerfont{subsection in head/foot}\insertsubsectionhead
-%  \end{beamercolorbox}%
-%  \begin{beamercolorbox}[colsep=1.5pt]{lower separation line head}
-%  \end{beamercolorbox}
-%}
-%{}%remove navigation symbols
-%\useoutertheme[subsection=false]{miniframes}
-
 \usepackage{verbatim}
 \usepackage[absolute,overlay]{textpos}
 \usepackage{amsmath,listings}
@@ -85,32 +65,16 @@
 
 \setlength{\abovecaptionskip}{-2ex} 
 \setlength{\belowcaptionskip}{-2ex} 
-\newcommand{\tab}{\hspace*{2em}}
-%\bibliographystyle{apalike}  
+\newcommand{\tab}{\hspace*{2em}}  
 \bibliography{literature} 
 \setbeamertemplate{footline}[frame number]
 
-%\newenvironment{slide}[1]%
-%{\begin{refsegment}
-%\begin{frame}[fragile,environment=slide]
-%\frametitle{#1}
-%}%
-%{
-%\footnotetext{\printbibliography[segment=1]}
-%\end{frame}
-%\end{refsegment}
-%}
 \usepackage{xifthen}% provides \isempty test
 \newcommand{\footmake}[1]{
 \ifthenelse{\equal{#1}{}}%
 	{}%
 	{\footnotetext{#1}}%
 }
-
-%\defbibenvironment{bibliography}
-%{\begin{minipage}[b]{\linewidth}}
-%{\end{minipage}}
-%{}
 
 \defbibenvironment{bibliography}
 {
