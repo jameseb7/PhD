@@ -172,6 +172,22 @@
     \item Definition of Correctness: construction of homomorphisms between algebras
     \end{itemize}
   \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S)  at (0cm,2.5cm) {expression\\algebra};
+      \node[align=center] (M)  at (0cm,0cm)   {value\\algebra};
+      \node[align=center] (T1) at (4cm,2.5cm) {stack machine\\code};
+      \node[align=center] (U1) at (4cm,0cm)   {stack machine\\states};
+      \node[align=center] (T2) at (8cm,2.5cm) {stack machine\\code};
+      \node[align=center] (U2) at (8cm,0cm)   {stack machine\\states};
+      %TODO: make diagram show intermediate machines
+      
+      \path (S)  edge[->] node[align=center, above] {compile}   (T1);
+      \path (S)  edge[->] node[align=right, left]   {interpret} (M);
+      \path (T1) edge[->] node[align=left, right]   {execute}   (U1);
+      \path (M)  edge[->] node[align=center, above] {load}      (U1);
+    \end{tikzpicture}
+  \end{center}
 \end{slide}
 
 \begin{slide}{Early Work}
@@ -184,21 +200,24 @@
     \item Partially mechanised proof using LCF
     \end{itemize}
   \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,2.5cm) {AlGOL-like\\language};
+      \node[align=center] (T) at (6cm,2.5cm) {stack machine\\code};
+      \node[align=center] (M) at (0cm,0cm)   {language state\\functions};
+      \node[align=center] (U) at (6cm,0cm)   {machine state\\functions};
+      
+      \path (S) edge[->] node[align=center, above] {compile}                    (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics}          (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics}          (U);
+      \path (M) edge[<-] node[align=center, above] {\emph{SIMUL}} (U);
+    \end{tikzpicture}
+  \end{center}
 \end{slide}
 
 \subsection{Algebraic Approach}
 
 \begin{slide}{Algebraic Approach}
-  \begin{itemize}
-  \item Proposed by Hoare in 1991\cite{hoare1991}
-  \item Source and target in the same specification language with laws for reasoning about them \cite{hoare1987}.
-  \item Refinement relation between programs: $P \sqsubseteq Q$ means $Q$ is at least as good as $P$ \cite{back1981, morris1987, morgan1990}.
-  \item Refines source program to a normal form that resembles an interpreter for the target machine.
-  \end{itemize}
-\end{slide}
-
-\begin{frame}
-  \frametitle{Algebraic Approach}
   \begin{tikzpicture}
     \draw (0cm,0cm) |- (10cm,5cm) |- (0cm,0cm);
     \draw (5cm,4.2cm) node[align=center] {Source Language\\+\\Specification Constructs};
@@ -212,7 +231,16 @@
               node[align=center, below] {Refinement\\Strategy\\(Compilation)}  
           (6.5cm,2cm);
   \end{tikzpicture}
-\end{frame}
+\end{slide}
+
+\begin{slide}{Algebraic Approach}
+  \begin{itemize}
+  \item Proposed by Hoare in 1991\cite{hoare1991}
+  \item Source and target in the same specification language with laws for reasoning about them \cite{hoare1987}.
+  \item Refinement relation between programs: $P \sqsubseteq Q$ means $Q$ is at least as good as $P$ \cite{back1981, morris1987, morgan1990}.
+  \item Refines source program to a normal form that resembles an interpreter for the target machine.
+  \end{itemize}
+\end{slide}
 
 \begin{slide}{Algebraic Approach}
   \begin{itemize}
@@ -236,12 +264,21 @@
     \item Refines complex structures to simple ones for implementation in hardware
     \item Laws proved from a denotational semantics expressed in the Unifying Theories of Programming\cite{hoare1998}.
     \end{itemize}
-    % \item \cite{hoare1984}\cite{morgan1990}
   \end{itemize}
+  % \begin{tikzpicture}
+  %   \draw (0cm,0cm) |- (10cm,4cm) |- (0cm,0cm);
+  %   \draw (5cm,3.2cm) node[align=center] {Handel-C + Specification Constructs};
+    
+  %   \draw (2cm,2cm)   circle[radius=1.5cm]               node[align=center] {Handel-C\\Program};
+  %   \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,1cm) node[align=center] {Hardware};
+  %   \draw (8cm,1.8cm) circle[radius=1cm]                 node[align=center] {Hardware\\components};
+    
+  %   \path (3.5cm,2cm) edge[->] node[align=center, above] {\LARGE $\sqsubseteq$} node[align=center, below] {Refinement\\Strategy\\(Compilation)} (6.5cm,2cm);
+  % \end{tikzpicture}      
 \end{slide}
-
-\subsection{Recent Work}
-
+      
+      \subsection{Recent Work}
+      
 \begin{slide}{Recent Work}
   \begin{itemize}
   \item CompCert\cite{leroy2012}
