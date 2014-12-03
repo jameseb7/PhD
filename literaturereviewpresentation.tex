@@ -1,4 +1,7 @@
-\documentclass{beamer}
+\documentclass[usenames,dvipsnames,svgnames,table]{beamer}
+
+\usepackage{xcolor}
+
 \usetheme[compress]{Dresden}
 \setbeamertemplate{navigation symbols}{}
 \setbeamertemplate{footline}{
@@ -32,7 +35,7 @@
 
 \usepackage{verbatim}
 \usepackage[absolute,overlay]{textpos}
-\usepackage{amsmath,listings}
+\usepackage{amsmath,amssymb,listings}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
 \definecolor{darkblue}{rgb}{0,0,0.5}
 \definecolor{darkgreen}{rgb}{0,0.5,0}
@@ -44,6 +47,9 @@
     appendix}}
 
 \usepackage{tikz}
+
+\newcommand{\yes}{{\large \checkmark}}
+\newcommand{\no}{{\large \color{red} $\times$}}
 
 \title{Correctness of Compilers for Java-like Languages}
 \author{James Baxter}
@@ -372,7 +378,7 @@
   \item The Isabelle proof assistant\cite{nipkow2014}
   \item Strecker\cite{strecker2002}
     \begin{itemize}
-    \item $\mu$Java --- contains many core features of Java but not interfaces, arrays, access modifiers and concurrency
+    \item $\mu$Java\cite{nipkow2000} --- contains many core features of Java but not interfaces, arrays, access modifiers and concurrency
     \item Definition of Correctness: ``commuting diagram'' argument
     \end{itemize}
   \item Klein and Nipkow\cite{klein2006}
@@ -396,20 +402,46 @@
 %schultz2003, varma2004
 \end{slide}
 
+\begin{slide}{Summary}
+  \tiny
+  \rowcolors{2}{white}{gray!30}
+  \begin{tabular}{p{2.6cm}| c c c c c}
+    
+      & St\"{a}rk, Schmid \& B\"{o}rger & Duran      & Strecker   & Klein \& Nipkow & Lochbihler \\
+      \hline
+      Simple data types\newline(\texttt{bool}, \texttt{int})
+      & \yes                            & \yes       & \yes       & \yes            & \yes \\
+      Basic imperative constructs\newline(\texttt{if}, \texttt{while}, assignment)
+      & \yes                            & \yes       & \yes       & \yes            & \yes \\
+      Floating point types
+      & \yes                            & \no        & \no        & \no             & \no   \\
+      Objects
+      & \yes                            & \yes       & \yes       & \yes            & \yes \\
+      Inheritance
+      & \yes                            & \yes       & \yes       & \yes            & \yes \\
+      Exception handling
+      & \yes                            & \no        & \no        & \yes            & \yes \\
+      Recursion
+      & \yes                            & \yes       & \yes       & \yes            & \yes \\
+      Concurrency
+      & \no                             & \no        & \no        & \no             & \yes \\
+  \end{tabular}
+\end{slide}
+
 \section{Conclusion}
 
-\begin{frame}
-\frametitle{Conclusion}
+\begin{slide}{Conclusion}
   \begin{itemize}
   \item There are two main approaches to compilation:
     \begin{itemize}
     \item algebraic approach
     \item traditional approach based on commuting diagrams
     \end{itemize}
-  \item Work has been done on verifying compilers for various languages, including Java.
+  \item Work has been done on verifying compilers for various languages, including work covering most of Java.
+    
   \item There seems to be little work on verifying Java compilers for embedded systems.
   \end{itemize}
-\end{frame}
+\end{slide}
 
 \begin{frame}[fragile]
 \frametitle{}
