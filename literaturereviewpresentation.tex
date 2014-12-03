@@ -268,23 +268,24 @@
   \begin{itemize}
   \item Perna\cite{perna2010, perna2011} --- Hardware compilation
     \begin{itemize}
-    \item Source: Handel-C
-    \item Target: Hardware components, FPGAs
     \item Handles timed structures and parallelism with shared variables
-    \item Refines complex structures to simple ones for implementation in hardware
     \item Laws proved from a denotational semantics expressed in the Unifying Theories of Programming\cite{hoare1998}.
     \end{itemize}
   \end{itemize}
-  % \begin{tikzpicture}
-  %   \draw (0cm,0cm) |- (10cm,4cm) |- (0cm,0cm);
-  %   \draw (5cm,3.2cm) node[align=center] {Handel-C + Specification Constructs};
-    
-  %   \draw (2cm,2cm)   circle[radius=1.5cm]               node[align=center] {Handel-C\\Program};
-  %   \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,1cm) node[align=center] {Hardware};
-  %   \draw (8cm,1.8cm) circle[radius=1cm]                 node[align=center] {Hardware\\components};
-    
-  %   \path (3.5cm,2cm) edge[->] node[align=center, above] {\LARGE $\sqsubseteq$} node[align=center, below] {Refinement\\Strategy\\(Compilation)} (6.5cm,2cm);
-  % \end{tikzpicture}      
+  \begin{center}
+    \begin{tikzpicture}
+      {\scriptsize
+        \draw (0.5cm,1cm) |- (9.5cm,4cm) |- (0.5cm,1cm);
+        \draw (5cm,3.5cm) node[align=center] {Handel-C +\\Specification Constructs};
+        
+        \draw (2cm,2.4cm) circle[radius=1.2cm]               node[align=center] {Handel-C\\Program};
+        \draw (8cm,2.4cm) circle[radius=1.2cm] ++(0cm,0.8cm) node[align=center] {Hardware};
+        \draw (8cm,2.2cm) circle[radius=0.85cm]              node[align=center] {Hardware\\Components};
+        
+        \path (3.2cm,2.4cm) edge[->] node[align=center, above] {\Large $\sqsubseteq$} node[align=center, below] {Refinement\\Strategy\\(Compilation)} (6.8cm,2.4cm);
+      }
+    \end{tikzpicture}
+  \end{center}
 \end{slide}
       
       \subsection{Recent Work}
