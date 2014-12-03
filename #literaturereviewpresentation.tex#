@@ -1,0 +1,422 @@
+\documentclass{beamer}
+\usetheme[compress]{Dresden}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor~~(\insertshortinstitute)
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} \hspace*{2ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+} 
+\usecolortheme{rose}
+
+\renewcommand{\insertsectionnumber}{}
+\renewcommand{\sectionname}{}
+
+\newcommand{\beginbackup}{
+   \newcounter{framenumbervorappendix}
+   \setcounter{framenumbervorappendix}{\value{framenumber}}
+}
+\newcommand{\backupend}{
+   \addtocounter{framenumbervorappendix}{-\value{framenumber}}
+   \addtocounter{framenumber}{\value{framenumbervorappendix}} 
+}
+
+\usepackage{verbatim}
+\usepackage[absolute,overlay]{textpos}
+\usepackage{amsmath,listings}
+\usepackage[backend=bibtex,style=numeric-comp,sorting=none,sortcites=true,isbn=false,url=false,doi=false,block=space,defernumbers=true]{biblatex}
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\lstset{language=[LaTeX]TeX,
+  basicstyle={\color{red}},
+  morekeywords={%
+    part,chapter,subsection,subsubsection,%
+    paragraph,subparagraph,%
+    appendix}}
+
+\usepackage{tikz}
+
+\title{Correctness of Compilers for Java-like Languages}
+\author{James Baxter}
+\date[2014-12-9]{Literature Review Seminar \\ 9 December 2014}
+
+\renewcommand{\footnotesize}{\tiny}
+\renewcommand{\printbibheading}{}
+\defbibheading{bibliography}{}
+
+\setbeamertemplate{bibliography item}[text]
+\setbeamerfont{bibliography entry author}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography entry title}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography entry journal}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography entry note}{shape=\scshape,size=\tiny}
+\setbeamerfont{bibliography item}{shape=\scshape,size=\tiny}
+\renewcommand{\bibfont}{\tiny}
+
+\setbeamertemplate{footnote}{\insertfootnotetext}
+
+\setlength{\abovecaptionskip}{-2ex} 
+\setlength{\belowcaptionskip}{-2ex} 
+\newcommand{\tab}{\hspace*{2em}}  
+\bibliography{literature} 
+\setbeamertemplate{footline}[frame number]
+
+\usepackage{xifthen}% provides \isempty test
+\newcommand{\footmake}[1]{
+\ifthenelse{\equal{#1}{}}%
+	{}%
+	{\footnotetext{#1}}%
+}
+
+\defbibenvironment{bibliography}
+{
+ \list{\printtext[labelnumberwidth]{%
+    \printfield{prefixnumber}%
+    \printfield{labelnumber}}}
+{\setlength{\bibhang}{0pt}%
+\setlength{\leftmargin}{\bibhang}%
+\setlength{\itemindent}{-\leftmargin}%
+\setlength{\itemsep}{\bibitemsep}%
+\setlength{\parsep}{\bibparsep}}}
+{\endlist}
+{\item}
+
+\newsavebox{\ptbib}
+
+\newenvironment{slide}[2][fragile,environment=slide]
+{\begin{frame}[#1]
+	\frametitle{#2}\begin{refsegment}}
+{\footmake{\printbibliography[segment=\therefsegment]}\end{refsegment}\end{frame}}
+
+\begin{document}
+
+\frame[plain]{\titlepage}
+
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
+\section{Motivation}
+
+\begin{slide}{Motivation}
+\begin{itemize}
+\item Popularity of Java\cite{gosling2013}
+\item Variants of Java: JavaCard\cite{chen2000}, RTSJ\cite{gosling2000}, SCJ\cite{locke2013}, Java ME\cite{oracle2014}
+\item Program correctness relies on compiler/interpreter correctness.
+\item Testing is usually not sufficient to ensure correctness.
+\end{itemize}
+\end{slide}
+
+\section{Compiler Correctness}
+
+\frame{\sectionpage}
+
+\subsection{Early Work}
+
+\begin{slide}{Early Work}
+  In general, the traditional approach to compilation is based on showing that a diagram of the following form commutes\cite{morris1973, thatcher1979}.
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,3cm) {source\\language};
+      \node[align=center] (T) at (4cm,3cm) {target\\language};
+      \node[align=center] (M) at (0cm,0cm) {source\\meanings};
+      \node[align=center] (U) at (4cm,0cm) {target\\meanings};
+      
+      \path (S) edge[->] node[align=center, above] {compile}           (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics} (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics} (U);
+      \path (M) edge[->] node[align=center, above] {encode}            (U);
+    \end{tikzpicture}
+  \end{center}
+\end{slide}
+
+\begin{slide}{Early Work}
+  \begin{itemize}
+  \item McCarthy and Painter\cite{mccarthy1967}
+    \begin{itemize}
+    \item Source: simple single-operator expression language
+    \item Target: simple four-instruction single-register machine
+    \item Definition of Correctness: partial equality of machine states
+    \end{itemize}
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,2.5cm) {expression\\language};
+      \node[align=center] (T) at (6cm,2.5cm) {4-instruction\\machine code};
+      \node[align=center] (M) at (0cm,0cm)   {expression\\value};
+      \node[align=center] (U) at (6cm,0cm)   {machine\\states};
+      
+      \path (S) edge[->] node[align=center, above] {compile}                    (T);
+      \path (S) edge[->] node[align=right, left]   {evaluate\\expression}       (M);
+      \path (T) edge[->] node[align=left, right]   {run\\machine}               (U);
+      \path (M) edge[->] node[align=center, above] {load value\\to accumulator} (U);
+    \end{tikzpicture}
+  \end{center}
+\end{slide}
+
+\begin{slide}{Early Work}
+  \begin{itemize}
+  \item Burstall and Landin\cite{burstall1969}
+    \begin{itemize}
+    \item Source: expression language similar to McCarthy and Painter's, but allowing for more operators.
+    \item Target: several intermediate machines
+    \item Definition of Correctness: construction of homomorphisms between algebras
+    \end{itemize}
+  \end{itemize}
+    {\scriptsize
+      \begin{tikzpicture}
+        \node[align=center] (S)  at (0cm,2.5cm) {expression\\algebra};
+        \node[align=center] (M)  at (0cm,0cm)   {value\\algebra};
+        \node[align=center] (T1) at (3cm,2.5cm) {stack machine\\program};
+        \node[align=center] (U1) at (3cm,0cm)   {stack machine\\state\\transformations};
+        \node[align=center] (T2) at (6cm,2.5cm) {store-pointer\\program};
+        \node[align=center] (U2) at (6cm,0cm)   {store-pointer\\state\\transformations};
+        \node at (7.5cm,0cm) {$\cdots$};
+        \node at (7.5cm,2.5cm) {$\cdots$};
+        \node[align=center] (T3) at (9cm,2.5cm) {accumulator\\machine\\program};
+        \node[align=center] (U3) at (9cm,0cm)   {accumulator\\machine state\\transformations};
+        % TODO: make diagram show intermediate machines
+        
+        \path (S)  edge[->] node[align=center, above] {compile}   (T1);
+        \path (S)  edge[->] node[align=right, left]   {interpret} (M);
+        \path (T1) edge[->] node[align=left, right]   {execute}   (U1);
+        \path (M)  edge[->] node[align=center, above] {load}      (U1);
+
+        \path (T1) edge[->] node[align=center, above] {compile}   (T2);
+        \path (U1) edge[->] node[align=center, above] {convert}   (U2);
+        \path (T2) edge[->] node[align=left, right]   {execute}   (U2);
+
+        \path (T3) edge[->] node[align=left, right]   {execute}   (U3);
+      \end{tikzpicture}
+    }
+\end{slide}
+
+\begin{slide}{Early Work}
+  \begin{itemize}
+  \item Milner and Weyhrauch\cite{milner1972}
+    \begin{itemize}
+    \item Source: simple ALGOL-like language
+    \item Target: stack machine that allows jumps
+    \item Definition of correctness: commuting diagram
+    \item Partially mechanised proof using LCF
+    \end{itemize}
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,2.5cm) {AlGOL-like\\language};
+      \node[align=center] (T) at (6cm,2.5cm) {stack machine\\code};
+      \node[align=center] (M) at (0cm,0cm)   {language state\\functions};
+      \node[align=center] (U) at (6cm,0cm)   {machine state\\functions};
+      
+      \path (S) edge[->] node[align=center, above] {compile}                    (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics}          (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics}          (U);
+      \path (M) edge[<-] node[align=center, above] {\emph{SIMUL}} (U);
+    \end{tikzpicture}
+  \end{center}
+\end{slide}
+
+\subsection{Algebraic Approach}
+
+\begin{slide}{Algebraic Approach}
+  \begin{tikzpicture}
+    \draw (0cm,0cm) |- (10cm,5cm) |- (0cm,0cm);
+    \draw (5cm,4.2cm) node[align=center] {Source Language\\+\\Specification Constructs};
+
+    \draw (2cm,2cm)   circle[radius=1.5cm]               node[align=center] {Source Program\\(in Source\\Language)};
+    \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,0.7cm) node[align=center] {Target\\Machine};
+    \draw (8cm,1.5cm) circle[radius=0.7]                 node[align=center] {Target\\Code};
+
+    \path (3.5cm,2cm) edge[->] 
+              node[align=center, above] {\LARGE $\sqsubseteq$} 
+              node[align=center, below] {Refinement\\Strategy\\(Compilation)}  
+          (6.5cm,2cm);
+  \end{tikzpicture}
+\end{slide}
+
+\begin{slide}{Algebraic Approach}
+  \begin{itemize}
+  \item Proposed by Hoare in 1991\cite{hoare1991}
+  \item Source and target in the same specification language with laws for reasoning about them \cite{hoare1987}.
+  \item Refinement relation between programs: $P \sqsubseteq Q$ means $Q$ is at least as good as $P$ \cite{back1981, morris1987, morgan1990}.
+  \item Refines source program to a normal form that resembles an interpreter for the target machine.
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Algebraic Approach}
+  \begin{itemize}
+  \item Sampaio\cite{hoare1993, sampaio1993, sampaio1997}
+    \begin{itemize}
+    \item Source: basic imperative language, including procedures and recursion.
+    \item Target: Simple single-register machine with jumps
+    \item Compilation using rewrite rules proved from basic laws.
+    \item Mechanisation in the OBJ3 term rewriting system\cite{goguen1988}.
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Algebraic Approach}
+  \begin{itemize}
+  \item Perna\cite{perna2010, perna2011} --- Hardware compilation
+    \begin{itemize}
+    \item Source: Handel-C
+    \item Target: Hardware components, FPGAs
+    \item Handles timed structures and parallelism with shared variables
+    \item Laws proved from a denotational semantics expressed in the Unifying Theories of Programming\cite{hoare1998}.
+    \end{itemize}
+  \end{itemize}
+  % \begin{tikzpicture}
+  %   \draw (0cm,0cm) |- (10cm,4cm) |- (0cm,0cm);
+  %   \draw (5cm,3.2cm) node[align=center] {Handel-C + Specification Constructs};
+    
+  %   \draw (2cm,2cm)   circle[radius=1.5cm]               node[align=center] {Handel-C\\Program};
+  %   \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,1cm) node[align=center] {Hardware};
+  %   \draw (8cm,1.8cm) circle[radius=1cm]                 node[align=center] {Hardware\\components};
+    
+  %   \path (3.5cm,2cm) edge[->] node[align=center, above] {\LARGE $\sqsubseteq$} node[align=center, below] {Refinement\\Strategy\\(Compilation)} (6.5cm,2cm);
+  % \end{tikzpicture}      
+\end{slide}
+      
+      \subsection{Recent Work}
+      
+\begin{slide}{Recent Work}
+  \begin{itemize}
+  \item CompCert\cite{leroy2012}
+    \begin{itemize}
+    \item Project to develop a realistic formally verified compiler
+    \item Large subset of C
+    \item Mechanised in the Coq proof assistant
+    \end{itemize}
+  \item Wang, Cuellar and Chlipala\cite{wang2014}
+    \begin{itemize}
+    \item Verifying compilers that allow linking with other languages
+    \item Combined algebraic and operational semantics of the source language
+    \item Algebraic reasoning about calls to programs in other languages
+    \item Mechanised in Coq 
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\section{Compiler Correctness for Java-like Languages}
+
+\frame{\sectionpage}
+
+\subsection{Compilation of Java}
+
+\begin{frame}
+  \frametitle{Compilation of Java}
+  \begin{itemize}
+  \item Java is usually compiled to Java bytecode, which is run on the JVM.
+  \item The JVM may either interpret the bytecode or compile it to native code.
+  \item Both the initial compilation and the JVM must be proved correct.
+  \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (3cm,0cm)   circle[radius=1cm]               node[align=center] {Java code};
+      \draw (4cm,0cm) edge[->] node[above] {compile} (7cm,0cm);
+      \draw (8cm,0.3cm) circle[radius=1.5cm] ++(0cm,1cm) node[align=center] {JVM};
+      \draw (8cm,0cm)   circle[radius=1cm]               node[align=center] {Java\\bytecode};
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\subsection{Compiler Correctness for the whole of Java}
+
+\begin{slide}{ASM approach}
+  St\"{a}rk, Schmid and B\"orger\cite{stark2001}
+  \begin{itemize}
+  \item Source: the whole of Java
+  \item Target: JVM with a few instructions not supported
+  \item Definition of Correctness:
+    \begin{itemize}
+    \item Defines Java and the JVM in terms of abstract state machines (ASMs)
+    \item Splits Java into sublanguages: imperative, procedural, object-oriented, exception-handling, concurrent
+    \item Requires equivalences between the Java ASM and the JVM ASM to be satisfied for the compilation to be correct.
+    \item Proves correctness by induction over the structure of Java code
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\subsection{Compiler Correctness for subsets of Java}
+
+\begin{slide}{ROOL}
+%borba2000, borba2004, cavalcanti2000
+  Duran\cite{duran2005, duran2010}
+  \begin{itemize}
+  \item Source: ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000}
+    \begin{itemize}
+    \item Subset of Java with specification features
+    \item Laws developed for reasoning about object-oriented languages\cite{borba2000}
+    \end{itemize}
+  \item Target: RVM (ROOL Virtual Machine)
+    \begin{itemize}
+    \item Similar to a JVM running a subset of Java bytecode
+    \end{itemize}
+  \item Definition of Correctness: algebraic approach
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Java Compilers in Isabelle/HOL}
+  \begin{itemize}
+  \item Strecker\cite{strecker2002}
+    \begin{itemize}
+    \item $\mu$Java --- contains many core features of Java but not interfaces, arrays, access modifiers and concurrency
+    \item Definition of Correctness: ``commuting diagram'' argument
+    \end{itemize}
+  \item Klein and Nipkow\cite{klein2006}
+    \begin{itemize}
+    \item Slightly larger subset of Java called Jinja
+    \end{itemize}
+  \item Lochbihler\cite{lochbihler2010}
+    \begin{itemize}
+    \item Adds support for concurrency
+    \end{itemize}
+  \end{itemize}
+\end{slide}
+
+\begin{slide}{Embedded Systems}
+  \begin{itemize}
+  \item Schultz\cite{schultz2003} --- compiling Java to native code
+  \item Varma and Bhattacharyya\cite{varma2004} --- compiling Java to C
+  \item Icecap Hardware Virtual Machine (HVM)\cite{sondergaard2012, korsholm2014} --- compiling SCJ to C
+  \item No formal verification work done
+  \end{itemize}
+%schultz2003, varma2004
+\end{slide}
+
+\section{Conclusion}
+
+\begin{frame}
+\frametitle{Conclusion}
+  \begin{itemize}
+  \item There are two main approaches to compilation:
+    \begin{itemize}
+    \item algebraic approach
+    \item traditional approach based on commuting diagrams
+    \end{itemize}
+  \item Work has been done on verifying compilers for various languages, including Java.
+  \item There seems to be little work on verifying Java compilers for embedded systems.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{}
+\begin{center}
+{\huge Any Questions?}
+\end{center}
+\end{frame}
+
+\beginbackup
+
+\backupend
+
+\end{document}

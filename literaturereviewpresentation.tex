@@ -168,26 +168,36 @@
   \item Burstall and Landin\cite{burstall1969}
     \begin{itemize}
     \item Source: expression language similar to McCarthy and Painter's, but allowing for more operators.
-    \item Target: several intermediate machines, including a stack machine and a machine similar to McCarthy and Painter's.
+    \item Target: several intermediate machines
     \item Definition of Correctness: construction of homomorphisms between algebras
     \end{itemize}
   \end{itemize}
-  \begin{center}
-    \begin{tikzpicture}
-      \node[align=center] (S)  at (0cm,2.5cm) {expression\\algebra};
-      \node[align=center] (M)  at (0cm,0cm)   {value\\algebra};
-      \node[align=center] (T1) at (4cm,2.5cm) {stack machine\\code};
-      \node[align=center] (U1) at (4cm,0cm)   {stack machine\\states};
-      \node[align=center] (T2) at (8cm,2.5cm) {stack machine\\code};
-      \node[align=center] (U2) at (8cm,0cm)   {stack machine\\states};
-      %TODO: make diagram show intermediate machines
-      
-      \path (S)  edge[->] node[align=center, above] {compile}   (T1);
-      \path (S)  edge[->] node[align=right, left]   {interpret} (M);
-      \path (T1) edge[->] node[align=left, right]   {execute}   (U1);
-      \path (M)  edge[->] node[align=center, above] {load}      (U1);
-    \end{tikzpicture}
-  \end{center}
+    {\scriptsize
+      \begin{tikzpicture}
+        \node[align=center] (S)  at (0cm,2.5cm) {expression\\algebra};
+        \node[align=center] (M)  at (0cm,0cm)   {value\\algebra};
+        \node[align=center] (T1) at (3cm,2.5cm) {stack machine\\program};
+        \node[align=center] (U1) at (3cm,0cm)   {stack machine\\state\\transformations};
+        \node[align=center] (T2) at (6cm,2.5cm) {store-pointer\\program};
+        \node[align=center] (U2) at (6cm,0cm)   {store-pointer\\state\\transformations};
+        \node at (7.5cm,0cm) {$\cdots$};
+        \node at (7.5cm,2.5cm) {$\cdots$};
+        \node[align=center] (T3) at (9cm,2.5cm) {accumulator\\machine\\program};
+        \node[align=center] (U3) at (9cm,0cm)   {accumulator\\machine state\\transformations};
+        % TODO: make diagram show intermediate machines
+        
+        \path (S)  edge[->] node[align=center, above] {compile}   (T1);
+        \path (S)  edge[->] node[align=right, left]   {interpret} (M);
+        \path (T1) edge[->] node[align=left, right]   {execute}   (U1);
+        \path (M)  edge[->] node[align=center, above] {load}      (U1);
+
+        \path (T1) edge[->] node[align=center, above] {compile}   (T2);
+        \path (U1) edge[->] node[align=center, above] {convert}   (U2);
+        \path (T2) edge[->] node[align=left, right]   {execute}   (U2);
+
+        \path (T3) edge[->] node[align=left, right]   {execute}   (U3);
+      \end{tikzpicture}
+    }
 \end{slide}
 
 \begin{slide}{Early Work}
@@ -196,7 +206,7 @@
     \begin{itemize}
     \item Source: simple ALGOL-like language
     \item Target: stack machine that allows jumps
-    \item Definition of correctness: equality between the source semantics and the composition of the compilation function, the target semantics and a function to extract the source state of the machine
+    \item Definition of correctness: commuting diagram
     \item Partially mechanised proof using LCF
     \end{itemize}
   \end{itemize}
