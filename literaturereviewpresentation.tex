@@ -294,7 +294,7 @@
   \end{center}
 \end{slide}
       
-      \subsection{Recent Work}
+\subsection{Recent Work}
       
 \begin{slide}{Recent Work}
   \begin{itemize}
@@ -342,35 +342,50 @@
 \begin{slide}{ASM approach}
   St\"{a}rk, Schmid and B\"orger\cite{stark2001}
   \begin{itemize}
-  \item Source: the whole of Java
-  \item Target: JVM with a few instructions not supported
-  \item Definition of Correctness:
-    \begin{itemize}
-    \item Defines Java and the JVM in terms of abstract state machines (ASMs)
-    \item Splits Java into sublanguages: imperative, procedural, object-oriented, exception-handling, concurrent
-    \item Requires equivalences between the Java ASM and the JVM ASM to be satisfied for the compilation to be correct.
-    \item Proves correctness by induction over the structure of Java code
-    \end{itemize}
+  \item Compiles most of Java to a JVM with a few instructions not supported
+  \item Defines Java and the JVM in terms of abstract state machines (ASMs)
+  \item Splits Java into sublanguages
   \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,2.5cm) {Java};
+      \node[align=center] (T) at (6cm,2.5cm) {JVM bytecode};
+      \node[align=center] (M) at (0cm,0cm)   {Java ASM\\transformations};
+      \node[align=center] (U) at (6cm,0cm)   {JVM ASM\\transformations};
+      
+      \path (S) edge[->] node[align=center, above] {compile}                    (T);
+      \path (S) edge[->] node[align=right, left]   {ASM\\definition}            (M);
+      \path (T) edge[->] node[align=left, right]   {ASM\\definition}            (U);
+      \path (M) edge[->] node[align=center, above] {equivalences\\between ASMs} (U);
+    \end{tikzpicture}
+  \end{center}
 \end{slide}
 
 \subsection{Compiler Correctness for subsets of Java}
 
 \begin{slide}{ROOL}
 %borba2000, borba2004, cavalcanti2000
+  \scriptsize
   Duran\cite{duran2005, duran2010}
   \begin{itemize}
-  \item Source: ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000}
-    \begin{itemize}
-    \item Subset of Java with specification features
-    \item Laws developed for reasoning about object-oriented languages\cite{borba2000}
-    \end{itemize}
-  \item Target: RVM (ROOL Virtual Machine)
-    \begin{itemize}
-    \item Similar to a JVM running a subset of Java bytecode
-    \end{itemize}
-  \item Definition of Correctness: algebraic approach
+  \item Source: ROOL (Refinement Object-Oriented Language)\cite{cavalcanti2000} --- subset of Java with specification features
+  \item Target: RVM (ROOL Virtual Machine) --- similar to a JVM running a subset of Java bytecode
+  \item Uses the algebraic approach
   \end{itemize}
+  \begin{center}
+    \begin{tikzpicture}
+      {\scriptsize
+        \draw (0.5cm,1cm) |- (9.5cm,4cm) |- (0.5cm,1cm);
+        \draw (5cm,3.5cm) node[align=center] {ROOL (Java subset +\\specification features)};
+        
+        \draw (2cm,2.4cm) circle[radius=1.2cm]               node[align=center] {ROOL\\Program};
+        \draw (8cm,2.4cm) circle[radius=1.2cm] ++(0cm,0.8cm) node[align=center] {RVM};
+        \draw (8cm,2.2cm) circle[radius=0.85cm]              node[align=center] {RVM\\Instructions};
+        
+        \path (3.2cm,2.4cm) edge[->] node[align=center, above] {\Large $\sqsubseteq$} node[align=center, below] {Refinement\\Strategy\\(Compilation)} (6.8cm,2.4cm);
+      }
+    \end{tikzpicture}
+  \end{center}
 \end{slide}
 
 \begin{slide}{Java Compilers in Isabelle/HOL}
