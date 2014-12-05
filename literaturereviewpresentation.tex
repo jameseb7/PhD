@@ -407,21 +407,11 @@
   \end{itemize}
 \end{slide}
 
-\begin{slide}{Embedded Systems}
-  \begin{itemize}
-  \item Schultz\cite{schultz2003} --- compiling Java to native code
-  \item Varma and Bhattacharyya\cite{varma2004} --- compiling Java to C
-  \item Icecap Hardware Virtual Machine (HVM)\cite{sondergaard2012, korsholm2014} --- compiling SCJ to C
-  \item No formal verification work done
-  \end{itemize}
-%schultz2003, varma2004
-\end{slide}
-
 \begin{frame}
   \frametitle{Summary}
   \tiny
   \rowcolors{2}{white}{gray!30}
-  \begin{tabular}{p{2.6cm}| b{1.6cm} b{0.7cm} b{0.8cm} b{0.8cm} b{1cm}}
+  \begin{tabular}{p{2.6cm}| b{1.6cm} b{0.9cm} b{0.9cm} b{0.9cm} b{1cm}}
       & St\"{a}rk, Schmid \& B\"{o}rger\newline(2001) %\cite{stark2001} 
       & Duran\newline(2005) %\cite{duran2005} 
       & Strecker\newline(2002) %\cite{strecker2002}   
@@ -447,8 +437,22 @@
       & \yes & \no  & \no  & \no  & \no  \\
       Concurrency
       & \no  & \no  & \no  & \no  & \yes \\
+      Approach to correctness
+      & ASM approach & algebraic approach & commuting diagram & commuting diagram & commuting diagram \\
+      Mechanised
+      & no   & no   & yes  & yes  & yes  \\
   \end{tabular}
 \end{frame}
+
+\begin{slide}{Embedded Systems}
+  \begin{itemize}
+  \item Schultz\cite{schultz2003} --- compiling Java to native code
+  \item Varma and Bhattacharyya\cite{varma2004} --- compiling Java to C
+  \item Icecap Hardware Virtual Machine (HVM)\cite{sondergaard2012, korsholm2014} --- compiling SCJ to C
+  \item No formal verification work done
+  \end{itemize}
+%schultz2003, varma2004
+\end{slide}
 
 \section{Conclusion}
 
