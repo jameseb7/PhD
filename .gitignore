@@ -39,6 +39,9 @@
 # amsthm
 *.thm
 
+# backup files
+*~
+
 # beamer
 *.nav
 *.snm
