@@ -15,14 +15,18 @@
 \maketitle
 
 \section{Introduction}
-\begin{itemize}
-  \item Popularity of Java
-  \item Use of Java in embedded systems
-  \item Importance of program correctness
-  \item Importance of compiler correctness
-  \item Difficulties of Java on embedded systems
-  \item The need for a correct SCJ compiler for embedded systems
-\end{itemize}
+
+\subsection{Motivation}
+
+Since its release in 1995, the Java programming language\cite{gosling2013} has increased in popularity and is now used on a wide variety of platforms.
+This popularity has spawned many variants for Java for different uses, including JavaCard\cite{chen2000}, Java ME \cite{oracle2014} and the Real-Time Specification for Java (RTSJ) \cite{gosling2000}, as well as some languages derived from Java such as Scala\cite{lausanne2015} and Ceylon\cite{redhat2015}.
+
+One use of Java that is of particular interest is in safety-critical embedded systems, with the recent development of Safety-Critical Java\cite{locke2013}.
+While safety-critical systems follow from the use of Java in other embedded systems such as smart cards and TV set-top boxes, safety-critical embedded systems present their own challenges in terms of ensuring the safety of the software while meeting the size and resource constraints of embedded systems.
+
+Work has already been done on systems to develop correct Safety-Critical Java programs from formal specifications\cite{cavalcanti2011, cavalcanti2013} but it must be shown that the programs can be executed correctly in order to be certain of the resultant software's correctness.
+This is an area where Java has particular difficulty since Java programs are normally compiled to Java bytecode which is then run on the Java Virtual Machine (JVM).
+The standard JVM is rather large and complex, making it unsuitable for embedded systems, and JVMs created for embedded systems\cite{thomm2010,caska2011} tend to focus on achieving low resource usage, which results in them being hard to verify.
 
 \section{Literature Review}
 
@@ -81,4 +85,6 @@ Though the use of partial equality and the equational way in which McCarthy and 
   \caption{A diagram showing how McCarthy and Painter's definition of compiler correctness follows the commuting diagram approach}
   \label{mccarthy1967-diagram}
 \end{figure}
+
+\printbibliography
 \end{document}
