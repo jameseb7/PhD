@@ -22,13 +22,20 @@ Since its release in 1995, the Java programming language~\cite{gosling2013} has 
 This popularity means that Java has been used in a wide variety of areas including desktop applications, on the internet in the form of Java applets, on smartcards~\cite{chen2000} and on mobile devices~\cite{oracle2014}.
 Several languages derived from Java have also been created, including Scala~\cite{lausanne2015} and Ceylon~\cite{redhat2015}, as well as older variants of Java such as MultiJava~\cite{clifton2006} and Pizza~\cite{odersky1997}, which have in turn contributed to the development of Java.
 
-%TODO: discuss RTSJ \cite{gosling2000} below 
-One use of Java that is of particular interest is in safety-critical embedded systems, with the recent development of Safety-Critical Java~\cite{locke2013}.
-While safety-critical systems follow from the use of Java in other embedded systems such as smart cards and TV set-top boxes, safety-critical embedded systems present their own challenges in terms of ensuring the safety of the software while meeting the size and resource constraints of embedded systems.
+One use of Java that is of particular interest is its use in embedded systems.
+While early versions of Java were developed with the intention of using them on embedded systems, particularly TV set-top boxes, the technology was not well recieved and it was only in the growing sector of the internet that Java intitially found a market.
+However, it was soon realised that the portability, modularity, safety and security benefits of Java could be of great use in embedded systems.
+This required the creation of specialised Java virtual machines as the standard JVM was too large for most embedded systems and much research has gone into making increasingly smaller virtual machines to increase the range of devices that Java can be used on~\cite{caska2011,thomm2010}.
+
+%TODO: discuss RTSJ \cite{gosling2000}
+%TODO: discuss SCJ \cite{locke2013}
 
 Work has already been done on systems to develop correct Safety-Critical Java programs from formal specifications~\cite{cavalcanti2011, cavalcanti2013} but it must be shown that the programs can be executed correctly in order to be certain of the resultant software's correctness.
 This is an area where Java has particular difficulty since Java programs are normally compiled to Java bytecode which is then run on the Java Virtual Machine (JVM).
 The standard JVM is rather large and complex, making it unsuitable for embedded systems, and JVMs created for embedded systems~\cite{thomm2010,caska2011} tend to focus on achieving low resource usage, which results in them being hard to verify.
+
+%TODO: mention the work done on compiling Java for embedded systems
+%TODO: mention the importance of compiler verification and some of the work done
 
 \section{Literature Review}
 
