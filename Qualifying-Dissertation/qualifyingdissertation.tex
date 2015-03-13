@@ -28,6 +28,10 @@ However, it was soon realised that the portability, modularity, safety and secur
 This required the creation of specialised Java virtual machines as the standard JVM was too large for most embedded systems and much research has gone into making increasingly smaller virtual machines to increase the range of devices that Java can be used on~\cite{caska2011,thomm2010}.
 
 %TODO: discuss RTSJ \cite{gosling2000}
+Many embedded systems are also real-time systems but features of Java such as the garbage collector and the concurrency model make it unsuitable for real-time systems, where strict guarantees about timing properties must be made.
+To rectify these problems the Real-Time Specification for Java (RTSJ)~\cite{gosling2000} was created.
+The RTSJ extends Java with a scoped memory model and a more predictable scheduling system, which allow RTSJ programs to fulfil real-time requirements.
+
 %TODO: discuss SCJ \cite{locke2013}
 
 Work has already been done on systems to develop correct Safety-Critical Java programs from formal specifications~\cite{cavalcanti2011, cavalcanti2013} but it must be shown that the programs can be executed correctly in order to be certain of the resultant software's correctness.
