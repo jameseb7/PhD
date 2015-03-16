@@ -11,6 +11,8 @@
 
 \bibliography{literature} 
 
+\newcommand{\Circus}{{\sffamily \slshape Circus}}
+
 \begin{document}
 \maketitle
 
@@ -27,16 +29,19 @@ While early versions of Java were developed with the intention of using them on 
 However, it was soon realised that the portability, modularity, safety and security benefits of Java could be of great use in embedded systems.
 This required the creation of specialised Java virtual machines as the standard JVM was too large for most embedded systems and much research has gone into making increasingly smaller virtual machines to increase the range of devices that Java can be used on~\cite{caska2011,thomm2010}.
 
-%TODO: discuss RTSJ \cite{gosling2000}
 Many embedded systems are also real-time systems but features of Java such as the garbage collector and the concurrency model make it unsuitable for real-time systems, where strict guarantees about timing properties must be made.
 To rectify these problems the Real-Time Specification for Java (RTSJ)~\cite{gosling2000} was created.
 The RTSJ extends Java with a scoped memory model and a more predictable scheduling system, which allow RTSJ programs to fulfil real-time requirements.
 
-%TODO: discuss SCJ \cite{locke2013}
+While the RTSJ addresses real-time requirements of embedded systems, many embedded systems are also safety-critical.
+Safety-critical programs must usually be shown to conform to certain standards of safety such as \mbox{DO-178C} and ISO~26262, so must be amenable to static analysis in order to determine if they meet the required standards.
+To better allow for the development of safety-critical programs that meet these requirements in Java, the Safety-Critical Java (SCJ) specification~\cite{locke2013} was created.
+SCJ is a subset of the RTSJ that contains only the features that can be statically reasoned about, which means that features such as the garbage-collected heap and dynamic class loading are absent from SCJ.
+This facilitates the creation of SCJ programs that fulfil formal specifications, indeed work has already been done on developing correct SCJ programs from formal specifications written in \Circus~\cite{cavalcanti2011, cavalcanti2013}.
 
-Work has already been done on systems to develop correct Safety-Critical Java programs from formal specifications~\cite{cavalcanti2011, cavalcanti2013} but it must be shown that the programs can be executed correctly in order to be certain of the resultant software's correctness.
-This is an area where Java has particular difficulty since Java programs are normally compiled to Java bytecode which is then run on the Java Virtual Machine (JVM).
-The standard JVM is rather large and complex, making it unsuitable for embedded systems, and JVMs created for embedded systems~\cite{thomm2010,caska2011} tend to focus on achieving low resource usage, which results in them being hard to verify.
+%but it must be shown that the programs can be executed correctly in order to be certain of the resultant software's correctness.
+%This is an area where Java has particular difficulty since Java programs are normally compiled to Java bytecode which is then run on the Java Virtual Machine (JVM).
+%The standard JVM is rather large and complex, making it unsuitable for embedded systems, and JVMs created for embedded systems~\cite{thomm2010,caska2011} tend to focus on achieving low resource usage, which results in them being hard to verify.
 
 %TODO: mention the work done on compiling Java for embedded systems
 %TODO: mention the importance of compiler verification and some of the work done
