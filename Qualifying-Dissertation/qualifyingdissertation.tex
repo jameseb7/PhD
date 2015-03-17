@@ -19,36 +19,48 @@
 
 \section{Introduction}
 
+% need a short paragraph describing the structure of the Introduction
+
 \subsection{Motivation}
 
 Since its release in 1995, the Java programming language~\cite{gosling2013} has increased in popularity and is now used on a wide variety of platforms.
 This popularity means that Java has been used in a wide variety of areas including desktop applications, on the internet in the form of Java applets, on smartcards~\cite{chen2000} and on mobile devices~\cite{oracle2014}.
 Several languages derived from Java have also been created, including Scala~\cite{lausanne2015} and Ceylon~\cite{redhat2015}, as well as older variants of Java such as MultiJava~\cite{clifton2006} and Pizza~\cite{odersky1997}, which have in turn contributed to the development of Java.
+% add a short sentence describing each langauage, try to find more non-webpage references
 
 One use of Java that is of particular interest is its use in embedded systems.
-While early versions of Java were developed with the intention of using them on embedded systems, particularly TV set-top boxes, the technology was not well recieved and it was only in the growing sector of the internet that Java intitially found a market.
-However, it was soon realised that the portability, modularity, safety and security benefits of Java could be of great use in embedded systems.
-This required the creation of specialised Java virtual machines as the standard JVM was too large for most embedded systems and much research has gone into making increasingly smaller virtual machines to increase the range of devices that Java can be used on~\cite{caska2011,thomm2010}.
+While early versions of Java were developed with the intention of using them on embedded systems, particularly TV set-top boxes, the technology was not well received and it was only in the growing sector of the internet that Java intitially found a market. % need citation for this - horstmann2002?
+However, it was soon realised that the portability, modularity, safety and security benefits of Java could be of great use in embedded systems. % need citation for this
+This required the creation of specialised Java virtual machines as the standard JVM is too large for most embedded systems and much research has gone into making increasingly smaller virtual machines to increase the range of devices that Java can be used on~\cite{caska2011,thomm2010}.
 
-Many embedded systems are also real-time systems but features of Java such as the garbage collector and the concurrency model make it unsuitable for real-time systems, where strict guarantees about timing properties must be made.
+Many embedded systems are also real-time systems, but features of Java such as the garbage collector and the concurrency model make it unsuitable for real-time systems, where strict guarantees about timing properties must be made.
 To rectify these problems the Real-Time Specification for Java (RTSJ)~\cite{gosling2000} was created.
 The RTSJ extends Java with a scoped memory model and a more predictable scheduling system, which allow RTSJ programs to fulfil real-time requirements.
 
 While the RTSJ addresses real-time requirements of embedded systems, many embedded systems are also safety-critical.
-Safety-critical programs must usually be shown to conform to certain standards of safety such as \mbox{DO-178C} and ISO~26262, so must be amenable to static analysis in order to determine if they meet the required standards.
-To better allow for the development of safety-critical programs that meet these requirements in Java, the Safety-Critical Java (SCJ) specification~\cite{locke2013} was created.
+Safety-critical programs must usually be shown to conform to certain standards of safety such as, \mbox{DO-178C} and ISO~26262, and so must be amenable to static analysis in order to determine if they meet the required standards.
+To support the development of safety-critical programs that meet these requirements in Java, the Safety-Critical Java (SCJ) specification~\cite{locke2013} has been created.
 SCJ is a subset of the RTSJ that contains only the features that can be statically reasoned about, which means that features such as the garbage-collected heap and dynamic class loading are absent from SCJ.
-This facilitates the creation of SCJ programs that fulfil formal specifications, indeed work has already been done on developing correct SCJ programs from formal specifications written in \Circus~\cite{cavalcanti2011, cavalcanti2013}.
+This facilitates the creation of SCJ programs that fulfil formal specifications; indeed work has already been done on developing correct SCJ programs from formal specifications~\cite{cavalcanti2011, cavalcanti2013}.
 
 While it can be shown that SCJ programs are correct, it must still be ensured those programs will be run correctly.
 In the case of Java this generally means ensuring the Java Virtual Machine (JVM) is correct.
-However, in the case of virtual machines for embedded systems the priorities are usually size and speed, which generally results in machines that are hard to verify.
-In any case, virtual machines that rely on interpreting bytecode are unsuitable real-time embedded systems as they are likely to be slower than running native code directly.
+However, in the case of virtual machines for embedded systems, the priorities are usually size and speed, which generally results in machines that are hard to verify.
+In any case, virtual machines that rely on interpreting bytecode are unsuitable for real-time embedded systems as they are likely to be slower than running native code directly.
 
-An alternative method to run a Java program would be to compile it to native code and several authors have suggested doing so either directly~\cite{schultz2003} or via C~\cite{varma2004, korsholm2014}.
-This allows correct running of an otherwise correct SCJ program to be viewed as a compiler verification problem and there has been much research in the past into compiler correctness that can be drawn upon.
+An alternative method to run a Java program is to compile it to native code and several authors have suggested doing so either directly~\cite{schultz2003} or via C~\cite{varma2004, korsholm2014}.
+This allows correct running of an otherwise correct SCJ program to be viewed as a compiler verification problem.
 
-%TODO: mention some of the work done on compiler correctness
+There has been much research in the past into compiler correctness.
+% mention why compiler correctness is important and briefly cover work done - about 2 paragraphs
+
+% explain that there is a gap with no verification for SCJ compilers for embedded systems
+
+\subsection{Objectives}
+
+% describe the requirements for the verified compiler for SCJ
+
+\subsection{Document Structure}
 
 \section{Literature Review}
 
@@ -107,6 +119,10 @@ Though the use of partial equality and the equational way in which McCarthy and 
   \caption{A diagram showing how McCarthy and Painter's definition of compiler correctness follows the commuting diagram approach}
   \label{mccarthy1967-diagram}
 \end{figure}
+
+\section{Research Proposal}
+
+\section{Preliminary Work}
 
 \printbibliography
 \end{document}
