@@ -170,7 +170,26 @@ to areas such as scheduling and memory management.
 
 \subsection{Document Structure}
 
+Having given a brief overview of the area of study and identified the problem I
+wish to consider, the remainder of this report will proceed as follows: 
 
+In Section~\ref{scj-sec} I will give a more in-depth description of SCJ as a
+whole, particularly identifiying its differences from standard Java that make
+standard JVMs unsuitable for running SCJ programs and so motivate the need for
+an SCJ virtual machine. I will also consider some of the existing virtual
+machines that have been created to run SCJ programs.
+
+ Then, in Section~\ref{compiler-correctness-sec}, I will
+discuss approaches to showing the correctness of compilers, describing and
+comparing the commuting diagram and algebraic approaches before discussing how
+these approaches have been applied to compilation of Java-like
+languages.
+
+Finally, in Section~\ref{requirements-sec}, I will present the structure of the
+proposed research and describe the intended approach before presenting some
+preliminary results identifying the requirements of an SCJ virtual machine. I
+will end by presenting a formal model of the identified requirements in the
+\Circus{} specification language in Section~\ref{formal-model-sec}.
 
 % Description of SCJ and review of SCJ VMs - use stuff from JTRES paper, maybe extend it a bit
 % Review the literature on compiler correctness 
