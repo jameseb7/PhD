@@ -276,7 +276,26 @@ SCJ.
 \section{Compiler Correctness}
 \label{compiler-correctness-sec}
 
+Due to the importance of compiler correctness to the correctness of the programs
+produced by it, there has been much research over the years into the area of
+compiler correctness. Most of the work done follows a similar approach, which I
+will term the commuting diagram approach as it can be viewed as showing that a
+particular diagram commutes. I will discuss the commuting diagram approach in
+Section~\ref{commuting-diagram-sec}.
+
+An alternative approach to compiler verification is the algebraic approach that
+was developed in the early 90s and is based on the concepts of refinement
+calculi designed for deriving software from specifications of behaviour. I will
+explain the algebraic approach in Section~\ref{algebraic-sec} and discuss how it
+differs from the commuting diagram approach.
+
+I will finish in Section~\ref{java-correctness-sec} by reviewing some of the
+literature on correctness of compilers for Java-like languages, looking at how
+the techniques of compiler correctness have been applied in the case of Java and
+comparing the different approaches.
+
 \subsection{Commuting Diagram Approach}
+\label{commuting-diagram-sec}
 
 % As the correctness of the compiler is of great importance to the correctness of
 % the programs produced using it, there has been much research in the past into
@@ -361,8 +380,10 @@ SCJ.
 % \end{figure}
 
 \subsection{Algebraic Approach}
+\label{algebraic-sec}
 
 \subsection{Correctness of Java Compilers}
+\label{java-correctness-sec}
 
 \section{Requirements of a Safety-Critical Java Virtual Machine}
 \label{requirements-sec}
