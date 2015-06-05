@@ -103,9 +103,9 @@ of SCJ from standard Java mean that the standard JVM is not suitable for running
 SCJ programs.  A specialised virtual machine is required and the specialised
 virtual machine must also be verified.
 
-In the case of virtual machines for embedded systems, the priorities are usually size and
-speed, which generally results in machines that are hard to verify.  In any
-case, virtual machines that rely on interpreting bytecode are unsuitable for
+In the case of virtual machines for embedded systems, the priorities are usually
+size and speed, which generally results in machines that are hard to verify.  In
+any case, virtual machines that rely on interpreting bytecode are unsuitable for
 real-time embedded systems as they are likely to be slower than running native
 code directly.
 
@@ -116,24 +116,49 @@ approach including Fiji VM~\cite{pizlo2009}, Icecap HVM~\cite{sondergaard2012}
 and OVM~\cite{armbruster2007}.  This allows correct running of an otherwise
 correct SCJ program to be viewed as a compiler verification problem.
 
-There has been much research in the past into compiler correctness as correct 
+There has been much research in the past into compiler correctness as correct
 compilation is important to the correct functioning of a program, even when the
 program itself has been shown to be correct.  Much of the work follows a
 commuting diagram approach, in which the compilation is shown to be consistent
 with transformation between the semantics of the source and target
-languages\cite{morris1973, thatcher1979}. This approach is apparent in much of the early work such as that of McCarthy and Painter~\cite{mccarthy1967}, as well as in more recent work such as the CompCert project~\cite{leroy2009a, leroy2009b}. There has also been work done using this approach in automated theorem provers~\cite{klein2006, milner1972, nipkow2000}, which provide additional certainty that the proof is correct and can also provide code generation facilities to allow creation of a working compiler.
+languages\cite{morris1973, thatcher1979}. This approach is apparent in much of
+the early work such as that of McCarthy and Painter~\cite{mccarthy1967}, as well
+as in more recent work such as the CompCert project~\cite{leroy2009a,
+  leroy2009b}. There has also been work done using this approach in automated
+theorem provers~\cite{klein2006, milner1972, nipkow2000}, which provide
+additional certainty that the proof is correct and can also provide code
+generation facilities to allow creation of a working compiler.
 
-An alternative approach to compiler verification is the algebraic approach~\cite{hoare1991, sampaio1993}, based on modelling compilation using refinement calculus~\cite{back1981, morgan1990, morris1987}. This approach appears to be less commonly used but has been applied to Java~\cite{duran2005, duran2010} and hardware description languages~\cite{perna2010, perna2011}. This approach is also quite amenable to automation as it relies on refinement laws that can be applied by a term rewriting system.
+An alternative approach to compiler verification is the algebraic
+approach~\cite{hoare1991, sampaio1993}, based on modelling compilation using
+refinement calculus~\cite{back1981, morgan1990, morris1987}. This approach
+appears to be less commonly used but has been applied to Java~\cite{duran2005,
+  duran2010} and hardware description languages~\cite{perna2010,
+  perna2011}. This approach is also quite amenable to automation as it relies on
+refinement laws that can be applied by a term rewriting system.
 
-There is a clear need for formal verification of SCJ virtual machines due to the safety-critical nature of the systems involved and the fact that safety standards such as DO-178C require it at the highest safety levels. However, there appears to be little work done in that area and no known SCJ virtual machines have been formally verified.
+There is a clear need for formal verification of SCJ virtual machines due to the
+safety-critical nature of the systems involved and the fact that safety
+standards such as DO-178C require it at the highest safety levels. However,
+there appears to be little work done in that area and no known SCJ virtual
+machines have been formally verified.
 
 % explain that there is a gap with no verification for SCJ compilers for embedded systems
 
 \subsection{Objectives}
 
-Given that there is a need for a formally verified virtual machine that can run SCJ programs efficiently on an embedded system, my objective is to identify the requirements of such a virtual machine. These requirements will be expressed in formal notation so as to permit proofs of correctness, and allow verification and construction of provably correct virtual machines.
+Given that there is a need for a formally verified virtual machine that can run
+SCJ programs efficiently on an embedded system, my objective is to identify the
+requirements of such a virtual machine. These requirements will be expressed in
+formal notation so as to permit proofs of correctness, and allow verification
+and construction of provably correct virtual machines.
 
-As many existing SCJ virtual machines, particularly those targetting embedded systems, take the approach of compiling Java bytecode to native code in order to improve speed, formal specification of a SCJ virtual also includes the specification and verification of such a compiler. This must be done in addition to ensuring the virtual machine caters for the requirements of SCJ with regard to areas such as scheduling and memory management.
+As many existing SCJ virtual machines, particularly those targetting embedded
+systems, take the approach of compiling Java bytecode to native code in order to
+improve speed, formal specification of a SCJ virtual also includes the
+specification and verification of such a compiler. This must be done in addition
+to ensuring the virtual machine caters for the requirements of SCJ with regard
+to areas such as scheduling and memory management.
 
 \subsection{Document Structure}
 
@@ -150,8 +175,11 @@ As many existing SCJ virtual machines, particularly those targetting embedded sy
 
 \section{Literature Review}
 
-As the correctness of the compiler is of great importance to the correctness of the programs produced using it, there has been much research in the past into compiler correctness.
-The approach that was used in the earliest works on compiler correctness, which is still widely used today, is to show that a diagram of the form shown in Figure~\ref{commuting-diagram} commutes.
+As the correctness of the compiler is of great importance to the correctness of
+the programs produced using it, there has been much research in the past into
+compiler correctness.  The approach that was used in the earliest works on
+compiler correctness, which is still widely used today, is to show that a
+diagram of the form shown in Figure~\ref{commuting-diagram} commutes.
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}
@@ -169,25 +197,47 @@ The approach that was used in the earliest works on compiler correctness, which 
   \caption{The commuting diagram used in the traditional approach to compiler verification}
   \label{commuting-diagram}
 \end{figure}
-Lockwood Morris\cite{morris1973} first observed that the commuting diagram approach was the usual approach to showing compiler correctness, though his version of the diagram had a decode function relating target meanings to source meanings.
-Thatcher \emph{et al.}\cite{thatcher1979}, in extending Lockwood Morris' verification of a compiler, noticed that an encode function was more useful in reasoning and so included it in their diagram instead of the decode function.
+Lockwood Morris\cite{morris1973} first observed that the commuting diagram
+approach was the usual approach to showing compiler correctness, though his
+version of the diagram had a decode function relating target meanings to source
+meanings.  Thatcher \emph{et al.}\cite{thatcher1979}, in extending Lockwood
+Morris' verification of a compiler, noticed that an encode function was more
+useful in reasoning and so included it in their diagram instead of the decode
+function.
 
-The commuting diagram approach can be seen in some of the earliest work on compiler correctness, particularly McCarthy and Painter's paper from 1967\cite{mccarthy1967}.
-McCarthy and Painter show the correctness of a compiler for a very simple expression language that targets a simple 4-instruction machine.
-The source language consists only of constants, variables and addition to form expressions such as $(x + 3) + (y + z)$, and a function that evaluates these expressions to values under a particular variable binding forns the semantics of the source language.
-The target machine consists of an acumulator register and a memory store with four instructions:
+The commuting diagram approach can be seen in some of the earliest work on
+compiler correctness, particularly McCarthy and Painter's paper from
+1967\cite{mccarthy1967}.  McCarthy and Painter show the correctness of a
+compiler for a very simple expression language that targets a simple
+4-instruction machine.  The source language consists only of constants,
+variables and addition to form expressions such as $(x + 3) + (y + z)$, and a
+function that evaluates these expressions to values under a particular variable
+binding forns the semantics of the source language.  The target machine consists
+of an acumulator register and a memory store with four instructions:
 \begin{itemize}
-  \item LI $\alpha$ --- which loads the immediate value $\alpha$ into the accumulator
-  \item LOAD $x$ --- which loads a value from the memory location $x$ into the accumulator
-  \item STO $x$ --- which stores the value in the accumulator in memory location $x$
-  \item ADD $x$ --- which add the value at memory location $x$ to the value in the accumulator
+\item LI $\alpha$ --- which loads the immediate value $\alpha$ into the
+  accumulator
+  \item LOAD $x$ --- which loads a value from the memory location $x$ into the
+    accumulator
+  \item STO $x$ --- which stores the value in the accumulator in memory location
+    $x$
+  \item ADD $x$ --- which add the value at memory location $x$ to the value in
+    the accumulator
 \end{itemize}
-The semantics of this target machine are defined by a function that takes an intial state and a list of instructions and outputs the final state.
-McCarthy and Painter then define a compilation function from the source language to the target language.
-The correctness of the compiler is defined by providing a function that puts the computed value of an expression into the accumulator of a machine state. 
-It is then required that applying the function to the result of evaluating an expression is equivalent under a partial equality relation to the resultant state from compiling and running the expression.
-The reason for the use of a partial equality is to ensure that any temporary variables introduced in compilation are ignored when comparing the machine states.
-Though the use of partial equality and the equational way in which McCarthy and Painter state their definition of compiler correctness obscures it slightly, this can be seen as following the commuting diagram approach as shown in Figure~\ref{mccarthy1967-diagram}.
+The semantics of this target machine are defined by a function that takes an
+intial state and a list of instructions and outputs the final state.  McCarthy
+and Painter then define a compilation function from the source language to the
+target language.  The correctness of the compiler is defined by providing a
+function that puts the computed value of an expression into the accumulator of a
+machine state.  It is then required that applying the function to the result of
+evaluating an expression is equivalent under a partial equality relation to the
+resultant state from compiling and running the expression.  The reason for the
+use of a partial equality is to ensure that any temporary variables introduced
+in compilation are ignored when comparing the machine states.  Though the use of
+partial equality and the equational way in which McCarthy and Painter state
+their definition of compiler correctness obscures it slightly, this can be seen
+as following the commuting diagram approach as shown in
+Figure~\ref{mccarthy1967-diagram}.
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}
@@ -202,7 +252,8 @@ Though the use of partial equality and the equational way in which McCarthy and 
       \path (M) edge[->] node[align=center, above] {load value\\to accumulator} (U);
     \end{tikzpicture}
   \end{center}
-  \caption{A diagram showing how McCarthy and Painter's definition of compiler correctness follows the commuting diagram approach}
+  \caption{A diagram showing how McCarthy and Painter's definition of compiler
+    correctness follows the commuting diagram approach}
   \label{mccarthy1967-diagram}
 \end{figure}
 
