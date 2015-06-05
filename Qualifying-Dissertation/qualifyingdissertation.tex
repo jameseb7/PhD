@@ -1,4 +1,4 @@
-\documentclass[a4paper,12pt]{article}
+\documentclass[a4paper,10pt]{article}
 
 \usepackage[in]{fullpage}
 \usepackage{parskip}
@@ -13,12 +13,21 @@
 
 \bibliography{literature} 
 
+%TC:group zed 0 displaymath
+%TC:group axdef 0 displaymath
+%TC:group schema 1 displaymath
+%TC:group circus 0 displaymath
+%TC:group circusaction 0 displaymath
+
 \begin{document}
 \maketitle
 
 \section{Introduction}
 
-% need a short paragraph describing the structure of the Introduction
+This section begins by explaining the motivation for the work decribed in
+this report. Then the objectives of the work, which come from the motivation,
+are described and, finally, the structure of the remainder of this report is
+described.
 
 \subsection{Motivation}
 
@@ -161,6 +170,8 @@ to areas such as scheduling and memory management.
 
 \subsection{Document Structure}
 
+
+
 % Description of SCJ and review of SCJ VMs - use stuff from JTRES paper, maybe extend it a bit
 % Review the literature on compiler correctness 
 %  - Two approaches: algebraic and commuting diagram
@@ -173,6 +184,7 @@ to areas such as scheduling and memory management.
 % - Discuss the formal model - similar to JTRES paper but room to go into more depth
 
 \section{Safety-Critical Java}
+\label{scj-sec}
 
 Safety-Critical Java is a variant of Java designed for writing Java programs
 where certifiability is an important concern.  SCJ is based upon the Real-Time
@@ -243,6 +255,7 @@ support for allocation in memory areas and preemptive scheduling is required for
 SCJ.
 
 \section{Compiler Correctness}
+\label{compiler-correctness-sec}
 
 \subsection{Commuting Diagram Approach}
 
@@ -333,9 +346,9 @@ SCJ.
 \subsection{Correctness of Java Compilers}
 
 \section{Requirements of a Safety-Critical Java Virtual Machine}
-\label{vm-services-sec}
+\label{requirements-sec}
 
-\begin{figure*}[ht]
+\begin{figure}[ht]
   \centering
   \begin{tikzpicture}
     \draw (0cm,0cm) rectangle (12cm,5.3cm);
@@ -363,7 +376,7 @@ SCJ.
     relation to the SCJ infrastructure and the operating system/hardware
     abstraction layer.}
   \label{scjvm-fig}
-\end{figure*}
+\end{figure}
 
 Figure~\ref{scjvm-fig} shows the components we have identified for an SCJ
 virtual machine (SCJVM).  The core execution environment handles the running of
@@ -426,7 +439,7 @@ the root backing store and the backing stores for the per-release memory of each
 schedulable object in a mission nested within the mission memory's backing
 store.
 
-\begin{figure*}[ht]
+\begin{figure}[ht]
   \centering
   \begin{tikzpicture}
     \draw (0,0) rectangle (12,3.7);
@@ -446,7 +459,7 @@ store.
   \end{tikzpicture}
   \caption{An illustration of an example memory layout}
   \label{memory-fig}
-\end{figure*}
+\end{figure}
 
 The operations of the memory manager API are summarised in
 Table~\ref{memory-manager-table}. In addition to the inputs and outputs
@@ -455,9 +468,10 @@ whether that be exceptions, global error flags or particular return values
 signalling errors. The conditions that cause an error to be reported are listed
 in the final column of the table.
 
-\begin{table*}[ht]
+\begin{table}[ht]
   \centering
-  \begin{tabular}{|l|p{3.5cm}|p{3.5cm}|p{4cm}|}
+  \footnotesize
+  \begin{tabular}{|l|p{3cm}|p{3cm}|p{3.6cm}|}
     Operation & Inputs & Outputs & Error Conditions \\
     \hline
     getRootBackingStore &
@@ -520,7 +534,7 @@ in the final column of the table.
   \end{tabular}
   \caption{The operations of the SCJVM memory manager}
   \label{memory-manager-table}
-\end{table*}
+\end{table}
 
 The root backing store described above is always available to the SCJ
 infrastructure through the \texttt{get\-Root\-Backing\-Store} operation. An SCJ
@@ -611,9 +625,10 @@ to the space allocated for the stack.
 The SCJVM scheduler manages the scheduling of threads. The operations of the
 scheduler are summarised in Table~\ref{scheduler-table}.
 
-\begin{table*}[ht]
+\begin{table}[ht]
   \centering
-  \begin{tabular}{|l|p{3.5cm}|p{2.5cm}|p{3cm}|}
+  \footnotesize
+  \begin{tabular}{|l|p{3cm}|p{2.2cm}|p{2.7cm}|}
     Operation & Inputs & Outputs & Error Conditions \\
     \hline
     getMaxSoftwarePriority &
@@ -706,7 +721,7 @@ scheduler are summarised in Table~\ref{scheduler-table}.
   \end{tabular}
   \caption{The operations of the SCJVM scheduler}
   \label{scheduler-table}
-\end{table*}
+\end{table}
 
 Each thread is scheduled according to a priority level. The SCJ standard
 requires that there be at least 28 priorities and separates them into hardware
@@ -827,9 +842,10 @@ allows for the time to be read and alarms to be set to trigger time-based
 events. The operations of the SCJVM real-time clock are summarised in
 Table~\ref{realtime-clock-table}.
 
-\begin{table*}[ht]
+\begin{table}[ht]
   \centering
-  \begin{tabular}{|l|p{2.5cm}|p{2.5cm}|p{3cm}|}
+  \footnotesize
+  \begin{tabular}{|l|p{0.9cm}|p{1.8cm}|p{2.3cm}|}
     Operation & Inputs & Outputs & Error Conditions \\
     \hline
     getSystemTime &
@@ -851,7 +867,7 @@ Table~\ref{realtime-clock-table}.
   \end{tabular}
   \caption{The operations of the SCJVM real-time clock}
   \label{realtime-clock-table}
-\end{table*}
+\end{table}
 
 The main function of the real-time clock API is to provide access to the system
 time through the \texttt{get\-System\-Time} operation. The SCJ API deals with
