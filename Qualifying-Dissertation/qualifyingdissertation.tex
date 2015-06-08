@@ -430,6 +430,14 @@ comparing the different approaches.
 \section{Requirements of a Safety-Critical Java Virtual Machine}
 \label{requirements-sec}
 
+For the purposes of specification, a Safety-Critical Java virtual machine
+(SCJVM) is seen as having the components shown in Figure~\ref{scjvm-fig}. The
+SCJVM is spilt into two parts: the core execution environment and the virtual
+machine services. The core execution environment handles the running of Java
+bytecode.  The virtual machine services support, for example, scheduling and
+memory management, that is, services that are required to support the SCJ
+infrastructure and the core execution environment.
+
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
@@ -460,22 +468,36 @@ comparing the different approaches.
   \label{scjvm-fig}
 \end{figure}
 
-Figure~\ref{scjvm-fig} shows the components we have identified for an SCJ
-virtual machine (SCJVM).  The core execution environment handles the running of
-Java bytecode.  The virtual machine services support, for example, scheduling
-and memory management, that is, services that are required to support the SCJ
-infrastructure and the core execution environment.
+The core execution environment is not necessarily required to use any particular
+means to run the bytecode.  It may interpret bytecode instructions, just-in-time
+compile the bytecode, or execute native code precompiled from Java bytecode (in
+such a case the compiler is regarded as part of the core execution
+environment). As many existing virtual machines for SCJ adopt the approach of
+compiling to native code, I intend to consider specification of the core
+execution environment as specification of a compiler from Java bytecode to
+C. The reason for the choice of C as a target language is the same as that of
+other SCJ virtual machines: C is a language already widely used in the area of
+embedded systems and is sufficiently lightweight to permit its use as a
+compilation target.
 
-We do not require the core execution environment to use any particular means to
-run the bytecode.  It may interpret bytecode instructions, just-in-time compile
-the bytecode, or execute native code precompiled from Java bytecode (in such a
-case the compiler is regarded as part of the core execution environment). As
-mentioned previously, we do not go into detail about the core execution
-environment here. Its semantics does not differ from the semantics of Java
-bytecode, except in the instructions relating to scheduling and memory
-management, where some changes are envisaged. It should also be noted that class
-loading is treated as part of the core execution environment and so it is bound
-by the requirement to load all classes at virtual machine startup.
+The approach I will use for specifying and verfying the compilation is the
+algebraic approach as it allows for verification to easily flow from
+specification without the need for an additional function to verify against as
+in the commuting diagram approach. While Java bytecode is the source language of
+the compilation, it may be better to have a model of a bytecode interpreter that
+resembles the normal form usually used in the algebraic approach and refine it
+to a model of C code, essentially applying the algebraic approach in
+reverse. The reason for this is that Java bytecode is relatively low-level and
+there is a similar model of Java bytecode in Duran's model of Java
+compilation. The benefit of having a model of a Java bytecode interpreter is
+that it provides a specification of an iterpreter as well as a compiler,
+allowing compilation and interpretation to be mixed, as it permitted by the
+Icecap HVM. The semantics is not expected differ from the standard semantics of
+Java bytecode, except in the instructions relating to scheduling and memory
+management, where some changes are envisaged, so the main challenge is in the
+compiler verification. It should also be noted that class loading is treated as
+part of the core execution environment and so it is bound by the requirement to
+load all classes at virtual machine startup.
 
 As can be seen from Figure~\ref{scjvm-fig}, we group the virtual machine
 services into three areas:
@@ -498,6 +520,9 @@ a full-featured operating system on which the virtual machine runs or may simply
 be a minimal set of services required to run the virtual machine.  The latter
 case is desirable for low-end embedded systems that lack the resources to
 run a general operating system.
+
+I will now proceed to present some preliminary results specifying the virtual
+machine services and constructing a formal model of them.
 
 \subsection{Memory Manager API}
 \label{memory-manager-sec}
