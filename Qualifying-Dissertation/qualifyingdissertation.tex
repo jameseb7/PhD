@@ -279,14 +279,20 @@ OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and PERC
 Pico~\cite{atego2015, richard2010}. Most of these are targeted at embedded
 systems with real time constraints.
 
-% mention Icecap's SCJ API implementation - check earlier versions of the JTRES
-% paper
-% mention that Icecap is free and open source
-Icecap also provides a lightweight Java bytecode interpreter and allows for
-interpreted code to be mixed with compiled code. HVM\textsubscript{TP} is a
-modification of the Icecap HVM's bytecode interpreter to improve time
-predictability and ensure that bytecode instructions are executed in constant
-time.
+The Fiji VM and Icecap HVM both take the approach of precompiling Java
+bytecode to C in order to allow for faster running programs with fewer
+memory resources.  Fiji VM is, however, not specifically concerned
+with SCJ; it is rather designed to run general real-time Java
+programs, though this includes providing support for SCJ.  By
+contrast, Icecap has been designed specifically to run SCJ
+programs. It includes an implementation of the SCJ libraries, although
+they cannot be easily decoupled from the virtual machine itself.
+
+Icecap also provides a lightweight Java bytecode interpreter and
+allows for interpreted code to be mixed with compiled
+code. HVM\textsubscript{TP} is a modification of the Icecap HVM's
+bytecode interpreter to improve time predictability and ensure that
+bytecode instructions are executed in constant time.
 
 OVM works on a principle of precompiling code for performance reasons, similar
 to Fiji VM and Icecap HVM, but translates Java to C++ instead of bytecode to C.
