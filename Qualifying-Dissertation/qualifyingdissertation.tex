@@ -339,12 +339,23 @@ comparing the different approaches.
 \subsection{Commuting Diagram Approach}
 \label{commuting-diagram-sec}
 
+Much of the work on compiler correctness can be seen as following the approach
+identified by Lockwood Morris~\cite{morris1973}, and later refined by Thatcher,
+Wagner and Wright~\cite{thatcher1979}. The approach is essentially that a
+compiler correctness proof should be a proof that the diagram shown in
+Figure~\ref{commuting-diagram} commutes, that is,
+\begin{displaymath}
+  \gamma \circ \psi = \phi \circ \epsilon .
+\end{displaymath}
+Lockwood Morris had the corners of the diagram as algebras, rather than merely
+sets, with the functions between them being homomorphisms in order to add
+additional structure to the compiler correctness proof.
 % As the correctness of the compiler is of great importance to the correctness of
 % the programs produced using it, there has been much research in the past into
 % compiler correctness.  The approach that was used in the earliest works on
 % compiler correctness, which is still widely used today, is to show that a
 % diagram of the form shown in Figure~\ref{commuting-diagram} commutes.
-\begin{figure}
+\begin{figure}[ht]
   \begin{center}
     \begin{tikzpicture}
       \node[align=center] (S) at (0cm,3cm) {source\\language};
@@ -352,10 +363,14 @@ comparing the different approaches.
       \node[align=center] (M) at (0cm,0cm) {source\\meanings};
       \node[align=center] (U) at (4cm,0cm) {target\\meanings};
       
-      \path (S) edge[->] node[align=center, above] {compile}           (T);
-      \path (S) edge[->] node[align=right, left]   {source\\semantics} (M);
-      \path (T) edge[->] node[align=left, right]   {target\\semantics} (U);
-      \path (M) edge[->] node[align=center, above] {encode}            (U);
+      \path (S) edge[->] node[align=center, above] {compile}           
+        node[align=center, below] {$\gamma$} (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics} 
+        node[align=center, right] {$\phi$} (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics} 
+        node[align=center, left] {$\psi$} (U);
+      \path (M) edge[->] node[align=center, above] {encode} 
+        node[align=center, below] {$\epsilon$} (U);
     \end{tikzpicture}
   \end{center}
   \caption{The commuting diagram used in the traditional approach to compiler verification}
