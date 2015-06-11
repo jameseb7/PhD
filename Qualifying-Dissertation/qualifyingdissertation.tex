@@ -347,14 +347,7 @@ Figure~\ref{commuting-diagram} commutes, that is,
 \begin{displaymath}
   \gamma \circ \psi = \phi \circ \epsilon .
 \end{displaymath}
-Lockwood Morris had the corners of the diagram as algebras, rather than merely
-sets, with the functions between them being homomorphisms in order to add
-additional structure to the compiler correctness proof.
-% As the correctness of the compiler is of great importance to the correctness of
-% the programs produced using it, there has been much research in the past into
-% compiler correctness.  The approach that was used in the earliest works on
-% compiler correctness, which is still widely used today, is to show that a
-% diagram of the form shown in Figure~\ref{commuting-diagram} commutes.
+
 \begin{figure}[ht]
   \begin{center}
     \begin{tikzpicture}
@@ -376,6 +369,41 @@ additional structure to the compiler correctness proof.
   \caption{The commuting diagram used in the traditional approach to compiler verification}
   \label{commuting-diagram}
 \end{figure}
+
+Lockwood Morris had the corners of the diagram as algebras, rather than merely
+sets, with the functions between them being homomorphisms in order to add
+additional structure to the compiler correctness proof.  This differs from the
+approach of some earlier works, particularly the earliest work by McCarthy and
+Painter~\cite{mccarthy1967}, and instead follows work such as that of Burstall
+and Landin~\cite{burstall1969}.
+
+McCarthy and Painter's work featured a simple expression language with addition,
+natural numbers and variables.  This was compiled to a simple 4-instruction
+single-register machine. The proof of the compiler's correctness followed the
+commuting diagram approach, though the arrows of the diagram were simple
+functions rather than homomorphisms and the proof was performed using induction
+over the source language. The work is not particularly advanced but did lay the
+foundation for the study of compiler correctness.
+
+The approach taken by Burstall and Landin is interesting since, though
+they show correctness of a compiler for the same source and target languages as
+McCarthy and Painter, they use a more algebraic approach that better matches
+what Lockwood Morris later suggested.  Burstall and Landin's approach involved
+representing the source and target languages, and their meanings, as algebras,
+with the compilation functions as homomorphisms. They then show correctness of
+the compilation, targetting several intermediate machines in the
+process. Viewing the languages as algebras can be seen to allow for simpler
+proofs as some of the arrows of the commuting diagram can be wholly or partially
+derived from the algebraic structure. It is this notion of simplifying the
+proofs that led Lockwood Morris to advocate the use of algebras and
+homomorphisms.
+
+The overall goal of pursuing formal proofs of compiler correctness, as proposed
+by McCarthy and Painter~\cite{mccarthy1967}, is to allow machine-checked proofs
+of program correctness. There has certainly been work in that area following
+McCarthy and Painter's work, the earliest of which is that by Milner and
+Weyhrauch~\cite{milner1972}.
+
 % Lockwood Morris\cite{morris1973} first observed that the commuting diagram
 % approach was the usual approach to showing compiler correctness, though his
 % version of the diagram had a decode function relating target meanings to source
