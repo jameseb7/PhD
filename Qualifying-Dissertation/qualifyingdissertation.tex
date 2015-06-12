@@ -402,7 +402,46 @@ The overall goal of pursuing formal proofs of compiler correctness, as proposed
 by McCarthy and Painter~\cite{mccarthy1967}, is to allow machine-checked proofs
 of program correctness. There has certainly been work in that area following
 McCarthy and Painter's work, the earliest of which is that by Milner and
-Weyhrauch~\cite{milner1972}.
+Weyhrauch~\cite{milner1972} who show the correctness of an ALGOL-like
+language. The proof of correctness was partially mechanised in the LCF theorem
+prover~\cite{milner1972a} but they were of the opinion that the proof was
+feasable and could be completed relatively easily. An interesting point to note
+is that Milner and Weyhrauch acknowledged the need for some way of structuring
+the proof in order to make it amenable to machine-checking, which gives further
+support to the algebraic commuting diagram approach advocated by Lockwood
+Morris. Indeed, Milner and Wehrauch explicitly followed that approach as they
+were in disscusions with Lockwood Morris.
+
+One advantage to making proofs easily machine-checkable, apart from the added
+certainty that the proof is correct, is that working compilers can be created
+from the machine-checked proofs via the code generation facitilies available
+with many theorem provers such as those of Isabelle/HOL~\cite{haftmann2007} and
+Coq~\cite{letouzey2003, letouzey2008}. The fact that the commuting diagram
+approach involves treating the compilation as a function between algebras
+representing the source and target languages fits well with this idea as there
+is then a function defined in the mechanised logic for the purposes of
+conducting proofs about it that can be readily extracted to executable code.
+
+The commuting diagram approach has been followed in much of the literature
+through the years, though not always with the algebraic methods recommended by
+Lockwood Morris.  It seems that the basic structure of the commuting diagram is
+a fairly natural approach to take, as seen by work such as that of the ProCoS
+project~\cite{buth1992}, which follows the commuting diagram structure although
+it does not directly reference the early works advocating an algebraic commuting
+diagram approach. Another piece of work that follows the commuting diagram
+approach is that of Polak~\cite{polak1981}, who states that he is more
+interested in verification of a ``real'' compiler rather than ``abstract code
+generating algorithms'', and shows the correctness of a compiler for a
+Pascal-like language.  This work also seems to focus much more on pragmatic
+applications of the commuting diagram approach, leaving behind the algebraic
+ideas of earlier papers (though Polak does cite them) and setting a precedent
+for a simpler verification approach based on considering the functions in the
+commuting diagram.
+
+The commuting diagram has also been used in recent work, some of the most
+successful of which is that of CompCert~\cite{leroy2009a, leroy2009b,
+  leroy2012}, which is a project to create a fully verified realistic compiler
+for a subset of C, using the theorem prover Coq~\cite{coq2004}.
 
 % Lockwood Morris\cite{morris1973} first observed that the commuting diagram
 % approach was the usual approach to showing compiler correctness, though his
