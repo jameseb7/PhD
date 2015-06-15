@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt]{article}
+\documentclass[a4paper,10pt]{report}
 
 \usepackage[in]{fullpage}
 \usepackage{parskip}
@@ -24,14 +24,18 @@
 \begin{document}
 \maketitle
 
-\section{Introduction}
+%TODO: abstract
+
+\tableofcontents
+
+\chapter{Introduction}
 
 This section begins by explaining the motivation for the work decribed in
 this report. Then the objectives of the work, which come from the motivation,
 are described and, finally, the structure of the remainder of this report is
 described.
 
-\subsection{Motivation}
+\section{Motivation}
 
 Since its release in 1995, the Java programming language~\cite{gosling2013} has
 increased in popularity and is now used on a wide variety of platforms.  This
@@ -155,7 +159,7 @@ machines have been formally verified.
 
 % explain that there is a gap with no verification for SCJ compilers for embedded systems
 
-\subsection{Objectives}
+\section{Objectives}
 
 Given that there is a need for a formally verified virtual machine that can run
 SCJ programs efficiently on an embedded system, my objective is to identify the
@@ -170,28 +174,28 @@ specification and verification of such a compiler. This must be done in addition
 to ensuring the virtual machine caters for the requirements of SCJ with regard
 to areas such as scheduling and memory management.
 
-\subsection{Document Structure}
+\section{Document Structure}
 
-Having given a brief overview of the area of study and identified the problem I
+Having given a brief overview of the area of study and identified the problem we
 wish to consider, the remainder of this report will proceed as follows: 
 
-In Section~\ref{scj-sec} I will give a more in-depth description of SCJ as a
-whole, particularly identifiying its differences from standard Java that make
-standard JVMs unsuitable for running SCJ programs and so motivate the need for
-an SCJ virtual machine. I will also consider some of the existing virtual
-machines that have been created to run SCJ programs.
+In Chapter~\ref{literature-review-chapter} we will examine the literature on
+safety-critical virtual machines and compilers for Java-like languages. This
+includes a discussion of why a safety-critical variant of Java is necessary and
+how it differs from standard Java so as to make a specialised virtual machine
+necessary, followed by a survey of the existing virtual machines for
+Saftey-Critical Java and the techniques used in verifying compilers.
 
- Then, in Section~\ref{compiler-correctness-sec}, I will
-discuss approaches to showing the correctness of compilers, describing and
-comparing the commuting diagram and algebraic approaches before discussing how
-these approaches have been applied to compilation of Java-like
-languages.
+Then, in Chapter~\ref{research-proposal-chapter} we will cover the structure and
+plan for the proposed research.
 
-Finally, in Section~\ref{requirements-sec}, I will present the structure of the
-proposed research and describe the intended approach before presenting some
-preliminary results identifying the requirements of an SCJ virtual machine. I
-will end by presenting a formal model of the identified requirements in the
-\Circus{} specification language in Section~\ref{formal-model-sec}.
+In Chapter~\ref{requirements-chapter} we will present some
+preliminary results identifying the requirements of an SCJ virtual machine, with
+a formal model of those requirements in the \Circus{} specification language in
+Section~\ref{formal-model-section}.
+
+Finally, we conclude in Chapter~\ref{conclusions-chapter} by mentioning some
+related work and the wider context of this research.
 
 % Description of SCJ and review of SCJ VMs - use stuff from JTRES paper, maybe extend it a bit
 % Review the literature on compiler correctness 
@@ -203,6 +207,14 @@ will end by presenting a formal model of the identified requirements in the
 % - Overall plan - requirements for an SCJVM - explain different parts of the diagram, mention CEE will be dealt with by later work
 % - Present the identification of the requirements for the VM services from the JTRES paper
 % - Discuss the formal model - similar to JTRES paper but room to go into more depth
+
+
+\chapter{Compilers and Virtual Machines for Java-like languages in the
+  Safety-critical Domain}
+\label{literature-review-chapter}
+
+\section{Java for Safety-critical systems}
+% provide motivation for SCJ, mentioning standard Java and RTSJ
 
 \section{Safety-Critical Java}
 \label{scj-sec}
@@ -270,6 +282,9 @@ because dynamic class loading may introduce time overheads that are hard to
 predict and also introduces additional code paths that complicate the
 certification of programs.  SCJ also disallows object finalisers as it is not
 always easy to predict when they will be run.
+
+\section{Virtual Machines for Safety-Critical Java}
+% one subsection per machine
 
 Because of these features of SCJ, a specialised virtual machine that provides
 support for allocation in memory areas and preemptive scheduling is required for
@@ -488,8 +503,26 @@ specification. % an example of where nondeterminism in a specification is good
 \subsection{Correctness of Java Compilers}
 \label{java-correctness-sec}
 
-\section{Requirements of a Safety-Critical Java Virtual Machine}
-\label{requirements-sec}
+% conclude no efforts to verify SCJVMs, following the normal form approach,
+% mention that the VM normal form must be in some specification language to lead
+% into the next section
+
+\section{\Circus{}}
+
+% adapt overview of Circus using the clock specification from earlier version of
+% JTRES paper
+
+\section{Final Considerations}
+
+% summarise the problem and how to solve it
+
+\chapter{Research Proposal}
+\label{research-proposal-chapter}
+
+% Move material from the start of the next chapter to here
+
+\chapter{Requirements of a Safety-Critical Java Virtual Machine}
+\label{requirements-chapter}
 
 For the purposes of specification, a Safety-Critical Java virtual machine
 (SCJVM) is seen as having the components shown in Figure~\ref{scjvm-fig}. The
@@ -585,7 +618,7 @@ run a general operating system.
 I will now proceed to present some preliminary results specifying the virtual
 machine services and constructing a formal model of them.
 
-\subsection{Memory Manager API}
+\section{Memory Manager API}
 \label{memory-manager-sec}
 
 The SCJVM memory manager deals with the raw blocks of memory used as backing
@@ -787,7 +820,7 @@ mission and will be destroyed before the parent mission ends. Like backing
 stores, stacks are referred to by unique identifiers that may simply be pointers
 to the space allocated for the stack.
 
-\subsection{Scheduler API}
+\section{Scheduler API}
 \label{scheduler-sec}
 
 The SCJVM scheduler manages the scheduling of threads. The operations of the
@@ -1002,7 +1035,7 @@ re-enabled using the \texttt{enable\-Interrupts} operation. While interrupts are
 disabled no interrupt handlers can run but it is implementation-defined as to
 whether or not interrupts fired while interrupts are disabled are lost.
 
-\subsection{Real-time Clock API}
+\section{Real-time Clock API}
 \label{realtime-clock-sec}
 
 The SCJVM must manage the system real-time clock, providing an interface that
@@ -1060,8 +1093,8 @@ is removed and a new alarm must be set in order to perform events periodically.
 The current alarm (if any) can be cleared using the \texttt{clear\-Alarm}
 operation.
 
-\subsection{Formal Model}
-\label{formal-model-sec}
+\section{Formal Model}
+\label{formal-model-section}
 
 The formal model of the SCJVM is written in the \Circus{} specification
 language~\cite{oliveira2009}. \Circus{} is based on CSP~\cite{roscoe2011}, which
@@ -1374,6 +1407,11 @@ remain the same.
 Other global memory manager operations are similarly specified using
 promotion. Operations on stacks are specified separately, using a
 specification based on $MemoryBlock$.
+
+\chapter{Conclusions}
+\label{conclusions-chapter}
+
+% Similar to JTRES paper conclusions
 
 \raggedright
 \printbibliography
