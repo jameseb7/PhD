@@ -213,11 +213,33 @@ related work and the wider context of this research.
   Safety-critical Domain}
 \label{literature-review-chapter}
 
+This chapter will begin with a discussion of why Java is being used in
+safety-critical systems and the need for a specialised version of Java for use
+in that area, in Section~\ref{java-safety-critical-section}.  Then, in
+section~\ref{scj-section} we will cover the variant of Java developed for
+safety-critical systems, seeing how it differs from standard Java and why a
+specialised virtual machine is required, before discussing some of the existing
+virtual machines for that variant in Section~\ref{virtual-machines-section}.
+
+In Section~\ref{compiler-correctness-section} we will survey some of the
+literature on compiler correctness, looking at the two main approaches in
+Sections~\ref{commuting-diagram-subsection} and
+\ref{algebraic-approach-subsection} before seeing how the techniques of compiler
+correctness have been applied to Java-like languages in
+Section~\ref{java-compiler-correctness-subsection}.
+
+Then, in Section~\ref{circus-section}, we will give an overview of the \Circus{}
+specification language used for our virtual machine specification before
+summarising what we have learnt from the literature reviewed in this chapter in
+Section~\ref{final-considerations-section}.
+
 \section{Java for Safety-critical systems}
+\label{java-safety-critical-section}
+
 % provide motivation for SCJ, mentioning standard Java and RTSJ
 
 \section{Safety-Critical Java}
-\label{scj-sec}
+\label{scj-section}
 
 Safety-Critical Java is a variant of Java designed for writing Java programs
 where certifiability is an important concern.  SCJ is based upon the Real-Time
@@ -284,6 +306,8 @@ certification of programs.  SCJ also disallows object finalisers as it is not
 always easy to predict when they will be run.
 
 \section{Virtual Machines for Safety-Critical Java}
+\label{virtual-machines-section}
+
 % one subsection per machine
 
 Because of these features of SCJ, a specialised virtual machine that provides
@@ -332,28 +356,28 @@ machine, which must be clearly identified before verification can commence, are
 currently agreed on.
 
 \section{Compiler Correctness}
-\label{compiler-correctness-sec}
+\label{compiler-correctness-section}
 
 Due to the importance of compiler correctness to the correctness of the programs
 produced by it, there has been much research over the years into the area of
 compiler correctness. Most of the work done follows a similar approach, which I
 will term the commuting diagram approach as it can be viewed as showing that a
 particular diagram commutes. I will discuss the commuting diagram approach in
-Section~\ref{commuting-diagram-sec}.
+Section~\ref{commuting-diagram-subsection}.
 
 An alternative approach to compiler verification is the algebraic approach that
 was developed in the early 90s and is based on the concepts of refinement
 calculi designed for deriving software from specifications of behaviour. I will
-explain the algebraic approach in Section~\ref{algebraic-sec} and discuss how it
-differs from the commuting diagram approach.
+explain the algebraic approach in Section~\ref{algebraic-approach-subsection}
+and discuss how it differs from the commuting diagram approach.
 
-I will finish in Section~\ref{java-correctness-sec} by reviewing some of the
-literature on correctness of compilers for Java-like languages, looking at how
-the techniques of compiler correctness have been applied in the case of Java and
-comparing the different approaches.
+I will finish in Section~\ref{java-compiler-correctness-subsection} by reviewing
+some of the literature on correctness of compilers for Java-like languages,
+looking at how the techniques of compiler correctness have been applied in the
+case of Java and comparing the different approaches.
 
 \subsection{Commuting Diagram Approach}
-\label{commuting-diagram-sec}
+\label{commuting-diagram-subsection}
 
 Much of the work on compiler correctness can be seen as following the approach
 identified by Lockwood Morris~\cite{morris1973}, and later refined by Thatcher,
@@ -458,7 +482,7 @@ successful of which is that of CompCert~\cite{leroy2009a, leroy2009b,
 for a subset of C, using the theorem prover Coq~\cite{coq2004}.
 
 \subsection{Algebraic Approach}
-\label{algebraic-sec}
+\label{algebraic-approach-subsection}
 
 The second main approach to showing correctness of compilers is the algebraic
 approach proposed by Hoare in 1991~\cite{hoare1991}, and further developed by a
@@ -501,18 +525,20 @@ specification. % an example of where nondeterminism in a specification is good
 
 
 \subsection{Correctness of Java Compilers}
-\label{java-correctness-sec}
+\label{java-compiler-correctness-subsection}
 
 % conclude no efforts to verify SCJVMs, following the normal form approach,
 % mention that the VM normal form must be in some specification language to lead
 % into the next section
 
 \section{\Circus{}}
+\label{circus-section}
 
 % adapt overview of Circus using the clock specification from earlier version of
 % JTRES paper
 
 \section{Final Considerations}
+\label{final-considerations-section}
 
 % summarise the problem and how to solve it
 
