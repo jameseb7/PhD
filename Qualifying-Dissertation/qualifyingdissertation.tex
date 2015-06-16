@@ -238,6 +238,40 @@ Section~\ref{final-considerations-section}.
 
 % provide motivation for SCJ, mentioning standard Java and RTSJ
 
+In recent years Java has increasingly been considered as a language for writing
+safety-critical software. The reason for this is that the other languages that
+are generally used in the safety-critical domain are C/C++ and Ada; C and C++ are
+seen as having too many problems to permit reliable use at the highest levels of
+safety~\cite{kornecki2009}, and Ada has not gained widespread
+popularity~\cite{bissyande2013}.  While Java has not traditionally been seen as
+a language for safety-critical systems, it was originally developed for the area
+of embedded systems, particularly use in television set-top boxes, and has seen
+renewed interest in its use in embedded systems after gaining popularity in the
+area of the internet~\cite{mulchandani1998}.  
+
+There are, however, several issues with standard Java that make it unsuitable
+for safety-critical systems. Many safety critical systems are also real-time
+systems, which are required to be predictable in their scheduling and use of
+memory. However, standard Java uses a garbage-collected memory model, in which
+it is hard to predict when memory may be freed or how long the process of
+freeing memory may take. Standard Java's thread model also lacks the
+predictability and control that is required in real-time systems.
+
+To rectify these problems with standard Java the Real-Time Specification for
+Java (RTSJ)~\cite{gosling2000} was created, which augments Java's memory and
+scheduling models with a system of scoped memory areas and a preemptive priority
+scheduler. RTSJ also allows for the standard Java models to be used alongside
+its own, making it suitable for a wide range of different real-time applications
+but also making it hard to certify RTSJ applications and thus unsuitable for use
+in the safety-critical domain.
+
+In order to better allow for certifiable safety-critical systems in Java, the
+Safety-Critical Java (SCJ)~\cite{locke2013} specification was developed. SCJ is
+a subset of RTSJ, chosen so as to permit certification and leaving out the
+features from standard Java that are difficult to certify such as the garbage
+collector. SCJ also provides annotations that allow memory usage to be more
+easily checked. We will discuss SCJ in more detail in the next section.
+
 \section{Safety-Critical Java}
 \label{scj-section}
 
