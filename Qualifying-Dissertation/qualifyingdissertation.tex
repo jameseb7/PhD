@@ -135,25 +135,21 @@ virtual machine has been formally verified.
 \section{Objectives}
 
 Given that there is a need for a verified SCJ virtual machine, our objective is
-to facilitate the development of such a machine.  We could attempt to verify an
-existing SCJ virtual machine but they tend to be too complex to verify easily,
-and would require many changes as errors were discovered and fixed.  Instead, it
-seems better to construct a specification of the requirements for an SCJ virtual
-machine, from which an implementation of an SCJ virtual machine could be
-constructed, and show that to be correct.  The specification must cover the
-whole of the virtual machine, including both the execution of Java bytecode by
-compiling it to native code and the supporting services that the virtual machine
-must offer.
+to construct a framework for verification of an SCJ virtual machine.  We could
+attempt to verify an existing SCJ virtual machine but they tend to be too
+complex to verify easily, and would require many changes as errors were
+discovered and fixed.  Instead, we will construct a framework that will consist
+of the following components:
+\begin{itemize}
+\item a specification of the requirements of an SCJ virtual machine,
+\item a compilation strategy from Java bytecode to native C code,
+\item a formal model of the virtual machine specification,
+\item proofs of the correctness of the formal model and compilation strategy,
+  and
+\item a mechanisation of the model and proofs.
+\end{itemize}
 
-In order to construct the specification, we must identify the requirements of an
-SCJ virtual machine, including the semantics of Java bytecode, and show a
-correct compilation to native code.  The specification must be put in terms of
-some formal specification language with well-defined laws to facilitate
-reasoning about it.  The proof of the specification's correctness should be
-machine-checked to provide certainty that there have been no errors in the
-writing of the proof.
-
-The requirements of an SCJ virtual machine are obtained from the requirements
+The specification of requirements will be identified from the requirements
 imposed, both explicitly and implicitly, on virtual machines by the SCJ
 specification.  It is also helpful to consider the approach taken by some
 existing SCJ virtual machines on points where the SCJ specification is unclear.
