@@ -440,30 +440,40 @@ run.
 Because of these features of SCJ, a specialised virtual machine that provides
 support for allocation in memory areas and preemptive scheduling is required for
 SCJ. Although SCJ is a relatively recent development there have been various
-virtual machines created for SCJ or variations of SCJ, including including Fiji
-VM~\cite{pizlo2009}, Icecap HVM~\cite{sondergaard2012},
+virtual machines created for SCJ or variations of SCJ, including including
+icecap HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009},
 OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and PERC
-Pico~\cite{atego2015, richard2010}. Most of these are targeted at embedded
-systems with real time constraints.
+Pico~\cite{atego2015, richard2010}. These are each described in the following
+subsections.
 
-The Fiji VM and Icecap HVM both take the approach of precompiling Java
+\subsection{icecap HVM}
+
+\subsection{Fiji VM}
+
+\subsection{OVM}
+
+\subsection{HVM\textsubscript{TP}}
+
+\subsection{PERC Pico}
+
+The Fiji VM and icecap HVM both take the approach of precompiling Java
 bytecode to C in order to allow for faster running programs with fewer
 memory resources.  Fiji VM is, however, not specifically concerned
 with SCJ; it is rather designed to run general real-time Java
 programs, though this includes providing support for SCJ.  By
-contrast, Icecap has been designed specifically to run SCJ
+contrast, icecap has been designed specifically to run SCJ
 programs. It includes an implementation of the SCJ libraries, although
 they cannot be easily decoupled from the virtual machine itself.
 
-Icecap also provides a lightweight Java bytecode interpreter and
+icecap also provides a lightweight Java bytecode interpreter and
 allows for interpreted code to be mixed with compiled
-code. HVM\textsubscript{TP} is a modification of the Icecap HVM's
+code. HVM\textsubscript{TP} is a modification of the icecap HVM's
 bytecode interpreter to improve time predictability and ensure that
 bytecode instructions are executed in constant time.
 
 OVM works on a principle of precompiling code for performance reasons, similar
-to Fiji VM and Icecap HVM, but translates Java to C++ instead of bytecode to C.
-OVM also differs from the Icecap HVM and Fiji VM in that it predates SCJ. It is
+to Fiji VM and icecap HVM, but translates Java to C++ instead of bytecode to C.
+OVM also differs from the icecap HVM and Fiji VM in that it predates SCJ. It is
 written to implement the Real-Time Specification for Java
 (RTSJ)~\cite{gosling2000}, though it can still support SCJ programs as SCJ is
 based on a subset of RTSJ.
@@ -473,7 +483,7 @@ system of Java metadata annotations to ensure the safety of scoped memory. PERC
 Pico does not support the current SCJ standard.
 
 In summary, as far as I am aware there is one implementation of an SCJ VM
-publicly available, which is the Icecap HVM. This is and, typically, virtual
+publicly available, which is the icecap HVM. This is and, typically, virtual
 machines for SCJ will be, designed to be very small and fast so as to be able to
 run on embedded systems.  While these are important goals in an embedded virtual
 machine implementation, the resultant virtual machines tend to be complex and so
@@ -739,7 +749,7 @@ there is a similar model of Java bytecode in Duran's model of Java
 compilation. The benefit of having a model of a Java bytecode interpreter is
 that it provides a specification of an iterpreter as well as a compiler,
 allowing compilation and interpretation to be mixed, as it permitted by the
-Icecap HVM. The semantics is not expected differ from the standard semantics of
+icecap HVM. The semantics is not expected differ from the standard semantics of
 Java bytecode, except in the instructions relating to scheduling and memory
 management, where some changes are envisaged, so the main challenge is in the
 compiler verification. It should also be noted that class loading is treated as
