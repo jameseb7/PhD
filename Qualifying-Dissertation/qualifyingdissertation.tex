@@ -345,20 +345,42 @@ of standard Java threads and the garbage collector.  This leaves scheduling and
 memory management models that are very different to the models for standard Java
 and that, therefore, require specialised virtual machines to support them.
 
+SCJ defines three compliance levels to which programs and implementations may
+conform. Level 0 is the simplest compliance level. It is intended for programs
+following a cyclic executive approach. Level 1 lifts several of the restrictions
+of level 0, allowing handlers that may trigger in response to external events
+and preempt one another. Level 2 is the most complex compliance level, allowing
+access to real-time threads and suspension via \texttt{wait()} and
+\texttt{notify()}.  
+
 An SCJ program consists of one or more missions, which are collections of
 schedulable objects that are scheduled by SCJ's priority scheduler. Missions are
-run in an order determined by the mission sequencer supplied by an SCJ
-program. Running a mission consists of starting each of the schedulable objects
-in the mission, waiting for a request to terminate the mission, then terminating
-each of the schedulable objects in the mission.  The schedulable objects within
-a mission are event handlers that are released either periodically, at set
-intervals of time, aperiodically, in response to a release request from a
-hardware interrupt or another handler, or once at a specific point in time
-(though handlers that are released once can have a new release time set,
-allowing them to be released again).
+run in an order determined by the mission sequencer supplied by an SCJ program.
+Running a mission proceeds in several phases, as shown in
+Figure~\ref{phases-diagram}.
+
+\begin{figure}[ht]
+\includegraphics[width=\textwidth]{phases.pdf}
+\caption{A diagram showing the phases of SCJ mission execution}
+\label{phases-diagram}
+\end{figure}
+
+The fist phase is initialization, which consists of setting up the schedulable
+objects controlled by the mission and creating any data structures required for
+the mission.  Then the mission is executed by starting each of the schedulable
+objects in the mission and waiting for a request to terminate the mission. Then,
+when the mission is requested to terminate, each of the schedulable objects in
+the mission is terminated and the mission's memory is cleared.  The schedulable
+objects within a mission are asynchronous event handlers that are released
+either periodically, at set intervals of time, aperiodically, in response to a
+release request, or once at a specific point in time (though handlers that are
+released once can have a new release time set, allowing them to be released
+again).  At level 2 real-time threads are also allowed, which run continuously
+from when they start until they finish unless they are suspended or interrupted
+by another schedulable object.
 
 Each schedulable object has a priority and the highest priority object that is
-eligible to run at each point in time are the objects that run. This allows for
+eligible to run at each point in time is the object that runs. This allows for
 simpler reasoning about order of execution and allows for more urgent tasks to
 preempt less urgent tasks.
 
@@ -366,10 +388,10 @@ SCJ allows for assigning schedulable objects to ``scheduling allocation
 domains'', where each domain consists of one or more processors.  At Level 1,
 each scheduling allocation domain is restricted to a single processor.  Hence,
 in scheduling terms, the system is fully partitioned. This allows for mature
-single processor schedulability analysis to be applied to each domain, although
+single processor schedulability analysis to be applied to each domain (although
 the calculation of the blocking times when accessing global synchronised methods
 will be different than they would be on a single processor system due to the
-potential for remote blocking~\cite{davis2011}.
+potential for remote blocking~\cite{davis2011}).
 
 SCJ deals with memory in terms of memory areas, which are Java objects that
 provide an interface to blocks of physical memory called backing stores.  Memory
@@ -380,24 +402,35 @@ that object, and is cleared after each release.  Each mission also has a mission
 memory area that can be used as an allocation context by the schedulable objects
 of that mission, to provide space for objects that persist for the duration of
 the mission or that need to be shared between the schedulable objects.  There is
-also an immortal memory area where objects can be allocated that will be needed
-for the entire running of the program (and so will never be freed).
+also an immortal memory area where objects can be allocated if needed for the
+entire running of the program (they are never freed). SCJ places restrictions on
+which objects an object may point to, so as to avoid dangling pointers from
+being created. Some examples of valid object references for some asynchronous
+event handlers are shown in Figure~\ref{stacks-areas-diagram}.
 
-This system of memory areas makes it easy to predict when memory will be freed,
-which cannot be easily done with a garbage-collected heap.  Furthermore, this
-memory model cannot be achieved with a standard JVM as it does not provide
-memory outside of the heap for allocation and lacks a notion of allocation
-context. The memory manager should also provide a means of accessing raw memory
-for the purposes of device access, but that section of the SCJ standard is not
-yet finalised so we will not cover it here. It can, however, be seen that any
-system of raw memory access is not supported by most standard JVMs.
+
+\begin{figure}[ht]
+\includegraphics[width=\textwidth]{Stacks-Areas.pdf}
+\caption{An example of the layout of memory areas for four asynchronous event
+  handlers (ASEHs), showing possible valid and invalid references between them}
+\label{stacks-areas-diagram}
+\end{figure}
+
+This system of memory areas makes it easy to predict when memory is freed, which
+cannot be easily done with a garbage-collected heap.  Furthermore, this memory
+model cannot be achieved with a standard JVM as it does not provide memory
+outside of the heap for allocation and lacks a notion of allocation context. The
+memory manager also needs to provide a means of accessing raw memory for the
+purposes of device access, but that section of the SCJ standard is not yet
+finalised so we will not cover it here. It can, however, be seen that any system
+of raw memory access is not supported by most standard JVMs.
 
 A further requirement of SCJ is that dynamic class loading is not allowed; all
 classes used by the program must be loaded when the program starts. This is
 because dynamic class loading may introduce time overheads that are hard to
-predict and also introduces additional code paths that complicate the
-certification of programs.  SCJ also disallows object finalisers as it is not
-always easy to predict when they will be run.
+predict and additional code paths that complicate certification.  SCJ also
+disallows object finalisers as it is not always easy to predict when they are
+run.
 
 \section{Virtual Machines for Safety-Critical Java}
 \label{virtual-machines-section}
