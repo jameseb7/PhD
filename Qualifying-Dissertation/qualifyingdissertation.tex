@@ -474,15 +474,20 @@ programs, although it does not necessarily support all aspects of SCJ properly.
 Fiji VM does have the advantage of high portability and multiprocessor support,
 which is lacking in many other SCJ virtual machines.
 
-%%%
 \subsection{OVM}
 
-OVM works on a principle of precompiling code for performance reasons, similar
-to Fiji VM and icecap HVM, but translates Java to C++ instead of bytecode to C.
+OVM was created at Purdue University as part of the PCES
+project~\cite{baker2006}, to provide a virtual machine that can execute
+real-time Java programs with a high level of performance on embedded systems.
+Similar to Fiji VM and icecap HVM, OVM works on a principle of precompiling code
+for performance reasons but translates Java to C++ instead of bytecode to C.
 OVM also differs from the icecap HVM and Fiji VM in that it predates SCJ. It is
 written to implement the Real-Time Specification for Java
 (RTSJ)~\cite{gosling2000}, though it can still support SCJ programs as SCJ is
-based on a subset of RTSJ.
+based on a subset of RTSJ and, indeed, an SCJ implementation for OVM was later
+created~\cite{plsek2010}. However, OVM does not appear to have kept up with more
+recent changes to the draft SCJ standard. OVM is, like icecap HVM but unlike
+Fiji VM, single processor. 
 
 \subsection{PERC Pico}
 
@@ -490,15 +495,14 @@ PERC Pico is a product of Atego based on early ideas for SCJ, but uses its own
 system of Java metadata annotations to ensure the safety of scoped memory. PERC
 Pico does not support the current SCJ standard.
 
-In summary, as far as I am aware there is one implementation of an SCJ VM
-publicly available, which is the icecap HVM. This is and, typically, virtual
-machines for SCJ will be, designed to be very small and fast so as to be able to
-run on embedded systems.  While these are important goals in an embedded virtual
-machine implementation, the resultant virtual machines tend to be complex and so
-hard to verify.  There does not yet appear to be any work on verification of an
-SCJ virtual machine.  Moreover, not even the requirements of an SCJ virtual
-machine, which must be clearly identified before verification can commence, are
-currently agreed on.
+To summarise, as far as we are aware there is one publicly available virtual
+machine that has kept up with the developing SCJ specificarion, which is the
+icecap HVM. This is and, typically, virtual machines for SCJ will be, designed
+to be very small and fast so as to be able to run on embedded systems.  As can
+be seen from the preceding discussion, a common technique to run Java programs
+on embedded systems is to precompile them to native code. This means compiler
+correctness techniques must be considered in verfication of such a virtual
+machine; these techniques will be looked at in detail in the next section.
 
 \section{Compiler Correctness}
 \label{compiler-correctness-section}
