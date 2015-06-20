@@ -658,20 +658,31 @@ Equation~\eqref{skip-comp-identity}.
   P;\Skip = \Skip;P = P
 \end{equation}
 
-%TODO: mention some of Bauer's early work on program development by stepwise transformation
 The notion of refinement is an important one for the construction of these laws
 of programs and the algebraic approach to compilation.  Refinement was
 developed, largely independently, by Back~\cite{back1981},
-Morris~\cite{morris1987} and Morgan~\cite{morgan1990}.  The basic idea is that
-there is a relation between programs that captures the idea of one program being
-``at least as good as'' another or, to put it more precisely, at least as
-deterministic as another.  The reason for this concept being so important is
-that the languages and laws for reasoning about programs can also be used to
-develop programs from specifications.  This means that certain things can be
-left loosely specified and several different implementations could refine that
+Morris~\cite{morris1987} and Morgan~\cite{morgan1990}, and follows from earlier
+concepts of program transformation~\cite{bauer1976, balzer1976, standish1976,
+  arsac1979}.  The basic idea is that there is a relation between programs that
+captures the idea of one program being ``at least as good as'' another or, to
+put it more precisely, at least as deterministic as another.  The reason for
+this concept being so important is that the languages and laws for reasoning
+about programs can also be used to develop programs from specifications.  This
+means that certain things can be left loosely specified and several different
+implementations could refine that
 specification. % an example of where nondeterminism in a specification is good
                % would be helpful here
 
+The use of refinement in showing correctness of a compiler is that the laws of
+the specification language can be used to prove refinement laws, transforming
+the source language into the form of an interpreter  for the target language.
+That is, the code output by the compiler, when executed by on the target
+machine, must be a refinement of the source program.  The power of the
+algebraic approach is that the compilation of individual elements of the source
+language can be specified and proved speparately in different refinement
+laws.  The compilation can also be split into stages, with a set of refinement
+laws for each stage to further modularise the compilation.  The separate
+refinement laws can then be combined to form a compilation strategy.
 
 \subsection{Correctness of Java Compilers}
 \label{java-compiler-correctness-subsection}
