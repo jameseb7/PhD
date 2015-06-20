@@ -153,41 +153,38 @@ virtual machine has been formally verified.
 
 \section{Objectives}
 
-Given that there is a need for a verified SCJ virtual machine, our objective is
-to construct a framework for verification of an SCJ virtual machine.  We could
-attempt to verify an existing SCJ virtual machine but they tend to be too
-complex to verify easily, and would require many changes as errors were
-discovered and fixed.  Instead, we will construct a framework that will consist
-of the following components:
+Our objective is to construct a framework for verification of an SCJ virtual
+machine.  It will provide the following resources for developers and verifiers:
 \begin{itemize}
 \item a specification of the requirements of an SCJ virtual machine,
 \item a compilation strategy from Java bytecode to native C code,
 \item a formal model of the virtual machine specification,
-\item proofs of the correctness of the formal model and compilation strategy,
-  and
+\item proofs for validation of the formal model and verification of the
+  compilation strategy, and
 \item a mechanisation of the model and proofs.
 \end{itemize}
 
 The first component required is a specification of the requirements for an SCJ
-virtual machine. This is important because the specification will shape the rest
-of the work and there is at present no clear specification of what is required
-of an SCJ virtual machine or how it differs from a standard Java virtual
-machine.  The specification of requirements should come from the requirements
-imposed, both explicitly and implicitly, on virtual machines by the SCJ
-specification~\cite{locke2013} as that provides the authoritative source for
-information on SCJ.  It is also helpful to consider the approach taken by some
-existing SCJ virtual machines on points where the SCJ specification is unclear.
-The virtual machine must also meet the standard Java Virtual Machine
-specification~\cite{lindholm2014} on points such as how to interpret Java
-bytecode instructions and there is much work on the semantics of Java bytecode
-that can be leveraged in our work~\cite{bertelsen2000, jones1998, stark2001}.
+virtual machine. This specification will shape the rest of the work and there is
+at present no clear specification of what is required of an SCJ virtual machine
+or how it differs from a standard Java virtual machine.  The specification of
+requirements needs to consider the requirements imposed, both explicitly and
+implicitly, on virtual machines by the SCJ specification~\cite{locke2013} as
+that provides the authoritative source for information on SCJ.  It is also
+helpful to consider the approach taken by some existing SCJ virtual machines on
+points where the SCJ specification is unclear.  The virtual machine must also
+meet the standard Java Virtual Machine specification~\cite{lindholm2014} on
+points such as how to interpret Java bytecode instructions.  There is much work
+on the semantics of Java bytecode that can be leveraged in our
+work~\cite{bertelsen2000, jones1998, stark2001}.
 
-As many existing virtual machines for SCJ adopt an approach of precompiling to
-native code in order to allow faster execution on embedded systems, it seems
-wise to include that in our framework for verifying an SCJ virtual machine.  We
-will focus on compilation of Java bytecode to C as that is the approach adopted
-by several existing virtual machines for embedded systems and C is already
-widely used for embedded systems software.
+As many existing virtual machines for SCJ precompile programs to native code in
+order to allow faster execution on embedded systems, it seems wise to include
+that in our framework.  We will focus on compilation of Java bytecode to C as
+that is the approach adopted by several existing virtual machines for embedded
+systems, including Fiji VM~\cite{pizlo2009} and icecap
+HVM~\cite{sondergaard2012}, and C is already widely used for embedded systems
+software.
 
 There are two main approaches to the specification and verification of
 compilers: the commuting diagram approach and the algebraic approach.  The
@@ -200,62 +197,61 @@ work~\cite{mccarthy1967} and recent work such as that of the CompCert
 project~\cite{leroy2009a, leroy2009b}.
 
 The algebraic approach involves defining the source and target languages in the
-same specification space, and proving rewrite rules between them. This approach
-was first proposed in the early nineties by Hoare~\cite{hoare1991} and further
-developed by Sampaio~\cite{hoare1993, sampaio1993}.  The algebraic approach
-does not seem to be as popular as the commuting diagram approach but it does
-have the advantage that the specification of the compilation strategy is correct
-by construction as the rewrite rules that comprise it have all been proved. It
-remains to be decided which approach we will take in specifying our compilation
-strategy.
+same specification space, and and using proved specialised rewrite rules to
+characterise compilation as model transformation in the extended language. This
+approach was first proposed in the early nineties by Hoare~\cite{hoare1991} and
+further developed by Sampaio~\cite{hoare1993, sampaio1993}.  The algebraic
+approach does not seem to be as popular as the commuting diagram approach, but
+it does have the advantage that the specification of the compilation strategy is
+correct by construction as the rewrite rules that comprise it have all been
+proved.
 
 In order to ensure that the specification is precise and to facilitate proofs of
 its correctness, it must have a model written in some formal specification
 language.  We will focus on using the \Circus{} specification
 language~\cite{oliveira2009}, as it has been used in some of the previous work
 on formalising SCJ~\cite{cavalcanti2011, cavalcanti2013}.  It is important that
-the correctness of the formal model can be shown via mathematical proof, which
-requires the specification language to have a well-defined semantics.  \Circus{}
-has such a semantics, defined using the model of Unifying Theories of
-Programming (UTP)~\cite{hoare1998}.
+the correctness of the formal models and compilation strategy can be shown via
+mathematical proof, which requires the specification language to have a
+well-defined semantics.  \Circus{} has such a semantics, defined using the model
+of Unifying Theories of Programming (UTP)~\cite{hoare1998}.
 
-To prevent mistakes in the proof and allow the proofs to be completed quickly,
-it is helpful to mechanise the formal model and proofs.  There are various
-systems that could be used for this, but we will focus on the proof assistant
-Isabelle~\cite{nipkow2002, nipkow2014} as it is extensible and fairly
-easy-to-use. Isabelle has existing mechanisations of \Circus{}~\cite{joshi2012}
-and the UTP~\cite{foster2015}, and has been used in previous work verifying
-compilers for Java-like languages~\cite{klein2006, nipkow2000, lochbihler2010},
-making it well placed for our work.
+To prevent mistakes in the proofs, it is helpful to mechanise the formal model
+and proofs.  There are various systems that can be used for this, but we will
+focus on the proof assistant Isabelle~\cite{nipkow2002, nipkow2014}. It has
+existing mechanisations of \Circus{}~\cite{joshi2012} and the
+UTP~\cite{foster2015}, and has been used in previous work verifying compilers
+for Java-like languages~\cite{klein2006, nipkow2000, lochbihler2010}, making it
+well placed for our work.
 
 We have already made some progress towards the construction of the proposed
 framework with a specification and formal model of the requirements of an SCJ
-virtual machine.  It is expected that the model will be checked using a
-mechanised proof and the next part of the work will then be to develop the
-compilation strategy to native code.
+virtual machine.  It is expected that the model will be checked using a theorem
+prover; our next task is then the development of a compilation strategy to
+native code.
 
 \section{Document Structure}
 
 Having given a brief overview of the area of study and identified the problem we
-wish to consider, the remainder of this dissertation will proceed as follows: 
+wish to consider, the remainder of this dissertation proceeds as follows.
 
-In Chapter~\ref{literature-review-chapter} we will examine the literature on
+In Chapter~\ref{literature-review-chapter} we examine the literature on
 safety-critical virtual machines and compilers for Java-like languages. This
 includes a discussion of why a safety-critical variant of Java is necessary and
-how it differs from standard Java so as to make a specialised virtual machine
-necessary, followed by a survey of the existing virtual machines for
-Saftey-Critical Java and the techniques used in verifying compilers.
+how it differs from standard Java.  We also explain why a specialised virtual
+machine is necessary for SCJ.  This is followed by a survey of the existing
+virtual machines for Saftey-Critical Java and the techniques used in verifying
+compilers.
 
-Then, in Chapter~\ref{research-proposal-chapter} we will cover the structure and
+In Chapter~\ref{research-proposal-chapter} we will cover the structure and
 plan for the proposed research.
 
-In Chapter~\ref{requirements-chapter} we will present some
-preliminary results identifying the requirements of an SCJ virtual machine, with
-a formal model of those requirements in the \Circus{} specification language in
-Section~\ref{formal-model-section}.
+In Chapter~\ref{requirements-chapter} we present some preliminary results
+identifying the requirements of an SCJ virtual machine, with a formal model of
+those requirements in the \Circus{} specification language.
 
-Finally, we conclude in Chapter~\ref{conclusions-chapter} by mentioning some
-related work and the wider context of this research.
+Finally, we conclude in Chapter~\ref{conclusions-chapter} by mentioning the
+wider context of this research.
 
 % Description of SCJ and review of SCJ VMs - use stuff from JTRES paper, maybe extend it a bit
 % Review the literature on compiler correctness 
