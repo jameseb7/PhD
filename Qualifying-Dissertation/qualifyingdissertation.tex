@@ -697,6 +697,184 @@ refinement laws can then be combined to form a compilation strategy.
 % adapt overview of Circus using the clock specification from earlier version of
 % JTRES paper
 
+The \Circus{} specification language~\cite{oliveira2009} is based on CSP~\cite{roscoe2011}, which is
+used to specify processes that communicate over channels, and the Z
+notation~\cite{woodcock1996}, which is used to specify state and data
+operations.  A \Circus{} specification is made up of processes that communicate
+over channels.  These channels may carry values of a particular type, or may be
+used as flags for synchronization or signalling between processes.  Each process
+may have state, and is made up of actions that operate on that state and
+communicate over channels.
+
+We will illustrate the concepts of \Circus{} using as an example the process for
+the real-time clock from some of the preliminary work on the specification of an
+SCJ virtual machine. The specification begins with a declaration of the channels
+that may be used in the following processes.  Type declarations written in Z can
+also be included at the beginning of a \Circus{} specification. Here, we define
+a type $Time$ to be the set of natural numbers and create a boolean datatype
+%
+\begin{zed}
+  Time == \nat \\
+  Bool ::= True | False \\
+\end{zed}
+%
+We declare channels to represent interactions corresponding to calls to methods
+to get the clock's time and precision, and set and clear alarms. Channels are
+also declared to model interactions with the hardware that accept clock tick
+interrupts and read the time from the hardware clock.
+%
+\begin{circus}
+  \circchannel getTime, getPrecision, setAlarm : Time \\
+  \circchannel clearAlarm \\
+  \circchannel HWtick \\
+  \circchannel HWtime : Time \\
+\end{circus}
+%
+We also specify a constant to represent the clock's precision using a Z
+axiomatic definition. The value of the constant is required to be nonzero but is
+otherwise left unrestricted, so that any nonzero time value is a valid
+instantiation.
+%
+\begin{axdef}
+  precision : Time
+\where
+  precision > 0
+\end{axdef}
+%
+After the channels are declared, we can declare processes that use them. Here we
+declare the $RealtimeClock$ process. It is a basic process, that is, its state
+is defined in Z, and its behaviour using CSP constructs and Z data operations.
+%
+\begin{circus}
+  \circprocess RealtimeClock \circdef \circbegin
+\end{circus}
+%
+In this example, the state records the current time, whether an alarm is set,
+and the time of the alarm that may be set. An invariant specifies that if an
+alarm is set, then the time of the alarm must not be in the past.
+%
+\begin{schema}{RTCState}
+  currentTime  : Time \\
+  alarmSet     : Bool \\
+  currentAlarm : Time \\
+\where
+  alarmSet = True \implies \\
+  \t1 currentAlarm \geq currentTime
+\end{schema}
+\begin{circusaction}
+  \circstate RTCState
+\end{circusaction}
+%
+The behaviour is described using actions, written in a mixture of Z and CSP. The
+first action is a Z initalisation operation, $Init0$.  Its final state is
+represented by variables obtained by placing a prime on the names of the state
+components.  Here, the initialisation takes as input the initial time,
+represented by a variable, $initTime?$. The current time is defined to be equal
+to the initial time and no alarm is initially set. The initial time of the alarm
+is arbitrary, that is, nodetermisitically chosen from elements of its type,
+since the initialisation imposes no restrictions on it.
+%
+\begin{schema}{Init0}
+  RTCState~' \\
+  initTime? : Time \\
+\where
+  currentTime' = initTime? \\
+  alarmSet' = False \\
+\end{schema}
+%
+The action $Init$, defined below, uses a CSP prefixing to specify an input
+communication before the initialisation operation $Init0$.  The initial time of
+the clock is read from the hardware clock and then the initialisation specified
+by the Z schema is performed.
+%
+\begin{circusaction}
+  Init \circdef HWtime?initTime \then Init0
+\end{circusaction}
+%
+The action that returns the current time simply uses CSP to output the current
+time from the state over the $getTime$ channel. The action ends with the special
+action $\Skip$, which indicates the end of an action.
+%
+\begin{circusaction}
+  GetTime \circdef getTime!currentTime \then \Skip
+\end{circusaction}
+%
+Setting a new alarm is a more complex operation that involves Z schemas that
+specify two different scenarios in which this operation may be used. In the
+first case, the new alarm is not in the past. The symbol $\Delta$ denotes a
+change of state. The operation stores the time of the new alarm and sets a flag
+to indicate an alarm is set in this case.
+%
+\begin{schema}{SetAlarm0}
+  \Delta RTCState \\
+  newAlarm? : Time \\
+\where
+  newAlarm? \geq currentTime \\
+  currentAlarm' = newAlarm? \\
+  alarmSet' = True \\
+  currentTime' = currentTime \\
+\end{schema}
+%
+In the second case, the new alarm is in the past and so the alarm is not set (we
+have omitted the error reporting for the sake of simplicity). The symbol $\Xi$
+denotes that the state remains the same.
+%
+\begin{schema}{SetAlarm1}
+  \Xi RTCState \\
+  newAlarm? : Time \\
+\where
+  newAlarm? < currentTime \\
+\end{schema}
+%
+The two Z schemas are combined using a logical disjunction, allowing either to
+specify the behaviour when a request to set the alarm takes place.
+%
+\begin{circusaction}
+  SetAlarm \circdef setAlarm?newAlarm \\
+  \t1 \then\ \lschexpract SetAlarm0 \lor SetAlarm1 \rschexpract
+\end{circusaction}
+%
+In addition to Z and CSP constructs, Circus also has other constructs more
+familiar to programmers, such as if statements and do loops. One of these
+constructs, the assignment operator, is used in the action that clears the
+current alarm to update part of the state without requiring a Z schema.  The
+alarm is cleared by simply setting $alarmSet$ to $False$, without updating any
+other state variables.
+%
+\begin{circusaction}
+  ClearAlarm \circdef clearAlarm \then alarmSet := False
+\end{circusaction}
+%
+Each of the actions the process can perform are joined together with the CSP
+external choice operator, which chooses an action to take based on the channel
+communications that the environment is willing to perform. This includes the
+actions above, as well as some other actions that have been omitted here. The
+choice is repeated in a loop.
+%
+\begin{circusaction}
+  Loop \circdef \left( GetTime \extchoice SetAlarm \extchoice ClearAlarm
+    \extchoice \cdots \right) \\
+  \t1 \circseq Loop
+\end{circusaction}
+%
+The \Circus{} process then ends with the main action that specifies the overall
+behaviour of the process. Here, the process simply performs the initialisation
+and then enters the loop.
+%
+\begin{circusaction}
+  \circspot Init \circseq Loop
+\end{circusaction}
+\begin{circus}
+  \circend
+\end{circus}
+
+In addition to the constructs presented here \Circus{} also contains operators
+for composing processes in parallel, with or without synchronization on
+channels.  These operators are used both to specify actual parallelism and to
+represent composition of requirements.  In this way several \Circus{}
+specifications of individual components can be combined to form a specification
+of the entire system.
+
 \section{Final Considerations}
 \label{final-considerations-section}
 
