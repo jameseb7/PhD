@@ -684,27 +684,105 @@ laws.  The compilation can also be split into stages, with a set of refinement
 laws for each stage to further modularise the compilation.  The separate
 refinement laws can then be combined to form a compilation strategy.
 
+The first major work done using the algebraic approach was that of
+Sampaio~\cite{sampaio1993}, who used it to specify a correct compiler for a
+simple language that nonetheless covers all the constructs available in most
+programming languages. The target machine Sampaio used was a simple
+single-register machine that bears some similarity to most real processor
+architectures.  One interesting aspect of Sampaio's work is that he mechanised
+the compiler in the OBJ3 term rewriting system~\cite{goguen1988}, showing that
+working compilers can be easily created from specifications using the algebraic
+approach.  However, the algebraic laws Samapaio used to prove correctness of the
+compiler were taken as axioms and not proved, though Samapaio notes that they
+could be easily proved given a semantics for the reasoning language.
+
+Though there has not been much work done using the algebraic approach, one
+interesting application of the algebraic approach is in the work of
+Perna~\cite{perna2010, perna2011}, showing correctness of a compiler for a
+hardware description language.  The compilation takes high-level descriptions of
+hardware written in Handel-C and transforms them into systems of basic hardware
+components connected by wires.  The algebraic approach works well here as the
+target language is a subset of the source language, albeit in a different form,
+and Perna was able to handle features not covered by most other works on
+hardware compilation such as parallelism with shared variables.  Also, whereas
+Sampaio took the basic algebraic laws as axioms, Perna proved the laws from a
+semantics given using the Unifying Theories of Programming (UTP)
+model~\cite{hoare1998}.
+
 \subsection{Correctness of Java Compilers}
 \label{java-compiler-correctness-subsection}
 
-% conclude no efforts to verify SCJVMs, following the normal form approach,
-% mention that the VM normal form must be in some specification language to lead
-% into the next section
+We now turn to consider how these approaches to compiler correctness have been
+applied in the case of Java-like languages.  The popularity of Java has meant
+that there has been plenty of work on formalising Java and the
+JVM~\cite{hartel2001} but there have been relatively few works on formally
+verified compilers for Java-like languages.  However, the work that has been
+done uses both of the two main approaches and covers most of the features of
+Java.
+
+Some of the earliest and most thorough work is that by S\"{a}rk, Schmid and
+B\"{o}rger~\cite{stark2001}, who formalise most of Java and the JVM before
+specifying and showing the correctness of a compiler for Java.  The approach
+taken by them is an interesting one of using Abstract State Machines (ASMs) to
+specify the source and target languages.  The ASMs are used to give an
+operational semantics to Java and the JVM, describing how each construct affects
+the running of the program.  The languages are each specified by multiple ASMs,
+beginning with an imperative core, then adding classes, objects, execeptions
+and, finally, threads.  Although this approach is called the ASM
+approach, it becomes clear from the definition of compiler correctness given in
+terms of a mapping between ASMs that this work ultimately follows the commuting
+diagram approach.  This work leaves parts of the proof incomplete (in
+particular, compilation of threads is not addressed) and applies to an old
+version of Java, but this is nevertheless an admirable attempt at a verified
+Java compiler.
+
+Work has also been done on compilers for Java-like languages following the
+algebraic approach by Duran~\cite{duran2005, duran2010}.  Duran's work specifies
+a compiler for a language called Refinement Object-Oriented Language
+(ROOL)~\cite{borba2000}, which was created for reasoning about object-oriented
+languages and bears much similarity to Java.  ROOL features constructs for
+specifying and reasoning about programs as well as object-oriented programming
+language constructs.  This means that the there are algebraic laws for ROOL,
+from which the rewrite rules that form the basis of the algebraic approach can
+be proved.  Duran's work adds further phases to Sampaio's compilation strategy
+in order to deal with the object-oriented features but does not consider some
+other aspects of Java such as exceptions and threads, though Duran notes that
+other work has addressed some of those issues.
+
+While the two works already discussed were not machine checked, there have also
+been compiler correctness proofs fo Java-like languages in the Isabelle/HOL
+proof assistant.  The first of these was by Strecker~\cite{strecker2002},
+showing correctness of a compiler for a subset of Java calles $\mu$Java, which
+already had a formalisation of its semantics in Isabelle/HOL~\cite{nipkow2000}.
+This work was followed by Klein and Nipkow's work on a compiler for a slightly
+larger subset of Java called Jinja~\cite{klein2006}, which added exception
+handling.  Finally, Lochbihler~\cite{lochbihler2010} added threads to Jinja and
+showed correctness of compilation for Java concurrency.  It is notable that this
+is the only work on Java compilation that properly addresses concurrency.  All
+of these works follow the commuting diagram approach.
+
+Though some work has been done on correct compilers for Java-like languages and
+many virtual machines for SCJ adopt an approach of compiling to native code, no
+work has been done on verifying that compilation to native code.  Therefore, we
+will consider correctness of the compilation to native code as part of our work
+on SCJ virtual machines.  We will follow the algebraic approach as it gives
+greater assurance of correctness, as an additional function mapping source
+meanings to target meanings is not required, and a good level of modularity, as
+the compilation is split into separately proved rewrite rules.  In order to
+represent the normal form we require a specification language and for that
+purpose will use \Circus{}, which is described in the next section.
 
 \section{\Circus{}}
 \label{circus-section}
 
-% adapt overview of Circus using the clock specification from earlier version of
-% JTRES paper
-
-The \Circus{} specification language~\cite{oliveira2009} is based on CSP~\cite{roscoe2011}, which is
-used to specify processes that communicate over channels, and the Z
-notation~\cite{woodcock1996}, which is used to specify state and data
-operations.  A \Circus{} specification is made up of processes that communicate
-over channels.  These channels may carry values of a particular type, or may be
-used as flags for synchronization or signalling between processes.  Each process
-may have state, and is made up of actions that operate on that state and
-communicate over channels.
+The \Circus{} specification language~\cite{oliveira2009} is based on
+CSP~\cite{roscoe2011}, which is used to specify processes that communicate over
+channels, and the Z notation~\cite{woodcock1996}, which is used to specify state
+and data operations.  A \Circus{} specification is made up of processes that
+communicate over channels.  These channels may carry values of a particular
+type, or may be used as flags for synchronization or signalling between
+processes.  Each process may have state, and is made up of actions that operate
+on that state and communicate over channels.
 
 We will illustrate the concepts of \Circus{} using as an example the process for
 the real-time clock from some of the preliminary work on the specification of an
