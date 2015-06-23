@@ -492,8 +492,10 @@ Fiji VM, single processor.
 \subsection{PERC Pico}
 
 PERC Pico is a product of Atego based on early ideas for SCJ, but uses its own
-system of Java metadata annotations to ensure the safety of scoped memory. PERC
-Pico does not support the current SCJ standard.
+system of Java metadata annotations to ensure the safety of scoped memory.  This
+systems of annotations provides additional information about how memory will be
+used so that it can be checked. PERC Pico does not support the current SCJ
+standard.
 
 To summarise, as far as we are aware there is one publicly available virtual
 machine that has kept up with the developing SCJ specificarion, which is the
@@ -669,32 +671,71 @@ put it more precisely, at least as deterministic as another.  The reason for
 this concept being so important is that the languages and laws for reasoning
 about programs can also be used to develop programs from specifications.  This
 means that certain things can be left loosely specified and several different
-implementations could refine that
-specification. % an example of where nondeterminism in a specification is good
-               % would be helpful here
+implementations could refine that specification.  As an example, many high-level
+programming languages make use of variables without specifying where in memory
+they should reside.  A compiler is free to produce code that places the
+variables at any valid memory addresses, or even in processor registers.  Such
+code would be a refinement of the high-level program, which permitted a
+nondterministic choice as to the location of the variables.
 
 The use of refinement in showing correctness of a compiler is that the laws of
 the specification language can be used to prove refinement laws, transforming
-the source language into the form of an interpreter  for the target language.
-That is, the code output by the compiler, when executed by on the target
-machine, must be a refinement of the source program.  The power of the
-algebraic approach is that the compilation of individual elements of the source
-language can be specified and proved speparately in different refinement
+the source language into som normal form that represents an interpreter for the
+target language.  That is, the code output by the compiler, when executed by on
+the target machine, must be a refinement of the source program.  The power of
+the algebraic approach is that the compilation of individual elements of the
+source language can be specified and proved separately in different refinement
 laws.  The compilation can also be split into stages, with a set of refinement
 laws for each stage to further modularise the compilation.  The separate
 refinement laws can then be combined to form a compilation strategy.
 
-The first major work done using the algebraic approach was that of
-Sampaio~\cite{sampaio1993}, who used it to specify a correct compiler for a
-simple language that nonetheless covers all the constructs available in most
-programming languages. The target machine Sampaio used was a simple
-single-register machine that bears some similarity to most real processor
-architectures.  One interesting aspect of Sampaio's work is that he mechanised
-the compiler in the OBJ3 term rewriting system~\cite{goguen1988}, showing that
-working compilers can be easily created from specifications using the algebraic
-approach.  However, the algebraic laws Samapaio used to prove correctness of the
-compiler were taken as axioms and not proved, though Samapaio notes that they
-could be easily proved given a semantics for the reasoning language.
+As an example, consider the following refinement laws, based on rules from
+Sampaio's work~\cite{sampaio1993}, which address the compilation of assignment
+statements.
+\begin{align}
+  \label{assignment-rule}
+  x := e &\circrefines \circvar A \circspot A := e \circseq x := A \\
+  \label{addition-rule}
+  A := e + f &\circrefines \circvar t \circspot A := f \circseq t := A
+  \circseq A := e \circseq A := A + t \\
+  \label{counter-rule}
+  x := e &\circrefines \circvar P \circspot P := s \circseq \circdo P = s
+  \circthen x, P := e, P+1 \circod \circseq \{ P = s + 1 \}
+\end{align}
+In these rules the symbol $\circrefines$ represents the refinement relation.
+The first two rules come from a phase of compilation in which complex
+expressions are broken down into expressions that can be more directly handled
+by processor instructions.  In rule~\eqref{assignment-rule}, a variable
+representing a processor register, $A$, is introduced to temporarily store the
+result of an expression as the target architecture does not have instructions to
+store results of computations directly into memory, but only into registers.  In
+that way the compilation can be seen as advancing towards the form of the
+individual processor instructions.  The rule~\eqref{addition-rule} provides for
+handling addition by storing the, possibly quite complex, right-hand side of the
+equation into a newly introduced temporary variable, $t$.  These rules, along
+with others, reduce complex assignment statements to a series of simple
+assignments that can be performed by processor instructions.  Finally, the
+rule~\eqref{counter-rule}, introduces a variable, $P$, that represents the
+program counter and refines the assignment operation with an operation that
+performs the assignment and increments the program counter as long as the
+program counter is at a specific value $s$, which is the location of the
+instruction in memory.  The result of the refinement works as a standalone
+program since it also initialises the program counter and makes an assertion
+about the final value of the program counter.  Programs of this form are
+combined by the refinement rule for sequential composition, bringing the result
+of the compilation into the normal form, which behaves as an interpreter for the
+target machine.
+
+Sampaio~\cite{sampaio1993} specified a correct compiler for a simple language
+that nonetheless covers all the constructs available in most programming
+languages. The target machine Sampaio used was a simple single-register machine
+that bears some similarity to most real processor architectures.  One
+interesting aspect of Sampaio's work is that he mechanised the compiler in the
+OBJ3 term rewriting system~\cite{goguen1988}, showing that working compilers can
+be easily created from specifications using the algebraic approach.  However,
+the algebraic laws Samapaio used to prove correctness of the compiler were taken
+as axioms and not proved, though Samapaio notes that they could be easily proved
+given a semantics for the reasoning language.
 
 Though there has not been much work done using the algebraic approach, one
 interesting application of the algebraic approach is in the work of
