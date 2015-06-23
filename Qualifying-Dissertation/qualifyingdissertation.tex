@@ -999,6 +999,57 @@ of the entire system.
 
 % summarise the problem and how to solve it
 
+We have seen that Java is increasingly being considered as a language for
+safety-critical embedded systems and that the modifications to Java required to
+make it suitable for such systems require a specialised virtual machine.  In
+particular, the developing Safety-Critical Java specification has several
+differences from standard Java, particularly in the areas of scheduling and
+memory management, that make standard JVMs unsuitable for running SCJ programs.
+We have considered several virtual machines that have been developed for running
+SCJ programs and noted that none of them has formal verification, which is now
+required for certification under many standards, and that most of them adopt an
+approach of precompiling programs to native code.
+
+Having seen that many SCJ virtual machines follow a precompilation approach, we
+have considered the techniques used to verify the correctness of compilers and
+found that there are two main approaches: the commuting diagram approach and the
+algebraic approach.
+
+In the commuting diagram approach the source semantics, target semantics,
+compilation function, and a function mapping the source meanings to the target
+meanings, are shown to commute.  This approach is popular and has had much
+research done on it but relies on the definition of the function from the source
+meanings to the target meanings.
+
+The algebraic approach defines the source and target languages within the same
+specification language, which is additionally equipped with a relation of
+refinement between programs.  The laws that constructs in the specification
+language are known to obey are then used to prove refinement rules that are
+applied according to some compilation strategy to perform the compilation.  The
+algebraic approach has the advantage that it does not require the additional
+function that is required in the commuting diagram approach since the source and
+target languages are defined in terms of the same specification language.  The
+algebraic approach also permits a modular approach to proof and allows for the
+compiler to be easily implemented by application of the refinement rules using a
+term rewriting system.
+
+Given the considerations above, we have decided to adopt the algebraic approach
+when specifying the compilation to native code employed by many SCJ virtual
+machines.  This means that a specification language is required in which to
+define the source and target languages, as well as for the purposes of
+specifying other aspects of the virtual machine.  We have chosen \Circus{} as
+the specification language as it contains a wide variety of constructs that
+allow for specification of both and behaviour, has a well-defined semantics with
+many laws already proved, and has been used for previous work on the
+specification of SCJ programs. \Circus{} also has some existing mechanisation
+and tool support, which can help give greater assurance of the correctness of
+specifications.
+
+Having considered some of the literature and seen that our task is to construct
+a framework in which virtual machines for SCJ can be verified, it remains to
+formulate the structure of this framework and plan how to proceed with the
+work.  This is the topic of the next chapter.
+
 \chapter{Research Proposal}
 \label{research-proposal-chapter}
 
