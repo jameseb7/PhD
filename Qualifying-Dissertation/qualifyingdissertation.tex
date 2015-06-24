@@ -268,25 +268,24 @@ wider context of this research.
 \chapter{Compilers and Virtual Machines for Java-like languages in the Safety-critical Domain}
 \label{literature-review-chapter}
 
-This chapter will begin with a discussion of why Java is being used in
+This chapter begins with a discussion of why Java is being used in
 safety-critical systems and the need for a specialised version of Java for use
-in that area, in Section~\ref{java-safety-critical-section}.  Then, in
-section~\ref{scj-section} we will cover the variant of Java developed for
-safety-critical systems, seeing how it differs from standard Java and why a
-specialised virtual machine is required, before discussing some of the existing
-virtual machines for that variant in Section~\ref{virtual-machines-section}.
+in that area.  Then, in Section~\ref{scj-section} we cover the variant of Java
+developed for safety-critical systems, how it differs from standard Java and why
+a specialised virtual machine is required, before discussing some of the
+existing virtual machines for that variant in
+Section~\ref{virtual-machines-section}.
 
-In Section~\ref{compiler-correctness-section} we will survey some of the
-literature on compiler correctness, looking at the two main approaches in
+In Section~\ref{compiler-correctness-section} we survey some of the literature
+on compiler correctness, and discuss the two main approaches in
 Sections~\ref{commuting-diagram-subsection} and
-\ref{algebraic-approach-subsection} before seeing how the techniques of compiler
+\ref{algebraic-approach-subsection}, before seeing how the techniques of compiler
 correctness have been applied to Java-like languages in
 Section~\ref{java-compiler-correctness-subsection}.
 
-Then, in Section~\ref{circus-section}, we will give an overview of the \Circus{}
-specification language used for our virtual machine specification before
-summarising what we have learnt from the literature reviewed in this chapter in
-Section~\ref{final-considerations-section}.
+In Section~\ref{circus-section}, we give an overview of the \Circus{}
+specification language used for our virtual machine specification, before
+concluding in Section~\ref{final-considerations-section}.
 
 \section{Java for Safety-critical systems}
 \label{java-safety-critical-section}
@@ -294,49 +293,45 @@ Section~\ref{final-considerations-section}.
 % provide motivation for SCJ, mentioning standard Java and RTSJ
 
 In recent years Java has increasingly been considered as a language for writing
-safety-critical software. The reason for this is that the other languages that
-are generally used in the safety-critical domain are C/C++ and Ada; C and C++ are
-seen as having too many problems to permit reliable use at the highest levels of
-safety~\cite{kornecki2009}, and Ada has not gained widespread
-popularity~\cite{bissyande2013}.  While Java has not traditionally been seen as
-a language for safety-critical systems, it was originally developed for the area
-of embedded systems, particularly use in television set-top boxes, and has seen
-renewed interest in its use in embedded systems after gaining popularity in the
-area of the internet~\cite{mulchandani1998}.  
+safety-critical software. Other languages that are generally used in the
+safety-critical domain are C/C++ and Ada; C and C++ impose challenges concerning
+reliable use at the highest levels of safety~\cite{kornecki2009}, and the
+numkber of Ada programmers is not very large~\cite{bissyande2013}.  While Java has not
+traditionally been seen as a language for safety-critical systems, it was
+originally developed for the area of embedded systems, particularly for use in
+television set-top boxes, and has seen renewed interest in its use in embedded
+systems after gaining popularity in programming for the
+internet~\cite{mulchandani1998}.
 
 There are, however, several issues with standard Java that make it unsuitable
 for safety-critical systems. Many safety critical systems are also real-time
 systems, which are required to be predictable in their scheduling and use of
-memory. However, standard Java uses a garbage-collected memory model, in which
-it is hard to predict when memory may be freed or how long the process of
+memory. However, standard Java uses a garbage-collected memory model, which
+makes it hard to predict when memory may be freed or how long the process of
 freeing memory may take. Standard Java's thread model also lacks the
 predictability and control that is required in real-time systems.
 
-To rectify these problems with standard Java the Real-Time Specification for
-Java (RTSJ)~\cite{gosling2000} was created, which augments Java's memory and
-scheduling models with a system of scoped memory areas and a preemptive priority
+To rectify these problems the Real-Time Specification for Java
+(RTSJ)~\cite{gosling2000} was created; it augments Java's memory and scheduling
+models with a system of scoped memory areas and a preemptive priority
 scheduler. RTSJ also allows for the standard Java models to be used alongside
-its own, making it suitable for a wide range of different real-time applications
-but also making it hard to certify RTSJ applications and thus unsuitable for use
-in the safety-critical domain.
+its own, making it suitable for a wide range of different real-time
+applications.  On the other hand, this makes it hard to certify RTSJ
+applications and thus renders the RTSJ unsuitable for use in the safety-critical
+domain.
 
-In order to better allow for certifiable safety-critical systems in Java, the
+In order to allow certifiable safety-critical systems in Java, the
 Safety-Critical Java (SCJ)~\cite{locke2013} specification was developed. SCJ is
-a subset of RTSJ, chosen so as to permit certification and leaving out the
-features from standard Java that are difficult to certify such as the garbage
-collector. SCJ also provides annotations that allow memory usage to be more
-easily checked. We will discuss SCJ in more detail in the next section.
+a subset of the RTSJ that leaves out the features from standard Java that are
+difficult to certify such as the garbage collector. SCJ also provides
+annotations that allow memory usage to be more easily checked. We discuss SCJ in
+more detail in the next section.
 
 \section{Safety-Critical Java}
 \label{scj-section}
 
-Safety-Critical Java is a variant of Java designed for writing Java programs
-where certifiability is an important concern.  SCJ is based upon the Real-Time
-Specification for Java, which augments the standard Java scheduler and
-garbage-collected heap with more predictable priority-scheduled event handlers
-and scoped memory areas.  The modification that SCJ makes to the RTSJ is to
-remove the aspects of RTSJ that make certification difficult, including removal
-of standard Java threads and the garbage collector.  This leaves scheduling and
+SCJ removes the aspects of the RTSJ that make certification difficult, including
+standard Java threads and the garbage collector.  This leaves scheduling and
 memory management models that are very different to the models for standard Java
 and that, therefore, require specialised virtual machines to support them.
 
@@ -350,7 +345,7 @@ access to real-time threads and suspension via \texttt{wait()} and
 
 An SCJ program consists of one or more missions, which are collections of
 schedulable objects that are scheduled by SCJ's priority scheduler. Missions are
-run in an order determined by the mission sequencer supplied by an SCJ program.
+run in an order determined by a mission sequencer supplied by an SCJ program.
 Running a mission proceeds in several phases, as shown in
 Figure~\ref{phases-diagram}.
 
@@ -363,16 +358,17 @@ Figure~\ref{phases-diagram}.
 The fist phase is initialization, which consists of setting up the schedulable
 objects controlled by the mission and creating any data structures required for
 the mission.  Then the mission is executed by starting each of the schedulable
-objects in the mission and waiting for a request to terminate the mission. Then,
-when the mission is requested to terminate, each of the schedulable objects in
-the mission is terminated and the mission's memory is cleared.  The schedulable
-objects within a mission are asynchronous event handlers that are released
-either periodically, at set intervals of time, aperiodically, in response to a
-release request, or once at a specific point in time (though handlers that are
-released once can have a new release time set, allowing them to be released
-again).  At level 2 real-time threads are also allowed, which run continuously
-from when they start until they finish unless they are suspended or interrupted
-by another schedulable object.
+objects in the mission and waiting for a request to terminate the mission. When
+the mission is requested to terminate, each of the schedulable objects in the
+mission is terminated and the mission's memory is cleared.
+
+The schedulable objects within a mission are asynchronous event handlers that
+are released either periodically, at set intervals of time, aperiodically, in
+response to a release request, or once at a specific point in time (though
+handlers that are released once can have a new release time set, allowing them
+to be released again).  At level 2 real-time threads are also allowed, which run
+continuously from when they start until they finish, unless they are suspended
+or interrupted by another schedulable object.
 
 Each schedulable object has a priority and the highest priority object that is
 eligible to run at each point in time is the object that runs. This allows for
@@ -385,7 +381,7 @@ each scheduling allocation domain is restricted to a single processor.  Hence,
 in scheduling terms, the system is fully partitioned. This allows for mature
 single processor schedulability analysis to be applied to each domain (although
 the calculation of the blocking times when accessing global synchronised methods
-will be different than they would be on a single processor system due to the
+are different than they would be on a single processor system due to the
 potential for remote blocking~\cite{davis2011}).
 
 SCJ deals with memory in terms of memory areas, which are Java objects that
@@ -395,13 +391,13 @@ designated as the allocation context.  Each schedulable object has a memory area
 associated with it that is used as the allocation context during a release of
 that object, and is cleared after each release.  Each mission also has a mission
 memory area that can be used as an allocation context by the schedulable objects
-of that mission, to provide space for objects that persist for the duration of
-the mission or that need to be shared between the schedulable objects.  There is
-also an immortal memory area where objects can be allocated if needed for the
+of that mission, to provide space for objects that need to persist for the
+duration of the mission or to be shared between the schedulable objects.  There
+is also an immortal memory area where objects can be allocated if needed for the
 entire running of the program (they are never freed). SCJ places restrictions on
 which objects an object may point to, so as to avoid dangling pointers from
-being created. Some examples of valid object references for some asynchronous
-event handlers are shown in Figure~\ref{stacks-areas-diagram}.
+being created. Some examples of valid and invalid object references for some
+asynchronous event handlers are shown in Figure~\ref{stacks-areas-diagram}.
 
 
 \begin{figure}[ht]
@@ -411,46 +407,44 @@ event handlers are shown in Figure~\ref{stacks-areas-diagram}.
 \label{stacks-areas-diagram}
 \end{figure}
 
-This system of memory areas makes it easy to predict when memory is freed, which
-cannot be easily done with a garbage-collected heap.  Furthermore, this memory
-model cannot be achieved with a standard JVM as it does not provide memory
-outside of the heap for allocation and lacks a notion of allocation context. The
-memory manager also needs to provide a means of accessing raw memory for the
-purposes of device access, but that section of the SCJ standard is not yet
-finalised so we will not cover it here. It can, however, be seen that any system
-of raw memory access is not supported by most standard JVMs.
+This system of memory areas makes it easy to predict when memory is freed.  It
+is not supported by standard JVMs as they do not provide memory outside of the
+heap for allocation and lack a notion of allocation context. The SCJ memory manager
+also needs to provide a means of accessing raw memory for the purposes of device
+access, but that section of the SCJ standard is not yet finalised so we will not
+cover it here. It can, however, be seen that any system of raw memory access is
+not supported by most standard JVMs.
 
-A further requirement of SCJ is that dynamic class loading is not allowed; all
-classes used by the program must be loaded when the program starts. This is
-because dynamic class loading may introduce time overheads that are hard to
-predict and additional code paths that complicate certification.  SCJ also
-disallows object finalisers as it is not always easy to predict when they are
-run.
+Moreover, dynamic class loading is not allowed in SCJ; all classes used by the
+program must be loaded when the program starts. This is because dynamic class
+loading may introduce time overheads that are hard to predict and additional
+code paths that complicate certification.  Finally, SCJ also disallows object
+finalisers as it is not always easy to predict when they are run.
 
 \section{Virtual Machines for Safety-Critical Java}
 \label{virtual-machines-section}
 
 % one subsection per machine
 
-Because of these features of SCJ, a specialised virtual machine that provides
-support for allocation in memory areas and preemptive scheduling is required for
-SCJ. Although SCJ is a relatively recent development there have been various
-virtual machines created for SCJ or variations of SCJ, including including
-icecap HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009},
-OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and PERC
-Pico~\cite{atego2015, richard2010}. These are each described in the following
-subsections.
+Because of the novel features of SCJ, briefly described in the previous section,
+a specialised virtual machine that provides support for allocation in memory
+areas and preemptive scheduling is required for SCJ. Although SCJ is a
+relatively recent development there have been various virtual machines created
+for SCJ or variations of SCJ, including including icecap
+HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009}, OVM~\cite{armbruster2007},
+HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
+  richard2010}. These are each described in the following subsections.
 
 \subsection{icecap HVM and HVM\textsubscript{TP}}
 
-The icecap hardware near virtual machine (HVM) was created as part of the
+The icecap hardware-near virtual machine (HVM) was created as part of the
 Certifiable Java for Embedded Systems Project~\cite{schoeberl2014} and provides
 an open-source implementation of SCJ targetted at embedded systems.  The
 approach taken by the HVM is one of precompiling Java bytecode to C in order to
 allow for faster running programs with fewer memory resources.  It includes an
-implementation of the SCJ libraries, which cannot be easily decoupled from the
-virtual machine itself and covers most of SCJ level 2, though only for a single
-processor implementation.
+implementation of the SCJ libraries that covers most of SCJ level 2, though only
+for a single processor implementation.  This implementation, however, cannot be
+easily decoupled from the virtual machine itself.
 
 The icecap HVM also provides a lightweight Java bytecode interpreter and allows
 for interpreted code to be mixed with compiled code.  The reason for this is
@@ -458,8 +452,7 @@ that the bytecode together with the interpreter can often be smaller than the
 compiled code, though there is a tradeoff for speed. HVM\textsubscript{TP} is a
 modification of the icecap HVM's bytecode interpreter to improve time
 predictability and ensure that bytecode instructions are executed in constant
-time, which is important for ensuring real-time properties of the system can
-hold.
+time, which is important for ensuring real-time properties of the system hold.
 
 \subsection{Fiji VM}
 
@@ -467,26 +460,30 @@ Fiji VM is a proprietary Java implementation designed to run on real-time
 embedded systems.  Similarly to the icecap HVM, Fiji VM uses the strategy of
 compiling to C in order to improve performance.  However, Fiji VM is not
 specifically targetted at SCJ and works with a range of libraries, including
-SCJ, RTSJ and the standard Java libraries.  The fact that Fiji VM works with the
-SCJ libraries and supports the scoped memory model means it can run SCJ
-programs, although it does not necessarily support all aspects of SCJ properly.
-Fiji VM does have the advantage of high portability and multiprocessor support,
-which is lacking in many other SCJ virtual machines.
+SCJ, RTSJ and the standard Java libraries.  Fiji VM does have the advantage of
+high portability and multiprocessor support, which is lacking in many other SCJ
+virtual machines.
+
+The fact that Fiji VM works with the SCJ libraries and supports the scoped
+memory model means it can run SCJ programs.  It does not necessarily support all
+aspects of SCJ properly though.
+
 
 \subsection{OVM}
 
 OVM was created at Purdue University as part of the PCES
 project~\cite{baker2006}, to provide a virtual machine that can execute
 real-time Java programs with a high level of performance on embedded systems.
-Similar to Fiji VM and icecap HVM, OVM works on a principle of precompiling code
-for performance reasons but translates Java to C++ instead of bytecode to C.
+Similar to Fiji VM and icecap HVM, OVM follows the principle of precompiling
+code for performance reasons, but translates Java to C++ instead of bytecode to
+C.
+
+
 OVM also differs from the icecap HVM and Fiji VM in that it predates SCJ. It is
-written to implement the Real-Time Specification for Java
-(RTSJ)~\cite{gosling2000}, though it can still support SCJ programs as SCJ is
-based on a subset of RTSJ and, indeed, an SCJ implementation for OVM was later
-created~\cite{plsek2010}. However, OVM does not appear to have kept up with more
-recent changes to the draft SCJ standard. OVM is, like icecap HVM but unlike
-Fiji VM, single processor. 
+written to implement the RTSJ, though it can still support SCJ programs; indeed,
+an SCJ implementation for OVM was later created~\cite{plsek2010}. However, OVM
+does not appear to have kept up with more recent changes to the draft SCJ
+standard. OVM is, like icecap HVM, but unlike Fiji VM, single processor.
 
 \subsection{PERC Pico}
 
@@ -497,42 +494,42 @@ used so that it can be checked. PERC Pico does not support the current SCJ
 standard.
 
 To summarise, as far as we are aware there is one publicly available virtual
-machine that has kept up with the developing SCJ specificarion, which is the
-icecap HVM. This is and, typically, virtual machines for SCJ will be, designed
-to be very small and fast so as to be able to run on embedded systems.  As can
-be seen from the preceding discussion, a common technique to run Java programs
-on embedded systems is to precompile them to native code. This means compiler
-correctness techniques must be considered in verfication of such a virtual
-machine; these techniques will be looked at in detail in the next section.
+machine that has kept up with the developing SCJ specification, the icecap
+HVM. This is and, typically, virtual machines for SCJ will be, designed to be
+very small and fast so as to be able to run on embedded systems.
+
+As can be seen from the preceding discussion, a common technique to run Java
+programs on embedded systems is to precompile them to native code. This means
+compiler correctness techniques must be considered in verfication of such a
+virtual machine; these techniques are discussed in the next section.
 
 \section{Compiler Correctness}
 \label{compiler-correctness-section}
 
-Due to the importance of compiler correctness to the correctness of the programs
-produced by it, there has been much research over the years into the area of
-compiler correctness. Most of the work done follows a similar approach, which I
-will term the commuting diagram approach as it can be viewed as showing that a
-particular diagram commutes. I will discuss the commuting diagram approach in
+Due to the importance of compiler correctness, there has been much research over
+the years in this area.  Most of the work done follows a similar approach, which
+we will term the commuting-diagram approach as it is based on showing that a
+particular diagram commutes. We will discuss the commuting diagram approach in
 Section~\ref{commuting-diagram-subsection}.
 
-An alternative approach to compiler verification is the algebraic approach that
-was developed in the early 90s and is based on the concepts of refinement
-calculi designed for deriving software from specifications of behaviour. I will
-explain the algebraic approach in Section~\ref{algebraic-approach-subsection}
-and discuss how it differs from the commuting diagram approach.
+An alternative approach to compiler verification is the algebraic approach
+developed in the early 90s.  It is based on the concepts of refinement calculi
+designed for deriving software from specifications of behaviour. We will explain
+the algebraic approach in Section~\ref{algebraic-approach-subsection} and
+discuss how it differs from the commuting-diagram approach.
 
-I will finish in Section~\ref{java-compiler-correctness-subsection} by reviewing
-some of the literature on correctness of compilers for Java-like languages,
-looking at how the techniques of compiler correctness have been applied in the
-case of Java and comparing the different approaches.
+We finish in Section~\ref{java-compiler-correctness-subsection} by reviewing
+some of the literature on correctness of compilers for Java-like languages. We
+explain how the techniques of compiler correctness have been applied in the case
+of Java and compare the different approaches.
 
-\subsection{Commuting Diagram Approach}
+\subsection{Commuting-diagram Approach}
 \label{commuting-diagram-subsection}
 
 Much of the work on compiler correctness can be seen as following the approach
 identified by Lockwood Morris~\cite{morris1973}, and later refined by Thatcher,
 Wagner and Wright~\cite{thatcher1979}. The approach is essentially that a
-compiler correctness proof should be a proof that the diagram shown in
+compiler correctness proof is a proof that the diagram shown in
 Figure~\ref{commuting-diagram} commutes, that is, $\gamma \circ \psi = \phi
 \circ \epsilon$.
 
@@ -560,75 +557,70 @@ Figure~\ref{commuting-diagram} commutes, that is, $\gamma \circ \psi = \phi
 
 Lockwood Morris had the corners of the diagram as algebras, rather than merely
 sets, with the functions between them being homomorphisms in order to add
-additional structure to the compiler correctness proof.  This differs from the
-approach of some earlier works, particularly the earliest work by McCarthy and
+additional structure to the proof.  This differs from the approach of some
+earlier works, particularly the earliest work by McCarthy and
 Painter~\cite{mccarthy1967}, and instead follows work such as that of Burstall
 and Landin~\cite{burstall1969}.
 
 McCarthy and Painter's work featured a simple expression language with addition,
 natural numbers and variables.  This was compiled to a simple 4-instruction
-single-register machine. The proof of the compiler's correctness followed the
-commuting diagram approach, though the arrows of the diagram were simple
-functions rather than homomorphisms and the proof was performed using induction
-over the source language. The work is not particularly advanced but did lay the
-foundation for the study of compiler correctness.
+single-register machine.  The arrows of the diagram were simple functions,
+rather than homomorphisms, and the proof was performed using induction over the
+source language. This work laid the foundation for the study of compiler
+correctness.
 
-The approach taken by Burstall and Landin is interesting since, though
-they show correctness of a compiler for the same source and target languages as
-McCarthy and Painter, they use a more algebraic approach that better matches
-what Lockwood Morris later suggested.  Burstall and Landin's approach involved
-representing the source and target languages, and their meanings, as algebras,
-with the compilation functions as homomorphisms. They then show correctness of
-the compilation, targetting several intermediate machines in the
-process. Viewing the languages as algebras can be seen to allow for simpler
-proofs as some of the arrows of the commuting diagram can be wholly or partially
-derived from the algebraic structure. It is this notion of simplifying the
-proofs that led Lockwood Morris to advocate the use of algebras and
-homomorphisms.
+Burstall and Landin show correctness of a compiler for the same source and
+target languages as McCarthy and Painter; they use a more algebraic approach
+that better matches what Lockwood Morris later suggested.  Burstall and Landin's
+approach involved representing the source and target languages, and their
+meanings, as algebras, with the compilation functions as homomorphisms. They
+targetseveral intermediate machines in the proof of correctness. Viewing the
+languages as algebras allows for simpler proofs as some of the arrows of the
+commuting diagram can be wholly or partially derived from the algebraic
+structure. It was this goal of simplifying the proofs that led Lockwood Morris
+to advocate the use of algebras and homomorphisms.
 
 The overall goal of pursuing formal proofs of compiler correctness, as proposed
 by McCarthy and Painter~\cite{mccarthy1967}, is to allow machine-checked proofs
-of program correctness. There has certainly been work in that area following
-McCarthy and Painter's work, the earliest of which is that by Milner and
-Weyhrauch~\cite{milner1972} who show the correctness of an ALGOL-like
-language. The proof of correctness was partially mechanised in the LCF theorem
-prover~\cite{milner1972a} but they were of the opinion that the proof was
-feasable and could be completed relatively easily. An interesting point to note
+of program correctness. There has been work in that area, the earliest of which
+is that by Milner and Weyhrauch~\cite{milner1972} who show the correctness of an
+ALGOL-like language. The proof of correctness was partially mechanised in the
+LCF theorem prover~\cite{milner1972a} and the authors were of the opinion that
+the proof was feasable and could be completed relatively easily. A point to note
 is that Milner and Weyhrauch acknowledged the need for some way of structuring
-the proof in order to make it amenable to machine-checking, which gives further
+the proof in order to make it amenable to machine-checking. This gives further
 support to the algebraic commuting diagram approach advocated by Lockwood
 Morris. Indeed, Milner and Wehrauch explicitly followed that approach as they
 were in disscusions with Lockwood Morris.
 
 One advantage to making proofs easily machine-checkable, apart from the added
 certainty that the proof is correct, is that working compilers can be created
-from the machine-checked proofs via the code generation facitilies available
-with many theorem provers such as those of Isabelle/HOL~\cite{haftmann2007} and
-Coq~\cite{letouzey2003, letouzey2008}. The fact that the commuting diagram
+from the machine-checked proofs.  Code generation facitilies are available with
+many theorem provers such as those of Isabelle/HOL~\cite{haftmann2007} and
+Coq~\cite{letouzey2003, letouzey2008}. The fact that the commuting-diagram
 approach involves treating the compilation as a function between algebras
-representing the source and target languages fits well with this idea as there
-is then a function defined in the mechanised logic for the purposes of
-conducting proofs about it that can be readily extracted to executable code.
+representing the source and target languages fits well with this idea. In this
+case, there is then a function defined in the mechanised logic for the purposes
+of conducting proofs about it that can be readily extracted to executable code.
 
-The commuting diagram approach has been followed in much of the literature
+The commuting-diagram approach has been followed in much of the literature
 through the years, though not always with the algebraic methods recommended by
-Lockwood Morris.  It seems that the basic structure of the commuting diagram is
-a fairly natural approach to take, as seen by work such as that of the ProCoS
-project~\cite{buth1992}, which follows the commuting diagram structure although
-it does not directly reference the early works advocating an algebraic commuting
-diagram approach. Another piece of work that follows the commuting diagram
-approach is that of Polak~\cite{polak1981}, who states that he is more
-interested in verification of a ``real'' compiler rather than ``abstract code
-generating algorithms'', and shows the correctness of a compiler for a
-Pascal-like language.  This work also seems to focus much more on pragmatic
-applications of the commuting diagram approach, leaving behind the algebraic
-ideas of earlier papers (though Polak does cite them) and setting a precedent
-for a simpler verification approach based on considering the functions in the
+Lockwood Morris.  The basic structure of the commuting diagram is a fairly
+natural approach to take, as seen by work such as that of the ProCoS
+project~\cite{buth1992}.
+
+Another piece of work that follows the commuting diagram approach is that of
+Polak~\cite{polak1981}, who states that he is more interested in verification of
+a ``real'' compiler rather than ``abstract code generating algorithms'', and
+shows the correctness of a compiler for a Pascal-like language.  This work
+focuses much more on pragmatic applications of the commuting-diagram approach,
+leaving behind the algebraic ideas of earlier papers.  It sets a precedent for a
+simpler verification approach based on considering the functions in the
 commuting diagram.
 
 The commuting diagram has also been used in recent work, some of the most
 successful of which is that of CompCert~\cite{leroy2009a, leroy2009b,
-  leroy2012}, which is a project to create a fully verified realistic compiler
+  leroy2012}.  This is a project to create a fully verified realistic compiler
 for a subset of C, using the theorem prover Coq~\cite{coq2004}.
 
 \subsection{Algebraic Approach}
