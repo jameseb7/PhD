@@ -1170,8 +1170,17 @@ but that remains to be completed.
 \chapter{Requirements of a Safety-Critical Java Virtual Machine}
 \label{requirements-chapter}
 
+We present here our preliminary work specifying the requirements for the
+services of an SCJVM.  We specify the requirements for each of the virtual
+machine services separately: the memory manager in
+Section~\ref{memory-manager-section}, the scheduler in
+Section~\ref{scheduler-section}, and the real-time clock in
+Section~\ref{realtime-clock-section}.  Finally, we present an overview of the
+formal model of the virtual machine services in
+Section~\ref{formal-model-section}.
+
 \section{Memory Manager API}
-\label{memory-manager-sec}
+\label{memory-manager-section}
 
 The SCJVM memory manager deals with the raw blocks of memory used as backing
 stores for the memory areas of SCJ. The memory areas themselves are Java objects
@@ -1373,7 +1382,7 @@ stores, stacks are referred to by unique identifiers that may simply be pointers
 to the space allocated for the stack.
 
 \section{Scheduler API}
-\label{scheduler-sec}
+\label{scheduler-section}
 
 The SCJVM scheduler manages the scheduling of threads. The operations of the
 scheduler are summarised in Table~\ref{scheduler-table}.
@@ -1569,8 +1578,8 @@ attached to a given interrupt using the \texttt{attach\-Interrupt\-Handler}
 operation and an interrupt's handler can be removed with the
 \texttt{detach\-Interrupt\-Handler} operation. An interrupt with no handler
 attached to it is ignored. The clock interrupt coming from hardware is handled
-by the SCJVM clock (see Section~\ref{realtime-clock-sec}) and converted into a
-clock interrupt that is passed to the scheduler for handling by the attached
+by the SCJVM clock (see Section~\ref{realtime-clock-section}) and converted into
+a clock interrupt that is passed to the scheduler for handling by the attached
 interrupt handler (which should simply call the \texttt{triggerAlarm()} method
 of \texttt{Clock}).
 
@@ -1588,7 +1597,7 @@ disabled no interrupt handlers can run but it is implementation-defined as to
 whether or not interrupts fired while interrupts are disabled are lost.
 
 \section{Real-time Clock API}
-\label{realtime-clock-sec}
+\label{realtime-clock-section}
 
 The SCJVM must manage the system real-time clock, providing an interface that
 allows for the time to be read and alarms to be set to trigger time-based
@@ -1703,7 +1712,7 @@ the scheduler on clock models here. Instead, we present part of the memory
 manager model, which is the most complex of the three VM services.  We show the
 memory manager state and some of the operations. We also explain how the formal
 specification reflects the requirements identified in
-Section~\ref{memory-manager-sec}.
+Section~\ref{memory-manager-section}.
 
 The memory manager specification begins by declaring a type, $MemoryAddress$, of
 memory addresses to be the set of natural numbers.  This then allows for
