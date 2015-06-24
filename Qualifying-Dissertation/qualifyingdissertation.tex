@@ -265,8 +265,7 @@ wider context of this research.
 % - Discuss the formal model - similar to JTRES paper but room to go into more depth
 
 
-\chapter{Compilers and Virtual Machines for Java-like languages in the
-  Safety-critical Domain}
+\chapter{Compilers and Virtual Machines for Java-like languages in the Safety-critical Domain}
 \label{literature-review-chapter}
 
 This chapter will begin with a discussion of why Java is being used in
@@ -1055,16 +1054,20 @@ work.  This is the topic of the next chapter.
 
 % Move material from the start of the next chapter to here
 
-\chapter{Requirements of a Safety-Critical Java Virtual Machine}
-\label{requirements-chapter}
+% * the overall aim is to specify a framework for verification of SCJ virtual
+% machines 
 
-For the purposes of specification, a Safety-Critical Java virtual machine
-(SCJVM) is seen as having the components shown in Figure~\ref{scjvm-fig}. The
-SCJVM is spilt into two parts: the core execution environment and the virtual
-machine services. The core execution environment handles the running of Java
-bytecode.  The virtual machine services support, for example, scheduling and
-memory management, that is, services that are required to support the SCJ
-infrastructure and the core execution environment.
+% * we have identified an SCJVM as requiring the component shown in the
+% diagram
+
+Our aim is to specify a framework for the verification of Safety-Critical Java
+virtual machines (SCJVMs).  In order to provide a structure to the
+specification, we view an SCJVM as being composed of the components shown in
+Figure~\ref{scjvm-fig}.  The SCJVM is spilt into two parts: the core execution
+environment and the virtual machine services. The core execution environment
+handles the running of Java bytecode.  The virtual machine services support, for
+example, scheduling and memory management, that is, services that are required
+to support the SCJ infrastructure and the core execution environment.
 
 \begin{figure}[ht]
   \centering
@@ -1099,36 +1102,43 @@ infrastructure and the core execution environment.
 The core execution environment is not necessarily required to use any particular
 means to run the bytecode.  It may interpret bytecode instructions, just-in-time
 compile the bytecode, or execute native code precompiled from Java bytecode (in
-such a case the compiler is regarded as part of the core execution
-environment). As many existing virtual machines for SCJ adopt the approach of
-compiling to native code, I intend to consider specification of the core
-execution environment as specification of a compiler from Java bytecode to
-C. The reason for the choice of C as a target language is the same as that of
-other SCJ virtual machines: C is a language already widely used in the area of
+such a case the compiler is regarded as part of the core execution environment).
+As we have already seen, many existing SCJVMs adopt the approach of compiling to
+native code, and so our consider specification of the core execution environment
+will focus on compilation from Java bytecode to C. The reason for the choice of
+C as a target language is the same as that of other SCJ virtual machines,
+particularly the icecap HVM: C is a language already widely used in the area of
 embedded systems and is sufficiently lightweight to permit its use as a
 compilation target.
 
-The approach I will use for specifying and verfying the compilation is the
-algebraic approach as it allows for verification to easily flow from
-specification without the need for an additional function to verify against as
-in the commuting diagram approach. While Java bytecode is the source language of
-the compilation, it may be better to have a model of a bytecode interpreter that
-resembles the normal form usually used in the algebraic approach and refine it
-to a model of C code, essentially applying the algebraic approach in
-reverse. The reason for this is that Java bytecode is relatively low-level and
-there is a similar model of Java bytecode in Duran's model of Java
-compilation. The benefit of having a model of a Java bytecode interpreter is
-that it provides a specification of an iterpreter as well as a compiler,
-allowing compilation and interpretation to be mixed, as it permitted by the
-icecap HVM. The semantics is not expected differ from the standard semantics of
-Java bytecode, except in the instructions relating to scheduling and memory
-management, where some changes are envisaged, so the main challenge is in the
-compiler verification. It should also be noted that class loading is treated as
-part of the core execution environment and so it is bound by the requirement to
-load all classes at virtual machine startup.
+As already mentioned, we intend adopt the algebraic approach in order to show
+that the compilation is correct.  This will involve defining the semantics of
+Java bytecode and C in terms of some specification language, though there is
+much existing work on the formal semantics of Java bytecode~\cite{bertelsen2000,
+  jones1998, stark2001, alves1999a, bogdanas2015, lochbihler2012a} and
+C~\cite{campbell2012, ellison2012, krebbers2014} that can be used to aid in
+that.  We expect that the semantics of Java bytecode for an SCJVM will be
+similar to standard Java bytecode, except that the \texttt{invokedynamic} will
+be absent, since SCJ does not allow dynamic class loading, and instructions such
+as \texttt{new} will have to be aware of the SCJ memory and scheduling models.
+The specification language we will use is \Circus{}, for the reasons explained
+earlier.
 
-As can be seen from Figure~\ref{scjvm-fig}, we group the virtual machine
-services into three areas:
+When the semantics of Java bytecode and C are defined, all that then remains is
+to construct and prove the refinement rules that specify the compilation.  This
+will be done with the use of an automated theorem prover, in order to provide
+assurance that the proof is correct, and we choose Isabelle as our theorem
+prover with its existing implementations of \Circus{}~\cite{joshi2012} and the
+UTP~\cite{foster2015}.
+
+The compiled code will need to call additional functions to handle certain
+features of SCJ, for example, as alluded to above, the code to handle the
+\texttt{new} instruction must ensure the allocation is performed withing the
+correct allocation context.  Some of these functions are also required for
+implementing the SCJ libraries and so it is sensible to implement them alongside
+the core execution environment in what we have called the virtual machine
+services.  As can be seen from Figure~\ref{scjvm-fig}, we group the virtual
+machine services into three areas:
 \begin{itemize}
 \item the memory manager, which manages backing stores for memory areas and
   allocation within them;
@@ -1149,8 +1159,16 @@ be a minimal set of services required to run the virtual machine.  The latter
 case is desirable for low-end embedded systems that lack the resources to
 run a general operating system.
 
-I will now proceed to present some preliminary results specifying the virtual
-machine services and constructing a formal model of them.
+The requirements for the virtual machine services are identified from
+requirements imposed by the SCJ specification and specified in \Circus{} for
+ease of composition with the core execution environment.  We already have some
+preliminary results identifying the requirements for virtual machine services
+and constructing a formal model of them, which are presented in the next
+chapter.  The formal model should have a machine-checked proof of consistency
+but that remains to be completed.
+
+\chapter{Requirements of a Safety-Critical Java Virtual Machine}
+\label{requirements-chapter}
 
 \section{Memory Manager API}
 \label{memory-manager-sec}
