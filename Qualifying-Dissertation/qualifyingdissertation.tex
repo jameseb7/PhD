@@ -1664,7 +1664,7 @@ notation~\cite{woodcock1996}, which is used to specify state and data
 operations. In this section, we present a brief explanation of \Circus{} and an
 overview of our model. We then present part of the memory manager model to to
 show how it is constructed. The complete model can be found
-in the appendix to this report. It is type checked with Community Z Tools and we have
+in~\cite{baxter2015}. It is type checked with Community Z Tools and we have
 started to prove some basic properties of the memory manager using Z/Eves.
 
 A \Circus{} specification is made up of processes that communicate over
@@ -1696,8 +1696,7 @@ execution environment.
 \begin{circus}
   VMServices \circdef \\
   \t1 ((MemoryManager \lpar MMSInterface \rpar Scheduler) \\
-  \t2 \lpar RTCSInterface \rpar RealtimeClock) \\
-  \t3 \circhide VMServicesInternals
+  \t2 \lpar RTCSInterface \rpar RealtimeClock) \circhide VMServicesInternals
 \end{circus}
 %
 The parallel composition of $VMServices$ with a process representing the core
@@ -1721,10 +1720,9 @@ memory addresses and is used to specify that backing stores must not be
 fragmented.
 %
 \begin{zed}
-	MemoryAddress == \nat \\
-	ContiguousMemory == \\
-        \t1 \{~ m : \power MemoryAddress | \\
-        \t2 \exists a, b : MemoryAddress @ m = a \upto b ~\}
+  MemoryAddress == \nat \\
+  ContiguousMemory == 
+  \{~ m : \power MemoryAddress | \exists a, b : MemoryAddress @ m = a \upto b ~\}
 \end{zed}
 %
 Backing stores are identified by identifiers that are elements of a type
@@ -1803,13 +1801,12 @@ $backingStoreOverhead$. The invariants inherited from $MemoryBlock$ are also
 required to hold.
 %
 \begin{schema}{BackingStore}
-	MemoryBlock \\
-  	self : BackingStoreID \\
-  	children : \finset BackingStoreID \\
+  MemoryBlock \\
+  self : BackingStoreID \\
+  children : \finset BackingStoreID \\
 \where
- 	self \notin children \\
- 	\# total = \\
-        \t1 \# used + \# free + backingStoreOverhead
+  self \notin children \\
+  \# total = \# used + \# free + backingStoreOverhead
 \end{schema}
 %
 Initialisation of a $BackingStore$ is handled by the operation
@@ -1889,14 +1886,11 @@ backing store can be a (direct or indirect) child of itself.
 \where
   rootBackingStore \in \dom~stores \\
   \forall b: \dom~stores @ (stores~b).self = b \\
-  \forall b : \ran stores @ \exists m : \power b.used @ \\
-    \t1 (\lambda x : b.children @ (stores~x).total) \\
-    \t2 \partition m \\
+  \forall b : \ran stores @ \exists m : \power b.used @ 
+    (\lambda x : b.children @ (stores~x).total)~\partition~m \\
   \ran threadACs \subseteq \dom stores \\
-  childRelation = \bigcup \{ i : \dom~stores @ \\ 
-    \t1 \{ j : (stores~i).children @ (i,j) \} \} \\
-  \dom stores = \\
-    \t1 (childRelation\star) \limg \{ rootBackingStore \} \rimg \\
+  childRelation = \bigcup \{ i : \dom~stores @ \{ j : (stores~i).children @ (i,j) \} \} \\
+  \dom stores = (childRelation\star) \limg \{ rootBackingStore \} \rimg \\
   \forall s : \dom stores @ s \notin childRelation\plus \limg \{ s \} \rimg \\
 \end{schema}
 %
@@ -1907,12 +1901,12 @@ used to update the backing stores in the $stores$ function.  As an
 example we present the $GlobalMakeBS$ schema that specifies the creation of a
 backing store within another.
 
-Much of this operation's complexity comes from the fact that it is
-promoting two operations: $RBSAllocateChild$ and $BackingStoreInit$. The
-allocation occurs in the current allocation context, identified by the input
-$allocationContext?$. It is determined by obtaining the current thread from the
-scheduler, looking up its allocation context and passing it as an input to the
-operation specified by the Z schema.
+Much of this operation's complexity is due to the fact that it promotes two
+operations: $RBSAllocateChild$ and $BackingStoreInit$. The allocation occurs in
+the current allocation context, identified by the input $allocationContext?$. It
+is determined by obtaining the current thread from the scheduler, looking up its
+allocation context and passing it as an input to the operation specified by the
+Z schema.
 
 The first condition on the operation requires that the allocation context be a
 valid backing store, that is, in the domain of $stores$. After that, the
@@ -1942,24 +1936,18 @@ remain the same.
   allocationContext? : BackingStoreID \\
 \where
   allocationContext? \in \dom stores \\
-  \exists actualSize : \nat | \\
-  \t1 actualSize = size? + backingStoreOverhead @ \\
+  \exists actualSize : \nat | actualSize = size? + backingStoreOverhead @ \\
   \exists childID! : BackingStoreID @ \\
   \exists allocated! : ContiguousMemory @ \\
   \exists parent, child : BackingStore @ \\
-  \t1 (\exists \Delta BackingStore; report! : Report | \\
-    \t2 RBSAllocateChild [ actualSize / size? ] @ \\
-    \t2 \theta BackingStore = \\
-      \t3 stores~allocationContext? \land \\
+  \t1 (\exists \Delta BackingStore; report! : Report | RBSAllocateChild [ actualSize / size? ] @ \\
+    \t2 \theta BackingStore = stores~allocationContext? \land \\
     \t2 parent = \theta BackingStore~' \land \\
     \t2 childID! \notin \dom stores \land \\
     \t2 report! = okay) \land \\
-  \t1 (\exists BackingStore~'; report! : Report | \\
-    \t2 BackingStoreInit [ allocated! / addresses? ] @ \\
+  \t1 (\exists BackingStore~'; report! : Report | BackingStoreInit [ allocated! / addresses? ] @ \\
     \t2 child = \theta BackingStore~') \land \\
-  \t1 stores' = stores \oplus \\
-    \t2 \{ allocationContext? \mapsto parent, \\
-    \t2 childID! \mapsto child \} \\
+  \t1 stores' = stores \oplus \{ allocationContext? \mapsto parent, childID! \mapsto child \} \\
   rootBackingStore' = rootBackingStore \\
   childRelation' = childRelation \\
   threadACs' = threadACs \\
