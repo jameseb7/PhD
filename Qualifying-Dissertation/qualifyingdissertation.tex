@@ -1040,7 +1040,21 @@ work.  This is the topic of the next chapter.
 % repeat list from the objectives section and address each item in its own section
 
 Our aim is to specify a framework for the verification of Safety-Critical Java
-virtual machines (SCJVMs).  In order to provide a structure to the
+virtual machines (SCJVMs).  As mentioned earlier, it will consist of the
+following:  
+\begin{itemize}
+\item a specification of the requirements of an SCJ virtual machine,
+\item a compilation strategy from Java bytecode to native C code,
+\item a formal model of the virtual machine specification,
+\item proofs for validation of the formal model and verification of the
+  compilation strategy, and
+\item a mechanisation of the model and proofs.
+\end{itemize}
+These are each discussed in the sections of this chapter.
+
+\section{SCJVM requirements}
+
+In order to provide a structure to the
 specification, we view an SCJVM as being composed of the components shown in
 Figure~\ref{scjvm-fig}.  The SCJVM is split into two parts: the core execution
 environment and the virtual machine services. The core execution environment
@@ -1084,30 +1098,8 @@ compile the bytecode, or execute native code precompiled from Java bytecode (in
 such a case the compiler is regarded as part of the core execution environment).
 As we have already seen, many existing SCJVMs adopt the approach of compiling to
 native code, and so our specification of the core execution environment will
-focus on compilation from Java bytecode to C. The reason for the choice of C as
-a target language is the same as that of other SCJ virtual machines,
-particularly the icecap HVM: C is a language already widely used in the area of
-embedded systems and is sufficiently lightweight to permit its use as a
-compilation target.
-
-As already mentioned, we intend adopt the algebraic approach in order to show
-that the compilation is correct.  This will involve defining the semantics of
-Java bytecode and C in terms of the specification language \Circus{}.  There is
-much existing work on the formal semantics of Java bytecode~\cite{bertelsen2000,
-  jones1998, stark2001, alves1999a, bogdanas2015, lochbihler2012a} and
-C~\cite{campbell2012, ellison2012, krebbers2014} that can be used to aid in
-that.
-
-We expect that the semantics of Java bytecode for an SCJVM will be similar to
-that of standard Java bytecode, except that the \texttt{invokedynamic} will be
-absent, since SCJ does not allow dynamic class loading, and instructions such as
-\texttt{new} will have to be aware of the SCJ memory and scheduling models.
-
-When the semantics of Java bytecode and C are defined, we will define and prove
-the refinement rules that specify the compilation.  This will be done with the
-use of an automated theorem prover, in order to provide assurance that the proof
-is correct. We will use Isabelle as our theorem prover with its existing
-implementations of \Circus{}~\cite{joshi2012} and the UTP~\cite{foster2015}.
+focus on the construction of a compilation strategy, which is discussed in the
+next section.
 
 The compiled code will need to call additional functions to handle certain
 features of SCJ, for example, as alluded to above, the code to handle the
@@ -1144,6 +1136,41 @@ preliminary results identifying the requirements for virtual machine services
 and constructing a formal model of them, which are presented in the next
 chapter.  The formal model should have a machine-checked proof of consistency
 but that remains to be completed.
+
+\section{Compilation Strategy}
+
+ from Java bytecode to C. The reason for the choice of C as
+a target language is the same as that of other SCJ virtual machines,
+particularly the icecap HVM: C is a language already widely used in the area of
+embedded systems and is sufficiently lightweight to permit its use as a
+compilation target.
+
+As already mentioned, we intend adopt the algebraic approach in order to show
+that the compilation is correct.  This will involve defining the semantics of
+Java bytecode and C in terms of the specification language \Circus{}.  There is
+much existing work on the formal semantics of Java bytecode~\cite{bertelsen2000,
+  jones1998, stark2001, alves1999a, bogdanas2015, lochbihler2012a} and
+C~\cite{campbell2012, ellison2012, krebbers2014} that can be used to aid in
+that.
+
+We expect that the semantics of Java bytecode for an SCJVM will be similar to
+that of standard Java bytecode, except that the \texttt{invokedynamic} will be
+absent, since SCJ does not allow dynamic class loading, and instructions such as
+\texttt{new} will have to be aware of the SCJ memory and scheduling models.
+
+When the semantics of Java bytecode and C are defined, we will define and prove
+the refinement rules that specify the compilation.  This will be done with the
+use of an automated theorem prover, in order to provide assurance that the proof
+is correct. We will use Isabelle as our theorem prover with its existing
+implementations of \Circus{}~\cite{joshi2012} and the UTP~\cite{foster2015}.
+
+\section{Formal Model}
+
+\section{Proofs}
+
+\section{Mechanisation}
+
+
 
 % conclude with a final considerations section - one paragraph saying what has
 % already been done and pointing to the next chapter
