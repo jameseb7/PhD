@@ -989,37 +989,33 @@ of the entire system.
 
 We have seen that Java is increasingly being considered as a language for
 safety-critical embedded systems and that the modifications to Java required to
-make it suitable for such systems require a specialised virtual machine.  In
-particular, the developing Safety-Critical Java specification has several
-differences from standard Java, particularly in the areas of scheduling and
-memory management, that make standard JVMs unsuitable for running SCJ programs.
-We have considered several virtual machines that have been developed for running
-SCJ programs and noted that none of them has formal verification, which is now
-required for certification under many standards, and that most of them adopt an
-approach of precompiling programs to native code.
+make it suitable for such systems require a specialised virtual machine.  The
+developing Safety-Critical Java specification has several differences from
+standard Java, particularly in the areas of scheduling and memory management,
+that make standard JVMs unsuitable for running SCJ programs.  We have considered
+several virtual machines that have been developed for running SCJ programs and
+noted that none of them has been formally verified and that most of them adopt
+an approach of precompiling programs to native code.
 
-Having seen that many SCJ virtual machines follow a precompilation approach, we
-have considered the techniques used to verify the correctness of compilers and
-found that there are two main approaches: the commuting diagram approach and the
-algebraic approach.
-
-In the commuting diagram approach the source semantics, target semantics,
-compilation function, and a function mapping the source meanings to the target
-meanings, are shown to commute.  This approach is popular and has had much
-research done on it but relies on the definition of the function from the source
-meanings to the target meanings.
+With that in mind, we have considered the techniques used to verify the
+correctness of compilers and found that there are two main approaches: the
+commuting-diagram approach and the algebraic approach.  In the commuting-diagram
+approach the source semantics, target semantics, compilation function, and a
+function mapping the source meanings to the target meanings, are shown to
+commute.  This approach is popular and has had much research done on it but
+relies on the definition of the function from the source meanings to the target
+meanings.
 
 The algebraic approach defines the source and target languages within the same
-specification language, which is additionally equipped with a relation of
-refinement between programs.  The laws that constructs in the specification
-language are known to obey are then used to prove refinement rules that are
-applied according to some compilation strategy to perform the compilation.  The
-algebraic approach has the advantage that it does not require the additional
-function that is required in the commuting diagram approach since the source and
-target languages are defined in terms of the same specification language.  The
-algebraic approach also permits a modular approach to proof and allows for the
-compiler to be easily implemented by application of the refinement rules using a
-term rewriting system.
+specification language, which is additionally equipped with a refinement
+relation between programs.  Laws of the specification language are then used to
+prove refinement rules that are applied according to some compilation strategy.
+The algebraic approach has the advantage that it does not require the additional
+function that is required in the commuting-diagram approach, since the source
+and target languages are defined in terms of the same specification language.
+The algebraic approach also permits a modular approach to proof and allows for
+the compiler to be easily implemented by application of the refinement rules
+using a term rewriting system.
 
 Given the considerations above, we have decided to adopt the algebraic approach
 when specifying the compilation to native code employed by many SCJ virtual
@@ -1027,8 +1023,8 @@ machines.  This means that a specification language is required in which to
 define the source and target languages, as well as for the purposes of
 specifying other aspects of the virtual machine.  We have chosen \Circus{} as
 the specification language as it contains a wide variety of constructs that
-allow for specification of both and behaviour, has a well-defined semantics with
-many laws already proved, and has been used for previous work on the
+allow for specification of both data and behaviour, has a well defined semantics
+with many laws already proved, and has been used for previous work on the
 specification of SCJ programs. \Circus{} also has some existing mechanisation
 and tool support, which can help give greater assurance of the correctness of
 specifications.
@@ -1041,18 +1037,12 @@ work.  This is the topic of the next chapter.
 \chapter{Research Proposal}
 \label{research-proposal-chapter}
 
-% Move material from the start of the next chapter to here
-
-% * the overall aim is to specify a framework for verification of SCJ virtual
-% machines 
-
-% * we have identified an SCJVM as requiring the component shown in the
-% diagram
+% repeat list from the objectives section and address each item in its own section
 
 Our aim is to specify a framework for the verification of Safety-Critical Java
 virtual machines (SCJVMs).  In order to provide a structure to the
 specification, we view an SCJVM as being composed of the components shown in
-Figure~\ref{scjvm-fig}.  The SCJVM is spilt into two parts: the core execution
+Figure~\ref{scjvm-fig}.  The SCJVM is split into two parts: the core execution
 environment and the virtual machine services. The core execution environment
 handles the running of Java bytecode.  The virtual machine services support, for
 example, scheduling and memory management, that is, services that are required
@@ -1093,32 +1083,31 @@ means to run the bytecode.  It may interpret bytecode instructions, just-in-time
 compile the bytecode, or execute native code precompiled from Java bytecode (in
 such a case the compiler is regarded as part of the core execution environment).
 As we have already seen, many existing SCJVMs adopt the approach of compiling to
-native code, and so our consider specification of the core execution environment
-will focus on compilation from Java bytecode to C. The reason for the choice of
-C as a target language is the same as that of other SCJ virtual machines,
+native code, and so our specification of the core execution environment will
+focus on compilation from Java bytecode to C. The reason for the choice of C as
+a target language is the same as that of other SCJ virtual machines,
 particularly the icecap HVM: C is a language already widely used in the area of
 embedded systems and is sufficiently lightweight to permit its use as a
 compilation target.
 
 As already mentioned, we intend adopt the algebraic approach in order to show
 that the compilation is correct.  This will involve defining the semantics of
-Java bytecode and C in terms of some specification language, though there is
+Java bytecode and C in terms of the specification language \Circus{}.  There is
 much existing work on the formal semantics of Java bytecode~\cite{bertelsen2000,
   jones1998, stark2001, alves1999a, bogdanas2015, lochbihler2012a} and
 C~\cite{campbell2012, ellison2012, krebbers2014} that can be used to aid in
-that.  We expect that the semantics of Java bytecode for an SCJVM will be
-similar to standard Java bytecode, except that the \texttt{invokedynamic} will
-be absent, since SCJ does not allow dynamic class loading, and instructions such
-as \texttt{new} will have to be aware of the SCJ memory and scheduling models.
-The specification language we will use is \Circus{}, for the reasons explained
-earlier.
+that.
 
-When the semantics of Java bytecode and C are defined, all that then remains is
-to construct and prove the refinement rules that specify the compilation.  This
-will be done with the use of an automated theorem prover, in order to provide
-assurance that the proof is correct, and we choose Isabelle as our theorem
-prover with its existing implementations of \Circus{}~\cite{joshi2012} and the
-UTP~\cite{foster2015}.
+We expect that the semantics of Java bytecode for an SCJVM will be similar to
+that of standard Java bytecode, except that the \texttt{invokedynamic} will be
+absent, since SCJ does not allow dynamic class loading, and instructions such as
+\texttt{new} will have to be aware of the SCJ memory and scheduling models.
+
+When the semantics of Java bytecode and C are defined, we will define and prove
+the refinement rules that specify the compilation.  This will be done with the
+use of an automated theorem prover, in order to provide assurance that the proof
+is correct. We will use Isabelle as our theorem prover with its existing
+implementations of \Circus{}~\cite{joshi2012} and the UTP~\cite{foster2015}.
 
 The compiled code will need to call additional functions to handle certain
 features of SCJ, for example, as alluded to above, the code to handle the
@@ -1155,6 +1144,9 @@ preliminary results identifying the requirements for virtual machine services
 and constructing a formal model of them, which are presented in the next
 chapter.  The formal model should have a machine-checked proof of consistency
 but that remains to be completed.
+
+% conclude with a final considerations section - one paragraph saying what has
+% already been done and pointing to the next chapter
 
 \chapter{Requirements of a Safety-Critical Java Virtual Machine}
 \label{requirements-chapter}
@@ -1647,20 +1639,11 @@ operation.
 \label{formal-model-section}
 
 The formal model of the SCJVM is written in the \Circus{} specification
-language~\cite{oliveira2009}. \Circus{} is based on CSP~\cite{roscoe2011}, which
-is used to specify processes that communicate over channels, and the Z
-notation~\cite{woodcock1996}, which is used to specify state and data
-operations. In this section, we present a brief explanation of \Circus{} and an
-overview of our model. We then present part of the memory manager model to to
-show how it is constructed. The complete model can be found
-in~\cite{baxter2015}. It is type checked with Community Z Tools and we have
-started to prove some basic properties of the memory manager using Z/Eves.
-
-A \Circus{} specification is made up of processes that communicate over
-channels.  These channels may carry values of a particular type, or may be used
-as flags for synchronisation or signalling between processes.  Each process may
-have state, and is made up of actions that operate on that state and communicate
-over channels.
+language~\cite{oliveira2009} In this section, we present an overview of our
+model. We then present part of the memory manager model to to show how it is
+constructed. The complete model can be found in~\cite{baxter2015}. It is type
+checked with Community Z Tools and we have started to prove some basic
+properties of the memory manager using Z/Eves.
 
 In our model, each of the components of the SCJVM shown in
 Figure~\ref{scjvm-fig} is specified by a single process whose channels represent
@@ -1946,10 +1929,21 @@ Other global memory manager operations are similarly specified using
 promotion. Operations on stacks are specified separately, using a
 specification based on $MemoryBlock$.
 
+% add a final considerations section noting lessons learned from the
+% formalisation and how it contributes to the research proposal
+
 \chapter{Conclusions}
 \label{conclusions-chapter}
 
-% Similar to JTRES paper conclusions
+% three sections: summary of contributions, related work, and future work
+
+\section{Summary of Contributions}
+
+
+\section{Related Work}
+
+
+\section{Future Work}
 
 \raggedright
 \printbibliography
