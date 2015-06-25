@@ -30,7 +30,7 @@
 
 \chapter{Introduction}
 
-This chapter begins by explaining the motivation for the work decribed in this
+This chapter begins by explaining the motivation for the work described in this
 dissertation. Afterwards, the objectives of the work, which come from the
 motivation, are described and, finally, the structure of the remainder of this
 dissertation is described.
@@ -54,7 +54,7 @@ time through the type system.
 One use of Java that is of particular interest is in embedded systems.  While
 early versions of Java were developed for programming, particularly TV set-top
 boxes, the technology was not well received. It was only in the growing sector
-of the internet that Java intitially found a market~\cite{horstmann2002}.
+of the internet that Java initially found a market~\cite{horstmann2002}.
 However, it was soon realised that the portability, modularity, safety and
 security benefits of Java could be of great use in embedded
 systems~\cite{mulchandani1998}.  This required the creation of specialised Java
@@ -88,7 +88,7 @@ Java-like languages, this generally means ensuring the Java compiler and Java
 Virtual Machine (JVM) are correct.
 
 Work has been done on modelling virtual machines for Java, and on the formal
-correctness of compilers targetting those virtual machines.  Some of the most
+correctness of compilers targeting those virtual machines.  Some of the most
 complete work in that area was by St\"{a}rk, Schmid and
 B\"{o}rger~\cite{stark2001}, who present a model of the full Java language and
 virtual machine, along with a formally verified compiler, although for an older
@@ -197,7 +197,7 @@ work~\cite{mccarthy1967} and recent work such as that of the CompCert
 project~\cite{leroy2009a, leroy2009b}.
 
 The algebraic approach involves defining the source and target languages in the
-same specification space, and and using proved specialised rewrite rules to
+same specification space, and using proved specialised rewrite rules to
 characterise compilation as model transformation in the extended language. This
 approach was first proposed in the early nineties by Hoare~\cite{hoare1991} and
 further developed by Sampaio~\cite{hoare1993, sampaio1993}.  The algebraic
@@ -240,7 +240,7 @@ safety-critical virtual machines and compilers for Java-like languages. This
 includes a discussion of why a safety-critical variant of Java is necessary and
 how it differs from standard Java.  We also explain why a specialised virtual
 machine is necessary for SCJ.  This is followed by a survey of the existing
-virtual machines for Saftey-Critical Java and the techniques used in verifying
+virtual machines for Safety-Critical Java and the techniques used in verifying
 compilers.
 
 In Chapter~\ref{research-proposal-chapter} we will cover the structure and
@@ -257,7 +257,7 @@ wider context of this research.
 % Review the literature on compiler correctness 
 %  - Two approaches: algebraic and commuting diagram
 %  - Consider each approach in a separate subsection and compare them
-%  - Make sure to descibe the *approach* in detail, not what the authors did
+%  - Make sure to describe the *approach* in detail, not what the authors did
 %  - Finish by looking at and comparing some of the work on Java compilation
 % Present research proposal and preliminary results
 % - Overall plan - requirements for an SCJVM - explain different parts of the diagram, mention CEE will be dealt with by later work
@@ -296,7 +296,7 @@ In recent years Java has increasingly been considered as a language for writing
 safety-critical software. Other languages that are generally used in the
 safety-critical domain are C/C++ and Ada; C and C++ impose challenges concerning
 reliable use at the highest levels of safety~\cite{kornecki2009}, and the
-numkber of Ada programmers is not very large~\cite{bissyande2013}.  While Java has not
+number of Ada programmers is not very large~\cite{bissyande2013}.  While Java has not
 traditionally been seen as a language for safety-critical systems, it was
 originally developed for the area of embedded systems, particularly for use in
 television set-top boxes, and has seen renewed interest in its use in embedded
@@ -355,7 +355,7 @@ Figure~\ref{phases-diagram}.
 \label{phases-diagram}
 \end{figure}
 
-The fist phase is initialization, which consists of setting up the schedulable
+The fist phase is initialisation, which consists of setting up the schedulable
 objects controlled by the mission and creating any data structures required for
 the mission.  Then the mission is executed by starting each of the schedulable
 objects in the mission and waiting for a request to terminate the mission. When
@@ -439,7 +439,7 @@ HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
 
 The icecap hardware-near virtual machine (HVM) was created as part of the
 Certifiable Java for Embedded Systems Project~\cite{schoeberl2014} and provides
-an open-source implementation of SCJ targetted at embedded systems.  The
+an open-source implementation of SCJ targeted at embedded systems.  The
 approach taken by the HVM is one of precompiling Java bytecode to C in order to
 allow for faster running programs with fewer memory resources.  It includes an
 implementation of the SCJ libraries that covers most of SCJ level 2, though only
@@ -459,7 +459,7 @@ time, which is important for ensuring real-time properties of the system hold.
 Fiji VM is a proprietary Java implementation designed to run on real-time
 embedded systems.  Similarly to the icecap HVM, Fiji VM uses the strategy of
 compiling to C in order to improve performance.  However, Fiji VM is not
-specifically targetted at SCJ and works with a range of libraries, including
+specifically targeted at SCJ and works with a range of libraries, including
 SCJ, RTSJ and the standard Java libraries.  Fiji VM does have the advantage of
 high portability and multiprocessor support, which is lacking in many other SCJ
 virtual machines.
@@ -500,7 +500,7 @@ very small and fast so as to be able to run on embedded systems.
 
 As can be seen from the preceding discussion, a common technique to run Java
 programs on embedded systems is to precompile them to native code. This means
-compiler correctness techniques must be considered in verfication of such a
+compiler correctness techniques must be considered in verification of such a
 virtual machine; these techniques are discussed in the next section.
 
 \section{Compiler Correctness}
@@ -574,7 +574,7 @@ target languages as McCarthy and Painter; they use a more algebraic approach
 that better matches what Lockwood Morris later suggested.  Burstall and Landin's
 approach involved representing the source and target languages, and their
 meanings, as algebras, with the compilation functions as homomorphisms. They
-targetseveral intermediate machines in the proof of correctness. Viewing the
+target several intermediate machines in the proof of correctness. Viewing the
 languages as algebras allows for simpler proofs as some of the arrows of the
 commuting diagram can be wholly or partially derived from the algebraic
 structure. It was this goal of simplifying the proofs that led Lockwood Morris
@@ -586,16 +586,16 @@ of program correctness. There has been work in that area, the earliest of which
 is that by Milner and Weyhrauch~\cite{milner1972} who show the correctness of an
 ALGOL-like language. The proof of correctness was partially mechanised in the
 LCF theorem prover~\cite{milner1972a} and the authors were of the opinion that
-the proof was feasable and could be completed relatively easily. A point to note
+the proof was feasible and could be completed relatively easily. A point to note
 is that Milner and Weyhrauch acknowledged the need for some way of structuring
 the proof in order to make it amenable to machine-checking. This gives further
 support to the algebraic commuting diagram approach advocated by Lockwood
-Morris. Indeed, Milner and Wehrauch explicitly followed that approach as they
-were in disscusions with Lockwood Morris.
+Morris. Indeed, Milner and Weyhrauch explicitly followed that approach as they
+were in discussions with Lockwood Morris.
 
 One advantage to making proofs easily machine-checkable, apart from the added
 certainty that the proof is correct, is that working compilers can be created
-from the machine-checked proofs.  Code generation facitilies are available with
+from the machine-checked proofs.  Code generation facilities are available with
 many theorem provers such as those of Isabelle/HOL~\cite{haftmann2007} and
 Coq~\cite{letouzey2003, letouzey2008}. The fact that the commuting-diagram
 approach involves treating the compilation as a function between algebras
@@ -626,21 +626,21 @@ for a subset of C, using the theorem prover Coq~\cite{coq2004}.
 \subsection{Algebraic Approach}
 \label{algebraic-approach-subsection}
 
-The second main approach to showing correctness of compilers is the algebraic
-approach proposed by Hoare in 1991~\cite{hoare1991}, and further developed by a
-student of his~\cite{hoare1993, sampaio1993, sampaio1997}. Note that the
-algebraic approach discussed in this section is largely unrelated to the
-algebraic commuting diagram approaches mentioned in the previous section.
+The second main approach to showing correctness of compilers is the
+algebraic approach proposed by Hoare in 1991~\cite{hoare1991}, and
+further developed by Sampaio~\cite{hoare1993, sampaio1993,
+  sampaio1997}. We note that the algebraic approach discussed in this
+section is largely unrelated to the algebraic commuting-diagram
+approaches mentioned in the previous section.
 
 The algebraic approach to compilation derives from the concepts of algebraic
 reasoning about programs and program refinement. These concepts come from the
 idea, proposed by Hoare in 1984~\cite{hoare1984}, that programs can be thought
 of as predicates and so the laws of predicate logic can be used to construct
 laws for reasoning about programs~\cite{hoare1987}. As an example of such a law
-for reasoning about programs consider the fact that sequential composition of
-programs is associative, as show in Equation~\eqref{seq-comp-assoc}, or the fact
-that a program that does nothing, called $\Skip$ here following the \Circus{}
-notation, is the identity of sequential composition, as shown in
+for reasoning about programs, we present below associativity of sequential
+composition, Equation~\eqref{seq-comp-assoc}, and left and right unit of
+sequential composition, namely, the program $\Skip$ that does nothing,
 Equation~\eqref{skip-comp-identity}.
 \begin{equation}
   \label{seq-comp-assoc}
@@ -651,34 +651,25 @@ Equation~\eqref{skip-comp-identity}.
   P;\Skip = \Skip;P = P
 \end{equation}
 
-The notion of refinement is an important one for the construction of these laws
-of programs and the algebraic approach to compilation.  Refinement was
-developed, largely independently, by Back~\cite{back1981},
-Morris~\cite{morris1987} and Morgan~\cite{morgan1990}, and follows from earlier
+The notion of refinement is central to the algebraic approach to compilation.
+Refinement calculi have been developed, independently, by Back~\cite{back1981},
+Morris~\cite{morris1987} and Morgan~\cite{morgan1990}, following from earlier
 concepts of program transformation~\cite{bauer1976, balzer1976, standish1976,
   arsac1979}.  The basic idea is that there is a relation between programs that
 captures the idea of one program being ``at least as good as'' another or, to
-put it more precisely, at least as deterministic as another.  The reason for
-this concept being so important is that the languages and laws for reasoning
-about programs can also be used to develop programs from specifications.  This
-means that certain things can be left loosely specified and several different
-implementations could refine that specification.  As an example, many high-level
-programming languages make use of variables without specifying where in memory
-they should reside.  A compiler is free to produce code that places the
-variables at any valid memory addresses, or even in processor registers.  Such
-code would be a refinement of the high-level program, which permitted a
-nondterministic choice as to the location of the variables.
+put it more precisely, at least as deterministic as another.  Languages and laws
+for reasoning about programs can also be used to develop programs from
+specifications.  This means that certain aspects of a system can have a
+nondeterministic specification and several different implementations can refine
+that specification.
 
-The use of refinement in showing correctness of a compiler is that the laws of
-the specification language can be used to prove refinement laws, transforming
-the source language into som normal form that represents an interpreter for the
-target language.  That is, the code output by the compiler, when executed by on
-the target machine, must be a refinement of the source program.  The power of
-the algebraic approach is that the compilation of individual elements of the
-source language can be specified and proved separately in different refinement
-laws.  The compilation can also be split into stages, with a set of refinement
-laws for each stage to further modularise the compilation.  The separate
-refinement laws can then be combined to form a compilation strategy.
+In using refinement in showing correctness of a compiler, the laws of the
+specification language can be used to prove compilation refinement laws.
+Compilation laws can be used to transform the source programs into some normal
+form that represents an interpreter for the target language.  In other words,
+the code output by the compiler, when executed by on the target machine, must be
+a refinement of the source program.  The compilation laws can be used to prove
+this refinement and at the same time generate the target code.
 
 As an example, consider the following refinement laws, based on rules from
 Sampaio's work~\cite{sampaio1993}, which address the compilation of assignment
@@ -717,74 +708,80 @@ combined by the refinement rule for sequential composition, bringing the result
 of the compilation into the normal form, which behaves as an interpreter for the
 target machine.
 
-Sampaio~\cite{sampaio1993} specified a correct compiler for a simple language
-that nonetheless covers all the constructs available in most programming
-languages. The target machine Sampaio used was a simple single-register machine
-that bears some similarity to most real processor architectures.  One
-interesting aspect of Sampaio's work is that he mechanised the compiler in the
-OBJ3 term rewriting system~\cite{goguen1988}, showing that working compilers can
-be easily created from specifications using the algebraic approach.  However,
-the algebraic laws Samapaio used to prove correctness of the compiler were taken
-as axioms and not proved, though Samapaio notes that they could be easily proved
-given a semantics for the reasoning language.
+The power of the algebraic approach is that the compilation of individual
+elements of the source language can be specified and proved separately in
+different refinement laws.  The compilation can also be split into stages, with
+a set of refinement laws for each stage to modularise the compilation.  The
+separate refinement laws can then be combined to form a compilation strategy.
 
-Though there has not been much work done using the algebraic approach, one
-interesting application of the algebraic approach is in the work of
-Perna~\cite{perna2010, perna2011}, showing correctness of a compiler for a
-hardware description language.  The compilation takes high-level descriptions of
-hardware written in Handel-C and transforms them into systems of basic hardware
-components connected by wires.  The algebraic approach works well here as the
-target language is a subset of the source language, albeit in a different form,
-and Perna was able to handle features not covered by most other works on
-hardware compilation such as parallelism with shared variables.  Also, whereas
-Sampaio took the basic algebraic laws as axioms, Perna proved the laws from a
-semantics given using the Unifying Theories of Programming (UTP)
-model~\cite{hoare1998}.
+The first major work done using the algebraic approach was that of
+Sampaio~\cite{sampaio1993}, who used it to specify a correct compiler for a
+simple language that, nonetheless, covers all the constructs available in most
+programming languages. The target machine Sampaio used was a simple
+single-register machine that bears similarity to most real processor
+architectures.  He mechanised the compiler in the OBJ3 term rewriting
+system~\cite{goguen1988}, showing that working compilers can be easily created
+from specifications using the algebraic approach.  However, the algebraic laws
+Sampaio used to prove correctness of the compiler were taken as axioms. Sampaio
+notes that they could be easily proved given a semantics for the reasoning
+language.
+
+Though there has not been much work done using the algebraic approach, we single
+out the work of Perna~\cite{perna2010, perna2011}, showing correctness of a
+compiler for a hardware description language.  The compilation takes high-level
+descriptions of hardware written in Handel-C and transforms them into systems of
+basic hardware components connected by wires.  The algebraic approach works well
+here as the target language is a subset of the source language, albeit in a
+different form.  Perna was able to handle features not covered by most other
+works on hardware compilation, such as parallelism with shared variables.  Also,
+whereas Sampaio took the basic algebraic laws as axioms, Perna proved the laws
+from a semantics given using the Unifying Theories of Programming (UTP)
+model~\cite{hoare1998}.  There has also been work on the correctness of Java
+compilers using the algebraic approach.  This is considered in the next section,
+where we consider compiler correctness for Java-like languages.
 
 \subsection{Correctness of Java Compilers}
 \label{java-compiler-correctness-subsection}
 
-We now turn to consider how these approaches to compiler correctness have been
-applied in the case of Java-like languages.  The popularity of Java has meant
-that there has been plenty of work on formalising Java and the
-JVM~\cite{hartel2001} but there have been relatively few works on formally
-verified compilers for Java-like languages.  However, the work that has been
-done uses both of the two main approaches and covers most of the features of
-Java.
+The popularity of Java has meant that there has been plenty of work on
+formalising Java and the JVM~\cite{hartel2001}, but there have been relatively
+few works on formally verified compilers for Java-like languages.  However, the
+work that has been done uses both of the two main approaches and covers most of
+the features of Java.
 
 Some of the earliest and most thorough work is that by S\"{a}rk, Schmid and
 B\"{o}rger~\cite{stark2001}, who formalise most of Java and the JVM before
 specifying and showing the correctness of a compiler for Java.  The approach
-taken by them is an interesting one of using Abstract State Machines (ASMs) to
-specify the source and target languages.  The ASMs are used to give an
-operational semantics to Java and the JVM, describing how each construct affects
-the running of the program.  The languages are each specified by multiple ASMs,
-beginning with an imperative core, then adding classes, objects, execeptions
-and, finally, threads.  Although this approach is called the ASM
-approach, it becomes clear from the definition of compiler correctness given in
-terms of a mapping between ASMs that this work ultimately follows the commuting
-diagram approach.  This work leaves parts of the proof incomplete (in
-particular, compilation of threads is not addressed) and applies to an old
-version of Java, but this is nevertheless an admirable attempt at a verified
-Java compiler.
+taken by them uses Abstract State Machines (ASMs) to specify the source and
+target languages.  The ASMs give an operational semantics to Java and the JVM,
+describing how each construct affects the running of the program.  The languages
+are each specified by multiple ASMs, beginning with an imperative core, then
+adding classes, objects, exceptions and, finally, threads.
 
-Work has also been done on compilers for Java-like languages following the
-algebraic approach by Duran~\cite{duran2005, duran2010}.  Duran's work specifies
-a compiler for a language called Refinement Object-Oriented Language
-(ROOL)~\cite{borba2000}, which was created for reasoning about object-oriented
-languages and bears much similarity to Java.  ROOL features constructs for
-specifying and reasoning about programs as well as object-oriented programming
-language constructs.  This means that the there are algebraic laws for ROOL,
-from which the rewrite rules that form the basis of the algebraic approach can
-be proved.  Duran's work adds further phases to Sampaio's compilation strategy
-in order to deal with the object-oriented features but does not consider some
-other aspects of Java such as exceptions and threads, though Duran notes that
-other work has addressed some of those issues.
+Although this approach is called the ASM approach, it becomes clear from the
+definition of compiler correctness given in terms of a mapping between ASMs that
+this work ultimately follows the commuting-diagram approach.  This work leaves
+parts of the proof incomplete (in particular, compilation of threads is not
+addressed) and applies to an old version of Java.  This is, nevertheless, an
+admirable attempt at producing a verified Java compiler.
+
+Work has also been done by Duran following the algebraic
+approach~\cite{duran2005, duran2010}.  Duran's work specifies a compiler for a
+language called Refinement Object-Oriented Language (ROOL)~\cite{borba2000},
+which was created for reasoning about object-oriented languages and bears much
+similarity to Java.  ROOL features constructs for specifying and reasoning about
+programs as well as object-oriented programming language constructs.  This means
+that the there are algebraic laws for ROOL, from which the rewrite rules that
+form the basis of the algebraic approach can be proved.  Duran's work adds
+further phases to Sampaio's compilation strategy in order to deal with the
+object-oriented features, but does not consider some other aspects of Java such
+as exceptions and threads.  Duran notes that other work has addressed some of
+those issues.
 
 While the two works already discussed were not machine checked, there have also
-been compiler correctness proofs fo Java-like languages in the Isabelle/HOL
+been compiler correctness proofs for Java-like languages in the Isabelle/HOL
 proof assistant.  The first of these was by Strecker~\cite{strecker2002},
-showing correctness of a compiler for a subset of Java calles $\mu$Java, which
+showing correctness of a compiler for a subset of Java called $\mu$Java, which
 already had a formalisation of its semantics in Isabelle/HOL~\cite{nipkow2000}.
 This work was followed by Klein and Nipkow's work on a compiler for a slightly
 larger subset of Java called Jinja~\cite{klein2006}, which added exception
@@ -816,7 +813,7 @@ type, or may be used as flags for synchronization or signalling between
 processes.  Each process may have state, and is made up of actions that operate
 on that state and communicate over channels.
 
-We will illustrate the concepts of \Circus{} using as an example the process for
+We illustrate the concepts of \Circus{} using as an example the process for
 the real-time clock from some of the preliminary work on the specification of an
 SCJ virtual machine. The specification begins with a declaration of the channels
 that may be used in the following processes.  Type declarations written in Z can
@@ -841,7 +838,7 @@ interrupts and read the time from the hardware clock.
 \end{circus}
 %
 We also specify a constant to represent the clock's precision using a Z
-axiomatic definition. The value of the constant is required to be nonzero but is
+axiomatic definition. The value of the constant is required to be nonzero, but is
 otherwise left unrestricted, so that any nonzero time value is a valid
 instantiation.
 %
@@ -876,12 +873,12 @@ alarm is set, then the time of the alarm must not be in the past.
 \end{circusaction}
 %
 The behaviour is described using actions, written in a mixture of Z and CSP. The
-first action is a Z initalisation operation, $Init0$.  Its final state is
+first action is a Z initialisation operation, $Init0$.  Its final state is
 represented by variables obtained by placing a prime on the names of the state
 components.  Here, the initialisation takes as input the initial time,
-represented by a variable, $initTime?$. The current time is defined to be equal
+represented by the variable $initTime?$. The current time is defined to be equal
 to the initial time and no alarm is initially set. The initial time of the alarm
-is arbitrary, that is, nodetermisitically chosen from elements of its type,
+is arbitrary, that is, nondeterministically chosen from elements of its type,
 since the initialisation imposes no restrictions on it.
 %
 \begin{schema}{Init0}
@@ -944,7 +941,7 @@ specify the behaviour when a request to set the alarm takes place.
   \t1 \then\ \lschexpract SetAlarm0 \lor SetAlarm1 \rschexpract
 \end{circusaction}
 %
-In addition to Z and CSP constructs, Circus also has other constructs more
+In addition to Z and CSP constructs, \Circus{} also has other constructs more
 familiar to programmers, such as if statements and do loops. One of these
 constructs, the assignment operator, is used in the action that clears the
 current alarm to update part of the state without requiring a Z schema.  The
@@ -979,7 +976,7 @@ and then enters the loop.
 \end{circus}
 
 In addition to the constructs presented here \Circus{} also contains operators
-for composing processes in parallel, with or without synchronization on
+for composing processes in parallel, with or without synchronisation on
 channels.  These operators are used both to specify actual parallelism and to
 represent composition of requirements.  In this way several \Circus{}
 specifications of individual components can be combined to form a specification
@@ -1820,7 +1817,7 @@ is specified to be empty.
 \end{schema}
 %
 An example of a $BackingStore$ operation is allocating space for a new child
-backing store within its parent. That operation is given by the the schema
+backing store within its parent. That operation is given by the schema
 $BSAllocateChild$ below.
 %
 \begin{schema}{BSAllocateChild}
@@ -1859,7 +1856,7 @@ specifies that the root backing store must be a valid identifier (this is
 implied by the sixth invariant but is written separately for clarity). The
 second invariant is an injectivity condition on $stores$, requiring that no two
 backing stores have the same identifier. The third invariant requires that a
-backing store's childres are all disjoint and contained in that backing store's 
+backing store's children are all disjoint and contained in that backing store's 
 used memory. The fourth invariant requires that
 the thread allocation contexts be valid backing stores. The fifth invariant 
 defines $childRelation$, using the set of children in the backing store record
@@ -1957,3 +1954,8 @@ specification based on $MemoryBlock$.
 \raggedright
 \printbibliography
 \end{document}
+
+%  LocalWords:  modularise certifiability verifiers mechanisations checkable
+%  LocalWords:  aperiodically schedulability associativity nondeterministic CSP
+%  LocalWords:  precompiled precompilation disjunction schemas instantiation
+%  LocalWords:  nondeterministically boolean datatype
