@@ -426,14 +426,15 @@ finalisers as it is not always easy to predict when they are run.
 
 % one subsection per machine
 
-Because of the novel features of SCJ, briefly described in the previous section,
-a specialised virtual machine that provides support for allocation in memory
-areas and preemptive scheduling is required for SCJ. Although SCJ is a
-relatively recent development there have been various virtual machines created
-for SCJ or variations of SCJ, including including icecap
-HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009}, OVM~\cite{armbruster2007},
-HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
-  richard2010}. These are each described in the following subsections.
+Because of the novel features of SCJ, briefly described in the
+previous section, a specialised virtual machine that provides support
+for allocation in memory areas and preemptive scheduling is required
+for SCJ. Although SCJ is a relatively recent development there have
+been various virtual machines created for SCJ or variations of SCJ,
+including icecap HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009},
+OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and
+PERC Pico~\cite{atego2015, richard2010}. These are each described in
+the following subsections.
 
 \subsection{icecap HVM and HVM\textsubscript{TP}}
 
@@ -809,7 +810,7 @@ CSP~\cite{roscoe2011}, which is used to specify processes that communicate over
 channels, and the Z notation~\cite{woodcock1996}, which is used to specify state
 and data operations.  A \Circus{} specification is made up of processes that
 communicate over channels.  These channels may carry values of a particular
-type, or may be used as flags for synchronization or signalling between
+type, or may be used as flags for synchronisation or signalling between
 processes.  Each process may have state, and is made up of actions that operate
 on that state and communicate over channels.
 
@@ -1054,13 +1055,13 @@ These are each discussed in the sections of this chapter.
 
 \section{SCJVM requirements}
 
-In order to provide a structure to the
-specification, we view an SCJVM as being composed of the components shown in
-Figure~\ref{scjvm-fig}.  The SCJVM is split into two parts: the core execution
-environment and the virtual machine services. The core execution environment
-handles the running of Java bytecode.  The virtual machine services support, for
-example, scheduling and memory management, that is, services that are required
-to support the SCJ infrastructure and the core execution environment.
+In order to provide a structure to the specification, we view an SCJVM as being
+composed of the components shown in Figure~\ref{scjvm-fig}.  The SCJVM is split
+into two parts: the core execution environment and the virtual machine
+services. The core execution environment handles the running of Java bytecode.
+The virtual machine services support, for example, scheduling and memory
+management, that is, services that are required to support the SCJ
+infrastructure and the core execution environment.
 
 \begin{figure}[ht]
   \centering
@@ -1101,13 +1102,18 @@ native code, and so our specification of the core execution environment will
 focus on the construction of a compilation strategy, which is discussed in the
 next section.
 
-The compiled code will need to call additional functions to handle certain
-features of SCJ, for example, as alluded to above, the code to handle the
-\texttt{new} instruction must ensure the allocation is performed withing the
-correct allocation context.  Some of these functions are also required for
-implementing the SCJ libraries and so it is sensible to implement them alongside
-the core execution environment in what we have called the virtual machine
-services.  As can be seen from Figure~\ref{scjvm-fig}, we group the virtual
+The compiled code in the core execution environment will need to call additional
+functions to handle certain features of SCJ, for example, as alluded to above,
+the code to handle the \texttt{new} instruction must ensure the allocation is
+performed withing the correct allocation context.  Some of these functions are
+also required for implementing the SCJ libraries and so it is sensible to
+implement them alongside the core execution environment in what we have called
+the virtual machine services.  The requirements for the virtual machine services
+are identified from requirements imposed by the SCJ specification, with some
+consideration given to the approaches taken by existing SCJVMs where the
+specification is unclear.
+
+As can be seen from Figure~\ref{scjvm-fig}, we group the virtual
 machine services into three areas:
 \begin{itemize}
 \item the memory manager, which manages backing stores for memory areas and
@@ -1129,21 +1135,14 @@ be a minimal set of services required to run the virtual machine.  The latter
 case is desirable for low-end embedded systems that lack the resources to
 run a general operating system.
 
-The requirements for the virtual machine services are identified from
-requirements imposed by the SCJ specification and specified in \Circus{} for
-ease of composition with the core execution environment.  We already have some
-preliminary results identifying the requirements for virtual machine services
-and constructing a formal model of them, which are presented in the next
-chapter.  The formal model should have a machine-checked proof of consistency
-but that remains to be completed.
-
 \section{Compilation Strategy}
 
- from Java bytecode to C. The reason for the choice of C as
+For the core execution environment, we adopt the approach of
+compilation from Java bytecode to C. The reason for the choice of C as
 a target language is the same as that of other SCJ virtual machines,
-particularly the icecap HVM: C is a language already widely used in the area of
-embedded systems and is sufficiently lightweight to permit its use as a
-compilation target.
+particularly the icecap HVM: C is a language already widely used in
+the area of embedded systems and is sufficiently lightweight to permit
+its use as a compilation target.
 
 As already mentioned, we intend adopt the algebraic approach in order to show
 that the compilation is correct.  This will involve defining the semantics of
@@ -1159,21 +1158,43 @@ absent, since SCJ does not allow dynamic class loading, and instructions such as
 \texttt{new} will have to be aware of the SCJ memory and scheduling models.
 
 When the semantics of Java bytecode and C are defined, we will define and prove
-the refinement rules that specify the compilation.  This will be done with the
-use of an automated theorem prover, in order to provide assurance that the proof
-is correct. We will use Isabelle as our theorem prover with its existing
-implementations of \Circus{}~\cite{joshi2012} and the UTP~\cite{foster2015}.
+the refinement rules that specify the compilation.
 
 \section{Formal Model}
 
+In addition to the formal models of Java bytecode and C that are required for
+specifying the compilation, a formal model of the virtual machine services is
+also required.  The model will allow the requirements to be stated more
+precisely and their consistency checked.  We will model the virtual machine
+services in \Circus{} for ease of composition with the core execution
+environment.
+
 \section{Proofs}
+
+It must be shown that the formal model of the virtual machine services is
+consistent and that all the error cases have been accounted for.  The refinement
+rules for the compilation will also require proofs.  These proofs will be
+constructed from the basic laws of \Circus{}, which come from the UTP semantics
+of \Circus{}~\cite{oliveira2009}.
 
 \section{Mechanisation}
 
+In order to better ensure no mistakes are made during the proof, it should be
+mechanised using an automated theorem prover. This provides assurance that the
+proof is correct and can also make testing of the model easier due to the code
+generation facilities theorem provers.  We will use Isabelle as our theorem
+prover with its existing implementations of \Circus{}~\cite{joshi2012} and the
+UTP~\cite{foster2015}.  The small axiomatic core of Isabelle helps to ensure
+that theories implemented in it are correct, giving greater certainty that
+proofs using them are correct.
 
+\section{Final Considerations}
 
-% conclude with a final considerations section - one paragraph saying what has
-% already been done and pointing to the next chapter
+We already have some preliminary results identifying the requirements for
+virtual machine services and constructing a formal model of them, which are
+presented in the next chapter.  The formal model should have a machine-checked
+proof of consistency but that remains to be completed.  We have not yet
+specified the core execution environment.
 
 \chapter{Requirements of a Safety-Critical Java Virtual Machine}
 \label{requirements-chapter}
