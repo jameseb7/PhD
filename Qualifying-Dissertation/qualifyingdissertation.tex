@@ -2005,6 +2005,23 @@ which may not be easily visible to the human eye.
 
 \section{Summary of Contributions}
 
+In this dissertation we have considered the safety-critical variant of Java and
+some virtual machines designed to run programs written in it.  We have concluded
+that none of the virtual machines is formally verified and that many of them
+precompile programs to native code.  Given the need for a formally verified
+virtual machine have stated our aim to specify a frame work within which an SCJ
+virtual machine can be verified
+
+Having noted that SCJ virtual machines employ compilation, we have surveyed some
+of the work on compiler correctness, particularly how it relates to Java
+compilation, and seen there are two approaches: the commuting-diagram approach
+and the algebraic approach.  We have decided to adopt the algebraic approach and
+chosen \Circus{} as a specification language.
+
+As some preliminary work in specifying an SCJ virtual machine, we have
+identified the requirements of the virtual machine services required to support
+SCJ programs.  We have also constructed a formal model of those requirements in
+the \Circus{} specification language.
 
 \section{Related Work}
 
