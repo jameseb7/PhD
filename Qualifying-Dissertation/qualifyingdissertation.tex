@@ -20,6 +20,7 @@
 %TC:group schema 1 displaymath
 %TC:group circus 0 displaymath
 %TC:group circusaction 0 displaymath
+%TC:macroword \Circus 1 
 
 \begin{document}
 \maketitle
@@ -219,10 +220,10 @@ of Unifying Theories of Programming (UTP)~\cite{hoare1998}.
 To prevent mistakes in the proofs, it is helpful to mechanise the formal model
 and proofs.  There are various systems that can be used for this, but we will
 focus on the proof assistant Isabelle~\cite{nipkow2002, nipkow2014}. It has
-existing mechanisations of \Circus{}~\cite{joshi2012} and the
+existing mechanisations of \Circus{}~\cite{feliachi2012} and the
 UTP~\cite{foster2015}, and has been used in previous work verifying compilers
-for Java-like languages~\cite{klein2006, nipkow2000, lochbihler2010}, making it
-well placed for our work.
+for Java-like languages~\cite{klein2006, strecker2002, lochbihler2010}, making
+it well placed for our work.
 
 We have already made some progress towards the construction of the proposed
 framework with a specification and formal model of the requirements of an SCJ
@@ -250,8 +251,8 @@ In Chapter~\ref{requirements-chapter} we present some preliminary results
 identifying the requirements of an SCJ virtual machine, with a formal model of
 those requirements in the \Circus{} specification language.
 
-Finally, we conclude in Chapter~\ref{conclusions-chapter} by mentioning the
-wider context of this research.
+Finally, we conclude in Chapter~\ref{conclusions-chapter} by summarising our
+contributions and mentioning the wider context of this research.
 
 % Description of SCJ and review of SCJ VMs - use stuff from JTRES paper, maybe extend it a bit
 % Review the literature on compiler correctness 
@@ -399,7 +400,6 @@ which objects an object may point to, so as to avoid dangling pointers from
 being created. Some examples of valid and invalid object references for some
 asynchronous event handlers are shown in Figure~\ref{stacks-areas-diagram}.
 
-
 \begin{figure}[ht]
 \includegraphics[width=\textwidth]{Stacks-Areas.pdf}
 \caption{An example of the layout of memory areas for four asynchronous event
@@ -469,7 +469,6 @@ The fact that Fiji VM works with the SCJ libraries and supports the scoped
 memory model means it can run SCJ programs.  It does not necessarily support all
 aspects of SCJ properly though.
 
-
 \subsection{OVM}
 
 OVM was created at Purdue University as part of the PCES
@@ -478,7 +477,6 @@ real-time Java programs with a high level of performance on embedded systems.
 Similar to Fiji VM and icecap HVM, OVM follows the principle of precompiling
 code for performance reasons, but translates Java to C++ instead of bytecode to
 C.
-
 
 OVM also differs from the icecap HVM and Fiji VM in that it predates SCJ. It is
 written to implement the RTSJ, though it can still support SCJ programs; indeed,
@@ -1183,7 +1181,7 @@ In order to better ensure no mistakes are made during the proof, it should be
 mechanised using an automated theorem prover. This provides assurance that the
 proof is correct and can also make testing of the model easier due to the code
 generation facilities theorem provers.  We will use Isabelle as our theorem
-prover with its existing implementations of \Circus{}~\cite{joshi2012} and the
+prover with its existing implementations of \Circus{}~\cite{feliachi2012} and the
 UTP~\cite{foster2015}.  The small axiomatic core of Isabelle helps to ensure
 that theories implemented in it are correct, giving greater certainty that
 proofs using them are correct.
@@ -1267,7 +1265,7 @@ in the final column of the table.
     \hline
     getRootBackingStore &
       (none) &
-      backing store identifer &
+      backing store identifier &
       (none)
     \\getCurrentAllocationContext &
       (none) &
@@ -2002,8 +2000,13 @@ which may not be easily visible to the human eye.
 \label{conclusions-chapter}
 
 % three sections: summary of contributions, related work, and future work
+In this chapter we conclude by summarising the contributions of this
+dissertation in Section~\ref{summary-section}.  We then discuss some related
+work in Section~\ref{related-work-section}, providing the context for our work,
+and the direction of future work in Section~\ref{future-work-section}.
 
 \section{Summary of Contributions}
+\label{summary-section}
 
 In this dissertation we have considered the safety-critical variant of Java and
 some virtual machines designed to run programs written in it.  We have concluded
@@ -2024,9 +2027,35 @@ SCJ programs.  We have also constructed a formal model of those requirements in
 the \Circus{} specification language.
 
 \section{Related Work}
+\label{related-work-section}
 
+Our work is done in the context of a wider effort to facilitate fully verified
+Safety-Critical Java programs.  There has already been work on generating
+correct SCJ programs from \Circus{} specifications~\cite{cavalcanti2011,
+  cavalcanti2013} and formalisation of the SCJ memory
+model~\cite{cavalcanti2011a}.  As discussed earlier, there has also been work on
+correct compilation of Java (and SCJ) programs~\cite{klein2006, strecker2002,
+  lochbihler2010, duran2005, stark2001}.  All these works allow for creation of
+correct programs and the focus of our work is on the next stage of running those
+programs.  As we are adopting the approach of compilation to C, it should also
+be noted that there has been much work on verified C
+compilation~\cite{leroy2009a, leroy2009b, leroy2012, leinenbach2005, blazy2006},
+thus allowing for complete verification down to executable code.
 
 \section{Future Work}
+\label{future-work-section}
+
+Our future work will involve proving the correctness of the formal model of the
+virtual machine services and specifying the core execution environment.  As
+already discussed, this will involve defining the semantics of Java bytecode and
+C in terms of \Circus and proving refinement laws between them.  This will be
+mechanised in the Isabelle proof assistant.
+
+Beyond the scope of our work, possible future work could include the
+verification of an SCJ virtual machine using our framework or even the creation
+of a correct-by-construction virtual machine from our specification.
+Facilitating such work is the ultimate aim of our work, in order to provide for
+the correct running of SCJ programs.
 
 \raggedright
 \printbibliography
@@ -2035,4 +2064,4 @@ the \Circus{} specification language.
 %  LocalWords:  modularise certifiability verifiers mechanisations checkable
 %  LocalWords:  aperiodically schedulability associativity nondeterministic CSP
 %  LocalWords:  precompiled precompilation disjunction schemas instantiation
-%  LocalWords:  nondeterministically boolean datatype
+%  LocalWords:  nondeterministically boolean datatype SCJVM
