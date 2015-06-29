@@ -1943,7 +1943,8 @@ operations: $RBSAllocateChild$ and $BackingStoreInit$. The allocation occurs in
 the current allocation context, identified by the input $allocationContext?$. It
 is determined by obtaining the current thread from the scheduler, looking up its
 allocation context and passing it as an input to the operation specified by the
-Z schema.
+Z schema.  The operation produces as output the identifier $childID!$ of the
+newly allocated backing store.
 
 The first condition on the operation requires that the allocation context be a
 valid backing store, that is, in the domain of $stores$. After that, the
@@ -1952,7 +1953,7 @@ size of the allocated backing store, $actualSize$, to include some
 implementation-defined overhead.
 
 Then the promotions are specified, beginning with the operation
-$RBSAllocateChild$. The local variables $childID!$ and $childAddresses!$ are
+$RBSAllocateChild$. The variables $childID!$ and $childAddresses!$ are
 identified with outputs of the promoted operation that have the same names. The
 initial state for the promoted operation is taken from the backing store in
 $stores$, and the final state is placed in the variable $parent$.  The output
@@ -1971,10 +1972,10 @@ remain the same.
   \Delta GlobalMemoryManager \\
   size? : \nat \\
   allocationContext? : BackingStoreID \\
+  childID! : BackingStoreID \\
 \where
   allocationContext? \in \dom stores \\
   \exists actualSize : \nat | actualSize = size? + backingStoreOverhead @ \\
-  \exists childID! : BackingStoreID @ \\
   \exists allocated! : ContiguousMemory @ \\
   \exists parent, child : BackingStore @ \\
   \t1 (\exists \Delta BackingStore; report! : Report | RBSAllocateChild [ actualSize / size? ] @ \\
