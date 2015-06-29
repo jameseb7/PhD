@@ -5,7 +5,7 @@
 \usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{amsmath}
-\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true]{biblatex}
+\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
 \usepackage[section]{placeins}
 \usepackage[color]{circus}
 \usepackage{fixltx2e}
@@ -1211,7 +1211,11 @@ We already have some preliminary results identifying the requirements for
 virtual machine services and constructing a formal model of them, which are
 presented in the next chapter.  The formal model should have a machine-checked
 proof of consistency but that remains to be completed.  We have not yet
-specified the core execution environment.
+specified the core execution environment.  The work presented in the next
+chapter has also been submitted to the Java Technologies for Real-time and
+Embedded Systems conference~\cite{baxter2015submitted}.  Our work is also
+related to some work verifying the icecap HVM scheduler and we have contributed
+to a paper on that, which is in preparation~\cite{freitas2015inpreparation}
 
 \chapter{Requirements of a Safety-Critical Java Virtual Machine}
 \label{requirements-chapter}
