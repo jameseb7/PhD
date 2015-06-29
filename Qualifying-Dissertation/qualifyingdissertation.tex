@@ -2095,11 +2095,19 @@ C in terms of \Circus{} and proving refinement laws between them.  This will be
 mechanised in the Isabelle proof assistant.
 % write more summarising chapter 3
 
-% explain why derive an SCJVM rather than prove an existing one correct
 Beyond the scope of our work, possible future work could include the
 verification of an SCJ virtual machine using our framework or even the creation
-of a correct-by-construction virtual machine from our specification.
-Facilitating such work is the ultimate aim of our work, in order to provide for
+of a correct-by-construction virtual machine from our specification.  The option
+of deriving a correct virtual machine from our specification may be more
+desirable than verifying an existing one.  This is because virtual machines can
+often be complex and therefore difficult to verify in a structured way.
+Moreover, while the effort of proving a virtual machine correct may uncover
+bugs, it may be a challenge to fix them.  Also, the virtual machine may not exactly
+meet our specification, requiring restructuring to merely allow the proof effort
+to begin.  On the other, the fact that \Circus{} allows for refinement means that a
+correct virtual machine can be constructed from our model in a stepwise and modular
+fashion, being shown to be correct at each stage of the process.  Facilitating such
+work is the ultimate aim of our work, in order to provide for
 the correct running of SCJ programs.
 
 \raggedright
