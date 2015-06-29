@@ -689,42 +689,48 @@ the code output by the compiler, when executed by on the target machine, must be
 a refinement of the source program.  The compilation laws can be used to prove
 this refinement and at the same time generate the target code.
 
-As an example, consider the following refinement laws, based on rules from
-Sampaio's work~\cite{sampaio1993}, which address the compilation of assignment
-statements.
-\begin{align}
-  \label{assignment-rule}
-  x := e &\circrefines \circvar A \circspot A := e \circseq x := A \\
-  \label{addition-rule}
-  A := e + f &\circrefines \circvar t \circspot A := f \circseq t := A
-  \circseq A := e \circseq A := A + t \\
-  \label{counter-rule}
-  x := e &\circrefines \circvar P \circspot P := s \circseq \circdo P = s
-  \circthen x, P := e, P+1 \circod \circseq \{ P = s + 1 \}
-\end{align}
-In these rules the symbol $\circrefines$ represents the refinement relation.
-The first two rules come from a phase of compilation in which complex
-expressions are broken down into expressions that can be more directly handled
-by processor instructions.  In rule~\eqref{assignment-rule}, a variable
-representing a processor register, $A$, is introduced to temporarily store the
-result of an expression as the target architecture does not have instructions to
-store results of computations directly into memory, but only into registers.  In
-that way the compilation can be seen as advancing towards the form of the
-individual processor instructions.  The rule~\eqref{addition-rule} provides for
-handling addition by storing the, possibly quite complex, right-hand side of the
-equation into a newly introduced temporary variable, $t$.  These rules, along
-with others, reduce complex assignment statements to a series of simple
-assignments that can be performed by processor instructions.  Finally, the
-rule~\eqref{counter-rule}, introduces a variable, $P$, that represents the
-program counter and refines the assignment operation with an operation that
-performs the assignment and increments the program counter as long as the
-program counter is at a specific value $s$, which is the location of the
-instruction in memory.  The result of the refinement works as a standalone
-program since it also initialises the program counter and makes an assertion
-about the final value of the program counter.  Programs of this form are
-combined by the refinement rule for sequential composition, bringing the result
-of the compilation into the normal form, which behaves as an interpreter for the
-target machine.
+As an example, consider the following refinement in which a simple program that
+performs some arithmetic and stores the results into variables is refined by a
+normal form representing the target machine.  The symbol $\circrefines$
+represents the refinement relation here.
+\begin{equation}
+\circvar x, y, z \circspot x := (x + 5) \times (y + z) ; z := z + 1
+\circrefines
+\begin{aligned}
+&\circvar A, P, M \circspot P := 1; \circdo \\
+&\quad            P=1  \then A,    P := M[2],          2 \\
+&\quad \extchoice P=2  \then A,    P := A + M[3],      3 \\
+&\quad \extchoice P=3  \then M[4], P := A,             4 \\
+&\quad \extchoice P=4  \then A,    P := M[1],          5 \\
+&\quad \extchoice P=5  \then A,    P := A + 5,         6 \\
+&\quad \extchoice P=6  \then A,    P := A \times M[4], 7 \\
+&\quad \extchoice P=7  \then M[1], P := A,             8 \\
+&\quad \extchoice P=8  \then A,    P := M[3],          9 \\
+&\quad \extchoice P=9  \then A,    P := A + 1,         10 \\
+&\quad \extchoice P=10 \then M[3] := A,               11 \\
+&\circod ; \{ P = 11 \}
+\end{aligned}
+\end{equation}
+The normal form introduces 3 variables: $A$, which represents the a general-purpose
+register of the target machine; $P$, which represents the program counter of the
+target machine; and $M$, which is an array representing the memory of the target
+machine.  The normal form consists of a program that initialises $P$ to 1 and
+then enters a loop in which the operation performed on each iteration is
+dependent on the value of $P$.  The loop is exited when $P$ is set to a value
+for which there is no operation and it is asserted that $P$ will be equal to 11
+at the end of the program.  Each of the statements of the source program
+corresponds to several operations in the normal form as complex expressions are
+broken down into simpler expressions that can be handled by instructions of the
+target machine.  This process also introduces the register $A$ and a temporary
+variable to store the intermediate results.  The temporary variable is what
+appears in the normal form as $M[4]$.  This temporary variable, as well as the
+variables $x$, $y$ and $z$ from the source program, get replaced with locations
+in the memory array $M$ in a process called data refinement.  Each of the
+assignment statements from breaking down the expressions is refined by a normal
+form with an explicit program counter $P$.  These normal forms are then combined
+to create the normal form of the full program.  The update of the program
+counter in this program is quite simple but more complex updates would occur for
+conditionals or loops.
 
 The power of the algebraic approach is that the compilation of individual
 elements of the source language can be specified and proved separately in
