@@ -25,7 +25,22 @@
 \begin{document}
 \maketitle
 
-%TODO: abstract
+\begin{abstract}
+  In recent years Java has been increasingly considered as a language for
+  safety-critical embedded systems.  However, some features of Java are
+  unsuitable for such systems and this has resulted in the creation of
+  Safety-Critical Java (SCJ).  The different scheduling and memory management
+  model of SCJ means that a specialised virtual machine is required to run SCJ
+  programs.  Given the safety-critical nature of the applications, it must be
+  ensured that the virtual machine is correct but so far no SCJ vitual machine
+  has been formally verified.  In this dissertation, we propose a framework for
+  verification of SCJ virtual machines.  We consider the differences between SCJ
+  and standard Java, and discuss some of the existing virtual machines for SCJ.
+  Seeing that many SCJ virtual machines precompile to native code, we then
+  survey some of the literature on compiler correctness.  Finally, we present
+  some preliminary results identifying the requirements of the services of an
+  SCJ virtual machine and constructing a formal model of those requirements.
+\end{abstract}
 
 \tableofcontents
 
@@ -75,9 +90,8 @@ embedded systems are also safety-critical.  For these conformance to certain
 standards, such as \mbox{DO-178C} and ISO~26262, is required.  To support the
 development of safety-critical programs that meet these requirements in Java,
 the Safety-Critical Java (SCJ) specification~\cite{locke2013} has been created.
-SCJ is a subset of the RTSJ that contains only the features that can be
-statically reasoned about, % this is a strong claim - find supporting evidence
-which means that features such as the
+SCJ is a subset of the RTSJ that removes the features that cannot be easily
+statically reasoned about, which means that features such as the
 garbage-collected heap and dynamic class loading are absent from SCJ.  This
 facilitates the creation of SCJ programs that fulfil formal specifications;
 indeed work has already been done on developing correct SCJ programs from formal
