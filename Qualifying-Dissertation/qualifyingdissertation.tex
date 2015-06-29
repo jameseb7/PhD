@@ -2,6 +2,7 @@
 
 \usepackage[in]{fullpage}
 \usepackage{parskip}
+\usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{amsmath}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true]{biblatex}
@@ -503,8 +504,12 @@ standard. OVM is, like icecap HVM, but unlike Fiji VM, single processor.
 PERC Pico is a product of Atego based on early ideas for SCJ, but uses its own
 system of Java metadata annotations to ensure the safety of scoped memory.  This
 systems of annotations provides additional information about how memory will be
-used so that it can be checked. PERC Pico does not support the current SCJ
-standard.
+used so that it can be checked.  Similarly to other SCJ virtual machines, PERC
+Pico allows for precompilation of Java code but targets executable machine code
+rather than an intermediate programming language.  The metadata annotations are
+used to guide the compiler to produce code that uses the correct scoped memory.
+PERC Pico does not support the current SCJ standard, though it has been
+suggested that it could be modified to do so~\cite{nilsen2011}.
 
 To summarise, as far as we are aware there is one publicly available virtual
 machine that has kept up with the developing SCJ specification, the icecap
