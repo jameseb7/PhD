@@ -2107,11 +2107,15 @@ SCJ programs down to executable code.
 \label{future-work-section}
 
 Our future work will involve proving the correctness of the formal model of the
-virtual machine services and specifying the core execution environment.  As
-already discussed, this will involve defining the semantics of Java bytecode and
-C in terms of \Circus{} and proving refinement laws between them.  This will be
-mechanised in the Isabelle proof assistant.
-% write more summarising chapter 3
+virtual machine services and specifying the core execution environment.  The
+formal model of the virtual machine services that we have created must have a
+formal proof of correctness and this may require revision of the formal model
+due to errors uncovered in the process of proving.  The specification of the
+core execution environment will be a proof of correct compilation from Java
+bytecode to C using the algebraic approach.  As already discussed, this will
+involve defining the semantics of Java bytecode and C in terms of \Circus{}
+and proving refinement laws between them.  We will mechanise these proofs in the
+Isabelle proof assistant in order to have assurance that the proofs are sound.
 
 Beyond the scope of our work, possible future work could include the
 verification of an SCJ virtual machine using our framework or even the creation
