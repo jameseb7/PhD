@@ -711,26 +711,39 @@ represents the refinement relation here.
 &\circod ; \{ P = 11 \}
 \end{aligned}
 \end{equation}
-The normal form introduces 3 variables: $A$, which represents the a general-purpose
-register of the target machine; $P$, which represents the program counter of the
-target machine; and $M$, which is an array representing the memory of the target
-machine.  The normal form consists of a program that initialises $P$ to 1 and
-then enters a loop in which the operation performed on each iteration is
-dependent on the value of $P$.  The loop is exited when $P$ is set to a value
-for which there is no operation and it is asserted that $P$ will be equal to 11
-at the end of the program.  Each of the statements of the source program
-corresponds to several operations in the normal form as complex expressions are
-broken down into simpler expressions that can be handled by instructions of the
-target machine.  This process also introduces the register $A$ and a temporary
-variable to store the intermediate results.  The temporary variable is what
-appears in the normal form as $M[4]$.  This temporary variable, as well as the
-variables $x$, $y$ and $z$ from the source program, get replaced with locations
-in the memory array $M$ in a process called data refinement.  Each of the
-assignment statements from breaking down the expressions is refined by a normal
-form with an explicit program counter $P$.  These normal forms are then combined
-to create the normal form of the full program.  The update of the program
-counter in this program is quite simple but more complex updates would occur for
-conditionals or loops.
+The normal form represents the behaviour of an interpreter of the source program
+running in a target machine whose structure is defined by the variables A, P,
+and M. The variable $A$ represents a general-purpose register of the target
+machine, $P$ represents the program counter of the target machine, and
+$M$ is an array representing the memory of the target machine.  The
+normal form consists of a program that initialises $P$ to 1 and then enters a
+loop in which the operation performed on each iteration is dependent on the
+value of $P$.  The loop is exited when $P$ is set to a value for which there is
+no operation and it is asserted that $P$ will be equal to 11 at the end of the
+program.  Each of the statements of the source program corresponds to several
+operations in the normal form as complex expressions are broken down into
+simpler expressions that can be handled by instructions of the target machine.
+
+The compilation proceeds by first applying rules to simplify the assignment
+statements. The register $A$ is introduced at this stage by splitting
+assignments of expressions to variables into two assignments that transfer the
+values to and from $A$.  In this way, the assignments are transformed for the
+target machine that only has instructions involving registers.  Particularly
+complex expressions such as $(x + 5) \times (y + z)$ are handled by storing
+intermediate results in temporary variables.  In this case the result of the
+expression $y + z$ is placed in a temporary variable when $P = 3$.  The
+variables used in the source program and introduced compilation are later
+replaced with locations in the memory array $M$ in a data refinement step.  This
+causes the variables $x$, $y$ and $z$ to be replaced with $M[1]$, $M[2]$ and
+$M[3]$ respectively.  The temporary variable introduced to store the result of $y + z$ is
+similarly replaced with $M[4]$.
+
+Each of the assignment statements from is then refined by a normal form with an
+explicit program counter $P$, that is incremented as part of the assignment
+operation.  These normal forms are then combined together by the refinement rule
+for sequential composition to create the normal form of the full program.  The
+update of the program counter in this program is quite simple but more complex
+updates would occur for conditionals or loops.
 
 The power of the algebraic approach is that the compilation of individual
 elements of the source language can be specified and proved separately in
@@ -2042,8 +2055,8 @@ which may not be easily visible to the human eye.
 % three sections: summary of contributions, related work, and future work
 In this chapter we conclude by summarising the contributions of this
 dissertation in Section~\ref{summary-section}.  We then discuss some related
-work in Section~\ref{related-work-section}, providing the context for our work,
-and the direction of future work in Section~\ref{future-work-section}.
+work in Section~\ref{related-work-section}, and the direction of future work in
+Section~\ref{future-work-section}.
 
 \section{Summary of Contributions}
 \label{summary-section}
@@ -2057,20 +2070,21 @@ SCJ virtual machine can be verified
 
 Having noted that SCJ virtual machines employ compilation, we have surveyed some
 of the work on compiler correctness, particularly how it relates to Java
-compilation, and seen there are two approaches: the commuting-diagram approach
+compilation, and seen that there are two approaches:~the commuting-diagram approach
 and the algebraic approach.  We have decided to adopt the algebraic approach and
 chosen \Circus{} as a specification language.
 
 As some preliminary work in specifying an SCJ virtual machine, we have
 identified the requirements of the virtual machine services required to support
 SCJ programs.  We have also constructed a formal model of those requirements in
-the \Circus{} specification language.  Contact with one of the authors of the
-SCJ specification has allowed us to obtain clarifications where the
-specification was unclear.  The work of constructing the formal model has helped
-in identification of the areas that require clarification.  It may be noted that
-the interface we have defined is not the only one that can support SCJ, though
-we believe that the overall functionality must be present in all SCJ virtual
-machines in some way.
+the \Circus{} specification language.
+
+Contact with one of the authors of the SCJ specification has allowed us to
+obtain clarifications where the specification is unclear.  The work of
+constructing the formal model has helped in the identification of the areas that
+require clarification.  It may be noted that the interface we have defined is
+not the only one that can support SCJ, though we believe that the overall
+functionality must be present in all SCJ virtual machines in some way.
 % need more reflection on the preliminary results, check the conclusions of the
 % JTRES paper for material
 
@@ -2094,42 +2108,47 @@ correct compilation of Java programs~\cite{klein2006, strecker2002,
   lochbihler2010, duran2005, stark2001} so it can be seen that there is already
 sufficient work to permit correct compilation to Java bytecode.  This then leaves
 us with correct SCJ programs in Java bytecode and the focus of our work is on the
-next stage of running those programs.  Finally, as we are adopting the approach
-of compilation to C, it must also be ensured that the C code can be compiled
-correctly.  We note that there has been much work on verified C
-compilation~\cite{leroy2009a, leroy2009b, leroy2012, leinenbach2005, blazy2006}
-and, in particular, that the CompCert project provides a functioning formally
-verified C compiler that could be used.  So, considering the context of other
-work done, our work is the final piece needed for complete verification of
-SCJ programs down to executable code.
+next stage of running those programs.
+
+Finally, as we are adopting the approach of compilation to C, it must also be
+ensured that the C code can be compiled correctly.  We note that there has been
+much work on verified C compilation~\cite{leroy2009a, leroy2009b, leroy2012,
+  leinenbach2005, blazy2006} and, in particular, that the CompCert project
+provides a functioning formally verified C compiler that can be used.  So our
+proposed work is the final piece needed for complete verification of SCJ
+programs down to executable code.
 
 \section{Future Work}
 \label{future-work-section}
 
 Our future work will involve proving the correctness of the formal model of the
 virtual machine services and specifying the core execution environment.  The
-formal model of the virtual machine services that we have created must have a
-formal proof of correctness and this may require revision of the formal model
-due to errors uncovered in the process of proving.  The specification of the
-core execution environment will be a proof of correct compilation from Java
-bytecode to C using the algebraic approach.  As already discussed, this will
-involve defining the semantics of Java bytecode and C in terms of \Circus{}
-and proving refinement laws between them.  We will mechanise these proofs in the
-Isabelle proof assistant in order to have assurance that the proofs are sound.
+formal model of the virtual machine services that we have created needs to be
+validated and this may require revision of the formal model due to errors
+uncovered in the process of proving essential properties.
 
-Beyond the scope of our work, possible future work could include the
-verification of an SCJ virtual machine using our framework or even the creation
-of a correct-by-construction virtual machine from our specification.  The option
-of deriving a correct virtual machine from our specification may be more
-desirable than verifying an existing one.  This is because virtual machines can
-often be complex and therefore difficult to verify in a structured way.
-Moreover, while the effort of proving a virtual machine correct may uncover
-bugs, it may be a challenge to fix them.  Also, the virtual machine may not exactly
-meet our specification, requiring restructuring to merely allow the proof effort
-to begin.  On the other, the fact that \Circus{} allows for refinement means that a
-correct virtual machine can be constructed from our model in a step-wise and modular
-fashion, being shown to be correct at each stage of the process.  Facilitating such
-work is the ultimate aim of our work, in order to provide for
+The specification of the core execution environment will be a proof of correct
+compilation from Java bytecode to C using the algebraic approach.  As already
+discussed, this will involve defining the semantics of Java bytecode and C in
+terms of \Circus{} and proving refinement laws between them.  We will mechanise
+these proofs in the Isabelle proof assistant in order to have assurance that the
+proofs are sound.
+
+Beyond the scope of our work, possible future work includes the verification of
+an SCJ virtual machine using our framework or even the creation of a
+correct-by-construction virtual machine from our specification.  The option of
+deriving a correct virtual machine from our specification may be more desirable
+than verifying an existing one.  This is because virtual machines can often be
+complex and therefore difficult to verify in a structured way.  Moreover, while
+the effort of proving a virtual machine correct may uncover bugs, it may be a
+challenge to fix them.  Also, the design of an existing virtual machine may not
+exactly meet the structure of our specification, requiring restructuring to
+allow the proof effort to begin.
+
+On the other hand, the fact that \Circus{} allows for refinement means that a
+correct virtual machine can be constructed from our model in a stepwise and
+modular fashion, being shown to be correct at each stage of the process.
+Facilitating such work is the ultimate aim of our work, in order to provide for
 the correct running of SCJ programs.
 
 \raggedright
@@ -2139,4 +2158,4 @@ the correct running of SCJ programs.
 %  LocalWords:  modularise certifiability verifiers mechanisations checkable
 %  LocalWords:  aperiodically schedulability associativity nondeterministic CSP
 %  LocalWords:  precompiled precompilation disjunction schemas instantiation
-%  LocalWords:  nondeterministically boolean datatype SCJVM
+%  LocalWords:  nondeterministically boolean datatype SCJVM stepwise
