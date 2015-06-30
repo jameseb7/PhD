@@ -33,7 +33,7 @@
   Safety-Critical Java (SCJ).  The different scheduling and memory management
   model of SCJ means that a specialised virtual machine is required to run SCJ
   programs.  Given the safety-critical nature of the applications, it must be
-  ensured that the virtual machine is correct, but so far no SCJ vitual machine
+  ensured that the virtual machine is correct, but so far no SCJ virtual machine
   has been formally verified.  In this dissertation, we propose a framework for
   verification of SCJ virtual machines.  We consider the differences between SCJ
   and standard Java, and discuss some of the existing virtual machines for SCJ.
@@ -872,7 +872,7 @@ instantiation.
   precision > 0
 \end{axdef}
 %
-After the channels are declared, we can declare processes that use them. Here we
+After the channel declarations, we can declare processes that use them. Here we
 declare the $RealtimeClock$ process. It is a basic process, that is, its state
 is defined in Z, and its behaviour using CSP constructs and Z data operations.
 %
@@ -1199,7 +1199,7 @@ also required.  The model will allow the requirements to be stated more
 precisely and their consistency checked.  We will model the virtual machine
 services in \Circus{} for ease of composition with the core execution
 environment.  Formal models of requirements, Java bytecode and C are needed as
-part of the characterisation of the normal form to be targetted in the algebraic
+part of the characterisation of the normal form to be targeted in the algebraic
 compilation approach. 
 
 \section{Proofs}
@@ -1659,7 +1659,7 @@ priority associated with each interrupt can be obtained by the
 
 Interrupts can be disabled using the \texttt{disable\-Interrupts} operation and
 re-enabled using the \texttt{enable\-Interrupts} operation. While interrupts are
-disabled no interrupt handlers can run but it is implementation-defined as to
+disabled no interrupt handlers can run but it is implemen\-tation-defined as to
 whether or not interrupts fired while interrupts are disabled are lost.
 
 \section{Real-time Clock API}
@@ -1737,7 +1737,7 @@ specified by a parallel composition of the memory manager, scheduler and clock
 processes. In this case, parallelism is being used to define a conjunction of
 requirements. 
 
-The processes synchronise on the channels they share, specified in the
+The processes synchronise on the channels they share, which are specified in the
 sets $MMSInterface$ and $RTCSInterface$. The set $MMSInterface$ is the interface
 between the memory manager and the scheduler, which contains a channel to get
 the current thread from the scheduler, and channels to inform the memory manager
@@ -1867,8 +1867,8 @@ required to hold.
 \end{schema}
 %
 Initialisation of a $BackingStore$ is handled by the operation
-$BackingStoreInit$, which behaves as $MemoryBlockInit$ with the additional
-precondition that the size $addresses?$ must be larger than
+$BackingStoreInit$, which behaves similarly to $MemoryBlockInit$ with the
+additional precondition that the size $addresses?$ must be larger than
 $backingStoreOverhead$ and the requirement that $free'$ be made smaller than
 $addresses?$ to allow space for $backingStoreOverhead$. For the new state
 components, $self'$ is specified by an additional input $newID?$ and $children'$
@@ -1901,7 +1901,7 @@ $BSAllocateChild$ below.
 This operation is based on $MBAllocate$, but it has an additional output,
 $childID!$, which is the identifier of the newly allocated child, and it
 specifies how the extra state components in $BackingStore$ are updated. The new
-child's identifer is specified to not be the identifier of an existing child and
+child's identifier is specified to not be the identifier of an existing child and
 must not be the identifier of the backing store itself. The final state
 $children'$ is specified to add $childID!$ to $children$ and $self$ does not
 change. This operation is made into a robust operation, $RBSAllocateChild$, that
@@ -2092,8 +2092,8 @@ dealt with at the level of Java bytecode, a standard Java compiler suffices for
 SCJ.  As discussed earlier, there has been plenty of work on
 correct compilation of Java programs~\cite{klein2006, strecker2002,
   lochbihler2010, duran2005, stark2001} so it can be seen that there is already
-sufficient work to permit correct compilation to Java bytcode.  This then leaves
-us with correct SCJ programs in Java bytcode and the focus of our work is on the
+sufficient work to permit correct compilation to Java bytecode.  This then leaves
+us with correct SCJ programs in Java bytecode and the focus of our work is on the
 next stage of running those programs.  Finally, as we are adopting the approach
 of compilation to C, it must also be ensured that the C code can be compiled
 correctly.  We note that there has been much work on verified C
@@ -2127,7 +2127,7 @@ Moreover, while the effort of proving a virtual machine correct may uncover
 bugs, it may be a challenge to fix them.  Also, the virtual machine may not exactly
 meet our specification, requiring restructuring to merely allow the proof effort
 to begin.  On the other, the fact that \Circus{} allows for refinement means that a
-correct virtual machine can be constructed from our model in a stepwise and modular
+correct virtual machine can be constructed from our model in a step-wise and modular
 fashion, being shown to be correct at each stage of the process.  Facilitating such
 work is the ultimate aim of our work, in order to provide for
 the correct running of SCJ programs.
