@@ -10,7 +10,7 @@
 \usepackage[color]{circus}
 \usepackage{fixltx2e}
 
-\title{Qualifying Dissertation}
+\title{A Framework for Verifying Safety-Critical Java Virtual Machines}
 \author{James Baxter}
 \date{}
 
@@ -87,7 +87,7 @@ and security benefits of Java could be of great use in embedded
 systems~\cite{mulchandani1998}.
 This required the creation of specialised Java virtual machines as the
 standard JVM is too large for most embedded systems.
-Much research has gone into making increasingly smaller virtual
+Much research has gone into making smaller and smaller virtual
 machines to widen the range of devices that Java can be used
 on~\cite{caska2011,thomm2010}.
 
@@ -229,8 +229,8 @@ virtual machines on points where the SCJ specification is unclear.
 The virtual machine must also meet the standard Java Virtual Machine
 specification~\cite{lindholm2014} on points such as how to interpret
 Java bytecode instructions.
-There is much work on the semantics of Java bytecode that can be
-leveraged in our work~\cite{bertelsen2000, jones1998, stark2001}.
+There is much existing work on the semantics of Java bytecode that can
+be used in our work~\cite{bertelsen2000, jones1998, stark2001}.
 
 As many existing virtual machines for SCJ precompile programs to
 native code in order to allow faster execution on embedded systems, it
@@ -488,6 +488,10 @@ Each mission also has a mission memory area that can be used as an
 allocation context by the schedulable objects of that mission, to
 provide space for objects that need to persist for the duration of the
 mission or to be shared between the schedulable objects.
+The amount of memory required for the mission memory must be computed
+ahead of time and specified by the programmer as part of writing the
+mission, though there has been som work on automated computation of
+worst case memory use for SCJ programs~\cite{andersen2013}.
 There is also an immortal memory area where objects can be allocated
 if needed for the entire running of the program (they are never
 freed).
@@ -629,6 +633,9 @@ in the next section.
 
 \section{Compiler Correctness}
 \label{compiler-correctness-section}
+
+%TODO: mention approach of deriving a correct compiler described in
+% www.cs.nott.ac.uk/~gmh/ccc.pdf
 
 Due to the importance of compiler correctness, there has been much
 research over the years in this area.
@@ -807,18 +814,18 @@ transformation~\cite{bauer1976, balzer1976, standish1976, arsac1979}.
 The basic idea is that there is a relation between programs that
 captures the idea of one program being ``at least as good as'' another
 or, to put it more precisely, at least as deterministic as another.
-Languages and laws for reasoning about programs can also be used to
-develop programs from specifications.
+Languages and laws for reasoning about programs with this notion of
+refinement can then be used to develop programs from specifications.
 This means that certain aspects of a system can have a
 nondeterministic specification and several different implementations
 can refine that specification.
 
-In using refinement in showing correctness of a compiler, the laws of
+In using refinement to show the correctness of a compiler, the laws of
 the specification language can be used to prove compilation refinement
 laws.
-Compilation laws can be used to transform the source programs into
-some normal form that represents an interpreter for the target
-language.
+These compilation laws can be used to transform the source programs
+into some normal form that represents an interpreter for the target
+language running the target code.
 In other words, the code output by the compiler, when executed by on
 the target machine, must be a refinement of the source program.
 The compilation laws can be used to prove this refinement and at the
@@ -826,7 +833,8 @@ same time generate the target code.
 
 As an example, consider the following refinement in which a simple
 program that performs some arithmetic and stores the results into
-variables is refined by a normal form representing the target machine.
+variables is refined by a normal form representing the target machine
+and code.
 The symbol $\circrefines$ represents the refinement relation here.
 \begin{equation}
   \circvar x, y, z \circspot x := (x + 5) \times (y + z) ; z := z + 1
@@ -842,12 +850,12 @@ The symbol $\circrefines$ represents the refinement relation here.
     &\quad \extchoice P=7  \then M[1], P := A,             8 \\
     &\quad \extchoice P=8  \then A,    P := M[3],          9 \\
     &\quad \extchoice P=9  \then A,    P := A + 1,         10 \\
-    &\quad \extchoice P=10 \then M[3] := A,               11 \\
+    &\quad \extchoice P=10 \then M[3] := A,                11 \\
     &\circod ; \{ P = 11 \}
   \end{aligned}
 \end{equation}
-The normal form represents the behaviour of an interpreter of the
-source program running in a target machine whose structure is defined
+The normal form represents the behaviour of an interpreter for the
+target code running in a target machine whose structure is defined
 by the variables A, P, and M.
 The variable $A$ represents a general-purpose register of the target
 machine, $P$ represents the program counter of the target machine, and
@@ -1081,7 +1089,7 @@ alarm must not be in the past.
   currentTime  : Time \\
   alarmSet     : Bool \\
   currentAlarm : Time \\
-  \where
+\where
   alarmSet = True \implies \\
   \t1 currentAlarm \geq currentTime
 \end{schema}
@@ -1104,10 +1112,9 @@ initialisation imposes no restrictions on it.
 %
 \begin{schema}{Init0}
   RTCState~' \\
-  initTime?
-  : Time \\
-  \where currentTime' = initTime?
-  \\
+  initTime?{} : Time \\
+\where 
+  currentTime' = initTime?{} \\
   alarmSet' = False \\
 \end{schema}
 %
@@ -1139,12 +1146,10 @@ indicate an alarm is set in this case.
 %
 \begin{schema}{SetAlarm0}
   \Delta RTCState \\
-  newAlarm?
-  : Time \\
-  \where newAlarm?
-  \geq currentTime \\
-  currentAlarm' = newAlarm?
-  \\
+  newAlarm?{} : Time \\
+\where
+  newAlarm?{} \geq currentTime \\
+  currentAlarm' = newAlarm?{} \\
   alarmSet' = True \\
   currentTime' = currentTime \\
 \end{schema}
@@ -1156,10 +1161,9 @@ The symbol $\Xi$ denotes that the state remains the same.
 %
 \begin{schema}{SetAlarm1}
   \Xi RTCState \\
-  newAlarm?
-  : Time \\
-  \where newAlarm?
-  < currentTime \\
+  newAlarm?{} : Time \\
+\where
+  newAlarm?{} < currentTime \\
 \end{schema}
 %
 The two Z schemas are combined using a logical disjunction, allowing
@@ -1404,6 +1408,13 @@ programs.
 % change to present tense in the thesis
 For the core execution environment, we will adopt the approach of
 compilation from Java bytecode to C.
+Java bytecode can be used as the source language, rather than Java
+itself, because SCJ has been designed without any extensions to the
+syntax and language constructs of Java, but only a different standard
+library and runtime.
+This means that an SCJ program can be compiled by a standard Java
+compiler, although it requires a specialised JVM to run the resultant
+bytecode.
 The reason for the choice of C as a target language is the same as
 that of other SCJ virtual machines, particularly the icecap HVM: C is
 a language already widely used in the area of embedded systems and is
@@ -1544,6 +1555,10 @@ In addition to the inputs and outputs described there, there should
 also be some system of reporting erroneous inputs, whether that be
 exceptions, global error flags or particular return values signalling
 errors.
+The precise mechanism by which error conditions are reported is not
+specified, only that they must be reported so that they can be handled
+by the program, infrastructure or core execution environment making
+use of the SCJVM services.
 The conditions that cause an error to be reported are listed in the
 final column of the table.
 
@@ -1724,7 +1739,11 @@ may simply be pointers to the space allocated for the stack.
 
 The SCJVM scheduler manages the scheduling of threads.
 The operations of the scheduler are summarised in
-Table~\ref{scheduler-table}.
+Table~\ref{scheduler-table}, which has the same format as
+Table~\ref{memory-manager-table}.
+The means of using the operations in the table is the same as for the
+memory manager, with the system of error reporting again left loosely
+specified.
 
 \begin{table}[ht]
   \centering
@@ -1964,6 +1983,10 @@ operation.
 While interrupts are disabled no interrupt handlers can run but it is
 implemen\-tation-defined as to whether or not interrupts fired while
 interrupts are disabled are lost.
+This is due to the fact that disabling of interrupts is usually done
+at the level of hardware so the choice of whether interrupts are lost
+or retained is made by the hardware manufacturer, not the virtual
+machine implementer.
 
 \section{Real-time Clock API}
 \label{realtime-clock-section}
@@ -1972,7 +1995,8 @@ The SCJVM must manage the system real-time clock, providing an
 interface that allows for the time to be read and alarms to be set to
 trigger time-based events.
 The operations of the SCJVM real-time clock are summarised in
-Table~\ref{realtime-clock-table}.
+Table~\ref{realtime-clock-table}, which has the same format as
+Table~\ref{memory-manager-table}.
 
 \begin{table}[ht]
   \centering
@@ -2258,7 +2282,7 @@ outputting a value $report!$, which is either a reported error or the
 value $okay$.
 
 Backing stores are managed by the global memory manager, the state of
-which is given by the schema below.
+which is given by the schema $GlobalMemoryManager$.
 The global memory manager state contains a partial function, $stores$,
 that relates backing store identifiers to the backing stores, along
 with the identifier, $rootBackingStore$, of the root backing store and
@@ -2268,7 +2292,24 @@ The global state also contains a map, $threadACs$, from thread
 identifiers to their allocation context, which is used, together with
 information obtained from the scheduler, to perform operations on the
 current allocation context.
-
+%
+\begin{schema}{GlobalMemoryManager}
+  stores : BackingStoreID \pfun BackingStore \\
+  childRelation : \\
+  \t1 BackingStoreID \rel BackingStoreID \\
+  rootBackingStore : BackingStoreID \\
+  threadACs : ThreadID \pfun BackingStoreID \\
+  \where
+  rootBackingStore \in \dom~stores \\
+  \forall b: \dom~stores @ (stores~b).self = b \\
+  \forall b : \ran stores @ \exists m : \power b.used @
+  (\lambda x : b.children @ (stores~x).total)~\partition~m \\
+  \ran threadACs \subseteq \dom stores \\
+  childRelation = \bigcup \{ i : \dom~stores @ \{ j : (stores~i).children @ (i,j) \} \} \\
+  \dom stores = (childRelation\star) \limg \{ rootBackingStore \} \rimg \\
+  \forall s : \dom stores @ s \notin childRelation\plus \limg \{ s \} \rimg \\
+\end{schema}
+%
 The relationships between the backing stores are specified by the
 invariants of this state as defined by the predicates in the schema
 above.
@@ -2290,24 +2331,7 @@ $childRelation$ to specify that every known backing store must be a
 backing store itself.
 Lastly, the seventh invariant specifies that no backing store can be a
 (direct or indirect) child of itself.
-%
-\begin{schema}{GlobalMemoryManager}
-  stores : BackingStoreID \pfun BackingStore \\
-  childRelation : \\
-  \t1 BackingStoreID \rel BackingStoreID \\
-  rootBackingStore : BackingStoreID \\
-  threadACs : ThreadID \pfun BackingStoreID \\
-  \where
-  rootBackingStore \in \dom~stores \\
-  \forall b: \dom~stores @ (stores~b).self = b \\
-  \forall b : \ran stores @ \exists m : \power b.used @
-  (\lambda x : b.children @ (stores~x).total)~\partition~m \\
-  \ran threadACs \subseteq \dom stores \\
-  childRelation = \bigcup \{ i : \dom~stores @ \{ j : (stores~i).children @ (i,j) \} \} \\
-  \dom stores = (childRelation\star) \limg \{ rootBackingStore \} \rimg \\
-  \forall s : \dom stores @ s \notin childRelation\plus \limg \{ s \} \rimg \\
-\end{schema}
-%
+
 The operations on the memory manager are specified using the Z idiom
 of promotion, which allows operations on a local state to be lifted to
 operations on a global state.
@@ -2315,44 +2339,6 @@ This allows simple operations on the backing store records to be used
 to update the backing stores in the $stores$ function.
 As an example we present the $GlobalMakeBS$ schema that specifies the
 creation of a backing store within another.
-
-Much of this operation's complexity is due to the fact that it
-promotes two operations: $RBSAllocateChild$ and $BackingStoreInit$.
-The allocation occurs in the current allocation context, identified by
-the input $allocationContext?$.
-It is determined by obtaining the current thread from the scheduler,
-looking up its allocation context and passing it as an input to the
-operation specified by the Z schema.
-The operation produces as output the identifier $childID!$ of the
-newly allocated backing store.
-
-The first condition on the operation requires that the allocation
-context be a valid backing store, that is, in the domain of $stores$.
-After that, the existential quantifiers introduce variables local to
-the schema, specifying the size of the allocated backing store,
-$actualSize$, to include some implementation-defined overhead.
-
-Then the promotions are specified, beginning with the operation
-$RBSAllocateChild$.
-The variables $childID!$ and $childAddresses!$ are identified with
-outputs of the promoted operation that have the same names.
-The initial state for the promoted operation is taken from the backing
-store in $stores$, and the final state is placed in the variable
-$parent$.
-The output $childID!$ is required to not be the identifier of another
-backing store.
-It is required that no error be reported in the error reporting
-variable $report!$.
-
-The second operation promoted is $BackingStoreInit$.
-The variables $actualSize$, $childAddresses!$ and $childID!$ are
-passed to it as inputs via renaming.
-The final state of the promoted operation is stored in $child$.
-The final states of both backing stores, $parent$ and $child$ are
-stored in the $stores$ function, with $childID!$ being used as the
-identifier of $child$.
-The specification of the operation ends by stating that all other
-state variables remain the same.
 %
 \begin{schema}{GlobalMakeBS}
   \Delta GlobalMemoryManager \\
@@ -2392,6 +2378,44 @@ state variables remain the same.
   threadACs' = threadACs \\
 \end{schema}
 %
+Much of this operation's complexity is due to the fact that it
+promotes two operations: $RBSAllocateChild$ and $BackingStoreInit$.
+The allocation occurs in the current allocation context, identified by
+the input $allocationContext?$.
+It is determined by obtaining the current thread from the scheduler,
+looking up its allocation context and passing it as an input to the
+operation specified by the Z schema.
+The operation produces as output the identifier $childID!$ of the
+newly allocated backing store.
+
+The first condition on the operation requires that the allocation
+context be a valid backing store, that is, in the domain of $stores$.
+After that, the existential quantifiers introduce variables local to
+the schema, specifying the size of the allocated backing store,
+$actualSize$, to include some implementation-defined overhead.
+
+Then the promotions are specified, beginning with the operation
+$RBSAllocateChild$.
+The variables $childID!$ and $childAddresses!$ are identified with
+outputs of the promoted operation that have the same names.
+The initial state for the promoted operation is taken from the backing
+store in $stores$, and the final state is placed in the variable
+$parent$.
+The output $childID!$ is required to not be the identifier of another
+backing store.
+It is required that no error be reported in the error reporting
+variable $report!$.
+
+The second operation promoted is $BackingStoreInit$.
+The variables $actualSize$, $childAddresses!$ and $childID!$ are
+passed to it as inputs via renaming.
+The final state of the promoted operation is stored in $child$.
+The final states of both backing stores, $parent$ and $child$ are
+stored in the $stores$ function, with $childID!$ being used as the
+identifier of $child$.
+The specification of the operation ends by stating that all other
+state variables remain the same.
+
 Other global memory manager operations are similarly specified using
 promotion.
 Operations on stacks are specified separately, using a specification
