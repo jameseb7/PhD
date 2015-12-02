@@ -774,6 +774,34 @@ most successful of which is that of CompCert~\cite{leroy2009a,
 This is a project to create a fully verified realistic compiler for a
 subset of C, using the theorem prover Coq~\cite{coq2004}.
 
+\subsection{Operational approach}
+\label{operational-approach-subsection}
+
+A related approach that should be mentioned here is that of deriving a
+compiler from a operational semantics by a series of transformations.
+There have been several works in past discussing this~\cite{wand1982,
+  meijer1992a, ager2003}, but there has also been some good recent
+work in this area by Bahr and Hutton~\cite{bahr2015}.
+Their approach involves beginning with an operational semantics of the
+source language and performing a series of transformations upon it to
+acquire a function that transforms the state of the target machine.
+Functions that represent the basic operations of the target machine
+are then identified as constituent parts of that function.
+Those functions are then converted to continuation passing style, in
+which a function representing the next action to be taken is passed as
+an argument to the function.
+This yields a nested list of functions transforming the state of the
+target machine in a manner that represents the semantics of the target
+machine instructions.
+The functions are then replaced with algebraic datatype constructors
+to yield a list of target machine instructions.
+Since the continuations in continuation passing style are functions
+that transform the state of the target machine, the transformed
+operational semantics function behaves as a compiler for the target
+machine.
+
+ 
+
 \subsection{Algebraic Approach}
 \label{algebraic-approach-subsection}
 
