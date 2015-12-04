@@ -32,6 +32,75 @@
 
 \tableofcontents
 
-\section{Introduction}
+\chapter{Introduction}
+
+% short explanation of chapter: motivation, objectives, document
+% structure
+
+\section{Motivation}
+
+The Java programming language~\cite{gosling2013} has achieved great
+popularity and is now used in a wide variety of areas.
+One particular area of interest in which Java is used is that of
+embedded systems, where it was realised that the features of
+portability, modularity, safety and security that Java offers could be
+of use in those areas~\cite{mulchandani1998}.
+As Java programs are compiled to be run by the Java Virtual Machine
+(JVM), this required creating JVMs for embedded devices and, indeed,
+research has gone into making smaller and smaller JVMs to accommodate
+a wider range of embedded devices~\cite{caska2011,thomm2010}.
+
+However, many embedded systems have real-time requirements, meaning
+that strict timing properties are required to be adhered to.
+Features of Java such as the garbage collector and its concurrency
+model make it difficult to ensure such properties, thus making
+standard Java unsuitable for real-time systems.
+To address this problem, the Real-Time Specification for Java
+(RTSJ)~\cite{gosling2000} was created.
+The RTSJ extends Java with some additional features that allow for
+greater time predictability.
+One feature the RTSJ adds is scoped memory, allowing memory to
+allocated for use in a particular scope and deallocated when that
+scope in left, thus allowing for prediction of when memory
+deallocations will occur.
+Another feature of the RTSJ is a more predictable priority scheduler
+that better allows the execution time of higher priority threads to be
+computed.
+
+Though the RTSJ provides for real-time considerations, many real-time
+embedded systems require certification under safety standards such as
+\mbox{DO-178C}.
+To better facilitate the certification of such systems,
+Safety-Critical Java (SCJ)~\cite{locke2013} was created.
+SCJ is based on the RTSJ but removes the features of the RTSJ that
+would make it diffcult to certify programs written using it.
+Some particular differences of SCJ from standard Java are in the areas
+of scheduling and memory management.
+
+SCJ's scheduling model is based around organising a program into a
+series of missions, which are executed sequentially in an order chosen
+by a programmer-supplied mission sequencer.
+Each mission may contain multiple asynchronous event handler threads,
+which are created when the mission is initialised and run throughout
+the duration of the mission.
+The event handlers within a mission are scheduled according to a
+priority scheduling system, in which the running handler is always the
+highest priority relesed handler.
+Once the mission is requested to terminate, the event handler threads
+are stopped, the mission's resources are cleaned up, and the mission
+sequencer selects the next mission.
+
+The memory management of SCJ makes use of the scoped memory areas of
+RTSJ, adapted for the SCJ mission model.
+Memory is allocated in memory areas, which have varying lifetimes.
+Each mission has a memory area associated with it that persists for
+the duration of the mission, while each event handler within the
+mission has a memory area that persists only during releases of the
+handler.
+Additional nested private memory areas can be created, which can be
+entered and left as needed, being cleared when they are left.
+There is also an immortal memory area, in which memory is never freed
+and persists for the entire duration of the program.
+
 
 \end{document}
