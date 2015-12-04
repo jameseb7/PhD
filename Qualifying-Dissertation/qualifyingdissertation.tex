@@ -644,6 +644,9 @@ the commuting-diagram approach as it is based on showing that a
 particular diagram commutes.
 We will discuss the commuting diagram approach in
 Section~\ref{commuting-diagram-subsection}.
+We also discuss a related approach based on deriving compilers and
+their proofs of correctness from operational semantics in
+Section~\ref{operational-approach-subsection}.
 
 An alternative approach to compiler verification is the algebraic
 approach developed in the early 90s.
@@ -800,7 +803,19 @@ that transform the state of the target machine, the transformed
 operational semantics function behaves as a compiler for the target
 machine.
 
- 
+This approach has the advantage of deriving a compiler along with its
+proof so that the compiler is known to be correct by construction.
+It also works using simple program transformations, meaning that it
+can be more easily adapted and applied to different programming languages.
+However, this approach relies on operational semantics, which are
+already quite concrete, meaning that many of the implementation
+decisions inherent in compiler construction have already been made
+before the compiler is derived since it is difficult to have a loosely
+specified operational semantics in the form required for this approach.
+The requirement for knowledge of the state is particularly problematic
+in our case where the target language is not a well-defined machine
+language but a native high-level programming language with a loosely
+defined state. 
 
 \subsection{Algebraic Approach}
 \label{algebraic-approach-subsection}
