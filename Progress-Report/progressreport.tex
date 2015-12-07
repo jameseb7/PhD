@@ -14,7 +14,7 @@
 \author{James Baxter}
 \date{}
 
-\bibliography{literature} 
+\bibliography{../Qualifying-Dissertation/literature} 
 
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
@@ -101,6 +101,62 @@ Additional nested private memory areas can be created, which can be
 entered and left as needed, being cleared when they are left.
 There is also an immortal memory area, in which memory is never freed
 and persists for the entire duration of the program.
+A system of annotations allows for static checking that dangling
+pointers cannot arise from misuse of the scoped memory model.
+
+% mention the existing work on formal verification of SCJ programs
+
+Due to the differences between SCJ and standard Java, SCJ requires a
+specialised virtual machine, although SCJ has been designed with no
+syntactic modifications so it can be compiled by a standard Java
+compiler.
+There have been several SCJ virtual machines (SCJVMs) created,
+including the icecap HVM~\cite{sondergaard2012}, Fiji
+VM~\cite{pizlo2009}, OVM~\cite{armbruster2007},
+HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
+  richard2010}.
+Of these, only Fiji VM and icecap HVM appear to be maintained
+and, while icecap provides support for most of SCJ, Fiji VM does not
+necessariy provide proper support for all aspects of SCJ.
+None of the SCJVMs produced to date have been formally
+verified, which is desirable given the safety-critical nature of the
+applications and the fact that correct execution of a program depends
+on virtual machine correctness.
+
+Additionally, having to execute a program via a virtual machine
+presents a cost in terms of memory and time resources, which may not
+be available on the embedded real-time systems SCJ is targetting.
+For this reason, most SCJVMs, including the ones listed above compile
+the Java bytecode to native code ahead-of-time.
+This can be particularly seen in the examples of Fiji VM and the
+icecap HVM, which compile Java bytecode to C code.
+The correctness of this compilation to native code must also be
+ensured, in addition to the correctness of the infrastructure
+supporting the running program, and so the problem of ensuring the
+correctness of an SCJVM is, in part, a compiler verification problem.
+
+There has already been much research in the area of compiler
+correctness, with most of the research following one of two
+approaches.
+The majority of the literature on compiler correctness follows a
+commuting-diagram approach, in which the compilation function is shown
+to commute with functions defining the semantics of the source and
+target languages.
+This approach was first identified by Lockwood
+Morris~\cite{morris1973} and later refined by Thatcher \emph{et
+  al.}~\cite{thatcher1979}, but can be seen in much of the earlier
+work, including the earliest work by McCarthy and
+Painter~\cite{mccarthy1967}.
+The commuting-diagram approach has also been used in more recent work,
+including some very comprehensive work as part of the CompCert
+project~\cite{leroy2009a, leroy2009b}.
+As this approach is based on the use of ordinary functions to describe
+compiler correctness, it can be readily encoded in an automated
+theorem prover and there have been several works that have made use of
+automated theorem provers~\cite{klein2006, milner1972, nipkow2000}.
+
+
+\printbibliography
 
 
 \end{document}
