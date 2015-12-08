@@ -220,6 +220,42 @@ does not differ much from that of standard Java bytecode so much of
 the Java Virtual Machine specification~\cite{lindholm2014} also
 applies to SCJVMs.
 
+Secondly, the need for a compilation strategy arises from the fact
+that most exising SCJVMs compile Java bytecode to some native code in
+order to improve performance on embedded system so it seems wise to
+include it in our specification of an SCJVM.
+We will focus on compilation from Java bytecode to C for much the same
+reasons as the icecap HVM and Fiji VM: that C is a language already
+widely used in embedded systems and is suffciently low level to enable
+its use as an efficient target language while retaining enough
+abstraction to be interacted with by the programmer.
+
+The specification and compilation strategy must then be formalised in
+some formal notation.
+As noted previously, there are two main approaches to formalising
+compilers and showing their correctness: the commuting-diagram
+approach and the algebraic approach.
+In the commuting diagram approach, the compiler is viewed as a
+function from some representation of the source language to some
+representation of the target language.
+The semantics of the source and target lanaguages are then defined as
+functions into some space of meanings, with a function to relate the
+meanings of the source and target languages if necessary.
+The correctness of the compiler is then checked by showing that the
+functions are all consistent with one another, i.e.\ that a diagram
+with the functions as edges commutes.
+
+The algebraic approach is based on defining the source and target
+languages using the same specification language.
+The notion of refinement can then be used to prove algebraic laws
+that can be applied to transform the source program into a normal form
+representing the target machine running the target code.
+Because the algebraic laws are proved correct and the compilation is
+made up of applying these laws in a systematic way, the compilation
+can then be known to be correct in the sense that the target code
+running on the target machine is a correct implementation of the
+program specified by the source code.
+
 \printbibliography
 
 
