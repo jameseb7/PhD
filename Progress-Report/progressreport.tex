@@ -69,7 +69,7 @@ computed.
 
 Though the RTSJ provides for real-time considerations, many real-time
 embedded systems require certification under safety standards such as
-\mbox{DO-178C}.
+\mbox{DO-178C} and ISO~26262.
 To better facilitate the certification of such systems,
 Safety-Critical Java (SCJ)~\cite{locke2013} was created.
 SCJ is based on the RTSJ but removes the features of the RTSJ that
@@ -102,26 +102,36 @@ entered and left as needed, being cleared when they are left.
 There is also an immortal memory area, in which memory is never freed
 and persists for the entire duration of the program.
 A system of annotations allows for static checking that dangling
-pointers cannot arise from misuse of the scoped memory model.
+pointers cannot arise from misuse of the scoped memory
+model~\cite{tang2010}.
 
-% mention the existing work on formal verification of SCJ programs
+Due to the safety-critical nature of the software SCJ is designed to
+create, it is necessary to show that they are correct.
+While the design of SCJ allows for it to be more easily shown that
+programs will execute correctly, greater certainty and precision can
+be obtained through the use of formal methods.
+There has already been work on generating correct SCJ programs from
+formal specifications~\cite{cavalcanti2011, cavalcanti2013}, which
+ensures that an SCJ program will have the behaviour intended.
+Some work has also been done on formalising the SCJ memory model,
+allowing it's correctness to be ensured.
 
-Due to the differences between SCJ and standard Java, SCJ requires a
-specialised virtual machine, although SCJ has been designed with no
-syntactic modifications so it can be compiled by a standard Java
-compiler.
+However, although SCJ can be compiled by a standard Java compiler, SCJ
+requires a specialised virtual machine due to the differences between
+SCJ and standard Java.
 There have been several SCJ virtual machines (SCJVMs) created,
 including the icecap HVM~\cite{sondergaard2012}, Fiji
 VM~\cite{pizlo2009}, OVM~\cite{armbruster2007},
 HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
   richard2010}.
-Of these, only Fiji VM and icecap HVM appear to be maintained
-and, while icecap provides support for most of SCJ, Fiji VM does not
+Of these, only Fiji VM and icecap HVM appear to be maintained and,
+while icecap provides support for most of SCJ, Fiji VM does not
 necessariy provide proper support for all aspects of SCJ.
-None of the SCJVMs produced to date have been formally
-verified, which is desirable given the safety-critical nature of the
-applications and the fact that correct execution of a program depends
-on virtual machine correctness.
+Since the correct execution of an SCJ program depends on the
+correctness of the underlying virtual machine, which must be ensured
+in addition to checking the correctness of the program.
+While there has been work on using formal methods to show SCJ program
+correctness, no SCJVM has been verified.
 
 Additionally, having to execute a program via a virtual machine
 presents a cost in terms of memory and time resources, which may not
@@ -155,6 +165,60 @@ compiler correctness, it can be readily encoded in an automated
 theorem prover and there have been several works that have made use of
 automated theorem provers~\cite{klein2006, milner1972, nipkow2000}.
 
+The other main approach to compiler verification is the algebraic
+approach proposed by Hoare~\cite{hoare1991} and implemented by
+Sampaio~\cite{hoare1993, sampaio1993}.
+The algebraic approach is based around the notion of refinement, which
+formally captures the idea of a program being an implementation of a
+less deterministic specification.
+In the algebraic approach, the source and target languages are defined
+in the same semantic space and proven refinement laws are used to
+refine the source program to a normal form representing the target
+machine running the target code.
+This approach has the advantage that the rules used to perform the
+compilation are known to be correct, thus making the resultant
+compiler correct by construction.
+It also allows for passing seamlessly from the source language to the
+target language using algebraic laws since the source and target
+languages are in the same semantic space.
+The algebraic approach has not been used particularly widely but, in
+addition to Sampaio's work, there has been work using the algebraic
+approach for compilation of object-oriented languages~\cite{duran2005,
+  duran2010} and for hardware compilation~\cite{perna2010, perna2011}.
+
+
+\section{Objectives}
+
+Since there appears to be no formally verified SCJVM and formal
+verification of an SCJVM is desirable, we propose to create a
+framework for formal verification of an SCJVM.
+This framework will consist of the following parts:
+\begin{itemize}
+\item A specification of the services required to be provided by an
+  SCJVM,
+\item A compilation strategy from Java bytecode to C,
+\item A formal model of the specification and compilation strategy,
+\item Proofs of the correctness of the formal model, and
+\item A mechanisation of the proofs in an automated theorem prover.
+\end{itemize}
+Each of these parts will be discussed in the following paragraphs.
+
+First, it is necessary to have an informal specification of what is
+required of an SCJVM.
+Even though the ultimate aim is one of formal verification, an
+informal specification is still needed to guide the development of the
+formal model since there is no existing clear specification for SCJVMs
+and some VM implementors may find the formal model difficult to
+understand.
+Concerning the content of the specification, it should be noted that
+the role of an SCJVM is not merely to execute bytecode instructions.
+An SCJVM must also provide services to support the SCJ API in areas
+such as scheduling and memory management.
+An informal specification of all aspects of the SCJVM is required for
+proper creation of a formal model, but the semantics of SCJ bytecode
+does not differ much from that of standard Java bytecode so much of
+the Java Virtual Machine specification~\cite{lindholm2014} also
+applies to SCJVMs.
 
 \printbibliography
 
