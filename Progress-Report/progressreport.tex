@@ -113,8 +113,8 @@ be obtained through the use of formal methods.
 There has already been work on generating correct SCJ programs from
 formal specifications~\cite{cavalcanti2011, cavalcanti2013}, which
 ensures that an SCJ program will have the behaviour intended.
-Some work has also been done on formalising the SCJ memory model,
-allowing it's correctness to be ensured.
+Some work has also been done on formalising the SCJ memory
+model~\cite{cavalcanti2011a}, allowing it's correctness to be ensured.
 
 However, although SCJ can be compiled by a standard Java compiler, SCJ
 requires a specialised virtual machine due to the differences between
@@ -255,6 +255,66 @@ made up of applying these laws in a systematic way, the compilation
 can then be known to be correct in the sense that the target code
 running on the target machine is a correct implementation of the
 program specified by the source code.
+
+We will follow the algebraic approach in our work as it relates the
+source and target languages in a clearer way than the
+commuting-diagram approach.
+Additionally, the commuting-diagram approach requires the definition
+of additional functions to relate the source and target semantics,
+thus relying more on definitions, which may be incorrect, than on
+mathematically derived results.
+However, there has been some work on deriving a compilation function
+given an operational sematics of the source language and a way of
+relating the semantics of the source and target
+languages~\cite{bahr2015}.
+We do not believe this work will be of use in the case we wish to
+apply it as it relies on knowledge of the state of the target machine
+and a way of identifying the semantics of the target code within the
+compilation function, which is not easily done with a complex language
+like C, though it may work better for machine languages.
+
+We require a formal language in which to specify the source and target
+languages, as well as for specifying the virtual machine services.
+For this we will use the \Circus{} specification
+language~\cite{oliveira2009}, which is based on Z
+notation~\cite{woodcock1996} and CSP~\cite{roscoe2011}.
+\Circus{} uses CSP to specify processes that communicate over channels
+and uses Z notation to specify state and data operations that can be
+encapsulated in processes.
+The reason for the choice of \Circus{} as our formal notation is due
+to the fact that \Circus{} is designed as a notation for refinement
+and so works well with the algebraic approach.
+The combination of Z notation and CSP also gives far greater
+expressive power than using those languages separately.
+Finally, the use of \Circus{} helps to tie this work into the existing
+specification work surrounding SCJ~\cite{cavalcanti2011,
+  cavalcanti2011a, cavalcanti2013, zeyda2011}.
+
+The consistency of the specification and the correctness of the
+compilation strategy must be proved by formal mathematical proof from
+algebraic laws known to be correct.
+\Circus{} has many such laws already developed and has an underlying
+semantics given using the model of Hoare and He's Unifying Thories of
+Programming (UTP)~\cite{hoare1998} that can be used to verify the
+correctness of the laws.
+
+Finally, to ensure the laws are understood and applied correctly, it
+is often helpful to mechanise the proofs in an automated theorem
+prover so that the proofs can then be machine checked.
+There are a variety of tools for machine checking of \Circus{}
+specifications.
+The \Circus{} parser and typechecker included as part of the Community
+Z Tools~\cite{malik2011, xavier2008, malik2005, miller2005} can be
+used to perform basic checking of a \Circus{} specification and
+integration with the Z/Eves theorem prover~\cite{saaltink1997} can be
+used to prove the Z portions of the \Circus{} specification.
+Process properties such as deadlock-freedom can be checked by
+translating the \Circus{} specification to CSP and checking with a
+tool such as FDR~\cite{gibson-robinson2014}.
+For more comprehensive proving of properties about \Circus
+specifications, recent work on Isabelle/UTP~\cite{foster2015} can be
+used to permit reasoning about \Circus{} in the Isabelle theorem
+prover~\cite{nipkow2002}.
 
 \printbibliography
 
