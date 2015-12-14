@@ -188,6 +188,7 @@ approach for compilation of object-oriented languages~\cite{duran2005,
 
 
 \section{Objectives}
+\label{objectives-section}
 
 Since there appears to be no formally verified SCJVM and formal
 verification of an SCJVM is desirable, we propose to create a
@@ -316,7 +317,49 @@ specifications, recent work on Isabelle/UTP~\cite{foster2015} can be
 used to permit reasoning about \Circus{} in the Isabelle theorem
 prover~\cite{nipkow2002}.
 
-\printbibliography
+\section{Document Structure}
 
+\chapter{Progress Report}
+
+\chapter{Research Plan}
+
+In this chapter we describe the plan for the rest of the research,
+explaining each of the steps to be taken and giving and estimate of
+the amount of time each will take.
+
+Having already constructed formal models of the SCJVM services and
+core execution environment, the bulk of the remaining work centres
+around the construction and proving of the compilation strategy.
+A summary of the tasks involved in this, with an estimate of the time
+needed, is given in Table~\ref{research-plan-table}
+
+\begin{table}{ht}
+  \begin{tabular}{ll}
+    \hline
+    Task & Time Needed
+    \hline
+    Define C subset semantics & 1 month \\
+    Develop compilation strategy & 4 months \\
+    Hand proofs of compilation rules & 4 months \\
+    Mechanise proofs of compilation rules & 2 months \\
+    Further work & 2 months \\
+    Writing up results & 6 months \\
+    \hline
+  \end{tabular}
+  \caption{A table showing the proposed plan for the remainder of the research}
+  \label{research-plan-table}
+\end{table}
+
+The first task is to define the target language for the compilation strategy.
+As has been mentioned in Section~\ref{objectives-section}, the focus
+is on C as the target language since that is the target language used
+by several existing SCJVMs.
+However, since C is being used as a target language and not as a
+high-level source language, not all features of C will necessarily be required.
+This means that we must first determine a subset of C that will be
+sufficiently powerful to support the compilation but sufficiently
+small to permit reasoning.
+
+\printbibliography
 
 \end{document}
