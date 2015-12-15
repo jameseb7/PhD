@@ -350,15 +350,44 @@ needed, is given in Table~\ref{research-plan-table}
   \label{research-plan-table}
 \end{table}
 
-The first task is to define the target language for the compilation strategy.
-As has been mentioned in Section~\ref{objectives-section}, the focus
-is on C as the target language since that is the target language used
-by several existing SCJVMs.
+The first task is to define the target language for the compilation
+strategy.
+As mentioned in Section~\ref{objectives-section}, the focus is on C as
+the target language since that is the target language used by several
+existing SCJVMs.
 However, since C is being used as a target language and not as a
-high-level source language, not all features of C will necessarily be required.
+high-level source language, not all features of C will necessarily be
+required.
 This means that we must first determine a subset of C that will be
 sufficiently powerful to support the compilation but sufficiently
 small to permit reasoning.
+
+Once the C subset is determined, its semantics must be defined.
+In order to properly apply the algebraic approach, the semantics must
+be described in the same semantic space as the source language and
+SCJVM model so that ther will be a refinement relation between them.
+This means an existing C semantics cannot necessarily be used as-is
+but consideration of existing C semantics can be of some use in
+defining the semantics of our subset.
+This is particularly true in light of the fact that the generated C
+code output by applying the compilation strategy will then need to be
+compiled correctly so it would be wise to ensure our semantics is
+consistent with that used in verified C complier projects such as
+CompCert~\cite{leroy2009a, leroy2009b}.
+Overall, due to the small size of our subset and the fact that some
+existing models of C semantics can be referenced, we do not expect the
+process of defining the subset and its semantics to take very long and
+so we have allotted one month for it.
+
+The next task is the construction of the compilation strategy to go
+from the source language to the target language.
+The approach taken in earlier works using the algebraic
+approach~\cite{sampaio1993,duran2005} is to divide the compilation
+into stages with compilation rules for each stage.
+This seems a sensible approach to adopt in developing the compilation
+strategy so we will proceed by deciding what the main transformations
+that must be performed and then breaking them down into specific rules
+to transform each program element.
 
 \printbibliography
 
