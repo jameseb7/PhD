@@ -342,7 +342,7 @@ needed, is given in Table~\ref{research-plan-table}
     Develop compilation strategy & 4 months \\
     Hand proofs of compilation rules & 4 months \\
     Mechanise proofs of compilation rules & 2 months \\
-    Further work & 2 months \\
+    Implementation and example development & 2 months \\
     Writing up results & 6 months \\
     \hline
   \end{tabular}
@@ -388,6 +388,67 @@ This seems a sensible approach to adopt in developing the compilation
 strategy so we will proceed by deciding what the main transformations
 that must be performed and then breaking them down into specific rules
 to transform each program element.
+As this is a significant part of our research, we have allowed four
+months for it.
+
+Additionally, while constructing the compilation strategy, we will
+also construct some example SCJ programs that can be used as case
+studies for the compilation strategy.
+This will allow for better construction of the compilation strategy as
+it can be designed to work for actual programs and it also means the
+compilation strategy can be easily compared to existing SCJVMs.
+
+While the top-down approach described above better enables
+construction of the compilation strategy, proof of its correctness
+must follow a bottom-up approach starting from basic axioms and using
+those to prove the compilation rules.
+With that in mind, the next stage after drawing up the compilation
+strategy is to prove it correct.
+Because machine-checked proofs can sometimes take a long time to write
+and hand-written proofs can be better for reading and understanding,
+it seems sensible to initially construct proofs by hand before
+translating them into an automated theorem prover.
+We have allowed 4 months for the hand-written proofs as they may be
+difficult to construct and form an important part of the work.
+
+The hand-written proofs then need to be performed in an automated
+theorem prover in order to have them machine-checked.
+The theorem prover we will be using is Isabelle due to the fact that
+it is well developed and there is an implementation of UTP in Isabelle
+that can be used to work with \Circus{}.
+We have allowed two months for completing this stage of the proof as
+Isabelle provides a lot of proof automation and the main outline of
+the proofs should already exist from the previous stage.
+
+With the main task of developing and proving the compilation strategy
+performed, we will then try implementing the compilation strategy.
+This should be a relatively simple task since the compilation rules
+will take the form of simple rewrite rules that can easily be turned
+into functions.
+Isabelle's code generation facilities could then be used to check the
+functions against the proved compilation laws and convert them to
+executable code.
+At this stage more work can also be done developing example SCJ
+programs whose bytecode can then be passed through the implementation
+of the compilation strategy and the output compared to that of other
+SCJVMs.
+We have allowed two months for this work as is should not take very
+long.
+If there is any extra time available, it would be good to implement
+additional bytecode instructions not in the original subset at this
+stage, especially if they may be required by the examples we create.
+
+Finally, we have left six months at the end of the project for writing
+up results.
+This will include preparing papers for publication as well as writing
+the thesis.
+
+In conclusion, upon successful completion of this work we will have
+created a framework that will allow creation of a formally verified
+virtual machine for SCJ.
+This will offer a certainty of correctness not offered by existing
+SCJVMs and so greater facilitate the use of SCJ.
+
 
 \printbibliography
 
