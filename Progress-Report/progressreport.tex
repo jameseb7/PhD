@@ -44,7 +44,7 @@ popularity and is now used in a wide variety of areas.
 One particular area of interest in which Java is used is that of
 embedded systems, where it was realised that the features of
 portability, modularity, safety and security that Java offers could be
-of use in those areas~\cite{mulchandani1998}.
+of use~\cite{mulchandani1998}.
 As Java programs are compiled to be run by the Java Virtual Machine
 (JVM), this required creating JVMs for embedded devices and, indeed,
 research has gone into making smaller and smaller JVMs to accommodate
@@ -59,10 +59,10 @@ To address this problem, the Real-Time Specification for Java
 (RTSJ)~\cite{gosling2000} was created.
 The RTSJ extends Java with some additional features that allow for
 greater time predictability.
-One feature the RTSJ adds is scoped memory, allowing memory to
+One feature the RTSJ adds is scoped memory, allowing memory to be
 allocated for use in a particular scope and deallocated when that
 scope in left, thus allowing for prediction of when memory
-deallocations will occur.
+deallocations occur.
 Another feature of the RTSJ is a more predictable priority scheduler
 that better allows the execution time of higher priority threads to be
 computed.
@@ -70,8 +70,8 @@ computed.
 Though the RTSJ provides for real-time considerations, many real-time
 embedded systems require certification under safety standards such as
 \mbox{DO-178C} and ISO~26262.
-To better facilitate the certification of such systems,
-Safety-Critical Java (SCJ)~\cite{locke2013} was created.
+To facilitate the certification of such systems, Safety-Critical Java
+(SCJ)~\cite{locke2013} was created.
 SCJ is based on the RTSJ but removes the features of the RTSJ that
 would make it diffcult to certify programs written using it.
 Some particular differences of SCJ from standard Java are in the areas
@@ -84,8 +84,11 @@ Each mission may contain multiple asynchronous event handler threads,
 which are created when the mission is initialised and run throughout
 the duration of the mission.
 The event handlers within a mission are scheduled according to a
-priority scheduling system, in which the running handler is always the
-highest priority relesed handler.
+priority scheduling system, in which the running handler is always one
+of the released handlers with the highest priority so that high
+priority handlers are not sharing processor time with low priority
+handlers.
+highest priority released handler.
 Once the mission is requested to terminate, the event handler threads
 are stopped, the mission's resources are cleaned up, and the mission
 sequencer selects the next mission.
@@ -114,7 +117,7 @@ There has already been work on generating correct SCJ programs from
 formal specifications~\cite{cavalcanti2011, cavalcanti2013}, which
 ensures that an SCJ program will have the behaviour intended.
 Some work has also been done on formalising the SCJ memory
-model~\cite{cavalcanti2011a}, allowing it's correctness to be ensured.
+model~\cite{cavalcanti2011a}, allowing its correctness to be ensured.
 
 However, although SCJ can be compiled by a standard Java compiler, SCJ
 requires a specialised virtual machine due to the differences between
@@ -128,22 +131,23 @@ Of these, only Fiji VM and icecap HVM appear to be maintained and,
 while icecap provides support for most of SCJ, Fiji VM does not
 necessariy provide proper support for all aspects of SCJ.
 Since the correct execution of an SCJ program depends on the
-correctness of the underlying virtual machine, which must be ensured
-in addition to checking the correctness of the program.
+correctness of the underlying virtual machine, it must be ensured in
+addition to checking the correctness of the program.
 While there has been work on using formal methods to show SCJ program
 correctness, no SCJVM has been verified.
 
 Additionally, having to execute a program via a virtual machine
 presents a cost in terms of memory and time resources, which may not
-be available on the embedded real-time systems SCJ is targetting.
-For this reason, most SCJVMs, including the ones listed above compile
-the Java bytecode to native code ahead-of-time.
+be available on the embedded real-time systems SCJ targets.
+For this reason, all known SCJVMs, including the ones listed above
+compile the Java bytecode to native code ahead-of-time.
 This can be particularly seen in the examples of Fiji VM and the
 icecap HVM, which compile Java bytecode to C code.
 The correctness of this compilation to native code must also be
 ensured, in addition to the correctness of the infrastructure
-supporting the running program, and so the problem of ensuring the
-correctness of an SCJVM is, in part, a compiler verification problem.
+supporting the running program.
+So the problem of ensuring the correctness of an SCJVM is, in part, a
+compiler verification problem.
 
 There has already been much research in the area of compiler
 correctness, with most of the research following one of two
@@ -179,7 +183,7 @@ This approach has the advantage that the rules used to perform the
 compilation are known to be correct, thus making the resultant
 compiler correct by construction.
 It also allows for passing seamlessly from the source language to the
-target language using algebraic laws since the source and target
+target language using algebraic laws, since the source and target
 languages are in the same semantic space.
 The algebraic approach has not been used particularly widely but, in
 addition to Sampaio's work, there has been work using the algebraic
@@ -202,60 +206,40 @@ This framework will consist of the following parts:
 \item Proofs of the correctness of the formal model, and
 \item A mechanisation of the proofs in an automated theorem prover.
 \end{itemize}
-Each of these parts will be discussed in the following paragraphs.
+Each of these parts will be discussed in what follows.
 
-First, it is necessary to have an informal specification of what is
-required of an SCJVM.
+First, it is necessary to have an explicit account of what is required
+of an SCJVM.
 Even though the ultimate aim is one of formal verification, an
 informal specification is still needed to guide the development of the
-formal model since there is no existing clear specification for SCJVMs
-and some VM implementors may find the formal model difficult to
-understand.
-Concerning the content of the specification, it should be noted that
-the role of an SCJVM is not merely to execute bytecode instructions.
+formal model.
+There is currently no clear specification for SCJVMs.
+
+It should be noted that the role of an SCJVM is not merely to execute
+bytecode instructions.
 An SCJVM must also provide services to support the SCJ API in areas
 such as scheduling and memory management.
-An informal specification of all aspects of the SCJVM is required for
-proper creation of a formal model, but the semantics of SCJ bytecode
-does not differ much from that of standard Java bytecode so much of
-the Java Virtual Machine specification~\cite{lindholm2014} also
-applies to SCJVMs.
+An informal specification of all aspects of the SCJVM is required to
+support creation of a formal model.
+On the other hand, the semantics of SCJ bytecode does not differ much
+from that of standard Java bytecode, so much of the Java Virtual
+Machine specification~\cite{lindholm2014} also applies to SCJVMs.
 
-Secondly, the need for a compilation strategy arises from the fact
-that most exising SCJVMs compile Java bytecode to some native code in
-order to improve performance on embedded system so it seems wise to
-include it in our specification of an SCJVM.
+The need for a compilation strategy arises from the fact that most
+exising SCJVMs compile Java bytecode to some native code in order to
+improve performance on embedded systems.
 We will focus on compilation from Java bytecode to C for much the same
-reasons as the icecap HVM and Fiji VM: that C is a language already
-widely used in embedded systems and is suffciently low level to enable
-its use as an efficient target language while retaining enough
-abstraction to be interacted with by the programmer.
+reasons as the icecap HVM and Fiji VM:~C is a language already widely
+used in embedded systems and is suffciently low level to enable its
+use as an efficient target language while retaining enough abstraction
+to be used by the programmer.
 
-The specification and compilation strategy must then be formalised in
-some formal notation.
+The specification and compilation strategy must be formalised.
 As noted previously, there are two main approaches to formalising
 compilers and showing their correctness: the commuting-diagram
 approach and the algebraic approach.
-In the commuting diagram approach, the compiler is viewed as a
-function from some representation of the source language to some
-representation of the target language.
-The semantics of the source and target lanaguages are then defined as
-functions into some space of meanings, with a function to relate the
-meanings of the source and target languages if necessary.
-The correctness of the compiler is then checked by showing that the
-functions are all consistent with one another, i.e.\ that a diagram
-with the functions as edges commutes.
-
-The algebraic approach is based on defining the source and target
-languages using the same specification language.
-The notion of refinement can then be used to prove algebraic laws
-that can be applied to transform the source program into a normal form
-representing the target machine running the target code.
-Because the algebraic laws are proved correct and the compilation is
-made up of applying these laws in a systematic way, the compilation
-can then be known to be correct in the sense that the target code
-running on the target machine is a correct implementation of the
-program specified by the source code.
+%TODO: mention the approach of deriving a compiler from an operational
+% semantics here
 
 We will follow the algebraic approach in our work as it relates the
 source and target languages in a clearer way than the
