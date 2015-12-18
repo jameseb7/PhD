@@ -169,6 +169,21 @@ compiler correctness, it can be readily encoded in an automated
 theorem prover and there have been several works that have made use of
 automated theorem provers~\cite{klein2006, milner1972, nipkow2000}.
 
+There is also a related approach of deriving a compiler from an
+operational semantics of the source language that has recently been
+developed~\cite{bahr2015}.
+In this approach, the operational semantics of the source
+language and a way of relating the source and target semantics are
+used to derive a diiferent operational semantics of the source
+language acting on the state of the target machine.
+The semantics of the target language are then identified as part of
+that operational semantics and it is transformed to extract a
+compilation function.
+This approach may be viewed as variant of the commuting-diagram
+approach in which the compilation function is derived from the source
+and target semantics and the relationship between them, rather than
+being verified by those elements of the commuting-diagram.
+
 The other main approach to compiler verification is the algebraic
 approach proposed by Hoare~\cite{hoare1991} and implemented by
 Sampaio~\cite{hoare1993, sampaio1993}.
@@ -189,7 +204,6 @@ The algebraic approach has not been used particularly widely but, in
 addition to Sampaio's work, there has been work using the algebraic
 approach for compilation of object-oriented languages~\cite{duran2005,
   duran2010} and for hardware compilation~\cite{perna2010, perna2011}.
-
 
 \section{Objectives}
 \label{objectives-section}
@@ -238,9 +252,6 @@ The specification and compilation strategy must be formalised.
 As noted previously, there are two main approaches to formalising
 compilers and showing their correctness: the commuting-diagram
 approach and the algebraic approach.
-%TODO: mention the approach of deriving a compiler from an operational
-% semantics here
-
 We will follow the algebraic approach in our work as it relates the
 source and target languages in a clearer way than the
 commuting-diagram approach.
@@ -248,15 +259,13 @@ Additionally, the commuting-diagram approach requires the definition
 of additional functions to relate the source and target semantics,
 thus relying more on definitions, which may be incorrect, than on
 mathematically derived results.
-However, there has been some work on deriving a compilation function
-given an operational sematics of the source language and a way of
-relating the semantics of the source and target
-languages~\cite{bahr2015}.
-We do not believe this work will be of use in the case we wish to
-apply it as it relies on knowledge of the state of the target machine
-and a way of identifying the semantics of the target code within the
-compilation function, which is not easily done with a complex language
-like C, though it may work better for machine languages.
+The approach of deriving a compiler from an operational semantics
+could be of use as it does not have this issue.
+That approach, however, relies on knowledge of the state of the target
+machine and a way of identifying the semantics of the target code
+within the compilation function.
+This is not easily done with a complex language like C, though it
+works well for machine languages.
 
 We require a formal language in which to specify the source and target
 languages, as well as for specifying the virtual machine services.
@@ -283,9 +292,8 @@ semantics given using the model of Hoare and He's Unifying Thories of
 Programming (UTP)~\cite{hoare1998} that can be used to verify the
 correctness of the laws.
 
-Finally, to ensure the laws are understood and applied correctly, it
-is often helpful to mechanise the proofs in an automated theorem
-prover so that the proofs can then be machine checked.
+To ensure the laws are understood and applied correctly, it is helpful
+to mechanise the proofs in an automated theorem prover.
 There are a variety of tools for machine checking of \Circus{}
 specifications.
 The \Circus{} parser and typechecker included as part of the Community
@@ -296,10 +304,21 @@ used to prove the Z portions of the \Circus{} specification.
 Process properties such as deadlock-freedom can be checked by
 translating the \Circus{} specification to CSP and checking with a
 tool such as FDR~\cite{gibson-robinson2014}.
-For more comprehensive proving of properties about \Circus
+For more comprehensive proving of properties about \Circus{}
 specifications, recent work on Isabelle/UTP~\cite{foster2015} can be
 used to permit reasoning about \Circus{} in the Isabelle theorem
 prover~\cite{nipkow2002}.
+
+Altogether, our objective is a framework for verification SCJVMs
+consisting of mechanised formal models together with proofs of
+properties about them.
+These formal models will cover both the services that must be provided
+by a running SCJVM and a compilation strategy for translating Java
+bytecode to native code.
+With our results, SCJVM developers will be able to create provably
+correct ahead-of-time compiling SCJVM implementations and check the
+correctness of those implementations.
+
 
 \section{Document Structure}
 
