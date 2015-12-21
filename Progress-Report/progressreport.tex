@@ -4,11 +4,13 @@
 \usepackage{parskip}
 \usepackage{hyperref}
 \usepackage{tikz}
+\usepackage{pgfgantt}
 \usepackage{amsmath}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
 \usepackage[section]{placeins}
 \usepackage[color]{circus}
 \usepackage{fixltx2e}
+\usepackage{rotating}
 
 \title{A Framework for Verifying Safety-Critical Java Virtual Machines}
 \author{James Baxter}
@@ -334,20 +336,21 @@ core execution environment, the bulk of the remaining work centres
 around the construction and proof of soundness of the compilation
 strategy.
 A summary of the tasks involved in this, with an estimate of the time
-needed, is given in Table~\ref{research-plan-table}
+needed and dates during which the work will be carried out, is given
+in Table~\ref{research-plan-table}
 
 \begin{table}[ht]
   \centering
-  \begin{tabular}{ll}
+  \begin{tabular}{llll}
     \hline
-    Task & Time Needed \\
+    Task & Time Needed & Start Date & End Date  \\
     \hline
-    Define C subset semantics & 1 month \\
-    Develop compilation strategy & 4 months \\
-    Hand proofs of compilation rules & 4 months \\
-    Mechanise proofs of compilation rules & 2 months \\
-    Implementation and example development & 2 months \\
-    Writing up results & 6 months \\
+    Define C subset semantics & 2 months & 2016-02-01 & 2016-03-31 \\
+    Develop compilation strategy & 4 months & 2016-04-01 & 2016-07-31 \\
+    Hand proofs of compilation rules & 6 months & 2016-07-01 & 2016-12-31 \\
+    Mechanise proofs of compilation rules & 3 months & 2016-12-01 & 2017-02-28 \\
+    Implementation and example development & 2 months & 2017-03-01 & 2017-04-30 \\
+    Writing up results & 5 months & 2017-05-01 & 2017-09-30 \\
     \hline
   \end{tabular}
   \caption{A table showing the proposed plan for the remainder of the research}
@@ -392,7 +395,7 @@ techniques as for the SCJVM model.
 Overall, due to the small size of our subset and the fact that some
 existing models of C semantics can be referenced, we do not expect the
 process of defining the subset and its semantics to take very long and
-so we have allotted one month for it.
+so we have allotted two months for it.
 
 \section{Development of Compilation Strategy}
 
@@ -427,7 +430,7 @@ Because machine-checked proofs can take a long time to write and
 hand-written proofs can be better for reading and understanding,
 we will initially construct proofs by hand before translating them
 into an automated theorem prover.
-We have allowed 4 months for the hand-written proofs as they may be
+We have allowed six months for the hand-written proofs as they may be
 difficult to construct and form an important part of the work.
 
 The hand-written proofs then need to be performed in an automated
@@ -435,7 +438,7 @@ theorem prover in order to have them machine-checked.
 The theorem prover we will use is Isabelle, due to the fact that it is
 well developed and there is an implementation of UTP in Isabelle that
 can be used to work with \Circus{}.
-We have allowed two months for completing this stage of the proof as
+We have allowed three months for completing this stage of the proof as
 Isabelle provides a lot of proof automation and the main outline of
 the proofs should already exist from the previous stage.
 
@@ -456,7 +459,7 @@ We have allowed two months for this work.
 
 \section{Writing Up Results}
 
-Finally, we have left six months at the end of the project for final
+Finally, we have left five months at the end of the project for final
 writing up of results.
 However, the main writing up effort will be carried out as part of the
 other stages of the work.
@@ -470,6 +473,29 @@ virtual machine for SCJ.
 This will offer a certainty of correctness not offered by existing
 SCJVMs and so facilitate the use of SCJ.
 
+\begin{sidewaysfigure}
+\centering
+\begin{minipage}{\textheight}
+\centering
+\begin{ganttchart}[
+  vgrid,
+  x unit=0.7cm,
+  time slot format = isodate-yearmonth,
+  compress calendar
+  ]{2016-01}{2017-12}
+  \gantttitlecalendar{year, month=shortname} \\
+  \ganttbar{Define C subset semantics}{2016-02}{2016-03} \\
+  \ganttbar{Develop compilation strategy}{2016-04}{2016-07} \\
+  \ganttbar{Hand proofs of compilation rules}{2016-07}{2016-12} \\
+  \ganttbar{Mechanise proofs of compilation rules}{2016-12}{2017-02} \\
+  \ganttbar{Implementation and example development}{2017-03}{2017-04} \\
+  \ganttbar{Writing up results}{2016-03}{2016-03}
+  \ganttbar{}{2016-07}{2016-07}
+  \ganttbar{}{2017-05}{2017-09} \\
+\end{ganttchart}
+\end{minipage}
+\caption{A Gantt chart showing the schedule for the planned research}
+\end{sidewaysfigure}
 
 \printbibliography
 
