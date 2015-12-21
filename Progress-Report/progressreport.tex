@@ -169,13 +169,12 @@ compiler correctness, it can be readily encoded in an automated
 theorem prover and there have been several works that have made use of
 automated theorem provers~\cite{klein2006, milner1972, nipkow2000}.
 
-There is also a related approach of deriving a compiler from an
-operational semantics of the source language that has recently been
-developed~\cite{bahr2015}.
-In this approach, the operational semantics of the source
-language and a way of relating the source and target semantics are
-used to derive a diiferent operational semantics of the source
-language acting on the state of the target machine.
+A recent variation of the commuting-diagram approach is based on an
+operational semantics of the source language~\cite{bahr2015}.
+In this work, the operational semantics of the source language and a
+way of relating the source and target semantics are used to derive a
+different operational semantics of the source language acting on the
+state of the target machine.
 The semantics of the target language are then identified as part of
 that operational semantics and it is transformed to extract a
 compilation function.
@@ -184,7 +183,7 @@ approach in which the compilation function is derived from the source
 and target semantics and the relationship between them, rather than
 being verified by those elements of the commuting-diagram.
 
-The other main approach to compiler verification is the algebraic
+The second main approach to compiler verification is the algebraic
 approach proposed by Hoare~\cite{hoare1991} and implemented by
 Sampaio~\cite{hoare1993, sampaio1993}.
 The algebraic approach is based around the notion of refinement, which
