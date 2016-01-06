@@ -9,6 +9,7 @@
 \usepackage[section]{placeins}
 \usepackage[color]{circus}
 \usepackage{fixltx2e}
+\usepackage{comment}
 
 \title{A Framework for Verifying Safety-Critical Java Virtual Machines}
 \author{James Baxter}
@@ -1360,37 +1361,7 @@ The virtual machine services support, for example, scheduling and
 memory management, that is, services that are required to support the
 SCJ infrastructure and the core execution environment.
 
-\begin{figure}[ht]
-  \centering
-  \begin{tikzpicture}
-    \draw (0cm,0cm) rectangle (12cm,5.3cm);
-    
-    \draw (0.5cm,0.2cm) rectangle (3.2cm,3.2cm); \draw (3.5cm,0.2cm)
-    rectangle (11.5cm,3.2cm); \foreach \x in {1,...,3} \draw (\x *
-    2.5cm + 1.5cm,0.5cm) rectangle (\x * 2.5cm + 3.5cm,2.5cm)
-    coordinate[pos=0.5](VMService\x);
-    
-    \node[align=center] at (3cm,4.2cm) {SCJ\\Virtual Machine};
-    \node[align=center] at (1.85cm,1.7cm)
-    {Core\\Execution\\Environment}; \node[align=center] at (7cm,2.8cm)
-    {VM Services}; \node[align=center] at (VMService1)
-    {Memory\\Manager}; \node[align=center] at (VMService2)
-    {Scheduler}; \node[align=center] at (VMService3)
-    {Real-time\\Clock};
-    
-    \draw (0cm,5.3cm) rectangle (12cm,6.8cm)
-    node[pos=0.5,align=center] {SCJ\\Application}; \draw (6cm,3.5cm)
-    rectangle (12cm,5.3cm) node[pos=0.5,align=center]
-    {SCJ\\Infrastructure\\and API};
-    
-    \draw (0cm,-1.5cm) rectangle (12cm,0cm) node[pos=0.5,align=center]
-    {Operating System/Hardware Abstraction Layer};
-  \end{tikzpicture}
-  \caption{A diagram showing the structure of the SCJ virtual machine
-    and its relation to the SCJ infrastructure and the operating
-    system/hardware abstraction layer.}
-  \label{scjvm-fig}
-\end{figure}
+
 
 The core execution environment is not necessarily required to use any
 particular means to run the bytecode.
@@ -1532,962 +1503,138 @@ Our work is also related to some work verifying the icecap HVM
 scheduler and we have contributed to a paper on that, which is in
 preparation~\cite{freitas2015inpreparation}.
 
-\chapter{Requirements of a Safety-Critical Java Virtual Machine}
-\label{requirements-chapter}
+\chapter{Safety-Critical Java Virtual Machine Services}
+\label{scjvm-services-chapter}
 
-We present here our preliminary work specifying the requirements for
-the services of an SCJVM.
-We specify the requirements for each of the virtual machine services
-separately: the memory manager in
-Section~\ref{memory-manager-section}, the scheduler in
-Section~\ref{scheduler-section}, and the real-time clock in
-Section~\ref{realtime-clock-section}.
-Finally, we present an overview of the formal model of the virtual
-machine services in Section~\ref{formal-model-section}.
-
-\section{Memory Manager API}
-\label{memory-manager-section}
-
-The SCJVM memory manager deals with the raw blocks of memory used as
-backing stores for the memory areas of SCJ.
-The memory areas themselves are Java objects and so are dealt with by
-the core execution environment and accessed through the SCJ API.
-Backing stores here are assumed to have unique identifiers that can be
-used to refer to them, these identifiers could simply be pointers to
-the physical blocks of memory used for backing stores.
-
-There is initially one backing store, called the root backing store,
-that has its size set when the SCJVM starts up to cover all the memory
-available for allocation in backing stores.
-We do not allow the root backing store to be resized or destroyed so
-that there is always a fixed base for the layout of memory.
-The root backing store could be used as the backing store for the
-immortal memory area.
-A backing store may have other backing stores nested within it so that
-a possible memory layout is as shown in Figure~\ref{memory-fig}, with
-the backing store of mission memory nested within the root backing
-store and the backing stores for the per-release memory of each
-schedulable object in a mission nested within the mission memory's
-backing store.
+In order to reason about a Safety-Critical Java virtual machine
+(SCJVM), we first require an identification of the the requirements of
+an SCJVM and a formal model of those requirements.
+For the purposes of our model, we view an SCJVM as being composed of
+the components illustrated in Figure~\ref{scjvm-services-fig}.
+An SCJVM is divided into two main parts:~the core execution
+environment and the SCJVM services.
 
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
-    \draw (0,0) rectangle (12,3.7); \node[align=center] at (3,2) {Root
-      Backing Store\\(Immortal Memory)};
+    \usetikzlibrary{calc}
+
+    \coordinate (width)  at (10cm,0cm);
+    \coordinate (height) at (0cm,7cm);
+
+    \path (0,0) -- (height)
+    coordinate[pos=0.18] (OS boundary)
+    coordinate[pos=0.20] (VM part bottom)
+    coordinate[pos=0.57] (VM part top)
+    coordinate[pos=0.60] (API boundary)
+    coordinate[pos=0.82] (App boundary);
     
-    \draw (6,0.1) rectangle (11.9,3.6); \node[align=center] at (9,3)
-    {Mission Memory};
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.7] (VM Service top);
+
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.85] (VM Services ypos);
+
+    \path (0,0) -- (width)
+    coordinate[pos=0.04] (CEE left)
+    coordinate[pos=0.27] (CEE right)
+    coordinate[pos=0.29] (VM Services left)
+    coordinate[pos=0.96] (VM Services right)
+    coordinate[pos=0.17] (VM Service width)
+    coordinate[pos=0.04] (VM Service sep);
+
+    \path (VM Services left) -- (VM Services right)
+    coordinate[pos=0.5] (VM Services xpos);
+
+    \path (0,0) to node[pos=0.5] (mid) {} (width);
+    \path (0,0) to node[pos=0.25] (quart) {} (width);
+
+    \draw (0,0) rectangle (width |- height);
+
+    \draw (OS boundary) -- ++(width);
+    \path (0,0) rectangle node[pos=0.5] (OS) {} (width |- OS boundary);
+    \draw (mid |- API boundary) rectangle node[pos=0.5] (API) {} (width |- App boundary);
+    \draw (App boundary) -- ++(width);
+    \path (App boundary) rectangle node[pos=0.5] (App) {} (width |- height);
+
+    \path (quart |- API boundary) rectangle node[pos=0.4] (SCJVM) {} (quart |- App boundary);
+    \draw (CEE left |- VM part bottom) rectangle node[pos=0.5] (CEE) {} (CEE right |- VM part top);
+    \draw (VM Services left |- VM part bottom) rectangle (VM Services right |- VM part top);
+    \coordinate (VM Services) at (VM Services xpos |- VM Services ypos);
+
+    \node[align=center] at (App)   {SCJ Application};
+    \node[align=center] at (API)   {SCJ\\Infrastructure\\and API};
+    \node[align=center] at (SCJVM) {SCJ\\Virtual Machine};
+    \node[align=center] at (CEE)   {Core\\Execution\\Environment};
+    \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
     
-    \draw (6.3,0.3) rectangle (8.3,2.5); \node[align=center] at
-    (7.3,1.5) {Per-release\\Memory};
-    
-    \draw (9,0.3) rectangle (11.8,2.5); \node[align=center] at
-    (10.4,2) {Per-release\\Memory};
-    
-    \draw (9.2,0.5) rectangle (11.6,1.5); \node[align=center] at
-    (10.4,1) {Nested Private\\Memory};
+    \foreach \x in {1,...,3}
+    \pgfmathsetmacro{\a}{0.333*(\x - 1)}
+    \pgfmathsetmacro{\b}{0.333*\x}
+    \path ($(VM Services left) + (VM part bottom)!0.07!(VM part top)$) -- 
+    node[pos=\a] (VM Service \x start) {}
+    node[pos=\b] (VM Service \x end) {}
+    ($(VM Services right) + (VM part bottom)!0.07!(VM part top) - (VM Service sep)$);
+
+    \foreach \x in {1,...,3} 
+    \draw ($(VM Service \x start) + (VM Service sep)$)
+    rectangle node[pos=0.5] (VM Service \x) {}
+    (VM Service \x end |- VM Service top);
+
+    \node[align=center] at (VM Services)  {VM Services};
+    \node[align=center] at (VM Service 1) {Memory\\Manager};
+    \node[align=center] at (VM Service 2) {Scheduler};
+    \node[align=center] at (VM Service 3) {Real-time\\Clock};
   \end{tikzpicture}
-  \caption{An illustration of an example memory layout}
-  \label{memory-fig}
+  \caption{A diagram showing the structure of the SCJ virtual machine
+    and its relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer.}
+  \label{scjvm-services-fig}
 \end{figure}
 
-The operations of the memory manager API are summarised in
-Table~\ref{memory-manager-table}.
-In addition to the inputs and outputs described there, there should
-also be some system of reporting erroneous inputs, whether that be
-exceptions, global error flags or particular return values signalling
-errors.
-The precise mechanism by which error conditions are reported is not
-specified, only that they must be reported so that they can be handled
-by the program, infrastructure or core execution environment making
-use of the SCJVM services.
-The conditions that cause an error to be reported are listed in the
-final column of the table.
+The core execution environment is responsible for the execution of
+Java bytecode, whether that be via interpretation, just-in-time
+compilation or ahead-of-time compilation.
+The core execution environment must also manage structure that
+relates to the execution of bytecode instructions, such as the
+representation of classes and objects.
+The core execution environment is the part of the SCJVM that our
+compilation strategy will act upon.
 
-\begin{table}[ht]
-  \centering
-  \footnotesize
-  \begin{tabular}{|l|p{3cm}|p{3cm}|p{3.6cm}|}
-    Operation & Inputs & Outputs & Error Conditions \\
-    \hline
-    getRootBackingStore &
-    (none) &
-    backing store identifier &
-    (none)
-    \\getCurrentAllocationContext &
-    (none) &
-    backing store identifier &
-    (none)
-    \\setCurrentAllocationContext &
-    backing store identifier &
-    (none) &
-    invalid identifier
-    \\getTotalSize &
-    backing store identifier &
-    size in bytes &
-    invalid identifier
-    \\getUsedSize &
-    backing store identifier &
-    size in bytes &
-    invalid identifier
-    \\getFreeSize &
-    backing store identifier &
-    size in bytes &
-    invalid identifier
-    \\findBackingStore &
-    memory pointer &
-    backing store identifier &
-    no backing store found
-    \\allocateMemory &
-    size in bytes &
-    memory pointer &
-    insufficient free memory
-    \\makeBackingStore &
-    size in bytes & 
-    backing store identifier &
-    insufficient free memory
-    \\clearCurrentAllocationContext &
-    (none) &
-    (none) &
-    nested backing store in use
-    \\resizeBackingStore &
-    backing store identifier \newline
-    size in bytes &
-    (none) &
-    invalid identifier \newline
-    insufficient free space \newline
-    backing store is root \newline
-    backing store not empty \newline
-    backing store not only child
-    \\createStack &
-    size in bytes &
-    stack identifier &
-    insufficient free space
-    \\destroyStack &
-    stack identifier &
-    (none) &
-    invalid identifier
-  \end{tabular}
-  \caption{The operations of the SCJVM memory manager}
-  \label{memory-manager-table}
-\end{table}
+The SCJVM services represent the additional services that must be
+offered by an SCJVM in order to support the SCJ infrastructure.
+These services may be supplied as standalone services and so do not
+need to be handled by the compilation strategy.
+They include such areas as low level memory management and
+scheduling.
 
-The root backing store described above is always available to the SCJ
-infrastructure through the \texttt{get\-Root\-Backing\-Store}
-operation.
-An SCJ program does not have direct access to the root backing store
-except through memory areas provided by the infrastructure.
+A model of the core execution environment will be presented in 
+Chapter~\ref{cee-chapter}.
+In this chapter, we will instead focus on the virtual machine
+services.
 
-In addition to managing the layout of backing stores in general, the
-memory manager must also track what the current allocation context is.
-The operations \texttt{get\-Cur\-rent\-Allo\-cation\-Con\-text} and
-\texttt{set\-Cur\-rent\-Allo\-cation\-Con\-text} provide a means to
-get and set the current allocation context.
-The functionality of changing the allocation context is used by the
-methods of the SCJ API that allow code to be run with a different
-memory area as allocation context, such as
-\texttt{execute\-In\-Area\-Of()} and
-\texttt{enter\-Private\-Memory()}.
-The memory manager stores each thread's allocation context and queries
-the scheduler as to which thread is current when it performs
-operations affecting the current allocation context.
+As indicated in Figure~\ref{scjvm-services-fig}, we divide the SCJVM
+services into three areas:~memory management, scheduling, and the
+real-time clock.
+We will present a \Circus{} model of these areas in the separate
+sections of this chapter, with a \Circus{} process for each of the three
+areas.
+A model of the memory manager will be presented in
+Section~\ref{memory-manager-section}, followed by a model of the
+scheduler in Section~\ref{scheduler-section}, then the real-time
+clock in Section~\ref{realtime-clock-section}.
+Finally, the \Circus{} processes are combined into a single process in
+Section~\ref{scjvm-services-section}.
 
-It is possible to obtain information about the used and available
-space in a given backing store using the operations
-\texttt{get\-Total\-Size}, \texttt{get\-Used\-Size}, and
-\texttt{get\-Free\-Size}.
-This information is made available to SCJ programs through the
-interface provided by memory areas.
+An earlier version of this model was presented at the %TODO: reference conference
 
-Another query that can be made concerning backing stores is that of
-which backing store a particular memory address lies in.
-This information can be obtained by the \texttt{find\-Backing\-Store}
-operation and is required by the infrastructure for obtaining the
-memory area of a given object.
+\input{\string~/SCJ-VM/James/memorymanager.zed}
 
-Allocation within backing stores is possible through the
-\texttt{allo\-cate\-Memory} operation, which allocates blocks of
-memory within the current allocation context.
-This operation is provided in order for the core execution environment
-to implement the \texttt{new} bytecode instruction and should not be
-directly available to the program or infrastructure.
-Allocations within backing stores must not cause fragmentation, so as
-to fulfil real-time predictability requirements.
-The operation \texttt{allo\-cate\-Memory} must also zero the memory it
-allocates, in order to properly match the semantics of \texttt{new}.
- 
-Allocation of backing stores, which may require additional information
-attached to them, is provided for by \texttt{make\-Back\-ing\-Store},
-which is available to the infrastructure for use when creating new
-memory areas.
-A new backing store is created nested within the current allocation
-context.
-The infrastructure is responsible for storing the backing store
-identifier returned by the \texttt{make\-Backing\-Store} operation.
-The allocation of backing stores is required to be done in constant
-time without fragmentation.
+\input{\string~/SCJ-VM/James/scheduler.zed}
 
-Deallocation of memory in backing stores cannot be done directly as
-that could introduce fragmentation and would defeat the scoped memory
-model of SCJ.
-Instead, the SCJVM provides for clearing a backing store when the
-memory area it serves is no longer in use.
-This functionality is provided by the operation
-\texttt{clear\-Current\-Allocation\-Context}, which clears the current
-allocation context.
-It is not necessary to track exactly which object are deallocated by
-this operation as SCJ does not have object finalisers.
-The clearing of a backing store includes the clearing and removal of
-all backing stores nested within it.
-This would create a problem if the parent backing store is cleared
-while another thread is using a backing store within it as an
-allocation context.
-However, such a situation should not occur as the backing stores of
-mission memory and immortal memory are the only backing stores that
-contain backing stores in use by different threads.
-Mission memory is only cleared when all the event handler threads
-within the mission have finished and immortal memory should never be
-cleared.
+\input{\string~/SCJ-VM/James/realtimeclock.zed}
 
-The last operation on backing stores is their resizing.
-This is provided for by \texttt{resize\-Backing\-Store} but, as
-resizing a backing store presents a lot of difficulties in terms of
-fragmentation, there are several restrictions.
-In addition to being a valid backing store and there being enough
-space in the parent backing store for the resizing to take place, a
-backing store to be resized must not be the root backing store and
-must be empty and the only backing store within its parent.
-However, the only situations in which a backing store resize is
-required are resizing of mission memory in between missions and
-resizing of nested private memory when it is reentered.
-In both these cases all the above points hold.
-
-In addition to managing backing stores, the memory manager must also
-manage stacks, which are placed in a separate area of memory to the
-backing stores.
-The operations \texttt{create\-Stack} and \texttt{destroy\-Stack}
-allow for stacks to be created and destroyed respectively.
-The stack space must not be fragmented but this should not be an issue
-as stacks for threads are allocated together when the mission is
-initialised and destroyed together when the mission ends.
-That remains true at level 2 where nested missions are permitted as
-the nested mission's stacks will be allocated after the stacks of it's
-parent mission and will be destroyed before the parent mission ends.
-Like backing stores, stacks are referred to by unique identifiers that
-may simply be pointers to the space allocated for the stack.
-
-\section{Scheduler API}
-\label{scheduler-section}
-
-The SCJVM scheduler manages the scheduling of threads.
-The operations of the scheduler are summarised in
-Table~\ref{scheduler-table}, which has the same format as
-Table~\ref{memory-manager-table}.
-The means of using the operations in the table is the same as for the
-memory manager, with the system of error reporting again left loosely
-specified.
-
-\begin{table}[ht]
-  \centering
-  \footnotesize
-  \begin{tabular}{|l|p{3cm}|p{2.2cm}|p{2.7cm}|}
-    Operation & Inputs & Outputs & Error Conditions \\
-    \hline
-    getMaxSoftwarePriority &
-    (none) &
-    priority level &
-    (none)
-    \\getMinSoftwarePriority &
-    (none) &
-    priority level &
-    (none)
-    \\getNormSoftwarePriority &
-    (none) &
-    priority level &
-    (none)
-    \\getMaxHardwarePriority &
-    (none) &
-    priority level &
-    (none)
-    \\getMinHardwarePriority &
-    (none) &
-    priority level &
-    (none)
-    \\getMainThread &
-    (none) &
-    thread identifier &
-    (none)
-    \\makeThread &
-    entry point \newline
-    priority level \newline
-    backing store identifier \newline
-    stack identifier &
-    thread identifier &
-    invalid priority \newline
-    invalid backing store \newline
-    invalid stack
-    \\startThread &
-    thread identifier &
-    (none) &
-    invalid identifier
-    \\getCurrentThread &
-    (none) &
-    thread identifier &
-    (none)
-    \\destroyThread &
-    thread identifier &
-    (none) &
-    invalid identifier
-    \\suspendThread &
-    (none) &
-    (none) &
-    (none)
-    \\resumeThread &
-    thread identifier &
-    (none) &
-    invalid identifier
-    \\setPriorityCeiling &
-    pointer to object \newline
-    priority level &
-    (none) &
-    invalid priority
-    \\takeLock &
-    pointer to object &
-    (none) &
-    lock in use
-    \\releaseLock &
-    pointer to object &
-    (none) &
-    lock not held
-    \\attachInterruptHandler &
-    interrupt identifier \newline
-    entry point &
-    (none) &
-    invalid interrupt
-    \\detachInterruptHandler &
-    interrupt identifier &
-    (none) &
-    invalid interrupt
-    \\getInterruptPriority &
-    interrupt identifier &
-    priority level &
-    invalid interrupt
-    \\disableInterrupts &
-    (none) &
-    (none) &
-    (none)
-    \\enableInterrupts &
-    (none) &
-    (none) &
-    (none)
-  \end{tabular}
-  \caption{The operations of the SCJVM scheduler}
-  \label{scheduler-table}
-\end{table}
-
-Each thread is scheduled according to a priority level.
-The SCJ standard requires that there be at least 28 priorities and
-separates them into hardware and software priorities, with hardware
-priorities being higher than software priorities.
-The range of priorities that a VM actually supports may vary between
-different VM implementations within these restrictions.
-To allow the range of supported priorities to be determined and
-support corresponding methods in the SCJ API, the minimum and maximum
-hardware and software priority levels can be obtained with
-\texttt{get\-Max\-Soft\-ware\-Pri\-or\-ity},
-\texttt{get\-Min\-Soft\-ware\-Pri\-or\-ity},
-\texttt{get\-Max\-Hard\-ware\-Pri\-or\-ity}, and
-\texttt{get\-Min\-Hard\-ware\-Pri\-or\-ity}.
-The SCJVM chooses a default normal software priority for threads, that
-can be queried through the
-\texttt{get\-Norm\-Soft\-ware\-Pri\-or\-ity} operation.
-
-Initially there is one thread running, which is called the main
-thread.
-The main thread is created when the VM starts and has an
-implementation-defined priority.
-The main thread can be suspended by the infrastructure when it is not
-needed and resumed when it is needed again, using the operations
-mentioned below.
-This allows it to be used for setting up the SCJ application and
-missions, then suspended during mission execution.
-The main thread's identifier can be retrieved using the
-\texttt{get\-Main\-Thread} operation.
-
-Threads other than the main thread can be created by the
-\texttt{create\-Thread} operation, which takes the entry point and
-priority level of the thread to be created, as well as a backing store
-as the allocation context and a stack to use for the thread.
-This operation returns the identifier of the newly created thread,
-which must be stored by the infrastructure.
-The SCJVM does not distinguish between the different thread release
-conditions so for periodic and one-shot threads the infrastructure
-must set a timer separately using the real-time clock API when a
-thread is created.
-The only priorities allowed for threads are the software priorities,
-as hardware priorities are reserved for interrupts.
-The backing store supplied here is only used to set the backing store
-in the memory manager when the thread starts and is not stored by the
-scheduler beyond that.
-
-The SCJVM threads that are eligible to run must be scheduled as if
-they are placed in queues with one queue for each priority.
-At each moment in time, the thread at the front of the highest
-priority non-empty queue is running.
-A thread becomes eligible to run after it is started and stops being
-eligible to run when it is blocked.
-A thread is started using the \texttt{start\-Thread} operation and
-must be started by the infrastructure when its enclosing mission
-starts.
-The reason for the separation between thread creation and thread
-starting is to ensure that threads all start together after mission
-initialisation has been completely finished.
-
-The identifier of the currently running thread can be obtained through
-the \texttt{get\-Current\-Thread} operation.
-This operation may be used by the infrastructure as part of obtaining
-the current schedulable object but is mainly intended for use by the
-memory manager in order to discern what the current allocation context
-is.
-
-A thread can be suspended, causing it to become blocked, and resumed,
-causing it to become eligible to run again, by the operations
-\texttt{suspend\-Thread} and \texttt{resume\-Thread}.
-These operations are only visible to the program through
-\texttt{wait()} and \texttt{notify()} at level 2.
-These operations are also used in hardware communication, when a
-thread must wait for hardware to complete a request, and to implement
-thread release, whereby a thread remains suspended until released.
-
-A thread that has been created can then be destroyed with the
-\texttt{destroy\-Thread} operation, which removes the thread from the
-scheduler.
-Destroying a thread does not automatically destroy its stack or the
-backing store being used as its allocation context.
-The SCJ infrastructure should not destroy a thread while it is running
-as a thread should only be destroyed when the mission it is part of is
-ending.
-The infrastructure should instead ensure that all threads in a mission
-are suspended before destroying them.
-
-The SCJVM must support priority ceiling emulation, as it is required
-by SCJ.
-This is handled by providing the \texttt{set\-Priority\-Ceiling}
-operation that associates a priority ceiling value to an object
-identified by a pointer.
-An object that does not have its priority ceiling explicitly set has a
-priority ceiling equal to the default ceiling, which should be the
-highest software priority but it is possible that a virtual machine
-could have an option to change the default priority ceiling.
-Note that the SCJVM scheduler does not require a notion of object in
-order to associate priority ceilings to objects as the object's
-pointer can be used as an opaque identifier.
-
-The operations for taking and releasing locks are \texttt{takeLock}
-and \texttt{releaseLock}.
-A thread can only take a lock if its active priority and the ceiling
-priorities of any other objects it holds the locks for is less than or
-equal to the ceiling priority of the object the lock is being taken
-on.
-Only one thread can take a given object's lock at a time.
-When a lock is taken, the thread's active priority is raised to the
-object's priority ceiling.
-When a thread releases a lock, the thread's active priority is lowered
-to its previous active priority (the thread may hold nested locks on
-multiple objects).
-
-The SCJVM scheduler must also manage interrupts, as interrupt handlers
-have priorities (though these should be in the hardware priority
-range) and so must be dealt with within the priority scheduling model.
-An interrupt handler can be attached to a given interrupt using the
-\texttt{attach\-Interrupt\-Handler} operation and an interrupt's
-handler can be removed with the \texttt{detach\-Interrupt\-Handler}
-operation.
-An interrupt with no handler attached to it is ignored.
-The clock interrupt coming from hardware is handled by the SCJVM clock
-(see Section~\ref{realtime-clock-section}) and converted into a clock
-interrupt that is passed to the scheduler for handling by the attached
-interrupt handler (which should simply call the
-\texttt{triggerAlarm()} method of \texttt{Clock}).
-
-Each interrupt has a priority associated with it, which is set by the
-SCJVM on startup and cannot be changed by the application.
-These interrupt priorities must be hardware priorities.
-An interrupt handler will interrupt any lower-priority interrupt
-handler and any running threads, and blocks lower-priority interrupt
-handlers from running until it has finished.
-The priority associated with each interrupt can be obtained by the
-\texttt{get\-Interrupt\-Priority} operation.
-
-Interrupts can be disabled using the \texttt{disable\-Interrupts}
-operation and re-enabled using the \texttt{enable\-Interrupts}
-operation.
-While interrupts are disabled no interrupt handlers can run but it is
-implemen\-tation-defined as to whether or not interrupts fired while
-interrupts are disabled are lost.
-This is due to the fact that disabling of interrupts is usually done
-at the level of hardware so the choice of whether interrupts are lost
-or retained is made by the hardware manufacturer, not the virtual
-machine implementer.
-
-\section{Real-time Clock API}
-\label{realtime-clock-section}
-
-The SCJVM must manage the system real-time clock, providing an
-interface that allows for the time to be read and alarms to be set to
-trigger time-based events.
-The operations of the SCJVM real-time clock are summarised in
-Table~\ref{realtime-clock-table}, which has the same format as
-Table~\ref{memory-manager-table}.
-
-\begin{table}[ht]
-  \centering
-  \footnotesize
-  \begin{tabular}{|l|p{0.9cm}|p{1.8cm}|p{2.3cm}|}
-    Operation & Inputs & Outputs & Error Conditions \\
-    \hline
-    getSystemTime &
-    (none) &
-    time &
-    (none)
-    \\getSystemTimePrecision &
-    (none) &
-    time precision &
-    (none)
-    \\setAlarm &
-    time &
-    (none) &
-    time in past
-    \\clearAlarm &
-    (none) &
-    (none) &
-    (none)
-  \end{tabular}
-  \caption{The operations of the SCJVM real-time clock}
-  \label{realtime-clock-table}
-\end{table}
-
-The main function of the real-time clock API is to provide access to
-the system time through the \texttt{get\-System\-Time} operation.
-The SCJ API deals with time values in terms of
-milliseconds-nanoseconds pairs, that should also be the format for
-time values passed to and from the SCJVM though another format could
-be used.
-The system time may be measured from January 1, 1970 or from the
-system start time (in case there is no reliable means of determining
-the date and time), and so may not correspond to wall-clock time.
-
-The time between ticks of the system clock (its precision) must be
-made available through the \texttt{get\-System\-Time\-Precision}
-operation.
-The clock's precision must not change.
-
-The SCJVM must also provide a facility to set an alarm that sends a
-clock interrupt to the scheduler when a specific time is reached.
-This facility is provided by the \texttt{set\-Alarm} function, which
-accepts an absolute time value at which the alarm should trigger.
-The time passed to \texttt{set\-Alarm} is required to not be in the
-past.
-Running code at a specified relative time offset should be handled by
-the infrastructure.
-Once a alarm has triggered, it is removed and a new alarm must be set
-in order to perform events periodically.
-
-The current alarm (if any) can be cleared using the
-\texttt{clear\-Alarm} operation.
-
-\section{Formal Model}
-\label{formal-model-section}
-
-The formal model of the SCJVM is written in the \Circus{}
-specification language~\cite{oliveira2009} In this section, we present
-an overview of our model.
-We then present part of the memory manager model to to show how it is
-constructed.
-The complete model can be found in~\cite{baxter2015}.
-It is type checked with Community Z Tools and we have started to prove
-some basic properties of the memory manager using Z/Eves.
-
-In our model, each of the components of the SCJVM shown in
-Figure~\ref{scjvm-fig} is specified by a single process whose channels
-represent the services they provide.
-The whole collection of VM services are then specified by a parallel
-composition of the memory manager, scheduler and clock processes.
-In this case, parallelism is being used to define a conjunction of
-requirements. 
-
-The processes synchronise on the channels they share, which are
-specified in the sets $MMSInterface$ and $RTCSInterface$.
-The set $MMSInterface$ is the interface between the memory manager and
-the scheduler, which contains a channel to get the current thread from
-the scheduler, and channels to inform the memory manager of the
-creation and destruction of threads.
-The interface between the real-time clock and the scheduler,
-$RTCSInterface$, contains a channel to pass the clock interrupt to the
-scheduler for handling.
-The channels used for internal communication between the VM services
-are hidden so that the only channels that can be used to communicate
-with the VM services are those used to represent the services in
-Tables~\ref{memory-manager-table}, \ref{scheduler-table} and
-\ref{realtime-clock-table}, and those used for communication with the
-core execution environment.
-%
-\begin{circus}
-  VMServices \circdef \\
-  \t1 ((MemoryManager \lpar MMSInterface \rpar Scheduler) \\
-  \t2 \lpar RTCSInterface \rpar RealtimeClock) \circhide
-  VMServicesInternals
-\end{circus}
-%
-The parallel composition of $VMServices$ with a process representing
-the core execution environment (which, as mentioned, we do not specify
-here) specifies the full SCJVM.
-
-Our model of the scheduler is similar to other formal models of
-priority schedulers~\cite{ferreira2014, gotsman2013, klein2014,
-  lime2009}, and the real-time clock specification is fairly simple
-and just manages the current time and any alarm that may be set.
-For those reasons, we do not go into detail on the scheduler on clock
-models here.
-Instead, we present part of the memory manager model, which is the
-most complex of the three VM services.
-We show the memory manager state and some of the operations.
-We also explain how the formal specification reflects the requirements
-identified in Section~\ref{memory-manager-section}.
-
-The memory manager specification begins by declaring a type,
-$MemoryAddress$, of memory addresses to be the set of natural numbers.
-This then allows for specification of a type, $ContiguousMemory$, that
-contains contiguous ranges of memory addresses and is used to specify
-that backing stores must not be fragmented.
-%
-\begin{zed}
-  MemoryAddress == \nat \\
-  ContiguousMemory == \{~ m : \power MemoryAddress | \exists a, b :
-  MemoryAddress @ m = a \upto b ~\}
-\end{zed}
-%
-Backing stores are identified by identifiers that are elements of a
-type $BackingStoreID$.
-These are simply opaque identifiers and there are no constraints on
-$BackingStoreID$ beyond the fact that it exists.
-
-We specify backing stores in two parts.
-The first part, $MemoryBlock$, stores the used, free and total memory
-and allows for allocation within it.
-This aspect of backing stores is separated out because it is also used
-in specifying the stack space, since allocation of memory also occurs
-there.The variables $used$ and $free$ correspond to the areas of used
-and free memory, while $total$ represents the whole memory area
-covered by the $MemoryBlock$.
-Note that $free$ and $total$ are required to be contiguous to enforce
-the requirement that there must be no fragmentation whereas it is not
-necessary that $used$ is simply specified to be a set of memory
-addresses.
-There are two invariants on $MemoryBlock$, identified by the
-predicates in the schema above.
-The first invariant simply specifies that $used$ and $free$ must be
-contained in $total$, but it does not require them to cover $total$ as
-there may be some additional memory overhead.
-The second invariant requires $used$ and $free$ to be disjoint.
-%
-\begin{schema}{MemoryBlock}
-  free, total : ContiguousMemory \\
-  used : \power MemoryAddress \\
-  \where
-  used \cup free \subseteq total \\
-  used \cap free = \emptyset \\
-\end{schema}
-%
-A $MemoryBlock$ is initialised by the $MemoryBlockInit$ operation,
-which accepts as an input a contiguous area of memory, $addresses?$,
-that it should cover.
-The final state of the operation is represented by variables obtained
-by placing a prime on the names of the state components.
-The variable $total'$ is specified to be equal to $addresses?$ and
-$used'$ is specified to be empty.
-The variable $free'$ is permitted to take any value, provided that it
-is a subset of $addresses?$.
-%
-\begin{schema}{MemoryBlockInit}
-  MemoryBlock~' \\
-  addresses?
-  : ContiguousMemory \\
-  \where total' = addresses?
-  \\
-  free' \subseteq addresses?
-  \\
-  used' = \emptyset \\
-\end{schema}
-%
-As an example of an operation on $MemoryBlock$, we present
-$MBAllocate$, the operation of allocating memory within a
-$MemoryBlock$.
-This operation takes an input $size?$ that is the requested size of
-the allocated memory, and outputs an area of contiguous memory called
-$allocated!$.
-There is a precondition on this operation that $size?$ must be smaller
-than the size of $free$, to ensure that there is enough free space to
-fulfil the allocation request.
-The output, $allocated!$, is then specified to be of the requested
-size and contained within $free$.
-The final state $used'$ is obtained by adding $allocated!$ to $used$
-and $free'$ is obtained by removing $allocated!$ from $free$.
-Finally, it is specified that $total$ does not change.
-%
-\begin{schema}{MBAllocate}
-  \Delta MemoryBlock \\
-  size?
-  : \nat \\
-  allocated!
-  : ContiguousMemory \where size?
-  \leq \# free \\
-  \# allocated!
-  = size?
-  \land allocated!
-  \subseteq free \\
-  used' = used \cup allocated!
-  \\
-  free' = free \setminus allocated!
-  \\
-  total' = total \\
-\end{schema}
-%
-With $MemoryBlock$ specified, the remaining parts of the backing store
-state are added in the schema $BackingStore$, which is a $MemoryBlock$
-with a variable, $self$, to store its own identifier and a finite set,
-$children$, of the identifiers of its immediate children.
-The invariants specify that it cannot be a child of itself and that
-the overhead, left loosely specified in $MemoryBlock$, must have a
-size equal to some constant $backingStoreOverhead$.
-The invariants inherited from $MemoryBlock$ are also required to hold.
-%
-\begin{schema}{BackingStore}
-  MemoryBlock \\
-  self : BackingStoreID \\
-  children : \finset BackingStoreID \\
-  \where
-  self \notin children \\
-  \# total = \# used + \# free + backingStoreOverhead
-\end{schema}
-%
-Initialisation of a $BackingStore$ is handled by the operation
-$BackingStoreInit$, which behaves similarly to $MemoryBlockInit$ with
-the additional precondition that the size $addresses?$ must be larger
-than $backingStoreOverhead$ and the requirement that $free'$ be made
-smaller than $addresses?$ to allow space for $backingStoreOverhead$.
-For the new state components, $self'$ is specified by an additional
-input $newID?$ and $children'$ is specified to be empty.
-\begin{schema}{BackingStoreInit}
-  BackingStore~' \\
-  MemoryBlockInit \\
-  newID?
-  : BackingStoreID \\
-  \where \# addresses?
-  \geq backingStoreOverhead \\
-  \# free' = \# addresses?
-  - backingStoreOverhead \\
-  self' = newID?
-  \\
-  children' = \emptyset \\
-\end{schema}
-%
-An example of a $BackingStore$ operation is allocating space for a new
-child backing store within its parent.
-That operation is given by the schema $BSAllocateChild$ below.
-%
-\begin{schema}{BSAllocateChild}
-  \Delta BackingStore \\
-  MBAllocate \\
-  childID!
-  : BackingStoreID \\
-  \where childID!
-  \notin children \land childID!
-  \neq self \\
-  children' = children \cup \{ childID!
-  \} \\
-  self' = self
-\end{schema}
-%
-This operation is based on $MBAllocate$, but it has an additional
-output, $childID!$, which is the identifier of the newly allocated
-child, and it specifies how the extra state components in
-$BackingStore$ are updated.
-The new child's identifier is specified to not be the identifier of an
-existing child and must not be the identifier of the backing store
-itself.
-The final state $children'$ is specified to add $childID!$ to
-$children$ and $self$ does not change.
-This operation is made into a robust operation, $RBSAllocateChild$,
-that handles the case where the precondition does not hold by
-outputting a value $report!$, which is either a reported error or the
-value $okay$.
-
-Backing stores are managed by the global memory manager, the state of
-which is given by the schema $GlobalMemoryManager$.
-The global memory manager state contains a partial function, $stores$,
-that relates backing store identifiers to the backing stores, along
-with the identifier, $rootBackingStore$, of the root backing store and
-a relation, $childRelation$ between backing store identifiers and the
-identifiers of their direct children.
-The global state also contains a map, $threadACs$, from thread
-identifiers to their allocation context, which is used, together with
-information obtained from the scheduler, to perform operations on the
-current allocation context.
-%
-\begin{schema}{GlobalMemoryManager}
-  stores : BackingStoreID \pfun BackingStore \\
-  childRelation : \\
-  \t1 BackingStoreID \rel BackingStoreID \\
-  rootBackingStore : BackingStoreID \\
-  threadACs : ThreadID \pfun BackingStoreID \\
-  \where
-  rootBackingStore \in \dom~stores \\
-  \forall b: \dom~stores @ (stores~b).self = b \\
-  \forall b : \ran stores @ \exists m : \power b.used @
-  (\lambda x : b.children @ (stores~x).total)~\partition~m \\
-  \ran threadACs \subseteq \dom stores \\
-  childRelation = \bigcup \{ i : \dom~stores @ \{ j : (stores~i).children @ (i,j) \} \} \\
-  \dom stores = (childRelation\star) \limg \{ rootBackingStore \} \rimg \\
-  \forall s : \dom stores @ s \notin childRelation\plus \limg \{ s \} \rimg \\
-\end{schema}
-%
-The relationships between the backing stores are specified by the
-invariants of this state as defined by the predicates in the schema
-above.
-The first invariant specifies that the root backing store must be a
-valid identifier (this is implied by the sixth invariant but is
-written separately for clarity).
-The second invariant is an injectivity condition on $stores$,
-requiring that no two backing stores have the same identifier.
-The third invariant requires that a backing store's children are all
-disjoint and contained in that backing store's used memory.
-The fourth invariant requires that the thread allocation contexts be
-valid backing stores.
-The fifth invariant defines $childRelation$, using the set of children
-in the backing store record to form a relation between backing store
-identifiers.
-The sixth invariant uses the reflexive transitive closure of
-$childRelation$ to specify that every known backing store must be a
-(direct or indirect) child of the root backing store or the root
-backing store itself.
-Lastly, the seventh invariant specifies that no backing store can be a
-(direct or indirect) child of itself.
-
-The operations on the memory manager are specified using the Z idiom
-of promotion, which allows operations on a local state to be lifted to
-operations on a global state.
-This allows simple operations on the backing store records to be used
-to update the backing stores in the $stores$ function.
-As an example we present the $GlobalMakeBS$ schema that specifies the
-creation of a backing store within another.
-%
-\begin{schema}{GlobalMakeBS}
-  \Delta GlobalMemoryManager \\
-  size?
-  : \nat \\
-  allocationContext?
-  : BackingStoreID \\
-  childID!
-  : BackingStoreID \\
-  \where allocationContext?
-  \in \dom stores \\
-  \exists actualSize : \nat | actualSize = size?
-  + backingStoreOverhead @ \\
-  \exists allocated!
-  : ContiguousMemory @ \\
-  \exists parent, child : BackingStore @ \\
-  \t1 (\exists \Delta BackingStore; report!
-  : Report | RBSAllocateChild [ actualSize / size?
-  ] @ \\
-  \t2 \theta BackingStore = stores~allocationContext?
-  \land \\
-  \t2 parent = \theta BackingStore~' \land \\
-  \t2 childID!
-  \notin \dom stores \land \\
-  \t2 report!
-  = okay) \land \\
-  \t1 (\exists BackingStore~'; report!
-  : Report | BackingStoreInit [ allocated!
-  / addresses?
-  ] @ \\
-  \t2 child = \theta BackingStore~') \land \\
-  \t1 stores' = stores \oplus \{ allocationContext?
-  \mapsto parent, childID!
-  \mapsto child \} \\
-  rootBackingStore' = rootBackingStore \\
-  childRelation' = childRelation \\
-  threadACs' = threadACs \\
-\end{schema}
-%
-Much of this operation's complexity is due to the fact that it
-promotes two operations: $RBSAllocateChild$ and $BackingStoreInit$.
-The allocation occurs in the current allocation context, identified by
-the input $allocationContext?$.
-It is determined by obtaining the current thread from the scheduler,
-looking up its allocation context and passing it as an input to the
-operation specified by the Z schema.
-The operation produces as output the identifier $childID!$ of the
-newly allocated backing store.
-
-The first condition on the operation requires that the allocation
-context be a valid backing store, that is, in the domain of $stores$.
-After that, the existential quantifiers introduce variables local to
-the schema, specifying the size of the allocated backing store,
-$actualSize$, to include some implementation-defined overhead.
-
-Then the promotions are specified, beginning with the operation
-$RBSAllocateChild$.
-The variables $childID!$ and $childAddresses!$ are identified with
-outputs of the promoted operation that have the same names.
-The initial state for the promoted operation is taken from the backing
-store in $stores$, and the final state is placed in the variable
-$parent$.
-The output $childID!$ is required to not be the identifier of another
-backing store.
-It is required that no error be reported in the error reporting
-variable $report!$.
-
-The second operation promoted is $BackingStoreInit$.
-The variables $actualSize$, $childAddresses!$ and $childID!$ are
-passed to it as inputs via renaming.
-The final state of the promoted operation is stored in $child$.
-The final states of both backing stores, $parent$ and $child$ are
-stored in the $stores$ function, with $childID!$ being used as the
-identifier of $child$.
-The specification of the operation ends by stating that all other
-state variables remain the same.
-
-Other global memory manager operations are similarly specified using
-promotion.
-Operations on stacks are specified separately, using a specification
-based on $MemoryBlock$.
-
-\section{Final Considerations}
-
-The requirements and formal model presented in this chapter are an
-important part of the plan presented in the previous chapter as they
-specify the services required to support an SCJ program.
-These requirements are also necessary to support the core execution
-environment, which will be specified in future work, and so they lay
-the foundation for our work.
-
-The formal model presented in this chapter is yet to be proved correct
-but it has already demonstrated its worth by enabling the requirements
-to be stated more precisely.
-This has meant that various issues have arisen during creation of the
-formal model that were not apparent in the informal statement of
-requirements.
-Resolving the issues in the formal model has, in turn, made the
-informal requirements more precise and better structured.
-It may be that further modifications will be required as proof of the
-model progresses.
-This shows one of the great benefits of formal methods: that errors
-can be detected which may not be easily visible to the human eye.
-
-% add a final considerations section noting lessons learned from the
-% formalisation and how it contributes to the research proposal
+\input{\string~/SCJ-VM/James/scjvmservices.zed}
 
 \chapter{Conclusions}
 \label{conclusions-chapter}
@@ -2611,6 +1758,23 @@ Facilitating such work is the ultimate aim of our work, in order to
 provide for the correct running of SCJ programs.
 
 \raggedright \printbibliography
+
+\appendix
+
+\chapter{Z/Eves Theorems and Proofs}
+
+\input{\string~/SCJ-VM/James/additional_lemmas.zed}
+
+\section{Proofs of Additional Toolkit Lemmas}
+
+\scriptsize
+
+\input{\string~/SCJ-VM/James/additional_lemmas_sets_proofs.zed}
+
+\input{\string~/SCJ-VM/James/additional_lemmas_relations_proofs.zed}
+
+\input{\string~/SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
+
 \end{document}
 
 %  LocalWords:  modularise certifiability verifiers mechanisations checkable
