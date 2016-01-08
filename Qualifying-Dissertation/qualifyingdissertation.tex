@@ -11,6 +11,10 @@
 \usepackage{fixltx2e}
 \usepackage{comment}
 
+\usetikzlibrary{calc}
+
+\CountDefsfalse
+
 \title{A Framework for Verifying Safety-Critical Java Virtual Machines}
 \author{James Baxter}
 \date{}
@@ -310,13 +314,11 @@ SCJ.
 This is followed by a survey of the existing virtual machines for
 Safety-Critical Java and the techniques used in verifying compilers.
 
-In Chapter~\ref{research-proposal-chapter} we will cover the structure
-and plan for the proposed research.
-
-In Chapter~\ref{requirements-chapter} we present some preliminary
-results identifying the requirements of an SCJ virtual machine, with a
-formal model of those requirements in the \Circus{} specification
-language.
+In Chapter~\ref{scjvm-services-chapter} we present an identification of the
+requirements of SCJ virtual machine services, with a formal model of
+those requirements in the \Circus{} specification language.
+This is followed by a model of the an SCJ virtual machine core
+execution environment in Chapter~\ref{cee-chapter}.
 
 Finally, we conclude in Chapter~\ref{conclusions-chapter} by
 summarising our contributions and mentioning the wider context of this
@@ -778,45 +780,20 @@ most successful of which is that of CompCert~\cite{leroy2009a,
 This is a project to create a fully verified realistic compiler for a
 subset of C, using the theorem prover Coq~\cite{coq2004}.
 
-\subsection{Operational approach}
-\label{operational-approach-subsection}
-
-A related approach that should be mentioned here is that of deriving a
-compiler from a operational semantics by a series of transformations.
-There have been several works in past discussing this~\cite{wand1982,
-  meijer1992a, ager2003}, but there has also been some good recent
-work in this area by Bahr and Hutton~\cite{bahr2015}.
-Their approach involves beginning with an operational semantics of the
-source language and performing a series of transformations upon it to
-acquire a function that transforms the state of the target machine.
-Functions that represent the basic operations of the target machine
-are then identified as constituent parts of that function.
-Those functions are then converted to continuation passing style, in
-which a function representing the next action to be taken is passed as
-an argument to the function.
-This yields a nested list of functions transforming the state of the
-target machine in a manner that represents the semantics of the target
-machine instructions.
-The functions are then replaced with algebraic datatype constructors
-to yield a list of target machine instructions.
-Since the continuations in continuation passing style are functions
-that transform the state of the target machine, the transformed
-operational semantics function behaves as a compiler for the target
-machine.
-
-This approach has the advantage of deriving a compiler along with its
-proof so that the compiler is known to be correct by construction.
-It also works using simple program transformations, meaning that it
-can be more easily adapted and applied to different programming languages.
-However, this approach relies on operational semantics, which are
-already quite concrete, meaning that many of the implementation
-decisions inherent in compiler construction have already been made
-before the compiler is derived since it is difficult to have a loosely
-specified operational semantics in the form required for this approach.
-The requirement for knowledge of the state is particularly problematic
-in our case where the target language is not a well-defined machine
-language but a native high-level programming language with a loosely
-defined state. 
+There is also recent variation of the commuting-diagram approach, 
+based on an operational semantics of the source
+language~\cite{bahr2015}.
+In this work, the operational semantics of the source language and
+a way of relating the source and target semantics are used to derive a
+different operational semantics of the source language acting on the
+state of the target machine.
+The semantics of the target language are then identified as part of
+that operational semantics and it is transformed to extract a
+compilation function.
+This approach may be viewed as variant of the commuting-diagram
+approach in which the compilation function is derived from the source
+and target semantics and the relationship between them, rather than
+being verified by those elements of the commuting-diagram.
 
 \subsection{Algebraic Approach}
 \label{algebraic-approach-subsection}
@@ -1325,184 +1302,6 @@ SCJ programs.
 \Circus{} also has some existing mechanisation and tool support, which
 can help give greater assurance of the correctness of specifications.
 
-Having considered some of the literature and seen that our task is to
-construct a framework in which virtual machines for SCJ can be
-verified, it remains to formulate the structure of this framework and
-plan how to proceed with the work.
-This is the topic of the next chapter.
-
-\chapter{Research Proposal}
-\label{research-proposal-chapter}
-
-% repeat list from the objectives section and address each item in its
-% own section
-
-Our aim is to specify a framework for the verification of
-Safety-Critical Java virtual machines (SCJVMs).
-As mentioned earlier, it will consist of the following:
-\begin{itemize}
-\item a specification of the requirements of an SCJ virtual machine,
-\item a compilation strategy from Java bytecode to native C code,
-\item a formal model of the virtual machine specification,
-\item proofs for validation of the formal model and verification of
-  the compilation strategy, and
-\item a mechanisation of the model and proofs.
-\end{itemize}
-These are each discussed in the following sections of this chapter.
-
-\section{SCJVM requirements}
-
-In order to provide a structure to the specification, we identify the
-main components of an SCJVM in Figure~\ref{scjvm-fig}.
-An SCJVM is split into two parts: the core execution environment and
-the virtual machine services.
-The core execution environment handles the running of Java bytecode.
-The virtual machine services support, for example, scheduling and
-memory management, that is, services that are required to support the
-SCJ infrastructure and the core execution environment.
-
-
-
-The core execution environment is not necessarily required to use any
-particular means to run the bytecode.
-It may interpret bytecode instructions, just-in-time compile the
-bytecode, or execute native code precompiled from Java bytecode (and
-in such a case the compiler is regarded as part of the core execution
-environment).
-As we have already seen, many existing SCJVMs adopt the approach of
-compiling to native code, and so our specification of the core
-execution environment will focus on the construction of a compilation
-strategy, which is discussed in the next section.
-
-The compiled code in the core execution environment will need to call
-additional functions to handle certain features of SCJ.
-For example, as alluded to above, the code to handle the \texttt{new}
-instruction must ensure the allocation is performed withing the
-correct allocation context.
-Some of these functions are also required for implementing the SCJ
-libraries.
-So it is sensible to implement them alongside the core execution
-environment in what we have called the virtual machine services.
-
-The requirements for the virtual machine services are identified from
-requirements imposed by the SCJ specification, with some consideration
-given to the approaches taken by existing SCJVMs where the
-specification is unclear.
-As can be seen from Figure~\ref{scjvm-fig}, we group the virtual
-machine services into three areas:
-\begin{itemize}
-\item the memory manager, which manages backing stores for memory
-  areas and allocation within them;
-\item the scheduler, which manages threads and interrupts, and allows
-  for implementation of SCJ event handlers; and
-\item the real-time clock, which provides an interface to the system
-  real-time clock.
-\end{itemize}
-Each of these services is used either by the core execution
-environment or by the SCJ infrastructure; some of the services also
-rely on each other.
-For example, the scheduler must update the allocation context in the
-memory manager when performing a thread switch.
-
-The virtual machine services may make use of low-level operating
-system services to access hardware.
-These operating system services may be supplied by a full-featured
-operating system on which the virtual machine runs or may simply be a
-minimal set of services required to run the virtual machine.
-The latter case is desirable for low-end embedded systems that lack
-the resources to run a general operating system.
-In our research, we need to identify the SCJVM requirements.
-As indicated previously, there is currently no accepted set of such
-requirements.
-We need them as part of the target machine for compilation of SCJ
-programs.
-
-\section{Compilation Strategy}
-
-% change to present tense in the thesis
-For the core execution environment, we will adopt the approach of
-compilation from Java bytecode to C.
-Java bytecode can be used as the source language, rather than Java
-itself, because SCJ has been designed without any extensions to the
-syntax and language constructs of Java, but only a different standard
-library and runtime.
-This means that an SCJ program can be compiled by a standard Java
-compiler, although it requires a specialised JVM to run the resultant
-bytecode.
-The reason for the choice of C as a target language is the same as
-that of other SCJ virtual machines, particularly the icecap HVM: C is
-a language already widely used in the area of embedded systems and is
-sufficiently lightweight to permit its use as a compilation target.
-
-As already mentioned, we intend adopt the algebraic approach in order
-to show that the compilation is correct.
-This will involve defining the semantics of Java bytecode and C in
-terms of the specification language \Circus{}.
-There is much existing work on the formal semantics of Java
-bytecode~\cite{bertelsen2000, jones1998, stark2001, alves1999a,
-  bogdanas2015, lochbihler2012a} and C~\cite{campbell2012,
-  ellison2012, krebbers2014} that can be used to aid in that.
-
-We expect that the semantics of Java bytecode for an SCJVM will be
-similar to that of standard Java bytecode, except that the
-\texttt{invokedynamic} instruction will be absent, since SCJ does not
-allow dynamic class loading.
-Moreover, instructions such as \texttt{new} will have to be aware of
-the SCJ memory and scheduling models.
-
-When the semantics of Java bytecode and C are defined, we will define
-and prove the refinement rules that specify the compilation.
-
-\section{Formal Model}
-
-In addition to the formal models of Java bytecode and C that are
-required for specifying the compilation, a formal model of the virtual
-machine services is also required.
-The model will allow the requirements to be stated more precisely and
-their consistency checked.
-We will model the virtual machine services in \Circus{} for ease of
-composition with the core execution environment.
-Formal models of requirements, Java bytecode and C are needed as part
-of the characterisation of the normal form to be targeted in the
-algebraic compilation approach. 
-
-\section{Proofs}
-
-It must be shown that the formal model of the virtual machine services
-is consistent and that all the error cases have been accounted for.
-The refinement rules for the compilation will also require proofs.
-These proofs will be constructed from the basic laws of \Circus{},
-which come from the UTP semantics of \Circus{}~\cite{oliveira2009}.
-
-\section{Mechanisation}
-
-In order to ensure no mistakes are made during the proof, it should be
-mechanised using an automated theorem prover.
-This provides assurance that the proof is correct and can also make
-testing of the model easier due to the code-generation facilities of
-theorem provers.
-We will use Isabelle as our theorem prover with its existing
-implementations of \Circus{}~\cite{feliachi2012} and the
-UTP~\cite{foster2015}.
-The small axiomatic core of Isabelle helps to ensure that theories
-implemented in it are correct, giving greater certainty that proofs
-using them are sound.
-
-\section{Final Considerations}
-
-We already have some preliminary results identifying the requirements
-for virtual machine services and constructing a formal model of them,
-which are presented in the next chapter.
-The formal model should have a machine-checked proof of consistency
-but that remains to be completed.
-We have not yet specified the core execution environment.
-The work presented in the next chapter has also been submitted to the
-Java Technologies for Real-time and Embedded Systems
-conference~\cite{baxter2015submitted}.
-Our work is also related to some work verifying the icecap HVM
-scheduler and we have contributed to a paper on that, which is in
-preparation~\cite{freitas2015inpreparation}.
-
 \chapter{Safety-Critical Java Virtual Machine Services}
 \label{scjvm-services-chapter}
 
@@ -1513,11 +1312,12 @@ For the purposes of our model, we view an SCJVM as being composed of
 the components illustrated in Figure~\ref{scjvm-services-fig}.
 An SCJVM is divided into two main parts:~the core execution
 environment and the SCJVM services.
+These parts may also make use of the services of an underlying
+operating system or hardware abstraction layer.
 
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
-    \usetikzlibrary{calc}
 
     \coordinate (width)  at (10cm,0cm);
     \coordinate (height) at (0cm,7cm);
@@ -1586,9 +1386,9 @@ environment and the SCJVM services.
     \node[align=center] at (VM Service 2) {Scheduler};
     \node[align=center] at (VM Service 3) {Real-time\\Clock};
   \end{tikzpicture}
-  \caption{A diagram showing the structure of the SCJ virtual machine
-    and its relation to the SCJ infrastructure and the operating
-    system/hardware abstraction layer.}
+  \caption{A diagram showing the structure of an SCJVM and its
+    relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer, focusing on the SCJVM services}
   \label{scjvm-services-fig}
 \end{figure}
 
@@ -1605,28 +1405,47 @@ The SCJVM services represent the additional services that must be
 offered by an SCJVM in order to support the SCJ infrastructure.
 These services may be supplied as standalone services and so do not
 need to be handled by the compilation strategy.
-They include such areas as low level memory management and
-scheduling.
+We view the virtual machine services as being divided into three areas: 
+\begin{itemize}
+\item the memory manager, which manages backing stores for memory areas and
+  allocation within them;
+\item the scheduler, which manages threads and interrupts, and allows for
+  implementation of SCJ event handlers; and
+\item the real-time clock, which provides an interface to the system real-time
+  clock.
+\end{itemize}
+Each of these services is used either by the core execution environment or by
+the SCJ infrastructure; some of the services also rely on each other.  For
+example, the scheduler must update the allocation context in the memory manager
+when performing a thread switch.
 
 A model of the core execution environment will be presented in 
 Chapter~\ref{cee-chapter}.
-In this chapter, we will instead focus on the virtual machine
-services.
+In this chapter, we present the requirements for the SCJVM services as
+a formal model written in the \Circus{} specification language.
+Each part of the model will be presented in a separate section:~the
+memory manager in Section~\ref{memory-manager-section}, the scheduler
+in Section~\ref{scheduler-section}, and the real-time clock in
+Section~\ref{realtime-clock-section}.
+Finally, the parts of the model are combined to form a complete model
+of the SCJVM services in Section~\ref{scjvm-services-section}.
 
-As indicated in Figure~\ref{scjvm-services-fig}, we divide the SCJVM
-services into three areas:~memory management, scheduling, and the
-real-time clock.
-We will present a \Circus{} model of these areas in the separate
-sections of this chapter, with a \Circus{} process for each of the three
-areas.
-A model of the memory manager will be presented in
-Section~\ref{memory-manager-section}, followed by a model of the
-scheduler in Section~\ref{scheduler-section}, then the real-time
-clock in Section~\ref{realtime-clock-section}.
-Finally, the \Circus{} processes are combined into a single process in
-Section~\ref{scjvm-services-section}.
+The memory manager model has be partially proved using Z/Eves.
+The theorems about the memory manager that have been proved with
+Z/Eves are included in the model in this chapter and mostly standard
+theorems from CZT's verification condition generator.
+The Z/Eves proof scripts for these theorems can be found in
+Appendix~\ref{memory-manager-proofs-section}.
+Many additional lemmas about objects in the Z/Eves mathematical
+toolkit have been proved in the course of proving the memory manager.
+As these could be of use outside our work, we have included them
+separately in Appendix~\ref{additional-lemmas-section} with their
+proofs in Appendix~\ref{addtional-lemmas-proofs-section}.
 
-An earlier version of this model was presented at the %TODO: reference conference
+Part of an earlier version of this model was presented at the 13th
+International Workshop on Java Technologies for Real-time and Embedded
+Systems~\cite{baxter2015a} with the full earlier version made available
+as a technical report~\cite{baxter2015}.
 
 \input{\string~/SCJ-VM/James/memorymanager.zed}
 
@@ -1636,9 +1455,241 @@ An earlier version of this model was presented at the %TODO: reference conferenc
 
 \input{\string~/SCJ-VM/James/scjvmservices.zed}
 
+\chapter{The Core Execution Environment}
+\label{cee-chapter}
+
+This chapter covers the second component of an SCJVM, which is the
+core execution environment (CEE).
+The CEE is reponsible for executing Java bytecode instructions.
+Additionally, the CEE must be aware of the structure of Java objects
+and classes in order to properly handle some bytecode instructions.
+The CEE also manages the flow of execution surrounding the execution
+of bytecode instructions, including handling safelet setup and mission
+execution.
+
+As shown in Figure~\ref{cee-fig}, we view the core execution
+environment as being divided into four parts:
+\begin{itemize}
+\item the code area, which stores the classes and bytecode
+  instructions that are statically loaded on SCJVM startup,
+\item the memory, which manages the information about objects created
+  during execution,
+\item the interpreter, which handles execution of bytecode
+  instructions, and
+\item the launcher, which coordinates the startup of the SCJVM, the
+  execution of missions and the execution of methods in the
+  interpreter.
+\end{itemize}
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+
+    \coordinate (width)  at (10cm,0cm);
+    \coordinate (height) at (0cm,7cm);
+
+    \path (0,0) -- (height)
+    coordinate[pos=0.18] (OS boundary)
+    coordinate[pos=0.20] (VM part bottom)
+    coordinate[pos=0.57] (VM part top)
+    coordinate[pos=0.60] (API boundary)
+    coordinate[pos=0.82] (App boundary);
+    
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.7] (CEE part top);
+
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.85] (CEE ypos);
+
+    \path (0,0) -- (width)
+    coordinate[pos=0.04] (CEE left)
+    coordinate[pos=0.76] (CEE right)
+    coordinate[pos=0.78] (VM Services left)
+    coordinate[pos=0.96] (VM Services right)
+    coordinate[pos=0.01] (CEE part sep);
+
+    \path (CEE left) -- (CEE right)
+    coordinate[pos=0.5] (CEE xpos);
+
+    \path (0,0) to node[pos=0.5] (mid) {} (width);
+    \path (0,0) to node[pos=0.25] (quart) {} (width);
+
+    \draw (0,0) rectangle (width |- height);
+
+    \draw (OS boundary) -- ++(width);
+    \path (0,0) rectangle node[pos=0.5] (OS) {} (width |- OS boundary);
+    \draw (mid |- API boundary) rectangle node[pos=0.5] (API) {} (width |- App boundary);
+    \draw (App boundary) -- ++(width);
+    \path (App boundary) rectangle node[pos=0.5] (App) {} (width |- height);
+
+    \path (quart |- API boundary) rectangle node[pos=0.4] (SCJVM) {} (quart |- App boundary);
+    \draw (CEE left |- VM part bottom) rectangle (CEE right |- VM part top);
+    \draw (VM Services left |- VM part bottom) rectangle node[pos=0.5] (VM Services) {} (VM Services right |- VM part top);
+    \coordinate (CEE) at (CEE xpos |- CEE ypos);
+
+    \node[align=center] at (App)   {SCJ Application};
+    \node[align=center] at (API)   {SCJ\\Infrastructure\\and API};
+    \node[align=center] at (SCJVM) {SCJ\\Virtual Machine};
+    \node[align=center] at (CEE)   {Core Execution Environment};
+    \node[align=center] at (VM Services)  {SCJVM\\Services};
+    \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
+
+    \foreach \x in {1,...,4}
+    \pgfmathsetmacro{\a}{0.25*(\x - 1)}
+    \pgfmathsetmacro{\b}{0.25*\x}
+    \path ($(CEE left) + (VM part bottom)!0.07!(VM part top)$) -- 
+    node[pos=\a] (CEE part \x start) {}
+    node[pos=\b] (CEE part \x end) {}
+    ($(CEE right) + (VM part bottom)!0.07!(VM part top) - (CEE part sep)$);
+
+    \foreach \x in {1,...,4} 
+    \draw ($(CEE part \x start) + (CEE part sep)$)
+    rectangle node[pos=0.5] (CEE part \x) {}
+    (CEE part \x end |- CEE part top);
+
+    \node[align=center] at (CEE part 1) {\small Code\\Area};
+    \node[align=center] at (CEE part 2) {\small Memory};
+    \node[align=center] at (CEE part 3) {\small Interpreter};
+    \node[align=center] at (CEE part 4) {\small Launcher};
+  \end{tikzpicture}
+  \caption{A diagram showing the structure of an SCJVM and its
+    relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer, focusing on the core execution
+    environment}
+  \label{cee-fig}
+\end{figure}
+
+This chapter will begin with a brief explanation of the assumptions 
+made and the bytecode subset used in creating this model in
+Section~\ref{cee-assumptions-section}.
+Then each part of the \Circus{} model of the core execution environment is
+presented in a separate section:~the class structure in
+Section~\ref{cee-classes-section}, the code area in
+Section~\ref{cee-code-area-section}, the object structure and memory
+in Section~\ref{cee-memory-section}, the stack frame structure in
+Section~\ref{cee-stack-frames-section}, the interpreter in
+Section~\ref{cee-interpreter-section}, and the launcher in
+Section~\ref{cee-launcher-section}.
+Finally the parts are drawn together into the complete model in
+Section~\ref{complete-cee-section}.
+
+\section{Assumptions and Bytecode Subset}
+\label{cee-assumptions-section}
+
+Due to the complexity of the JVM and Java bytecode, we have chosen not
+to model the whole of Java bytecode.
+We instead model a subset of Java bytecode that we believe is
+sufficient to express a wide variety of SCJ programs and illustrate
+how further features may be added, but small enough to permit
+effective reasoning.
+We describe our bytecode subset and further assumptions that we have
+made in creating the SCJVM model in this section.
+
+Our first major assumption is that execeptions are not handled,
+errors in the SCJVM are instead handled by simply aborting execution.
+This is justified as the exception handling mechanism of Java is quite
+complex and the correct application of formal methods should eliminate
+errors in the SCJVM.
+This means that that the bytecode instructions that relate to throwing
+and catching exceptions are not included in our bytecode subset.
+
+Another major assumption we have made is that all values consist of
+only a single virtual machine word.
+This means that \texttt{long} and \texttt{double} values are not
+handled.
+Any SCJ API methods that take \texttt{long} or \texttt{double}
+arguments are viewed as taking \texttt{int} or \texttt{float} instead.
+The reason for this assumption is that handling of two word values
+would complicate many bytecode instructions while adding little to
+the power of the bytecode subset except that larger ranges of values
+could be handled, which makes little difference at the level of the
+formal model.
+
+Further, we do not make a distinction between the different virtual
+machine types in our bytecode instructions but instead supply
+instructions that handle values as object references.
+This makes sense as many of the instructions behave the same for
+different types so it would introduce a lot of duplication to the
+model if, for example, both the \texttt{areturn} \and \texttt{ireturn}
+instructions were to be included.
+The arithmetic instructions are also quite simple and type specific so
+we have excluded them from our model for the sake of brevity; it
+should be fairly simple to add them if necessary.
+
+We also do not consider static methods and fields since that would add
+some complexity to our model and most of the considerations are
+covered by non-static methods and fields.
+
+Because we are considering SCJ bytecode, some requirements of SCJ
+permit further simplifications to our bytecode subset.
+The \texttt{invokedynamic} instruction is not included as it does not
+allow static typechecking and so should not be used for SCJ.
+The requirement for all classes to be loaded at startup greatly
+simplifies the semantics of several instructions since dynamic class
+loading does not need to be considered.
+It also means that method lookup tables can be precomputed, which
+simplifies method lookup and means that the semantics of the
+\texttt{invokevirtual} and \texttt{invokeinterface} instructions are
+the same so they do not both need to be included.
+
+In terms of concurrency considerations, we are assuming our SCJVM to
+be single processor and so we do not need to have more than one
+interpreter.
+We also assume that thread switches can only occur between bytecode
+instructions in the interpreter.
+That means that both the bytecode instructions and the portions of
+execution occuring in the launcher are atomic, which greatly
+simplifies the model since thread switches at any time do not have to
+be accounted for. 
+
+With the above assumptions in mind, the bytecode instructions in our
+subset are as follows:
+\begin{itemize}
+\item \texttt{aconst\_null}
+\item \texttt{aload}
+\item \texttt{areturn}
+\item \texttt{astore}
+\item \texttt{dup}
+\item \texttt{getfield}
+\item \texttt{invokevirtual}
+\item \texttt{invokespecial}
+\item \texttt{new}
+\item \texttt{putfield}
+\item \texttt{return}
+\end{itemize}
+
+The instruction \texttt{dup} is included as an example of a simple
+instruction that operates on the operand stack and was chosen for its
+frequent occurence in object intialisation.
+Other instructions that do simple operand stack manipulation,
+including the arithmetic instructions, can be specified similarly.
+
+Instructions that create object references and pass them around are
+also included to allow the full range of object manipulations.
+However, arrays are not included as they would require additional
+instructions and could be emulated, albeit inefficiently, with the
+instructions given here.
+
+Both \texttt{invokevirtual} and \texttt{invokespecial} are supplied as
+\texttt{invokespecial} chooses the method to invoke in a different way
+and is required for object initialisation.
+
+\input{\string~/SCJ-VM/James/Bytecode/classes.zed}
+
+\input{\string~/SCJ-VM/James/Bytecode/code_area.zed}
+
+\input{\string~/SCJ-VM/James/Bytecode/memory.zed}
+
+\input{\string~/SCJ-VM/James/Bytecode/stack_frames.zed}
+
+\input{\string~/SCJ-VM/James/Bytecode/interpreter.zed}
+
+\input{\string~/SCJ-VM/James/Bytecode/launcher.zed}
+
+\input{\string~/SCJ-VM/James/Bytecode/complete_cee.zed}
+
 \chapter{Conclusions}
 \label{conclusions-chapter}
-
 % three sections: summary of contributions, related work, and future
 % work
 In this chapter we conclude by summarising the contributions of this
@@ -1766,7 +1817,7 @@ provide for the correct running of SCJ programs.
 \input{\string~/SCJ-VM/James/additional_lemmas.zed}
 
 \section{Proofs of Additional Toolkit Lemmas}
-
+\label{additional-lemmas-proofs-section}
 \scriptsize
 
 \input{\string~/SCJ-VM/James/additional_lemmas_sets_proofs.zed}
@@ -1774,6 +1825,9 @@ provide for the correct running of SCJ programs.
 \input{\string~/SCJ-VM/James/additional_lemmas_relations_proofs.zed}
 
 \input{\string~/SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
+
+\input{\string~/SCJ-VM/James/memorymanager.zed}
+
 
 \end{document}
 
