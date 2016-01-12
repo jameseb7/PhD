@@ -325,6 +325,237 @@ correctness of those implementations.
 
 \chapter{Progress Report}
 
+\section{Review of Research Progress}
+
+% Explain initial plan - verified model of compilation from Java
+% bytecode to native code; explain necessity of having an SCJVM model;
+% describe the structure of an SCJVM and the division into two parts:
+% the core execution environment and the SCJVM services - use the
+% diagram.
+
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+
+    \coordinate (width)  at (10cm,0cm);
+    \coordinate (height) at (0cm,7cm);
+
+    \path (0,0) -- (height)
+    coordinate[pos=0.18] (OS boundary)
+    coordinate[pos=0.20] (VM part bottom)
+    coordinate[pos=0.57] (VM part top)
+    coordinate[pos=0.60] (API boundary)
+    coordinate[pos=0.82] (App boundary);
+
+    \path (0,0) -- (width)
+    coordinate[pos=0.04] (CEE left)
+    coordinate[pos=0.48] (CEE right)
+    coordinate[pos=0.52] (VM Services left)
+    coordinate[pos=0.96] (VM Services right);
+
+    \path (0,0) to node[pos=0.5] (mid) {} (width);
+    \path (0,0) to node[pos=0.25] (quart) {} (width);
+
+    \draw (0,0) rectangle (width |- height);
+
+    \draw (OS boundary) -- ++(width);
+    \path (0,0) rectangle node[pos=0.5] (OS) {} (width |- OS boundary);
+    \draw (mid |- API boundary) rectangle node[pos=0.5] (API) {} (width |- App boundary);
+    \draw (App boundary) -- ++(width);
+    \path (App boundary) rectangle node[pos=0.5] (App) {} (width |- height);
+
+    \path (quart |- API boundary) rectangle node[pos=0.4] (SCJVM) {} (quart |- App boundary);
+    \draw (CEE left |- VM part bottom) rectangle node[pos=0.5] (CEE) {} (CEE right |- VM part top);
+    \draw (VM Services left |- VM part bottom) rectangle node[pos=0.5] (VM Services) {} (VM Services right |- VM part top);
+
+    \node[align=center] at (App)   {SCJ Application};
+    \node[align=center] at (API)   {SCJ\\Infrastructure\\and API};
+    \node[align=center] at (SCJVM) {SCJ\\Virtual Machine};
+    \node[align=center] at (CEE)   {Core Execution\\Environment};
+    \node[align=center] at (VM Services)  {SCJVM\\Services};
+    \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
+
+  \end{tikzpicture}
+  \caption{A diagram showing the structure of an SCJVM and its
+    relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer}
+  \label{scjvm-fig}
+\end{figure}
+
+\section{Safety-Critical Java Virtual Machine Services}
+
+% Briefly explain the different SCJVM services and give a very brief
+% overview of the structure of the model; mention the JTRES paper and
+% the Z/Eves proofs of the model
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+
+    \coordinate (width)  at (10cm,0cm);
+    \coordinate (height) at (0cm,7cm);
+
+    \path (0,0) -- (height)
+    coordinate[pos=0.18] (OS boundary)
+    coordinate[pos=0.20] (VM part bottom)
+    coordinate[pos=0.57] (VM part top)
+    coordinate[pos=0.60] (API boundary)
+    coordinate[pos=0.82] (App boundary);
+    
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.7] (VM Service top);
+
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.85] (VM Services ypos);
+
+    \path (0,0) -- (width)
+    coordinate[pos=0.04] (CEE left)
+    coordinate[pos=0.27] (CEE right)
+    coordinate[pos=0.29] (VM Services left)
+    coordinate[pos=0.96] (VM Services right)
+    coordinate[pos=0.17] (VM Service width)
+    coordinate[pos=0.04] (VM Service sep);
+
+    \path (VM Services left) -- (VM Services right)
+    coordinate[pos=0.5] (VM Services xpos);
+
+    \path (0,0) to node[pos=0.5] (mid) {} (width);
+    \path (0,0) to node[pos=0.25] (quart) {} (width);
+
+    \draw (0,0) rectangle (width |- height);
+
+    \draw (OS boundary) -- ++(width);
+    \path (0,0) rectangle node[pos=0.5] (OS) {} (width |- OS boundary);
+    \draw (mid |- API boundary) rectangle node[pos=0.5] (API) {} (width |- App boundary);
+    \draw (App boundary) -- ++(width);
+    \path (App boundary) rectangle node[pos=0.5] (App) {} (width |- height);
+
+    \path (quart |- API boundary) rectangle node[pos=0.4] (SCJVM) {} (quart |- App boundary);
+    \draw (CEE left |- VM part bottom) rectangle node[pos=0.5] (CEE) {} (CEE right |- VM part top);
+    \draw (VM Services left |- VM part bottom) rectangle (VM Services right |- VM part top);
+    \coordinate (VM Services) at (VM Services xpos |- VM Services ypos);
+
+    \node[align=center] at (App)   {SCJ Application};
+    \node[align=center] at (API)   {SCJ\\Infrastructure\\and API};
+    \node[align=center] at (SCJVM) {SCJ\\Virtual Machine};
+    \node[align=center] at (CEE)   {Core\\Execution\\Environment};
+    \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
+    
+    \foreach \x in {1,...,3}
+    \pgfmathsetmacro{\a}{0.333*(\x - 1)}
+    \pgfmathsetmacro{\b}{0.333*\x}
+    \path ($(VM Services left) + (VM part bottom)!0.07!(VM part top)$) -- 
+    node[pos=\a] (VM Service \x start) {}
+    node[pos=\b] (VM Service \x end) {}
+    ($(VM Services right) + (VM part bottom)!0.07!(VM part top) - (VM Service sep)$);
+
+    \foreach \x in {1,...,3} 
+    \draw ($(VM Service \x start) + (VM Service sep)$)
+    rectangle node[pos=0.5] (VM Service \x) {}
+    (VM Service \x end |- VM Service top);
+
+    \node[align=center] at (VM Services)  {VM Services};
+    \node[align=center] at (VM Service 1) {Memory\\Manager};
+    \node[align=center] at (VM Service 2) {Scheduler};
+    \node[align=center] at (VM Service 3) {Real-time\\Clock};
+  \end{tikzpicture}
+  \caption{A diagram showing the structure of an SCJVM and its
+    relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer, focusing on the SCJVM services}
+  \label{scjvm-services-fig}
+\end{figure}
+
+\section{The Core Execution Environment}
+
+% Explain the structure of the core execution environment model and
+% describe the bytecode subset, justifying the design decisions taken
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+
+    \coordinate (width)  at (10cm,0cm);
+    \coordinate (height) at (0cm,7cm);
+
+    \path (0,0) -- (height)
+    coordinate[pos=0.18] (OS boundary)
+    coordinate[pos=0.20] (VM part bottom)
+    coordinate[pos=0.57] (VM part top)
+    coordinate[pos=0.60] (API boundary)
+    coordinate[pos=0.82] (App boundary);
+    
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.7] (CEE part top);
+
+    \path (VM part bottom) -- (VM part top)
+    coordinate[pos=0.85] (CEE ypos);
+
+    \path (0,0) -- (width)
+    coordinate[pos=0.04] (CEE left)
+    coordinate[pos=0.76] (CEE right)
+    coordinate[pos=0.78] (VM Services left)
+    coordinate[pos=0.96] (VM Services right)
+    coordinate[pos=0.01] (CEE part sep);
+
+    \path (CEE left) -- (CEE right)
+    coordinate[pos=0.5] (CEE xpos);
+
+    \path (0,0) to node[pos=0.5] (mid) {} (width);
+    \path (0,0) to node[pos=0.25] (quart) {} (width);
+
+    \draw (0,0) rectangle (width |- height);
+
+    \draw (OS boundary) -- ++(width);
+    \path (0,0) rectangle node[pos=0.5] (OS) {} (width |- OS boundary);
+    \draw (mid |- API boundary) rectangle node[pos=0.5] (API) {} (width |- App boundary);
+    \draw (App boundary) -- ++(width);
+    \path (App boundary) rectangle node[pos=0.5] (App) {} (width |- height);
+
+    \path (quart |- API boundary) rectangle node[pos=0.4] (SCJVM) {} (quart |- App boundary);
+    \draw (CEE left |- VM part bottom) rectangle (CEE right |- VM part top);
+    \draw (VM Services left |- VM part bottom) rectangle node[pos=0.5] (VM Services) {} (VM Services right |- VM part top);
+    \coordinate (CEE) at (CEE xpos |- CEE ypos);
+
+    \node[align=center] at (App)   {SCJ Application};
+    \node[align=center] at (API)   {SCJ\\Infrastructure\\and API};
+    \node[align=center] at (SCJVM) {SCJ\\Virtual Machine};
+    \node[align=center] at (CEE)   {Core Execution Environment};
+    \node[align=center] at (VM Services)  {SCJVM\\Services};
+    \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
+
+    \foreach \x in {1,...,4}
+    \pgfmathsetmacro{\a}{0.25*(\x - 1)}
+    \pgfmathsetmacro{\b}{0.25*\x}
+    \path ($(CEE left) + (VM part bottom)!0.07!(VM part top)$) -- 
+    node[pos=\a] (CEE part \x start) {}
+    node[pos=\b] (CEE part \x end) {}
+    ($(CEE right) + (VM part bottom)!0.07!(VM part top) - (CEE part sep)$);
+
+    \foreach \x in {1,...,4} 
+    \draw ($(CEE part \x start) + (CEE part sep)$)
+    rectangle node[pos=0.5] (CEE part \x) {}
+    (CEE part \x end |- CEE part top);
+
+    \node[align=center] at (CEE part 1) {\small Code\\Area};
+    \node[align=center] at (CEE part 2) {\small Memory};
+    \node[align=center] at (CEE part 3) {\small Interpreter};
+    \node[align=center] at (CEE part 4) {\small Launcher};
+  \end{tikzpicture}
+  \caption{A diagram showing the structure of an SCJVM and its
+    relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer, focusing on the core execution
+    environment}
+  \label{cee-fig}
+\end{figure}
+
+\section{Other Activities}
+
+% Mention any other activities undertaken in the course of the
+% research programme, including modules demonstrated for and work on
+% the programme committee of YDS
+
+
 \chapter{Research Plan}
 
 In this chapter we describe the plan for the rest of the research,
