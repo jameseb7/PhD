@@ -333,6 +333,27 @@ correctness of those implementations.
 % the core execution environment and the SCJVM services - use the
 % diagram.
 
+Our overall research plan has not changed much from the original idea
+of creating a verified model of compilation from Java bytecode to
+native code.
+It was realised that, before consideration of the compilation strategy
+could commence, it is necessary for us to identify the requirements of
+an SCJVM and create a formal model of it.
+This is because a semantics of Java bytecode is required as a starting
+point for the compilation and the state and services that it uses must
+also be modelled along with it.
+
+We are considering an SCJVM to be structured as shown in
+Figure~\ref{scjvm-fig}.
+An SCJVM must support both the running of an SCJ application and the
+SCJ API that supplies services to it.
+This means that the SCJVM must not only be capable of executing
+bytecode instructions but must also supply the services necessary to
+support the SCJ API and handle parts of the SCJ infrastructure such as
+the mission model.
+The SCJVM may in turn rely on services offered by the underlying
+operating system or hardware abstraction layer.
+
 
 \begin{figure}[ht]
   \centering
@@ -382,6 +403,21 @@ correctness of those implementations.
     system/hardware abstraction layer}
   \label{scjvm-fig}
 \end{figure}
+
+For the purposes of our model, we are viewing an SCJVM to be composed
+of two parts:~the core execution environment and the SCJVM services.
+The core execution environment is responsible for executing bytecode
+instructions and maintaining the data required to handle individual
+bytecode instructions.
+The core execution environment is the part of the SCJVM that must be
+refined during the compilation strategy.
+The SCJVM services consist of all the services required to support the
+core execution environment and the SCJ API that are not required to be
+handled by the compilation strategy and could instead be produced as a
+separate library alongside the compiled code.
+We have created formal models of the SCJVM services and the core
+execution environment, which are discussed in the following two
+sections.
 
 \section{Safety-Critical Java Virtual Machine Services}
 
