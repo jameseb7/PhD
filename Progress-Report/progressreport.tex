@@ -418,12 +418,34 @@ separate library alongside the compiled code.
 We have created formal models of the SCJVM services and the core
 execution environment, which are discussed in the following two
 sections.
+Both of these models are fairly large and are useful as an account of
+the requirements for an SCJVM, so they are each expected to take up a
+chapter in the thesis.
 
 \section{Safety-Critical Java Virtual Machine Services}
 
 % Briefly explain the different SCJVM services and give a very brief
 % overview of the structure of the model; mention the JTRES paper and
 % the Z/Eves proofs of the model
+
+As mentioned in the previous section, the SCJVM services are the
+services that an SCJVM must offer in order to support the core
+execution environment and SCJ API.
+Figure~\ref{scjvm-services-fig} shows the structure of the SCJVM
+services in the context of the SCJVM structure shown in
+Figure~\ref{scjvm-fig}.
+We divide the SCJVM services into three areas
+\begin{itemize}
+\item the memory manager, which manages backing stores for memory
+  areas and allocation within them;
+\item the scheduler, which manages threads and interrupts, and allows
+  for implementation of SCJ event handlers; and
+\item the real-time clock, which provides an interface to the system
+  real-time clock.
+\end{itemize}
+
+We identified the requirements for each of these areas by studying the
+SCJ standard~\cite{locke2013}.
 
 \begin{figure}[ht]
   \centering
@@ -491,7 +513,7 @@ sections.
     rectangle node[pos=0.5] (VM Service \x) {}
     (VM Service \x end |- VM Service top);
 
-    \node[align=center] at (VM Services)  {VM Services};
+    \node[align=center] at (VM Services)  {SCJVM Services};
     \node[align=center] at (VM Service 1) {Memory\\Manager};
     \node[align=center] at (VM Service 2) {Scheduler};
     \node[align=center] at (VM Service 3) {Real-time\\Clock};
