@@ -443,9 +443,11 @@ We divide the SCJVM services into three areas
 \item the real-time clock, which provides an interface to the system
   real-time clock.
 \end{itemize}
-
 We identified the requirements for each of these areas by studying the
-SCJ standard~\cite{locke2013}.
+SCJ standard~\cite{locke2013} and extracting the requirements, both
+implicit and explicit, imposed on the virtual machine.
+From these requirements, we identified the operations necessary to
+support the SCJ API.
 
 \begin{figure}[ht]
   \centering
@@ -523,6 +525,51 @@ SCJ standard~\cite{locke2013}.
     system/hardware abstraction layer, focusing on the SCJVM services}
   \label{scjvm-services-fig}
 \end{figure}
+
+The services of the memory manager are mainly centred around the
+concept of a backing store, which is a low-level block of memory that
+underlies the SCJ memory areas (the memory areas themselves are Java
+objects).
+Operations are required for allocating memory and new backing stores
+within a backing store.
+In order to perform allocations in the correct backing store, the
+memory manager must also track the current allocation context, which
+is the concept used in SCJ for the backing store being used for
+allocations.
+It must also be possible to clear and resize backing stores to
+properly handle how SCJ uses memory areas.
+Additionally, there must be operations to obtain information about a
+backing store such as the amounts of total, free and used memory, and
+which backing store a given piece of memory is in (which is required
+to determine which memory area a given object is in).
+Finally, there must also be facilities for allocating and deallocating
+stack memory.
+
+The scheduler is required to be a priority scheduler with at least 28
+priorities in which there is a queue for each priority and the thread
+at the front of the highest priority nonempty queue is the thread that
+runs.
+It must be possible to create, destroy and start threads.
+Threads must aslo be able to suspend themselves and it must be
+possible to resume a given thread that has suspended.
+SCJ also requires priority ceiling emulation in order to avoid a
+higher priority thread from being blocked by a lower priority thread
+using a resource that it requires.
+In order to implement this, there must be operations to set the
+priority ceiling of an object, and operations to lock and release the
+lock on an object.
+Finally, as interrupts involve a change to the usual scheduling, they
+must be handled  by the scheduler so there must be operations to set
+an interrupt handler, enable interrupts and disable interrupts.
+
+The main purpose of the real-time clock is to provide an interface to
+a system real-time clock, so it must provide an operation to get the
+current time.
+There must also be an operation to make available the precision of the
+time provided by the real-time clock.
+Finally, the real-time clock must also provide for setting an alarm so
+that an interrupt will be fired at a specific time.
+It must also be possible to clear the alarm before the time is reached.
 
 \section{The Core Execution Environment}
 
