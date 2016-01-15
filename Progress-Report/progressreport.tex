@@ -571,6 +571,19 @@ Finally, the real-time clock must also provide for setting an alarm so
 that an interrupt will be fired at a specific time.
 It must also be possible to clear the alarm before the time is reached.
 
+We have created a formal model of the SCJVM services in the \Circus{}
+specification language, using one \Circus{} process for each of the
+three areas of SCJVM services.
+The formal model has been syntax and type checked using CZT.
+We have also partially proved consistency of the Z portions of the
+memory manager model using Z/Eves.
+This has also involved the proof of other facts about objects in the
+Z/Eves mathematical toolkit, particularly results about transitive
+closure.
+The SCJVM services and the formal model were presented at the 13th
+International Workshop on Java Technologies for Real-time and Embedded
+Systems (JTRES)~\cite{baxter2015a}.
+
 \section{The Core Execution Environment}
 
 % Explain the structure of the core execution environment model and
