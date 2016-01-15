@@ -588,6 +588,18 @@ Systems (JTRES)~\cite{baxter2015a}.
 
 % Explain the structure of the core execution environment model and
 % describe the bytecode subset, justifying the design decisions taken
+The core execution environment is the part of an SCJVM that is
+corncerned with the execution of Java bytecode, managing the data
+required to correctly handle the bytecode instructions, and
+coordinating the SCJ startup and mission model.
+The core execution environment model will form the starting point of
+the compilation strategy.
+Figure~\ref{cee-fig} shows the structure of the core execution
+environment in the context of the SCJVM structure shown in
+Figure~\ref{scjvm-fig}.
+As can be seen from that diagram, we have divided the core execution
+environment into four areas: the code area, the memory, the
+interpreter and the launcher.
 
 \begin{figure}[ht]
   \centering
@@ -667,11 +679,126 @@ Systems (JTRES)~\cite{baxter2015a}.
   \label{cee-fig}
 \end{figure}
 
+The code area is responsible for storing the bytecode instructions and
+class data.
+Since SCJ requires that all classes be loaded when the SCJVM starts
+and that there be no dynamic class loading, the information managed by
+the code area does not change throughout the execution of the SCJVM as
+it is provided on startup.
+
+The memory handles object data since the SCJVM services are agnostic
+to the structure of objects and handling of objects is needed for
+many bytecode instructions.
+The memory must also account for entering and leaving backing stores
+to ensure the correct objects are available.
+
+The interpreter handles the execution of bytecode instructions.
+This includes management of the virtual machines stacks in addition to
+processing the semantics of the bytecode instructions.
+
+The launcher coordinates the execution of bytecode instructions by the
+interpreter and manages the SCJ mission model.
+The launcher also provides some special handling for methods invoked
+from within the interpreter that interact with the mission and memory
+model.
+
+Due to the complexity of the JVM and Java bytecode, we model a subset
+of Java bytecode.
+We believe it is sufficient to express a wide variety of SCJ programs
+and illustrate how further features may be added, but small enough to
+permit effective reasoning.
+We have also made several assumptions in specifying the core execution
+environment.
+
+Our first assumption is that execeptions are not handled; errors in
+the SCJVM are instead handled by simply aborting execution.
+This is justified as the exception handling mechanism of Java is quite
+complex and the correct application of formal methods should eliminate
+errors in the SCJVM.
+The bytecode instructions that relate to throwing and catching
+exceptions are, therefore, not included in our bytecode subset.
+
+Another assumption we have made is that all values consist of only a
+single virtual machine word.
+This means that \texttt{long} and \texttt{double} values are not
+handled.
+Any SCJ API methods that take \texttt{long} or \texttt{double}
+arguments are viewed as taking \texttt{int} or \texttt{float} instead.
+The reason for this assumption is that handling of two word values
+complicates many bytecode instructions while adding little to the
+power of the bytecode subset.
+This makes little difference at the level of the formal model and our
+approach can be easily extended to deal with more types.
+
+Further, we do not make a distinction between the different virtual
+machine types in our bytecode instructions, but instead supply
+instructions that handle values as object references since many of the
+instructions behave the same for different types.
+We would introduce a lot of duplication in the model if, for example,
+both the \texttt{areturn} and \texttt{ireturn} instructions were to be
+included.
+Equally, the arithmetic instructions are also quite simple and type
+specific so we have excluded them from our model for the sake of
+brevity.
+It is fairly simple to consider more types and arithmetic instructions
+if necessary.
+
+We also do not consider static methods and fields.
+That would add some complexity to our model and most of the
+considerations are covered by non-static methods and fields.
+
+Because we are considering bytecode arising from the compilation of an
+SCJ program, some requirements of SCJ permit further simplifications
+to our bytecode subset.
+The \texttt{invokedynamic} instruction is not included as it does not
+allow static typechecking and so should not be used for SCJ.
+The requirement for all classes to be loaded at startup greatly
+simplifies the semantics of several instructions since dynamic class
+loading does not need to be considered.
+It also means that method lookup tables can be precomputed, which
+simplifies method lookup and means that the semantics of the
+\texttt{invokevirtual} and \texttt{invokeinterface} instructions are
+the same, so they do not both need to be included.
+
+In terms of concurrency considerations, we are assuming our SCJVM to
+be single processor and so we do not need to have more than one
+interpreter.
+We also assume that thread switches can only occur between bytecode
+instructions in the interpreter.
+That means that both the bytecode instructions and the portions of
+execution occuring in the launcher are atomic, which greatly
+simplifies the model since thread switches at any time do not have to
+be accounted for.
+
+Taking into account these assumptions, we have create a formal model
+of the core execution environment in the \Circus{} specification
+language, using one \Circus{} process for each of the four areas.
+Though syntax and type checking has been performed using CZT, we have
+not yet proved correctness properties of the model.
+It is hoped that proofs can be done using Isabelle/UTP as part of
+mechanisation of the compilation strategy.
+
 \section{Other Activities}
 
 % Mention any other activities undertaken in the course of the
 % research programme, including modules demonstrated for and work on
 % the programme committee of YDS
+In addition to research I have been involved in demonstrating for
+several modules, namely:
+\begin{itemize}
+\item Implementation of Programming Languages (IMPL, Autumn term
+  2015--2016)
+\item Mathematical Foundations of Computer Science (MFCS, Autumn term
+  2015--2016)
+\item Programming: Correctness by Construction (PCOC, Autumn and
+  Spring terms 2015--2016)
+\end{itemize}
+
+I was also involved on the programme committee of the 8th York
+Doctoral Symposium on Computer Science (YDS 2015).
+
+I continue to explore a wide range of interests and I hope to be able
+to participate in more activities around the department in the future.
 
 
 \chapter{Research Plan}
