@@ -7,13 +7,11 @@
 \usepackage{amsmath}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
 \usepackage[section]{placeins}
-\usepackage[color]{circus}
+\usepackage[color,cntglobally]{circus}
 \usepackage{fixltx2e}
 \usepackage{comment}
 
 \usetikzlibrary{calc}
-
-\CountDefsfalse
 
 \title{A Framework for Verifying Safety-Critical Java Virtual Machines}
 \author{James Baxter}
@@ -1037,6 +1035,7 @@ in the next section.
 
 \section{\Circus{}}
 \label{circus-section}
+\CountDefsfalse
 
 The \Circus{} specification language~\cite{oliveira2009} is based on
 CSP~\cite{roscoe2011}, which is used to specify processes that
@@ -1243,7 +1242,7 @@ can be combined to form a specification of the entire system.
 
 % for the thesis add a more comprehensive description of Circus with a
 % description of process operators and tables of operator descriptions
-
+\CountDefstrue
 \section{Final Considerations}
 \label{final-considerations-section}
 
@@ -2389,8 +2388,11 @@ provide for the correct running of SCJ programs.
 
 \input{\string~/SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
 
+\input{\string~/SCJ-VM/James/memorymanager_theorems.zed}
+
 \input{\string~/SCJ-VM/James/memorymanager_proofs.zed}
 
+\ZDeclSummary
 
 \end{document}
 

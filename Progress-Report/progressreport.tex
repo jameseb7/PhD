@@ -8,7 +8,7 @@
 \usepackage{amsmath}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
 \usepackage[section]{placeins}
-\usepackage[color]{circus}
+\usepackage[color,cntglobally]{circus}
 \usepackage{fixltx2e}
 \usepackage{rotating}
 
@@ -325,34 +325,27 @@ correctness of those implementations.
 
 \chapter{Progress Report}
 
-\section{Review of Research Progress}
-
-% Explain initial plan - verified model of compilation from Java
-% bytecode to native code; explain necessity of having an SCJVM model;
-% describe the structure of an SCJVM and the division into two parts:
-% the core execution environment and the SCJVM services - use the
-% diagram.
-
-Our overall research plan has not changed much from the original idea
-of creating a verified model of compilation from Java bytecode to
-native code.
-It was realised that, before consideration of the compilation strategy
-could commence, it is necessary for us to identify the requirements of
-an SCJVM and create a formal model of it.
-This is because a semantics of Java bytecode is required as a starting
-point for the compilation and the state and services that it uses must
-also be modelled along with it.
-
-We are considering an SCJVM to be structured as shown in
-Figure~\ref{scjvm-fig}.
-An SCJVM must support both the running of an SCJ application and the
-SCJ API that supplies services to it.
-This means that the SCJVM must not only be capable of executing
-bytecode instructions but must also supply the services necessary to
-support the SCJ API and handle parts of the SCJ infrastructure such as
-the mission model.
-The SCJVM may in turn rely on services offered by the underlying
-operating system or hardware abstraction layer.
+As mentioned in the previous chapter, a specification of the
+requirements for an SCJVM is one component of our proposed framework
+for verification of SCJVMs.
+Our work so far has focused on the specification of requirements since
+it must be completed before work on the compilation strategy can begin
+as it is needed as a starting point for the compilation strategy and a
+specification of the services available to the compiled code.
+We split our specification into two parts according to these two roles
+of the specification relative to the compilation strategy:
+\begin{itemize}
+\item the core execution enviroment, which manages execution of
+  bytecode instructions and is refined during the compilation
+  strategy, and
+\item the SCJVM services, which are services required to support the
+  core execution environment that may be provided separately and are
+  not affected by the compilation strategy.
+\end{itemize}
+This division of the SCJVM into two parts may be seen in
+Figure~\ref{scjvm-fig}, which shows the structure of an SCJVM and its
+relation to the SCJ API and the underlying operating system or
+hardware abstraction layer.
 
 \begin{figure}[ht]
   \centering
@@ -454,231 +447,84 @@ operating system or hardware abstraction layer.
     system/hardware abstraction layer}
   \label{scjvm-fig}
 \end{figure}
-
-For the purposes of our model, we are viewing an SCJVM to be composed
-of two parts:~the core execution environment and the SCJVM services.
-The core execution environment is responsible for executing bytecode
-instructions and maintaining the data required to handle individual
-bytecode instructions.
-The core execution environment is the part of the SCJVM that must be
-refined during the compilation strategy.
-The SCJVM services consist of all the services required to support the
-core execution environment and the SCJ API that are not required to be
-handled by the compilation strategy and could instead be produced as a
-separate library alongside the compiled code.
-We have created formal models of the SCJVM services and the core
-execution environment, which are discussed in the following two
-sections.
-Both of these models are fairly large and are useful as an account of
-the requirements for an SCJVM, so they are each expected to take up a
-chapter in the thesis.
-
-\section{Safety-Critical Java Virtual Machine Services}
-
-% Briefly explain the different SCJVM services and give a very brief
-% overview of the structure of the model; mention the JTRES paper and
-% the Z/Eves proofs of the model
-
-As mentioned in the previous section, the SCJVM services are the
-services that an SCJVM must offer in order to support the core
-execution environment and SCJ API.
-Figure~\ref{scjvm-services-fig} shows the structure of the SCJVM
-services in the context of the SCJVM structure shown in
-Figure~\ref{scjvm-fig}.
-We divide the SCJVM services into three areas
+We created a specification of the SCJVM services first as the core
+execution environment needs to make use of them.
+We identified the necessary services by considering the services
+offered by the SCJ API given in the SCJ standard~\cite{locke2013} and
+deciding what low-level virtual machine services were necessary to
+support them.
+The services were divided into three areas, as can be seen in
+Figure~\ref{scjvm-fig}, based on the chapters of the SCJ standard the
+services they support belong to:
 \begin{itemize}
-\item the memory manager, which manages backing stores for memory
-  areas and allocation within them;
-\item the scheduler, which manages threads and interrupts, and allows
-  for implementation of SCJ event handlers; and
-\item the real-time clock, which provides an interface to the system
-  real-time clock.
+\item the memory manager contains the services supporting the `Memory
+  Management' chapter,
+\item the scheduler contains the services supporting the `Concurrency
+  and Scheduling Models' chapter and also the services for managing
+  the interrupts that must be handled by the scheduler described in
+  the `Interaction with Devices and External Events' chapter, and
+\item the real-time clock contains the services supporting the
+  `Clocks, Timers, and Time' chapter.
 \end{itemize}
-We identified the requirements for each of these areas by studying the
-SCJ standard~\cite{locke2013} and extracting the requirements, both
-implicit and explicit, imposed on the virtual machine.
-From these requirements, we identified the operations necessary to
-support the SCJ API.
+We decided not to handle further parts of the `Interaction with
+Devices and External Events' chapter until the hardware interaction
+model was finalised.
+Our identification of the required SCJVM services and their behaviour
+was checked with a member of the SCJ committee.
 
-The services of the memory manager are mainly centred around the
-concept of a backing store, which is a low-level block of memory that
-underlies the SCJ memory areas (the memory areas themselves are Java
-objects).
-Operations are required for allocating memory and new backing stores
-within a backing store.
-In order to perform allocations in the correct backing store, the
-memory manager must also track the current allocation context, which
-is the concept used in SCJ for the backing store being used for
-allocations.
-It must also be possible to clear and resize backing stores to
-properly handle how SCJ uses memory areas.
-Additionally, there must be operations to obtain information about a
-backing store such as the amounts of total, free and used memory, and
-which backing store a given piece of memory is in (which is required
-to determine which memory area a given object is in).
-Finally, there must also be facilities for allocating and deallocating
-stack memory.
+We created a formal model of the SCJVM services using the \Circus{}
+specification language.
+The formal model was created by first specifying the services using Z
+and then wrapping them in \Circus{} processes to specify how the
+services are accessed and the interactions between them.
+One \Circus{} process is used for each of the three areas of SCJVM
+services.
 
-The scheduler is required to be a priority scheduler with at least 28
-priorities in which there is a queue for each priority and the thread
-at the front of the highest priority nonempty queue is the thread that
-runs.
-It must be possible to create, destroy and start threads.
-Threads must aslo be able to suspend themselves and it must be
-possible to resume a given thread that has suspended.
-SCJ also requires priority ceiling emulation in order to avoid a
-higher priority thread from being blocked by a lower priority thread
-using a resource that it requires.
-In order to implement this, there must be operations to set the
-priority ceiling of an object, and operations to lock and release the
-lock on an object.
-Finally, as interrupts involve a change to the usual scheduling, they
-must be handled  by the scheduler so there must be operations to set
-an interrupt handler, enable interrupts and disable interrupts.
+The formal model of the memory manager has been partially proved using
+Z/Eves.
+The proofs performed take the form of domain check proofs and
+consistency proofs, and the first two sections of the memory manager,
+covering memory blocks and backing stores have been proved.
+A few proofs in the global memory manager section have also been done.
+Additionally, many theorems about objects in the Z/Eves mathematical
+toolkit have been proved in the course of proving the model.
 
-The main purpose of the real-time clock is to provide an interface to
-a system real-time clock, so it must provide an operation to get the
-current time.
-There must also be an operation to make available the precision of the
-time provided by the real-time clock.
-Finally, the real-time clock must also provide for setting an alarm so
-that an interrupt will be fired at a specific time.
-It must also be possible to clear the alarm before the time is reached.
+Overall the SCJVM services model is quite large.
+A summary of the number of declarations, theorems and proofs is given
+in Table~\ref{tbl:zdecl:global}, which was generated using the
+declaration counting facilities of CZT's \LaTeX style.
+Note that the number of unboxed items may not be accurate as
+declarations on separate lines are counted separately in unboxed
+environments and \Circus{} action environments are not counted, although
+plain \Circus{} environments are.
+The other counts are believed to be correct.
+The number of proofs is higher than the number of theorems due to the
+fact that domain check proof obligations are generated by Z schemas
+without a corresponding theorem.
+There are 13 memory manager services, 20 scheduler services and 4
+real-time clock services.
 
-We have created a formal model of the SCJVM services in the \Circus{}
-specification language, using one \Circus{} process for each of the
-three areas of SCJVM services.
-The formal model has been syntax and type checked using CZT.
-We have also partially proved consistency of the Z portions of the
-memory manager model using Z/Eves.
-This has also involved the proof of other facts about objects in the
-Z/Eves mathematical toolkit, particularly results about transitive
-closure.
-The SCJVM services and the formal model were presented at the 13th
-International Workshop on Java Technologies for Real-time and Embedded
-Systems (JTRES)~\cite{baxter2015a}.
+\setcounter{cntZtotunboxed}{353}
+\setcounter{cntZtotaxdef}{81}
+\setcounter{cntZtotgendef}{0}
+\setcounter{cntZtotschema}{193}
+\setcounter{cntZtotgenschema}{0}
+\setcounter{cntZtottheorem}{132}
+\setcounter{cntZtotproof}{157}
+\setcounter{cntZtotdecl}{916}
+\ZDeclSummary
 
-\section{The Core Execution Environment}
-
-% Explain the structure of the core execution environment model and
-% describe the bytecode subset, justifying the design decisions taken
-The core execution environment is the part of an SCJVM that is
-corncerned with the execution of Java bytecode, managing the data
-required to correctly handle the bytecode instructions, and
-coordinating the SCJ startup and mission model.
-The core execution environment model will form the starting point of
-the compilation strategy.
-Figure~\ref{cee-fig} shows the structure of the core execution
-environment in the context of the SCJVM structure shown in
-Figure~\ref{scjvm-fig}.
-As can be seen from that diagram, we have divided the core execution
-environment into four areas: the code area, the memory, the
-interpreter and the launcher.
-
-The code area is responsible for storing the bytecode instructions and
-class data.
-Since SCJ requires that all classes be loaded when the SCJVM starts
-and that there be no dynamic class loading, the information managed by
-the code area does not change throughout the execution of the SCJVM as
-it is provided on startup.
-
-The memory handles object data since the SCJVM services are agnostic
-to the structure of objects and handling of objects is needed for
-many bytecode instructions.
-The memory must also account for entering and leaving backing stores
-to ensure the correct objects are available.
-
-The interpreter handles the execution of bytecode instructions.
-This includes management of the virtual machines stacks in addition to
-processing the semantics of the bytecode instructions.
-
-The launcher coordinates the execution of bytecode instructions by the
-interpreter and manages the SCJ mission model.
-The launcher also provides some special handling for methods invoked
-from within the interpreter that interact with the mission and memory
-model.
-
-Due to the complexity of the JVM and Java bytecode, we model a subset
-of Java bytecode.
-We believe it is sufficient to express a wide variety of SCJ programs
-and illustrate how further features may be added, but small enough to
-permit effective reasoning.
-We have also made several assumptions in specifying the core execution
-environment.
-
-Our first assumption is that execeptions are not handled; errors in
-the SCJVM are instead handled by simply aborting execution.
-This is justified as the exception handling mechanism of Java is quite
-complex and the correct application of formal methods should eliminate
-errors in the SCJVM.
-The bytecode instructions that relate to throwing and catching
-exceptions are, therefore, not included in our bytecode subset.
-
-Another assumption we have made is that all values consist of only a
-single virtual machine word.
-This means that \texttt{long} and \texttt{double} values are not
-handled.
-Any SCJ API methods that take \texttt{long} or \texttt{double}
-arguments are viewed as taking \texttt{int} or \texttt{float} instead.
-The reason for this assumption is that handling of two word values
-complicates many bytecode instructions while adding little to the
-power of the bytecode subset.
-This makes little difference at the level of the formal model and our
-approach can be easily extended to deal with more types.
-
-Further, we do not make a distinction between the different virtual
-machine types in our bytecode instructions, but instead supply
-instructions that handle values as object references since many of the
-instructions behave the same for different types.
-We would introduce a lot of duplication in the model if, for example,
-both the \texttt{areturn} and \texttt{ireturn} instructions were to be
-included.
-Equally, the arithmetic instructions are also quite simple and type
-specific so we have excluded them from our model for the sake of
-brevity.
-It is fairly simple to consider more types and arithmetic instructions
-if necessary.
-
-We also do not consider static methods and fields.
-That would add some complexity to our model and most of the
-considerations are covered by non-static methods and fields.
-
-Because we are considering bytecode arising from the compilation of an
-SCJ program, some requirements of SCJ permit further simplifications
-to our bytecode subset.
-The \texttt{invokedynamic} instruction is not included as it does not
-allow static typechecking and so should not be used for SCJ.
-The requirement for all classes to be loaded at startup greatly
-simplifies the semantics of several instructions since dynamic class
-loading does not need to be considered.
-It also means that method lookup tables can be precomputed, which
-simplifies method lookup and means that the semantics of the
-\texttt{invokevirtual} and \texttt{invokeinterface} instructions are
-the same, so they do not both need to be included.
-
-In terms of concurrency considerations, we are assuming our SCJVM to
-be single processor and so we do not need to have more than one
-interpreter.
-We also assume that thread switches can only occur between bytecode
-instructions in the interpreter.
-That means that both the bytecode instructions and the portions of
-execution occuring in the launcher are atomic, which greatly
-simplifies the model since thread switches at any time do not have to
-be accounted for.
-
-Taking into account these assumptions, we have create a formal model
-of the core execution environment in the \Circus{} specification
-language, using one \Circus{} process for each of the four areas.
-Though syntax and type checking has been performed using CZT, we have
-not yet proved correctness properties of the model.
-It is hoped that proofs can be done using Isabelle/UTP as part of
-mechanisation of the compilation strategy.
+The specification and formal model of the SCJVM services can be found
+in Chapter~3 of the technical report in Appendix~\ref{techreport} of
+this report.
+The Z/Eves theorems and proofs can also be found in the appendix of
+that report.
+The SCJVM services were presented at the 13th International Workshop
+on Java Technologies for Real-time and Embedded Systems (JTRES
+2015)~\cite{baxter2015a}.
 
 \section{Other Activities}
 
-% Mention any other activities undertaken in the course of the
-% research programme, including modules demonstrated for and work on
-% the programme committee of YDS
 In addition to research I have been involved in demonstrating for
 several modules, namely:
 \begin{itemize}
@@ -870,5 +716,10 @@ SCJVMs and so facilitate the use of SCJ.
 \end{sidewaysfigure}
 
 \printbibliography
+
+\appendix
+
+\chapter{Technical Report}
+\label{techreport}
 
 \end{document}
