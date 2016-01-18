@@ -1416,13 +1416,12 @@ the SCJ infrastructure; some of the services also rely on each other.  For
 example, the scheduler must update the allocation context in the memory manager
 when performing a thread switch.
 
-A model of the core execution environment will be presented in 
+A model of the core execution environment will be presented in
 Chapter~\ref{cee-chapter}.
-In this chapter, we present the requirements for the SCJVM services as
-a formal model written in the \Circus{} specification language.
-Each part of the model will be presented in a separate section:~the
-memory manager in Section~\ref{memory-manager-section}, the scheduler
-in Section~\ref{scheduler-section}, and the real-time clock in
+In this chapter, we present the requirements for each area of the
+SCJVM services in a separate section:~the memory manager in
+Section~\ref{memory-manager-section}, the scheduler in
+Section~\ref{scheduler-section}, and the real-time clock in
 Section~\ref{realtime-clock-section}.
 Finally, the parts of the model are combined to form a complete model
 of the SCJVM services in Section~\ref{scjvm-services-section}.
@@ -1443,6 +1442,573 @@ Part of an earlier version of this model was presented at the 13th
 International Workshop on Java Technologies for Real-time and Embedded
 Systems~\cite{baxter2015a} with the full earlier version made available
 as a technical report~\cite{baxter2015}.
+
+\subsection{Memory Manager API}
+\label{memory-manager-section}
+
+The SCJVM memory manager deals with the raw blocks of memory used as
+backing stores for the memory areas of SCJ.
+The memory areas themselves are Java objects, and so are dealt with by
+the core execution environment and accessed through the SCJ API,
+instead of directly via the virtual machine.
+This is in line with what is specified in the SCJ standard and also
+done for RTSJ.
+Backing stores are assumed to have unique identifiers that can be used
+to refer to them; these identifiers can be simply pointers to the
+physical blocks of memory used for backing stores.
+
+There is initially one backing store, called the root backing store,
+which has its size set when the SCJVM starts up to cover all the
+memory available for allocation in backing stores.
+The root backing store is not allowed to be resized or destroyed, so
+that there is always a fixed base for the layout of memory.
+The root backing store is intended to be used as the backing store for
+the immortal memory area.
+A backing store may have other backing stores nested within it, so
+that a possible memory layout is as shown in Figure~\ref{memory-fig}.
+In this example, the backing store of the mission memory is nested
+within the root backing store, and the backing stores for the
+per-release memory of each schedulable object in a mission is nested
+within the mission memory's backing store.
+
+\begin{figure*}[ht]
+  \centering
+  \begin{tikzpicture}
+    \draw (0,0) rectangle (12,2); \node[align=center] at (2,1) {Root
+      Backing Store\\(Immortal Memory)};
+    
+    \draw (4,0.1) rectangle (11.9,1.9); \node[align=center] at (8,1.6)
+    {Mission Memory};
+    
+    \draw (4.3,0.3) rectangle (6.3,1.4); \node[align=center] at
+    (5.3,0.95) {Per-release\\Memory};
+    
+    \draw (6.5,0.3) rectangle (11.5,1.4); \node[align=center] at
+    (9,1.2) {Per-release Memory};
+    
+    \draw (6.7,0.4) rectangle (11.3,1); \node[align=center] at (9,0.7)
+    {Nested Private Memory};
+  \end{tikzpicture}
+  \caption{An example memory layout}
+  \label{memory-fig}
+\end{figure*}
+
+The operations of the memory manager API are summarised in
+Table~\ref{memory-manager-table}.
+In addition to the inputs and outputs described there, there should
+also be some system of reporting erroneous inputs, whether that be
+exceptions, global error flags or particular return values signalling
+errors.
+The conditions that cause an error to be reported are listed.
+
+\begin{table*}[ht]
+  \centering
+  \footnotesize
+  \begin{tabular}{|l|p{3.2cm}|p{3.2cm}|p{5cm}|}
+    Operation & Inputs & Outputs & Error Conditions \\
+    \hline
+    \texttt{getRootBackingStore} &
+    (none) &
+    backing store identifier &
+    (none)
+    \\\texttt{getCurrentAllocationContext} &
+    (none) &
+    backing store identifier &
+    no current thread allocation context
+    \\\texttt{setCurrentAllocationContext} &
+    backing store identifier &
+    (none) &
+    invalid identifier \newline
+    no current thread allocation context
+    \\\texttt{getTotalSize} &
+    backing store identifier &
+    size in bytes &
+    invalid identifier
+    \\\texttt{getUsedSize} &
+    backing store identifier &
+    size in bytes &
+    invalid identifier
+    \\\texttt{getFreeSize} &
+    backing store identifier &
+    size in bytes &
+    invalid identifier
+    \\\texttt{findBackingStore} &
+    memory pointer &
+    backing store identifier &
+    no backing store found
+    \\\texttt{allocateMemory} &
+    size in bytes &
+    memory pointer &
+    insufficient free memory \newline
+    no current thread allocation context
+    \\\texttt{makeBackingStore} &
+    backing store identifier \newline
+    size in bytes & 
+    backing store identifier &
+    invalid identifier \newline
+    insufficient free memory
+    \\\texttt{clearBackingStore} &
+    backing store identifier &
+    (none) &
+    invalid identifier
+    nested backing store in use
+    \\\texttt{resizeBackingStore} &
+    backing store identifier \newline
+    size in bytes &
+    backing store identifier &
+    invalid identifier \newline
+    backing store in use \newline
+    backing store is root \newline
+    backing store not empty \newline
+    backing store not only child \newline
+    insufficient free space \newline
+    no space for memory overhead
+    \\\texttt{createStack} &
+    size in bytes &
+    stack identifier &
+    insufficient free space
+    \\\texttt{destroyStack} &
+    stack identifier &
+    (none) &
+    invalid identifier \newline
+    stack space fragmentation
+  \end{tabular}
+  \caption{The operations of the SCJVM memory manager}
+  \label{memory-manager-table}
+\end{table*}
+
+The root backing store described above is always available to the SCJ
+infrastructure through the \texttt{get\-Root\-Backing\-Store}
+operation.
+An SCJ program, on the other hand, does not have direct access to the
+root backing store except through memory areas provided by the
+infrastructure.
+
+In addition to managing the layout of backing stores in general, the
+memory manager must track the current allocation context.
+The operations \texttt{get\-Cur\-rent\-Allo\-cation\-Con\-text} and
+\texttt{set\-Cur\-rent\-Allo\-cation\-Con\-text} provide a means to
+get and set the current allocation context.
+The functionality of changing the allocation context is used by the
+methods of the SCJ API that allow code to be run with a different
+memory area as allocation context, such as
+\texttt{execute\-In\-Area\-Of()} and
+\texttt{enter\-Private\-Memory()}.
+The memory manager stores each thread's allocation context and queries
+the scheduler as to which thread is current when it performs
+operations affecting the current allocation context.
+
+It is possible to obtain information about the used and available
+space in a given backing store using the operations
+\texttt{get\-Total\-Size}, \texttt{get\-Used\-Size}, and
+\texttt{get\-Free\-Size}.
+This information is made available to SCJ programs through the
+interface provided by memory areas defined in the infrastructure.
+
+Another query that can be made concerning backing stores is that of
+which backing store a particular memory address lies in.
+This information can be obtained by the \texttt{find\-Backing\-Store}
+operation and is required by the infrastructure for obtaining the
+memory area of a given object.
+
+Allocation within backing stores is possible through the
+\texttt{allo\-cate\-Memory} operation, which allocates blocks of
+memory within the current allocation context.
+This operation is provided in order for the core execution environment
+to implement the \texttt{new} bytecode instruction and should not be
+directly available to the program or infrastructure.
+Allocations within backing stores must not cause fragmentation, so as
+to fulfil real-time predictability requirements.
+The operation \texttt{allo\-cate\-Memory} must also zero the memory it
+allocates, in order to match the semantics of \texttt{new}.
+ 
+Allocation of backing stores is provided by
+\texttt{make\-Back\-ing\-Store}, which is available to the
+infrastructure for use when creating new memory areas.
+A new backing store is created nested within the specified backing
+store.
+The infrastructure is responsible for storing the backing store
+identifier returned by \texttt{make\-Back\-ing\-Store}.
+Backing store allocation must be done in constant time without
+fragmentation.
+
+Deallocation of memory in backing stores cannot be done directly as
+that could introduce fragmentation and would defeat the scoped memory
+model of SCJ.
+Instead, the SCJVM provides for clearing a backing store when the
+memory area it serves is no longer in use.
+This functionality is provided by the operation
+\texttt{clear\-Backing\-Store}, which clears the specified backing
+store, deallocating all objects and nested backing stores within it.
+It is not necessary to track exactly which objects are deallocated by
+this operation as SCJ does not have object finalisers.
+The clearing of a backing store includes the clearing of all backing
+stores nested within it.
+Since a backing store is not necessarily aware of what backing stores
+are nested within it, its nested backing stores' memory is freed with
+the rest of the backing store.
+This would create a problem if the parent backing store is cleared
+while another thread is using a backing store within it as an
+allocation context.
+However, such a situation should not occur as the backing stores of
+mission memory and immortal memory are the only backing stores that
+contain backing stores in use by different threads.
+The mission memory is only cleared when all the event handler threads
+within the mission have finished and the immortal memory should never
+be cleared.
+This is handled as an error case, since it cannot be guaranteed in
+general and relies on the API implementation functioning correctly.
+
+The last operation on backing stores is their resizing.
+This is provided for by \texttt{resize\-Backing\-Store} but, as
+resizing a backing store presents a lot of difficulties in terms of
+fragmentation, there are several restrictions.
+In addition to being a valid backing store and there being enough
+space in the parent backing store for the resizing to take place, a
+backing store to be resized must not be the root backing store, and
+must be empty and the only backing store within its parent.
+However, this operation should only be needed for resizing of the
+mission memory in between missions and resizing of a nested private
+memory when it is reentered.
+In both these cases all the needed restrictions hold.
+Due to the fact that resizing a backing store could move it and that a
+backing store identifier may be a pointer to the backing store, the
+identifier may change and so the new identifier is output from this
+operation.
+
+The memory manager must also manage stacks, which are placed in a
+separate area of memory to the backing stores.
+The operations \texttt{create\-Stack} and \texttt{destroy\-Stack}
+allow for stacks to be created and destroyed.
+The stack space must not be fragmented, which is a requirement that
+can be met since stacks for threads are allocated together when a
+mission is initialised and destroyed together when the mission ends.
+That remains true at level 2 where nested missions are permitted,
+since the nested mission's stacks are allocated after the stacks of
+its parent mission and are destroyed before the parent mission ends.
+Like backing stores, stacks are referred to by unique identifiers that
+may simply be pointers to the space allocated for the stack.
+
+\subsection{Scheduler API}
+\label{scheduler-section}
+
+The SCJVM scheduler manages the scheduling of threads, which are
+abstract lines of execution, each with its own stack and current
+allocation context.
+These threads should be used to implement the event handlers of SCJ,
+with each event handler being bound to a single thread.
+The operations of the scheduler are summarised in
+Table~\ref{scheduler-table}.
+
+\begin{table*}[ht]
+  \centering
+  \footnotesize
+  \begin{tabular}{|l|p{3.2cm}|p{2.3cm}|p{3.6cm}|}
+    Operation & Inputs & Outputs & Error Conditions \\
+    \hline
+    \texttt{getMaxSoftwarePriority} &
+    (none) &
+    priority level &
+    (none)
+    \\\texttt{getMinSoftwarePriority} &
+    (none) &
+    priority level &
+    (none)
+    \\\texttt{getNormSoftwarePriority} &
+    (none) &
+    priority level &
+    (none)
+    \\\texttt{getMaxHardwarePriority} &
+    (none) &
+    priority level &
+    (none)
+    \\\texttt{getMinHardwarePriority} &
+    (none) &
+    priority level &
+    (none)
+    \\\texttt{getMainThread} &
+    (none) &
+    thread identifier &
+    (none)
+    \\\texttt{makeThread} &
+    priority level \newline
+    backing store identifier \newline
+    class identifier \newline
+    method identifier \newline 
+    argument list &
+    thread identifier &
+    (none)
+    \\\texttt{startThread} &
+    thread identifier &
+    (none) &
+    invalid identifier \newline
+    thread already started
+    \\\texttt{getCurrentThread} &
+    (none) &
+    thread identifier &
+    (none)
+    \\\texttt{destroyThread} &
+    thread identifier &
+    (none) &
+    invalid identifier \newline
+    thread not destroyable
+    \\\texttt{suspendThread} &
+    (none) &
+    (none) &
+    thread cannot be blocked \newline
+    thread holds locks
+    \\\texttt{resumeThread} &
+    thread identifier &
+    (none) &
+    invalid identifier \newline
+    thread not blocked
+    \\\texttt{setPriorityCeiling} &
+    pointer to object \newline
+    priority level &
+    (none) &
+    invalid priority
+    \\\texttt{takeLock} &
+    pointer to object &
+    (none) &
+    lock in use
+    \\\texttt{releaseLock} &
+    pointer to object &
+    (none) &
+    lock not held
+    \\\texttt{attachInterruptHandler} &
+    interrupt identifier \newline
+    backing store identifier \newline
+    class identifier \newline
+    pointer to object &
+    (none) &
+    (none)
+    \\\texttt{detachInterruptHandler} &
+    interrupt identifier &
+    (none) &
+    (none)
+    \\\texttt{getInterruptPriority} &
+    interrupt identifier &
+    priority level &
+    (none)
+    \\\texttt{disableInterrupts} &
+    (none) &
+    (none) &
+    (none)
+    \\\texttt{enableInterrupts} &
+    (none) &
+    (none) &
+    (none)
+  \end{tabular}
+  \caption{The operations of the SCJVM scheduler}
+  \label{scheduler-table}
+\end{table*}
+
+Each thread is scheduled according to a priority level.
+The SCJ standard requires that there be at least 28 priorities and
+separates them into hardware and software priorities, with hardware
+priorities being higher than software priorities.
+The range of priorities that an SCJVM actually supports may vary
+between different implementations within these restrictions.
+To allow the range of supported priorities to be determined and
+support corresponding methods in the SCJ API, the minimum and maximum
+hardware and software priority levels can be obtained with
+\texttt{get\-Max\-Soft\-ware\-Pri\-or\-ity},
+\texttt{get\-Min\-Soft\-ware\-Pri\-or\-ity},
+\texttt{get\-Max\-Hard\-ware\-Pri\-or\-ity}, and
+\texttt{get\-Min\-Hard\-ware\-Pri\-or\-ity}.
+The SCJVM chooses a default normal software priority for threads, that
+can be queried through the
+\texttt{get\-Norm\-Soft\-ware\-Pri\-or\-ity} operation.
+
+Initially there is one thread running, which is called the main
+thread.
+The main thread is created when the SCJVM starts and has an
+implementation-defined priority.
+The main thread can be suspended by the infrastructure when it is not
+needed and resumed when it is needed again (using operations described
+in the sequel).
+This allows it to be used for setting up the SCJ application and
+missions, then suspended during mission execution.
+The main thread's identifier can be retrieved using the
+\texttt{get\-Main\-Thread} operation.
+
+Threads other than the main thread can be created by the
+\texttt{make\-Thread} operation, which takes the entry point and
+priority level of the thread to be created, as well as a backing store
+as the allocation context and a stack.
+This operation returns the identifier of the newly created thread,
+which must be stored by the infrastructure.
+The SCJVM does not distinguish between the different thread-release
+conditions, so for periodic and one-shot threads the infrastructure
+must set a timer separately using the real-time clock API when a
+thread is created.
+The only priorities allowed for threads are the software priorities,
+as hardware priorities are reserved for interrupts.
+The backing store supplied is only used to set the backing store in
+the memory manager when the thread starts and is not stored by the
+scheduler.
+
+The SCJVM threads that are eligible to run must be scheduled as if
+they are placed in queues with one queue for each priority.
+At each moment in time, the thread at the front of the highest
+priority non-empty queue is running.
+A thread becomes eligible to run after it is started, and stops being
+eligible to run when it is blocked.
+A thread is started using the \texttt{start\-Thread} operation and
+must be started by the infrastructure when its enclosing mission
+starts.
+The reason for the separation between thread creation and thread
+starting is to ensure that threads all start together after mission
+initialisation has been completely finished.
+
+The identifier of the currently running thread can be obtained through
+\texttt{get\-Current\-Thread}.
+This operation may be used by the infrastructure as part of obtaining
+the current schedulable object, but is mainly intended for use by the
+memory manager to discern the current allocation context.
+
+A thread can suspend itself, causing it to become blocked, and be
+resumed on command from another thread, causing it to become eligible
+to run again, by the operations \texttt{suspend\-Thread} and
+\texttt{resume\-Thread}.
+A thread must not be holding any locks when it suspends.
+These operations are only visible to the program through
+\texttt{wait()} and \texttt{notify()} at level 2.
+These operations are also used in hardware communication, when a
+thread must wait for the hardware to complete a request, and to
+implement thread release, whereby a thread remains suspended until
+released.
+
+A thread that has been created can then be destroyed with the
+\texttt{destroy\-Thread} operation, which removes the thread from the
+scheduler.
+Destroying a thread does not automatically destroy its stack or the
+backing store being used as its allocation context.
+The SCJ infrastructure should not destroy a thread while it is running
+as a thread should only be destroyed when the mission it is part of is
+ending.
+The infrastructure should instead ensure that all threads in a mission
+are suspended before destroying them.
+
+The SCJVM must support priority ceiling emulation.
+This is handled by the \texttt{set\-Priority\-Ceiling} operation that
+associates a priority ceiling value to an object.
+An object that does not have its priority ceiling explicitly set has a
+priority ceiling equal to the default ceiling.
+This should be the highest software priority, but it is possible for
+an SCJVM to have an option to change the default priority ceiling.
+The SCJVM scheduler does not require a notion of object in order to
+associate priority ceilings to objects since an object's pointer can
+be used as an opaque identifier.
+
+The operations for taking and releasing locks are \texttt{takeLock}
+and \texttt{releaseLock}.
+A thread can only take a lock if its active priority and the ceiling
+priorities of any other objects it holds the locks for are less than
+or equal to the ceiling priority of the object the lock is being taken
+on.
+Only one thread can take a given object's lock at a time.
+When a lock is taken, the thread's active priority is raised to the
+object's priority ceiling.
+When a thread releases a lock, the thread's active priority is lowered
+to its previous active priority.
+The thread may hold nested locks on multiple objects.
+
+The SCJVM scheduler must also manage interrupts, as interrupt handlers
+have priorities (though these should be in the hardware priority
+range) and so must be dealt with within the priority scheduling model.
+An interrupt handler can be attached to a given interrupt using the
+\texttt{attach\-Interrupt\-Handler} operation, and an interrupt's
+handler can be removed with the \texttt{detach\-Interrupt\-Handler}
+operation.
+An interrupt with no handler attached to it is ignored.
+The clock interrupt coming from the hardware is handled by the SCJVM
+clock (see Section~\ref{realtime-clock-section}) and converted into a
+clock interrupt that is passed to the scheduler for handling by the
+attached interrupt handler (which should simply call the
+\texttt{triggerAlarm()} method of \texttt{Clock}).
+
+Each interrupt has a priority associated with it, which is set by the
+SCJVM on startup and cannot be changed by the application.
+These interrupt priorities must be hardware priorities.
+An interrupt handler interrupts any lower-priority interrupt handler
+and any running threads, and blocks lower-priority interrupt handlers
+from running until it has finished.
+The priority associated with each interrupt can be obtained by the
+\texttt{get\-Interrupt\-Priority} operation.
+
+Interrupts can be disabled using the \texttt{disable\-Interrupts}
+operation and re-enabled using the \texttt{enable\-Interrupts}
+operation.
+While interrupts are disabled no interrupt handlers can run, but it is
+implementation-defined as to whether or not interrupts fired while
+interrupts are disabled are lost.
+
+\subsection{Real-time Clock API}
+\label{realtime-clock-section}
+
+The SCJVM must manage the system real-time clock, providing an
+interface that allows for the time to be read and alarms to be set to
+trigger time-based events.
+The operations of the SCJVM real-time clock are summarised in
+Table~\ref{realtime-clock-table}.
+
+\begin{table*}[ht]
+  \centering
+  \footnotesize
+  \begin{tabular}{|l|p{1.2cm}|p{2cm}|p{2.6cm}|}
+    Operation & Inputs & Outputs & Error Conditions \\
+    \hline
+    \texttt{getSystemTime} &
+    (none) &
+    time &
+    (none)
+    \\\texttt{getSystemTimePrecision} &
+    (none) &
+    time precision &
+    (none)
+    \\\texttt{setAlarm} &
+    time &
+    (none) &
+    time in past
+    \\\texttt{clearAlarm} &
+    (none) &
+    (none) &
+    (none)
+  \end{tabular}
+  \caption{The operations of the SCJVM real-time clock}
+  \label{realtime-clock-table}
+\end{table*}
+
+The main function of the real-time clock API is to provide access to
+the system time through the \texttt{get\-System\-Time} operation.
+The SCJ API deals with time values in terms of
+milliseconds-nanoseconds pairs.
+That should also be the format for time values passed to and from the
+SCJVM though another format could be used.
+The system time may be measured from January 1, 1970 or from the
+system start time (in case there is no reliable means of determining
+the date and time), and so may not correspond to wall-clock time.
+
+The time between ticks of the system clock (its precision) must be
+made available through the \texttt{get\-System\-Time\-Precision}
+operation.
+The clock's precision must not change.
+
+The SCJVM must also provide a facility to set an alarm that sends a
+clock interrupt to the scheduler when a specific time is reached.
+This facility is provided by the \texttt{set\-Alarm} operation, which
+accepts an absolute time value at which the alarm should trigger.
+The time passed to \texttt{set\-Alarm} is required to not be in the
+past.
+Running code at a specified relative time offset should be handled by
+the infrastructure.
+Once an alarm has triggered, it is removed and a new alarm must be set
+in order to perform events periodically.
+
+The current alarm (if any) can be cleared using the
+\texttt{clear\-Alarm} operation.
+Attempting to clear the alarm when there is no alarm set does nothing.
 
 \input{\string~/SCJ-VM/James/memorymanager.zed}
 
