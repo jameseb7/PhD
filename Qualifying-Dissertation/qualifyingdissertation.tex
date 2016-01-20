@@ -19,6 +19,8 @@
 
 \bibliography{literature} 
 
+\CountDefsfalse
+
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
 %TC:group schema 1 displaymath
@@ -1035,7 +1037,6 @@ in the next section.
 
 \section{\Circus{}}
 \label{circus-section}
-\CountDefsfalse
 
 The \Circus{} specification language~\cite{oliveira2009} is based on
 CSP~\cite{roscoe2011}, which is used to specify processes that
@@ -1242,7 +1243,7 @@ can be combined to form a specification of the entire system.
 
 % for the thesis add a more comprehensive description of Circus with a
 % description of process operators and tables of operator descriptions
-\CountDefstrue
+
 \section{Final Considerations}
 \label{final-considerations-section}
 
@@ -1422,27 +1423,25 @@ SCJVM services in a separate section:~the memory manager in
 Section~\ref{memory-manager-section}, the scheduler in
 Section~\ref{scheduler-section}, and the real-time clock in
 Section~\ref{realtime-clock-section}.
-Finally, the parts of the model are combined to form a complete model
-of the SCJVM services in Section~\ref{scjvm-services-section}.
+The formal model of the SCJVM requirements is then presented in
+Section~\ref{formal-model-section}.
 
-The memory manager model has be partially proved using Z/Eves.
-The theorems about the memory manager that have been proved with
-Z/Eves are included in the model in this chapter and mostly standard
-theorems from CZT's verification condition generator.
-The Z/Eves proof scripts for these theorems can be found in
-Appendix~\ref{memory-manager-proofs-section}.
+The memory manager model has been partially proved using Z/Eves.
+The theorems proved about the memory manager can be found in
+Appendix~\ref{memory-manager-theorems}, with the Z/Eves proof scripts
+in Appendix~\ref{memory-manager-proofs}.
 Many additional lemmas about objects in the Z/Eves mathematical
 toolkit have been proved in the course of proving the memory manager.
 As these could be of use outside our work, we have included them
-separately in Appendix~\ref{additional-lemmas-section} with their
-proofs in Appendix~\ref{additional-lemmas-proofs-section}.
+separately in Appendix~\ref{additional-lemmas} with their
+proofs in Appendix~\ref{additional-lemmas-proofs}.
 
 Part of an earlier version of this model was presented at the 13th
 International Workshop on Java Technologies for Real-time and Embedded
 Systems~\cite{baxter2015a} with the full earlier version made available
 as a technical report~\cite{baxter2015}.
 
-\subsection{Memory Manager API}
+\section{Memory Manager API}
 \label{memory-manager-section}
 
 The SCJVM memory manager deals with the raw blocks of memory used as
@@ -1688,7 +1687,7 @@ its parent mission and are destroyed before the parent mission ends.
 Like backing stores, stacks are referred to by unique identifiers that
 may simply be pointers to the space allocated for the stack.
 
-\subsection{Scheduler API}
+\section{Scheduler API}
 \label{scheduler-section}
 
 The SCJVM scheduler manages the scheduling of threads, which are
@@ -1943,7 +1942,7 @@ While interrupts are disabled no interrupt handlers can run, but it is
 implementation-defined as to whether or not interrupts fired while
 interrupts are disabled are lost.
 
-\subsection{Real-time Clock API}
+\section{Real-time Clock API}
 \label{realtime-clock-section}
 
 The SCJVM must manage the system real-time clock, providing an
@@ -2008,6 +2007,10 @@ in order to perform events periodically.
 The current alarm (if any) can be cleared using the
 \texttt{clear\-Alarm} operation.
 Attempting to clear the alarm when there is no alarm set does nothing.
+
+
+\section{Formal Model}
+\label{formal-model-section}
 
 \input{\string~/SCJ-VM/James/memorymanager.zed}
 
@@ -2376,23 +2379,27 @@ provide for the correct running of SCJ programs.
 
 \chapter{Z/Eves Theorems and Proofs}
 
+\section{Addtional Toolkit Lemmas}
+\label{additional-lemmas}
+\normalsize
 \input{\string~/SCJ-VM/James/additional_lemmas.zed}
 
 \section{Proofs of Additional Toolkit Lemmas}
-\label{additional-lemmas-proofs-section}
+\label{additional-lemmas-proofs}
 \scriptsize
-
 \input{\string~/SCJ-VM/James/additional_lemmas_sets_proofs.zed}
-
 \input{\string~/SCJ-VM/James/additional_lemmas_relations_proofs.zed}
-
 \input{\string~/SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
 
+\section{Memory Manager Theorems}
+\label{memory-manager-theorems}
+\normalsize
 \input{\string~/SCJ-VM/James/memorymanager_theorems.zed}
 
+\section{Proofs of Memory Manager Theorems}
+\label{memory-manager-proofs}
+\scriptsize
 \input{\string~/SCJ-VM/James/memorymanager_proofs.zed}
-
-\ZDeclSummary
 
 \end{document}
 
