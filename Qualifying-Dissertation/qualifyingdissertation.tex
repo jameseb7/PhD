@@ -2028,12 +2028,12 @@ core execution environment (CEE).
 The CEE is reponsible for executing Java bytecode instructions.
 Additionally, the CEE must be aware of the structure of Java objects
 and classes in order to properly handle some bytecode instructions.
-The CEE also manages the flow of execution surrounding the execution
-of bytecode instructions, including handling safelet setup and mission
-execution.
+The CEE of an SCJVM also manages the flow of execution surrounding the
+execution of bytecode instructions, including handling safelet setup
+and mission execution.
 
 As shown in Figure~\ref{cee-fig}, we view the core execution
-environment as being divided into four parts:
+environment as being composed of four parts:
 \begin{itemize}
 \item the code area, which stores the classes and bytecode
   instructions that are statically loaded on SCJVM startup,
@@ -2042,7 +2042,7 @@ environment as being divided into four parts:
 \item the interpreter, which handles execution of bytecode
   instructions, and
 \item the launcher, which coordinates the startup of the SCJVM, the
-  execution of missions and the execution of methods in the
+  execution of missions, and the execution of methods in the
   interpreter.
 \end{itemize}
 
@@ -2124,11 +2124,20 @@ environment as being divided into four parts:
   \label{cee-fig}
 \end{figure}
 
-This chapter will begin with a brief explanation of the assumptions 
-made and the bytecode subset used in creating this model in
+The CEE is combined with the SCJVM services to form the complete
+SCJVM, this can be seen in Figure~\ref{cee-fig} and also in
+Figure~\ref{scjvm-services-fig} in the previous chapter, which shows
+the same structure with a focus on the SCJVM services.
+The CEE then forms the starting point for the compilation strategy,
+which is another main component of our framework for verification of
+SCJVMs, while the SCJVM services are unaffected by the compilation
+strategy and could be implemented a separate library.
+
+This chapter begins with an explanation of the assumptions made and
+the bytecode subset used in creating this model in
 Section~\ref{cee-assumptions-section}.
-Then each part of the \Circus{} model of the core execution environment is
-presented in a separate section:~the class structure in
+Afterwards, each part of the \Circus{} model of the core execution
+environment is presented in a separate section:~the class structure in
 Section~\ref{cee-classes-section}, the code area in
 Section~\ref{cee-code-area-section}, the object structure and memory
 in Section~\ref{cee-memory-section}, the stack frame structure in
@@ -2141,12 +2150,97 @@ Section~\ref{complete-cee-section}.
 \section{Assumptions and Bytecode Subset}
 \label{cee-assumptions-section}
 
-Due to the complexity of the JVM and Java bytecode, we have chosen not
-to model the whole of Java bytecode.
-We instead model a subset of Java bytecode that we believe is
-sufficient to express a wide variety of SCJ programs and illustrate
-how further features may be added, but small enough to permit
-effective reasoning.
+Due to the complexity of the JVM and Java bytecode, we model a subset
+of Java bytecode.
+We believe it is sufficient to express a wide variety of SCJ programs
+and illustrate how further features may be added, but small enough to
+permit effective reasoning.
+The subset was chosen by considering the bytecode generated from a
+minimal SCJ program and removing instructions similar to those already
+in the subset.
+This ensures the model is not unnecessarily complicated with trivial
+or redundant instructions so we can concentrate on the instructions
+that are most of interest in creating the compilation strategy.
+
+Our bytecode subset mainly focuses on manipulation of objects and
+method invocation, since those are core concepts of Java bytecode and
+are likely to require special handling by the compilation strategy.
+The the bytecode instructions in our subset are described in
+Table~\ref{bytecode-subset-table}.
+
+\begin{table}
+  \centering
+  \begin{tabular}{llp{8cm}}
+    \hline
+    Instruction & Parameters & Description \\
+    \hline
+    \texttt{aconst\_null} & (none) & 
+    Pushes a null object reference onto the operand stack.
+    \\
+    \texttt{aload} & local variable index &
+    Loads the value from a specified local variable and pushes it
+    onto the operand stack.
+    \\
+    \texttt{areturn} & (none) &
+    Returns from the current method, pushing the value on top of the
+    current method's operand stack onto the operand stack of the
+    method returned to.
+    \\
+    \texttt{astore} & local variable index &
+    Pops a value from the operand stack and stores it in the specified
+    local variable.
+    \\
+    \texttt{dup} & &
+    Duplicates the value on top of the operand stack.
+    \\
+    \texttt{getfield} & &
+    Pops an object reference from the operand stack, gets the value of
+    the specified field for the referenced object, and pushes it onto
+    the operand stack.
+    \\
+    \texttt{invokespecial} & &
+    Invoke the specified method of the specified class, popping the
+    method's arguments, including a \texttt{this} object reference,
+    from the operand stack.
+    \\
+    \texttt{invokevirtual} & &
+    Pops the arguments of the specified method, including a
+    \texttt{this} object reference, from the operand stack and invokes
+    the specified method of the class of referenced object.
+    \\
+    \texttt{new} & &
+    Allocates a new object of the specified class and pushes a
+    reference to the new object onto the operand stack.
+    \\
+    \texttt{putfield} & &
+    Pops an object reference and value from the operand stack and
+    stores the value in the specified field of the referenced object.
+    \\
+    \texttt{return} & &
+    Returns from a method with no return value.
+    \\
+    \hline
+  \end{tabular}
+  \caption{}
+  \label{bytecode-subset-table}
+\end{table}
+
+The instruction \texttt{dup} is included as an example of a simple
+instruction that operates on the operand stack and was chosen for its
+frequent occurence in object intialisation.
+Other instructions that do simple operand stack manipulation,
+including the arithmetic instructions, can be specified similarly.
+
+Instructions that create object references and pass them around are
+also included to allow the full range of object manipulations.
+However, arrays are not included as they would require additional
+instructions and could be emulated, albeit inefficiently, with the
+instructions given here.
+
+Both \texttt{invokevirtual} and \texttt{invokespecial} are supplied as
+\texttt{invokespecial} chooses the method to invoke in a different way
+and is required for object initialisation.
+
 We describe our bytecode subset and further assumptions that we have
 made in creating the SCJVM model in this section.
 
@@ -2206,38 +2300,6 @@ That means that both the bytecode instructions and the portions of
 execution occuring in the launcher are atomic, which greatly
 simplifies the model since thread switches at any time do not have to
 be accounted for. 
-
-With the above assumptions in mind, the bytecode instructions in our
-subset are as follows:
-\begin{itemize}
-\item \texttt{aconst\_null}
-\item \texttt{aload}
-\item \texttt{areturn}
-\item \texttt{astore}
-\item \texttt{dup}
-\item \texttt{getfield}
-\item \texttt{invokevirtual}
-\item \texttt{invokespecial}
-\item \texttt{new}
-\item \texttt{putfield}
-\item \texttt{return}
-\end{itemize}
-
-The instruction \texttt{dup} is included as an example of a simple
-instruction that operates on the operand stack and was chosen for its
-frequent occurence in object intialisation.
-Other instructions that do simple operand stack manipulation,
-including the arithmetic instructions, can be specified similarly.
-
-Instructions that create object references and pass them around are
-also included to allow the full range of object manipulations.
-However, arrays are not included as they would require additional
-instructions and could be emulated, albeit inefficiently, with the
-instructions given here.
-
-Both \texttt{invokevirtual} and \texttt{invokespecial} are supplied as
-\texttt{invokespecial} chooses the method to invoke in a different way
-and is required for object initialisation.
 
 \input{\string~/SCJ-VM/James/Bytecode/classes.zed}
 
