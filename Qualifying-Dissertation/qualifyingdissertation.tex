@@ -2409,13 +2409,13 @@ in Section~\ref{future-work-section}.
 \section{Summary of Contributions}
 \label{summary-section}
 
-In this dissertation we have considered the safety-critical variant of
-Java and some virtual machines designed to run programs written in it.
+In this report we have considered the safety-critical variant of Java
+and some virtual machines designed to run programs written in it.
 We have concluded that none of the virtual machines is formally
 verified and that many of them precompile programs to native code.
 Given the need for a formally verified virtual machine, we have stated
 our aim to specify a framework within which an SCJ virtual machine can
-be verified
+be verified.
 
 Having noted that SCJ virtual machines employ compilation, we have
 surveyed some of the work on compiler correctness, particularly how it
@@ -2437,8 +2437,13 @@ identification of the areas that require clarification.
 It may be noted that the interface we have defined is not the only one
 that can support SCJ, though we believe that the overall functionality
 must be present in all SCJ virtual machines in some way.
-% need more reflection on the preliminary results, check the
-% conclusions of the JTRES paper for material
+
+We have also created a formal model of the core execution environment
+that executes SCJ programs in an SCJVM.
+This model was created by identifying a minimal subset of Java
+bytecode and defining its semantics then constructing a \Circus{}
+model of an interpreter for that subset with the necessary
+insfrastructure around it.
 
 \section{Related Work}
 \label{related-work-section}
@@ -2478,22 +2483,19 @@ verification of SCJ programs down to executable code.
 \section{Future Work}
 \label{future-work-section}
 
-Our future work will involve proving the correctness of the formal
-model of the virtual machine services and specifying the core
-execution environment.
-The formal model of the virtual machine services that we have created
-needs to be validated and this may require revision of the formal
-model due to errors uncovered in the process of proving essential
-properties.
-
-The specification of the core execution environment will be a proof of
-correct compilation from Java bytecode to C using the algebraic
+Our future work will be specifying and proving the correctness of a
+compilation strategy for Java bytecode to C using the algebraic
 approach.
-As already discussed, this will involve defining the semantics of Java
-bytecode and C in terms of \Circus{} and proving refinement laws
-between them.
+This will involve defining the semantics of a subset of C in terms of
+\Circus{} and proving refinement laws between our Java bytecode subset
+model in the core execution environment and the C subset.
 We will mechanise these proofs in the Isabelle proof assistant in
 order to have assurance that the proofs are sound.
+
+We will also continue to work on validation of the formal models we
+have created by proving correctness properties.
+This may require revision of the formal model due to errors uncovered
+in the process of proving essential properties.
 
 Beyond the scope of our work, possible future work includes the
 verification of an SCJ virtual machine using our framework or even the
@@ -2516,7 +2518,7 @@ of the process.
 Facilitating such work is the ultimate aim of our work, in order to
 provide for the correct running of SCJ programs.
 
-\raggedright \printbibliography
+{\raggedright \printbibliography}
 
 \appendix
 
