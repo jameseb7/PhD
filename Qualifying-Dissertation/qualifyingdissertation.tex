@@ -21,6 +21,11 @@
 
 \CountDefsfalse
 
+\newif\ifFullModel
+\FullModelfalse
+\newcommand{\ifnFullModel}{\ifFullModel\else}
+
+
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
 %TC:group schema 1 displaymath
@@ -2008,16 +2013,46 @@ The current alarm (if any) can be cleared using the
 \texttt{clear\-Alarm} operation.
 Attempting to clear the alarm when there is no alarm set does nothing.
 
-
 \section{Formal Model}
 \label{formal-model-section}
 
+We now present the formal model of the SCJVM services in the \Circus{}
+specification language.
+The model is structured with a single process for each area of the
+SCJVM services decribed above, which are then combined in parallel to
+form a complete model of the SCJVM services.
+
+\subsection{Memory Manager}
+
+The SCJVM memory manager is responsible for managing the backing
+stores that underlie memory areas, including creation, clearing, and
+resizing of backing stores, and allocation within them.
+The memory manager must also manage allocation and freeing of stack
+space.
+
+We begin this section by declaring the types and channels needed for
+the memory manager model, then build up the model in several layers,
+beginning with memory blocks that allow allocation, then adding in the
+structure of backing stores that may contain other backing stores
+nested inside.
+The global memory manager covering all the backing stores is then
+specified and then thread handling considerations are taken into account.
+Finally, the stack memory management is specified, with the stack area
+based on the memory blocks model.
+
+\label{memory-manager-model-section}
 \input{\string~/SCJ-VM/James/memorymanager.zed}
 
+\subsection{Scheduler}
+\label{scheduler-model-section}
 \input{\string~/SCJ-VM/James/scheduler.zed}
 
+\subsection{Real-time Clock}
+\label{realtime-clock-model-section}
 \input{\string~/SCJ-VM/James/realtimeclock.zed}
 
+\subsection{Complete VM Services Model}
+\label{scjvm-services-section}
 \input{\string~/SCJ-VM/James/scjvmservices.zed}
 
 \chapter{The Core Execution Environment}
