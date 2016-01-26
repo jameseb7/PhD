@@ -642,9 +642,6 @@ in the next section.
 \section{Compiler Correctness}
 \label{compiler-correctness-section}
 
-%TODO: mention approach of deriving a correct compiler described in
-% www.cs.nott.ac.uk/~gmh/ccc.pdf
-
 Due to the importance of compiler correctness, there has been much
 research over the years in this area.
 Most of the work done follows a similar approach, which we will term
@@ -2058,12 +2055,11 @@ based on the memory blocks model.
 \chapter{The Core Execution Environment}
 \label{cee-chapter}
 
-This chapter covers the second component of an SCJVM, which is the
-core execution environment (CEE).
-The CEE is reponsible for executing Java bytecode instructions.
-Additionally, the CEE must be aware of the structure of Java objects
+This chapter describes the core execution environment (CEE) of an
+SCJVM; it is reponsible for executing Java bytecode instructions.
+The CEE is aware of the structure of Java objects
 and classes in order to properly handle some bytecode instructions.
-The CEE of an SCJVM also manages the flow of execution surrounding the
+In addition, the CEE of an SCJVM manages the flow of execution surrounding the
 execution of bytecode instructions, including handling safelet setup
 and mission execution.
 
@@ -2071,15 +2067,27 @@ As shown in Figure~\ref{cee-fig}, we view the core execution
 environment as being composed of four parts:
 \begin{itemize}
 \item the code area, which stores the classes and bytecode
-  instructions that are statically loaded on SCJVM startup,
-\item the memory, which manages the information about objects created
-  during execution,
+  instructions that are statically loaded on the SCJVM at startup,
+\item the memory, which manages information about objects created
+  during execution of the bytecode,
 \item the interpreter, which handles execution of bytecode
   instructions, and
 \item the launcher, which coordinates the startup of the SCJVM, the
   execution of missions, and the execution of methods in the
   interpreter.
 \end{itemize}
+This view has been chosen as the interpreter is central to the main
+responsibility of the core execution environment but proper handling
+of infrastructure methods requires handling the SCJ mission model,
+which is dealt with by the launcher.
+Both the launcher and interpreter require access to memory, but the
+class information and bytecode instructions do not change throughout
+the execution of the SCJVM so they are separated out into the code
+area.
+The management of objects, which do change throughout the execution of
+the SCJVM and are in a separate region of memory to classes and
+bytecode instructions, is handled by the memory component of the core
+execution environment.
 
 \begin{figure}[ht]
   \centering
@@ -2152,33 +2160,36 @@ environment as being composed of four parts:
     \node[align=center] at (CEE part 3) {\small Interpreter};
     \node[align=center] at (CEE part 4) {\small Launcher};
   \end{tikzpicture}
-  \caption{A diagram showing the structure of an SCJVM and its
-    relation to the SCJ infrastructure and the operating
-    system/hardware abstraction layer, focusing on the core execution
-    environment}
+  \caption{Structure of an SCJVM and its relation to the SCJ
+    infrastructure and the operating system/hardware abstraction
+    layer}
   \label{cee-fig}
 \end{figure}
 
 The CEE is combined with the SCJVM services to form the complete
-SCJVM, this can be seen in Figure~\ref{cee-fig} and also in
-Figure~\ref{scjvm-services-fig} in the previous chapter, which shows
-the same structure with a focus on the SCJVM services.
-The CEE then forms the starting point for the compilation strategy,
-which is another main component of our framework for verification of
-SCJVMs, while the SCJVM services are unaffected by the compilation
-strategy and could be implemented a separate library.
+SCJVM; this can be seen in Figure~\ref{cee-fig}, which shows the same
+structure described in Figure~\ref{scjvm-services-fig} in the previous
+chapter but has a focus on the CEE components.
+The CEE is the starting point for our compilation strategy, which is
+another main component of our framework for verification of SCJVMs,
+while the SCJVM services are unaffected by the compilation strategy
+and can be implemented a separate library.
 
-This chapter begins with an explanation of the assumptions made and
-the bytecode subset used in creating this model in
-Section~\ref{cee-assumptions-section}.
+This chapter begins in Section~\ref{cee-assumptions-section} with an
+explanation of the bytecode subset used in our work.
 Afterwards, each part of the \Circus{} model of the core execution
-environment is presented in a separate section:~the class structure in
-Section~\ref{cee-classes-section}, the code area in
-Section~\ref{cee-code-area-section}, the object structure and memory
-in Section~\ref{cee-memory-section}, the stack frame structure in
-Section~\ref{cee-stack-frames-section}, the interpreter in
-Section~\ref{cee-interpreter-section}, and the launcher in
-Section~\ref{cee-launcher-section}.
+environment is presented in a separate section.
+First, the code area is described, beginning with a description of the
+class structure in Section~\ref{cee-classes-section} that is then used
+in the description of the code area itself in
+Section~\ref{cee-code-area-section}.
+The memory component, along with the structure of objects, is desribed
+in Section~\ref{cee-memory-section}.
+The interpreter is described by first describing the stack frame
+structure in Section~\ref{cee-stack-frames-section}, then the
+interpreter itself is presented in
+Section~\ref{cee-interpreter-section}.
+The launcher is presented in Section~\ref{cee-launcher-section}.
 Finally the parts are drawn together into the complete model in
 Section~\ref{complete-cee-section}.
 
@@ -2187,26 +2198,17 @@ Section~\ref{complete-cee-section}.
 
 Due to the complexity of the JVM and Java bytecode, we model a subset
 of Java bytecode.
-We believe it is sufficient to express a wide variety of SCJ programs
-and illustrate how further features may be added, but small enough to
+It is sufficient to express a wide variety of SCJ programs and
+illustrate how further features may be added, but small enough to
 permit effective reasoning.
-The subset was chosen by considering the bytecode generated from a
-minimal SCJ program and removing instructions similar to those already
-in the subset.
+The subset has been chosen by considering the bytecode generated from
+a minimal SCJ program and removing instructions similar to those
+already in the subset.
 This ensures the model is not unnecessarily complicated with trivial
-or redundant instructions so we can concentrate on the instructions
+or redundant instructions, so we can concentrate on the instructions
 that are most of interest in creating the compilation strategy.
 
-The bytecode instructions in our subset are described in
-Table~\ref{bytecode-subset-table}.
-Our bytecode subset mainly focuses on manipulation of objects and
-method invocation, since those are core concepts of Java bytecode and
-are likely to require special handling by the compilation strategy.
-
-
-\begin{table}
-  \centering
-  \begin{tabular}{llp{8cm}}
+The bytecode instructions in our subset are described inbular}{llp{8cm}}
     \hline
     Instruction & Parameter & Description \\
     \hline
@@ -2262,40 +2264,37 @@ are likely to require special handling by the compilation strategy.
     \\
     \hline
   \end{tabular}
-  \caption{}
+  \caption{The instructions in our bytecode subset}
   \label{bytecode-subset-table}
 \end{table}
 
 The instruction \texttt{dup} is included as an example of a simple
-instruction that operates on the operand stack and has been chosen for
-its frequent occurence in object intialisation.
+instruction that operates on the operand stack.
+It has been chosen for its frequent occurence in object intialisation.
 Other instructions that do simple operand stack manipulation,
 including the arithmetic instructions, can be specified similarly.
 
 Instructions that create object references and pass them around are
 also included to allow the full range of object manipulations.
-However, arrays are not included as they would require additional
-instructions and could be emulated, albeit inefficiently, with the
+However, arrays are not included as they require additional
+instructions and can be emulated, albeit inefficiently, with the
 instructions given here.
 
-Both \texttt{invokevirtual} and \texttt{invokespecial} are supplied,
-as \texttt{invokespecial} chooses the method to invoke in a different
-way and is required for object initialisation.
+Both \texttt{invokevirtual} and \texttt{invokespecial}, which invoke
+methods on objects, are supplied, as \texttt{invokespecial} chooses
+the method to invoke in a different way and is required for object
+initialisation.
 
-In the remainder of this section, we describe the assumptions that we
-have made in creating the SCJVM model and provide justification for
-our decisions concerning the instructions not included in our subset.
-
-Our first assumption is that execeptions are not handled; errors in
-the SCJVM are instead handled by simply aborting execution.
-This is justified as the exception handling mechanism of Java is quite
-complex and the correct application of formal methods should eliminate
-errors in the SCJVM.
+We do not handle exceptions are not handled; errors in the SCJVM are
+instead handled by simply aborting execution.
+While the exception handling mechanism of Java is quite complex, the
+correct application of formal methods should eliminate errors in the
+SCJVM.
 The bytecode instructions that relate to throwing and catching
 exceptions are, therefore, not included in our bytecode subset.
 
-Another assumption we have made is that all values consist of only a
-single virtual machine word.
+As another simplifying assumption, we consider that all values consist
+of only a single virtual machine word.
 This means that \texttt{long} and \texttt{double} values are not
 handled.
 Any SCJ API methods that take \texttt{long} or \texttt{double}
@@ -2307,9 +2306,10 @@ This makes little difference at the level of the formal model and our
 approach can be easily extended to deal with more types.
 
 Further, we do not make a distinction between the different virtual
-machine types in our bytecode instructions, but instead supply
-instructions that handle values as object references since many of the
-instructions behave the same for different types.
+machine types in our bytecode instructions.
+Instead, we supply instructions that handle values as object
+references, since many of the instructions behave the same for
+different types.
 We would introduce a lot of duplication in the model if, for example,
 both the \texttt{areturn} and \texttt{ireturn} instructions were to be
 included.
@@ -2326,27 +2326,42 @@ considerations are covered by non-static methods and fields.
 Because we are considering bytecode arising from an SCJ program, some
 requirements of SCJ permit further simplifications to our bytecode
 subset.
-The \texttt{invokedynamic} instruction is not included as it does not
-allow static typechecking and so should not be used for SCJ.
+The \texttt{invokedynamic} instruction performs method invocation with
+runtime typechecking, mainly for the purpose of implementing
+dynamically-typed languages targetting the JVM, though it is also used
+to implement the lambda expressions introduced in Java 8.
+It is not included in our subset as it does not allow static
+typechecking and so should not be used for SCJ.
 The requirement for all classes to be loaded at startup greatly
 simplifies the semantics of several instructions since dynamic class
 loading does not need to be considered.
 It also means that method lookup tables can be precomputed, which
-simplifies method lookup and means that the semantics of the
-\texttt{invokevirtual} and \texttt{invokeinterface} instructions are
-the same, so they do not both need to be included.
+simplifies method lookup.
+This means that the semantics of the \texttt{invokevirtual} and
+\texttt{invokeinterface} instructions are the same, since they both
+invoke a method on an object, using the object's class as the class
+for method lookup.
+They, therefore, do not both need to be included and so we have not
+included the \texttt{invokeinterface} instruction, since it exists
+only to optimise method lookup.
 
 In terms of concurrency considerations, we are assuming our SCJVM to
 be single processor, and so we do not need to have more than one
 interpreter.
 We also assume that thread switches can only occur between bytecode
 instructions in the interpreter.
-This is justified since bytecode instructions should be atomic and
-execution occuring in other parts of the core execution environment
-can be made atomic via disabling of interrupts since it may involve
-manipulation of shared state.
+This is justified since bytecode instructions should be atomic.
+Execution occuring in other parts of the core execution environment
+can also be made atomic via disabling of interrupts.
+This is advisable since such execution often involves manipulation of
+shared state.
 This greatly simplifies the model since thread switches at any time do
-not have to be accounted for. 
+not have to be accounted for.
+
+Having described our bytecode subset and the assumptions we are
+making, we now present our model of the core execution environment,
+beginning with an explanation of the class structure in the next
+section.
 
 \section{Classes}
 \label{cee-classes-section}
