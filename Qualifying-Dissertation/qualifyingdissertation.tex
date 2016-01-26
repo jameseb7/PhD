@@ -2208,7 +2208,15 @@ This ensures the model is not unnecessarily complicated with trivial
 or redundant instructions, so we can concentrate on the instructions
 that are most of interest in creating the compilation strategy.
 
-The bytecode instructions in our subset are described inbular}{llp{8cm}}
+The bytecode instructions in our subset are described in
+Table~\ref{bytecode-subset-table}.
+We mainly focus on manipulation of objects and method invocation,
+since those are core concepts of Java bytecode and are likely to
+require special handling by the compilation strategy.
+
+\begin{table}
+  \centering
+  \begin{tabular}{llp{8cm}}
     \hline
     Instruction & Parameter & Description \\
     \hline
@@ -2452,65 +2460,60 @@ process representing then entire core execution environment.
 % work
 In this chapter we conclude by summarising the contributions of this
 dissertation in Section~\ref{summary-section}.
-We then discuss some related work in
-Section~\ref{related-work-section}, and the direction of future work
-in Section~\ref{future-work-section}.
+We then discuss directions of future work in
+Section~\ref{future-work-section}.
 
 \section{Summary of Contributions}
 \label{summary-section}
 
-In this report we have considered the safety-critical variant of Java
-and some virtual machines designed to run programs written in it.
+We have considered the safety-critical variant of Java and the virtual
+machines designed to run programs written in it.
 We have concluded that none of the virtual machines is formally
 verified and that many of them precompile programs to native code.
 Given the need for a formally verified virtual machine, we have stated
-our aim to specify a framework within which an SCJ virtual machine can
+our aim to specify a framework within which an SCJVM can
 be verified.
 
 Having noted that SCJ virtual machines employ compilation, we have
-surveyed some of the work on compiler correctness, particularly how it
-relates to Java compilation, and seen that there are two
-approaches:~the commuting-diagram approach and the algebraic approach.
+surveyed some of the work on compiler correctness, particularly those
+related to Java compilation.
+We have established that two approaches to compiler correctness have
+been used:~the commuting-diagram approach and the algebraic approach.
 We have decided to adopt the algebraic approach and chosen \Circus{}
 as a specification language.
 
-As some preliminary work in specifying an SCJ virtual machine, we have
-identified the requirements of the virtual machine services required
-to support SCJ programs.
+To specify an SCJVM we have identified the requirements
+of the virtual machine services required to support SCJ programs.
 We have also constructed a formal model of those requirements in the
 \Circus{} specification language.
 
 Contact with one of the authors of the SCJ specification has allowed
 us to obtain clarifications where the specification is unclear.
-The work of constructing the formal model has helped in the
+The development of the formal model has helped in the
 identification of the areas that require clarification.
 It may be noted that the interface we have defined is not the only one
-that can support SCJ, though we believe that the overall functionality
+that can support SCJ, but its overall functionality
 must be present in all SCJ virtual machines in some way.
 
 We have also created a formal model of the core execution environment
 that executes SCJ programs in an SCJVM.
-This model was created by identifying a minimal subset of Java
-bytecode and defining its semantics then constructing a \Circus{}
+This model has been created by identifying a minimal subset of Java
+bytecode and defining its semantics, and then constructing a \Circus{}
 model of an interpreter for that subset with the necessary
 insfrastructure around it.
 
-\section{Related Work}
-\label{related-work-section}
-
 Our work is done in the context of a wider effort to facilitate fully
-verified Safety-Critical Java programs.
+verified SCJ programs.
 There has already been work on generating correct SCJ programs from
 \Circus{} specifications~\cite{cavalcanti2011, cavalcanti2013} and
 formalisation of the SCJ memory model~\cite{cavalcanti2011a}.
 These works allow for verification of SCJ programs, with our work
-forming the next stage of ensuring those programs can be run
+covering the next stage in ensuring those programs can be run
 correctly.
 
-Though our work addresses the execution of Java bytecode, it must
-still be ensured that SCJ programs can be compiled to bytecode
-correctly.
-However, since SCJ does not make any syntactic changes to Java and the
+Since our work addresses the execution of Java bytecode, it must still
+be ensured that SCJ programs can be compiled to bytecode correctly.
+Since SCJ does not make any syntactic changes to Java and the
 semantic changes can be dealt with at the level of Java bytecode, a
 standard Java compiler suffices for SCJ.
 As discussed earlier, there has been plenty of work on correct
@@ -2527,15 +2530,16 @@ We note that there has been much work on verified C
 compilation~\cite{leroy2009a, leroy2009b, leroy2012, leinenbach2005,
   blazy2006} and, in particular, that the CompCert project provides a
 functioning formally verified C compiler that can be used.
+
 So our proposed work is the final piece needed for complete
 verification of SCJ programs down to executable code.
 
 \section{Future Work}
 \label{future-work-section}
 
-Our future work will be specifying and proving the correctness of a
-compilation strategy for Java bytecode to C using the algebraic
-approach.
+As part of our agenda for future work, in the scope of this thesis, we
+will specify and prove the correctness of a strategy for compiling
+Java bytecode to C using the algebraic approach.
 This will involve defining the semantics of a subset of C in terms of
 \Circus{} and proving refinement laws between our Java bytecode subset
 model in the core execution environment and the C subset.
