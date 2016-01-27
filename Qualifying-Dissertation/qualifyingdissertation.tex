@@ -2020,6 +2020,7 @@ SCJVM services decribed above, which are then combined in parallel to
 form a complete model of the SCJVM services.
 
 \subsection{Memory Manager}
+\label{memory-manager-model-section}
 
 The SCJVM memory manager is responsible for managing the backing
 stores that underlie memory areas, including creation, clearing, and
@@ -2037,11 +2038,33 @@ specified and then thread handling considerations are taken into account.
 Finally, the stack memory management is specified, with the stack area
 based on the memory blocks model.
 
-\label{memory-manager-model-section}
 \input{\string~/SCJ-VM/James/memorymanager.zed}
+
+This concludes the specification of the memory manager.
+We have built the memory manager in several layers, first defining the
+concept of a memory block, in which allocations can occur and which is
+used as the basis for specifying backing stores and the stack space.
+We then specified backing stores, which are memory blocks that keep a
+record of other backing stores nested within them.
+The backing store operations have then been promoted to act over a
+global memory manager with a view of all backing stores.
+For the operation of allocating memory, which must work with the
+current allocation context, operations were added to track the current
+allocation context of each running thread and memory allocation was
+promoted to act upon it.
+Allocation and deallocation of space for stacks has also been
+specified, with the stack space treated as a memory block to allow
+memory for stacks to be allocated within it.
+Finally, we lifted the operations to \Circus{} actions, making them
+available over channels, via which the inputs to the operation (if
+any) are provided.
+Outputs from operations with output are provided via a separate return
+channel and all operations also report whether an error occured via a
+separate error reporting channel.
 
 \subsection{Scheduler}
 \label{scheduler-model-section}
+
 \input{\string~/SCJ-VM/James/scheduler.zed}
 
 \subsection{Real-time Clock}
