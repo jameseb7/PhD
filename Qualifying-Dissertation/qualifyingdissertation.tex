@@ -2084,13 +2084,59 @@ thread scheduling.
 
 \input{\string~/SCJ-VM/James/scheduler.zed}
 
+This concludes the specification of the scheduler.
+We have specified threads and information about them, including their
+priority, whether they are available to run or not, and the method
+information required to begin execution of the thread.
+We specified the priority scheduler, which sorts the executable
+threads into queues by priority and selects the thread at the front of
+the highest non-empty priority queue to run.
+This includes the operation to create, start, destroy, suspend and
+resume threads.
+A mechanism for locking objects to prevent interference has also been
+specified, with priority ceiling emulation as a mechanism for avoiding
+priority inversion problems.
+We also described the mechanism by which interrupt handlers are
+specified and how interrupt processing is performed by starting
+interrupt threads.
+Finally, we have lifted the scheduler operations to \Circus{} actions
+accessed via channels and specified the relation of the scheduler to
+the hardware, memory manager and core execution environment.
+
 \subsection{Real-time Clock}
 \label{realtime-clock-model-section}
+
+The SCJVM real-time clock provides an interface to a hardware
+real-time clock, which is used by the SCJ clock API. 
+The periodic clock interrupt from the hardware is handled by the SCJVM
+clock and used to manage alarms that trigger when a certain time is
+reached. 
+The interrupt is passed to the scheduler when an alarm triggers and
+the SCJ API implementation should attach an interrupt handler to it
+that simply calls the \texttt{triggerAlarm()} method of \texttt{Clock}
+for the real-time clock. 
+The type used for interrupt identifiers is the same as that used by
+the scheduler.
+
 \input{\string~/SCJ-VM/James/realtimeclock.zed}
+
+We have specified the real-time clock by tracking the current time and
+any alarm that may be set.
+Operations are provided to set and clear the alarm.
+The state of the clock is updated when a clock interrupt signal is
+received and the clock is checked against the alarm, forwarding the
+interrupt signal to the scheduler if the alarm time has passed.
 
 \subsection{Complete VM Services Model}
 \label{scjvm-services-section}
+
+Having defined the three processes that model the three components of
+the VM services, we now compose them in parallel to form the complete
+model of the VM services.
+
 \input{\string~/SCJ-VM/James/scjvmservices.zed}
+
+\section{Final Considerations}
 
 \chapter{The Core Execution Environment}
 \label{cee-chapter}
