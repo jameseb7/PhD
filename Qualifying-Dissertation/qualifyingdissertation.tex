@@ -1798,6 +1798,10 @@ Table~\ref{scheduler-table}.
     (none) &
     (none) &
     (none)
+    \\\texttt{endInterrupt} &
+    (none) &
+    (none) &
+    not in interrupt
   \end{tabular}
   \caption{The operations of the SCJVM scheduler}
   \label{scheduler-table}
@@ -1944,6 +1948,13 @@ While interrupts are disabled no interrupt handlers can run, but it is
 implementation-defined as to whether or not interrupts fired while
 interrupts are disabled are lost.
 
+Finally, an interrupt can be ended using the \texttt{end\-Interrupt}
+operation.
+This operation should be used by the infrastructure to ensure normal
+thread scheduling resumes when an interrupt handler has finished
+execution.
+This operation cannot be used outside of an interupt handler.
+
 \section{Real-time Clock API}
 \label{realtime-clock-section}
 
@@ -2064,6 +2075,12 @@ separate error reporting channel.
 
 \subsection{Scheduler}
 \label{scheduler-model-section}
+
+The SCJVM scheduler must manage separate threads of execution, which
+involves tracking information about threads, selecting which thread to
+run, and handling locks and blocking of threads.
+The scheduler must also manage interrupts as they interfere with
+thread scheduling.
 
 \input{\string~/SCJ-VM/James/scheduler.zed}
 
