@@ -2185,32 +2185,33 @@ proofs and some additional lemmas about mathematical toolkit objects
 that we proved in the course of our work, can be found in
 Appendix~\ref{zeves-proofs}.
 
-\begin{figure}
+\begin{figure}[ht]
+  \centering
   \begin{tikzpicture}
-        \node[draw,align=center] (MM)  at (3cm,2cm) {Memory\\Manager};
-        \node[draw,align=center] (S)   at (0.5cm,1cm)  {Scheduler};
-        \node[draw,align=center] (RTC) at (3cm,0cm)  {Real-Time\\Clock};
-        \draw (-0.2cm,-0.7cm) rectangle (3.7cm,2.7cm);
-        \node at (0.5cm,2.5cm) {VM Services};
+        \node[draw,align=center] (MM)  at (9cm,4.5cm) {Memory\\Manager};
+        \node[draw,align=center] (S)   at (1.5cm,3cm)  {Scheduler};
+        \node[draw,align=center] (RTC) at (9cm,0cm)  {Real-Time\\Clock};
+        \draw (0cm,-2.1cm) rectangle (10.5cm,6cm);
+        %\node at (0.5cm,2.5cm) {VM Services};
         
-        \node[align=center] (HW) at (1.5cm,-1.5cm) {Hardware};
+        \node[align=center] (HW) at (4.5cm,-3cm) {Hardware};
         
-        \draw[->] (RTC) edge node[right] {RTCclockInterrupt} (S);
-        \draw[->] (S)   edge[bend left]  node[] {ScurrentThread}    (MM);
-        \draw[->] (S)   edge             node[] {MMaddThread}       (MM);
-        \draw[->] (S)   edge[bend right] node[] {MMremoveThread}    (MM);
+        \draw[->] (RTC) edge node[below right] {RTCclockInterrupt} (S);
+        \draw[->] (S)   edge[bend left]  node[right] {ScurrentThread}    (MM);
+        \draw[->] (S)   edge             node[right] {MMaddThread}       (MM);
+        \draw[->] (S)   edge[bend right] node[right] {MMremoveThread}    (MM);
         
-        \draw[-] (HW) -- node[right] {HWinterrupt} coordinate[pos=1] (X) ++(0cm,1cm);
+        \draw[-] (HW) -- node[right] {HWinterrupt} coordinate[pos=1] (X) ++(0cm,2cm);
         \draw[->] (X) to (S);
         \draw[->] (X) to (RTC);
         
-        \node[align=center] (CEE) at (-1.4cm,1cm) {Core\\Execution\\Environment};
-        \draw[<->] (S -| -0.2cm,0cm) -- (CEE);
+        \node[align=center] (CEE) at (-2cm,3cm) {Core\\Execution\\Environment};
+        \draw[<->] (S) -- (CEE);
         %\draw[->] (S)   edge             node[] {CEEgetProgramCounter} (CEE);
         %\draw[->] (S)   edge[bend right] node[] {CEEsetProgramCounter} (CEE);
 
-        \node[align=center] (App) at (1.75cm,3.5cm) {SCJ Application\\and API};
-        \draw[<->] (1.75cm,2.7cm) -- (App);
+        \node[align=center] (App) at (5.25cm,7cm) {SCJ Application\\and API};
+        \draw[<->] (5.25cm,6cm) -- (App);
         % \draw[<->] (S)   edge[bend left] (App);
         % \draw[<->] (MM)  edge[] (App);
         % \draw[<->] (RTC) edge[bend right] (App);
