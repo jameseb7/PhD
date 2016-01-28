@@ -498,7 +498,7 @@ provide space for objects that need to persist for the duration of the
 mission or to be shared between the schedulable objects.
 The amount of memory required for the mission memory must be computed
 ahead of time and specified by the programmer as part of writing the
-mission, though there has been som work on automated computation of
+mission, though there has been some work on automated computation of
 worst case memory use for SCJ programs~\cite{andersen2013}.
 There is also an immortal memory area where objects can be allocated
 if needed for the entire running of the program (they are never
@@ -1427,6 +1427,8 @@ Section~\ref{scheduler-section}, and the real-time clock in
 Section~\ref{realtime-clock-section}.
 The formal model of the SCJVM requirements is then presented in
 Section~\ref{formal-model-section}.
+A complete version of the model without explanatory text can also be
+found in Appendix~\ref{full-scjvm-services-model}
 
 The memory manager model has been partially proved using Z/Eves.
 The theorems proved about the memory manager can be found in
@@ -1953,7 +1955,7 @@ operation.
 This operation should be used by the infrastructure to ensure normal
 thread scheduling resumes when an interrupt handler has finished
 execution.
-This operation cannot be used outside of an interupt handler.
+This operation cannot be used outside of an interrupt handler.
 
 \section{Real-time Clock API}
 \label{realtime-clock-section}
@@ -2027,7 +2029,7 @@ Attempting to clear the alarm when there is no alarm set does nothing.
 We now present the formal model of the SCJVM services in the \Circus{}
 specification language.
 The model is structured with a single process for each area of the
-SCJVM services decribed above, which are then combined in parallel to
+SCJVM services described above, which are then combined in parallel to
 form a complete model of the SCJVM services.
 
 \subsection{Memory Manager}
@@ -2070,7 +2072,7 @@ Finally, we lifted the operations to \Circus{} actions, making them
 available over channels, via which the inputs to the operation (if
 any) are provided.
 Outputs from operations with output are provided via a separate return
-channel and all operations also report whether an error occured via a
+channel and all operations also report whether an error occurred via a
 separate error reporting channel.
 
 \subsection{Scheduler}
@@ -2138,11 +2140,93 @@ model of the VM services.
 
 \section{Final Considerations}
 
+In this chapter we have presented the services that must be provided
+by an SCJVM in order to support the core execution environment and the
+SCJ API.
+We have divided these services into three areas, the memory manager,
+the scheduler, and the real-time clock, and detailed the services
+provided in each area.
+We have also presented our model of the SCJVM services in the
+\Circus{} specification language, of which a full version without
+explanatory text can be found in
+Appendix~\ref{full-scjvm-services-model}.
+Our model is constructed with a \Circus{} process for each of the
+three areas of the model.
+The memory manager process largely consists of Z data operations on
+the state of the memory, which are then lifted to \Circus{} actions
+that can be accessed via channels.
+The scheduler also consists of a large Z model but requires more
+reliance on \Circus{} to specify interaction with interrupts.
+The real-time clock model is mainly made up of \Circus{} actions with
+few Z schemas, though it is also a smaller component than the other
+two due to the small number of services it provides.
+
+Overall, the division of the SCJVM services into the three areas we
+have chosen appears to give a good separation between the components
+with little coupling.
+This is shown in Figure~\ref{scjvm-services-model-fig}, where it can
+be seen that only three channels are required for communication
+between the processes in the model.
+The use of \Circus{} has allowed us to specify the few necessary
+points of communication between these processes, and also their
+relation to hardware interrupts and the core execution environment.
+The fact that the requirements scheduler and memory manager model are
+largely expressed in Z allows them to be checked and proved using Z
+proof tools.
+Indeed, we have already partially subjected the memory manager model
+to proof using Z/Eves.
+The proofs we have performed are consistency proofs and proofs that
+functions are not applied outside their domain.
+We have performed these proofs for the first two parts of the memory
+manager model, covering memory blocks and backing stores, and also the
+global memory manager state.
+The theorems we have proved about the memory manager, along with their
+proofs and some additional lemmas about mathematical toolkit objects
+that we proved in the course of our work, can be found in
+Appendix~\ref{zeves-proofs}.
+
+\begin{figure}
+  \begin{tikzpicture}
+        \node[draw,align=center] (MM)  at (3cm,2cm) {Memory\\Manager};
+        \node[draw,align=center] (S)   at (0.5cm,1cm)  {Scheduler};
+        \node[draw,align=center] (RTC) at (3cm,0cm)  {Real-Time\\Clock};
+        \draw (-0.2cm,-0.7cm) rectangle (3.7cm,2.7cm);
+        \node at (0.5cm,2.5cm) {VM Services};
+        
+        \node[align=center] (HW) at (1.5cm,-1.5cm) {Hardware};
+        
+        \draw[->] (RTC) edge node[right] {RTCclockInterrupt} (S);
+        \draw[->] (S)   edge[bend left]  node[] {ScurrentThread}    (MM);
+        \draw[->] (S)   edge             node[] {MMaddThread}       (MM);
+        \draw[->] (S)   edge[bend right] node[] {MMremoveThread}    (MM);
+        
+        \draw[-] (HW) -- node[right] {HWinterrupt} coordinate[pos=1] (X) ++(0cm,1cm);
+        \draw[->] (X) to (S);
+        \draw[->] (X) to (RTC);
+        
+        \node[align=center] (CEE) at (-1.4cm,1cm) {Core\\Execution\\Environment};
+        \draw[<->] (S -| -0.2cm,0cm) -- (CEE);
+        %\draw[->] (S)   edge             node[] {CEEgetProgramCounter} (CEE);
+        %\draw[->] (S)   edge[bend right] node[] {CEEsetProgramCounter} (CEE);
+
+        \node[align=center] (App) at (1.75cm,3.5cm) {SCJ Application\\and API};
+        \draw[<->] (1.75cm,2.7cm) -- (App);
+        % \draw[<->] (S)   edge[bend left] (App);
+        % \draw[<->] (MM)  edge[] (App);
+        % \draw[<->] (RTC) edge[bend right] (App);
+      \end{tikzpicture}
+      \caption{The structure of the SCJVM services model, showing the
+        channels used for communication between the processes in the
+        model}
+      \label{scjvm-services-model-fig}
+\end{figure}
+
+
 \chapter{The Core Execution Environment}
 \label{cee-chapter}
 
 This chapter describes the core execution environment (CEE) of an
-SCJVM; it is reponsible for executing Java bytecode instructions.
+SCJVM; it is responsible for executing Java bytecode instructions.
 The CEE is aware of the structure of Java objects
 and classes in order to properly handle some bytecode instructions.
 In addition, the CEE of an SCJVM manages the flow of execution surrounding the
@@ -2269,7 +2353,7 @@ First, the code area is described, beginning with a description of the
 class structure in Section~\ref{cee-classes-section} that is then used
 in the description of the code area itself in
 Section~\ref{cee-code-area-section}.
-The memory component, along with the structure of objects, is desribed
+The memory component, along with the structure of objects, is described
 in Section~\ref{cee-memory-section}.
 The interpreter is described by first describing the stack frame
 structure in Section~\ref{cee-stack-frames-section}, then the
@@ -2364,7 +2448,7 @@ require special handling by the compilation strategy.
 
 The instruction \texttt{dup} is included as an example of a simple
 instruction that operates on the operand stack.
-It has been chosen for its frequent occurence in object intialisation.
+It has been chosen for its frequent occurrence in object initialisation.
 Other instructions that do simple operand stack manipulation,
 including the arithmetic instructions, can be specified similarly.
 
@@ -2422,7 +2506,7 @@ requirements of SCJ permit further simplifications to our bytecode
 subset.
 The \texttt{invokedynamic} instruction performs method invocation with
 runtime typechecking, mainly for the purpose of implementing
-dynamically-typed languages targetting the JVM, though it is also used
+dynamically-typed languages targeting the JVM, though it is also used
 to implement the lambda expressions introduced in Java 8.
 It is not included in our subset as it does not allow static
 typechecking and so should not be used for SCJ.
@@ -2445,7 +2529,7 @@ interpreter.
 We also assume that thread switches can only occur between bytecode
 instructions in the interpreter.
 This is justified since bytecode instructions should be atomic.
-Execution occuring in other parts of the core execution environment
+Execution occurring in other parts of the core execution environment
 can also be made atomic via disabling of interrupts.
 This is advisable since such execution often involves manipulation of
 shared state.
@@ -2504,14 +2588,14 @@ The representation of stack frames is described in this section as
 stack frames are, like classes, a large data type of interest as a
 significant part of the JVM state.
 The stack frames are used to form the frame stack used by the
-interpeter in the next section.
+interpreter in the next section.
 
 \input{\string~/SCJ-VM/James/Bytecode/stack_frames.zed}
 
 \section{Interpreter}
 \label{cee-interpreter-section}
 
-The interpreter is reponsible for executing the bytecode instructions
+The interpreter is responsible for executing the bytecode instructions
 of methods.
 This includes handling the frame stack and program counter, as well as
 processing the semantics of the bytecode instructions themselves.
@@ -2586,7 +2670,7 @@ that executes SCJ programs in an SCJVM.
 This model has been created by identifying a minimal subset of Java
 bytecode and defining its semantics, and then constructing a \Circus{}
 model of an interpreter for that subset with the necessary
-insfrastructure around it.
+infrastructure around it.
 
 Our work is done in the context of a wider effort to facilitate fully
 verified SCJ programs.
@@ -2662,9 +2746,25 @@ provide for the correct running of SCJ programs.
 
 \appendix
 
-\chapter{Z/Eves Theorems and Proofs}
+\chapter{Full SCJVM Services Model}
+\label{full-scjvm-services-model}
+\FullModeltrue
+\section{Memory Manager}
+\input{\string~/SCJ-VM/James/memorymanager.zed}
 
-\section{Addtional Toolkit Lemmas}
+\section{Scheduler}
+\input{\string~/SCJ-VM/James/scheduler.zed}
+
+\section{Real-Time Clock}
+\input{\string~/SCJ-VM/James/realtimeclock.zed}
+
+\section{Complete SCJVM Services Model}
+\input{\string~/SCJ-VM/James/scjvmservices.zed}
+
+\chapter{Z/Eves Theorems and Proofs}
+\label{zeves-proofs}
+
+\section{Additional Toolkit Lemmas}
 \label{additional-lemmas}
 \normalsize
 \input{\string~/SCJ-VM/James/additional_lemmas.zed}

@@ -102,7 +102,7 @@ embedded systems require certification under safety standards such as
 To facilitate the certification of such systems, Safety-Critical Java
 (SCJ)~\cite{locke2013} was created.
 SCJ is based on the RTSJ but removes the features of the RTSJ that
-would make it diffcult to certify programs written using it.
+would make it difficult to certify programs written using it.
 Some particular differences of SCJ from standard Java are in the areas
 of scheduling and memory management.
 
@@ -158,7 +158,7 @@ HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
   richard2010}.
 Of these, only Fiji VM and icecap HVM appear to be maintained and,
 while icecap provides support for most of SCJ, Fiji VM does not
-necessariy provide proper support for all aspects of SCJ.
+necessarily provide proper support for all aspects of SCJ.
 Since the correct execution of an SCJ program depends on the
 correctness of the underlying virtual machine, it must be ensured in
 addition to checking the correctness of the program.
@@ -268,11 +268,11 @@ from that of standard Java bytecode, so much of the Java Virtual
 Machine specification~\cite{lindholm2014} also applies to SCJVMs.
 
 The need for a compilation strategy arises from the fact that most
-exising SCJVMs compile Java bytecode to some native code in order to
+existing SCJVMs compile Java bytecode to some native code in order to
 improve performance on embedded systems.
 We will focus on compilation from Java bytecode to C for much the same
 reasons as the icecap HVM and Fiji VM:~C is a language already widely
-used in embedded systems and is suffciently low level to enable its
+used in embedded systems and is sufficiently low level to enable its
 use as an efficient target language while retaining enough abstraction
 to be used by the programmer.
 
@@ -316,7 +316,7 @@ The consistency of the specification and the correctness of the
 compilation strategy must be proved by formal mathematical proof from
 algebraic laws known to be correct.
 \Circus{} has many such laws already developed and has an underlying
-semantics given using the model of Hoare and He's Unifying Thories of
+semantics given using the model of Hoare and He's Unifying Theories of
 Programming (UTP)~\cite{hoare1998} that can be used to verify the
 correctness of the laws.
 
@@ -359,7 +359,7 @@ There is a technical report that describes the work done so far and
 will contribute toward the thesis included as
 Appendix~\ref{techreport}.
 We have also included two papers written in the course of the work as
-Appendicies~\ref{jtrespaper} and \ref{ifmpaper}.
+Appendices~\ref{jtrespaper} and \ref{ifmpaper}.
 
 \chapter{Progress Report}
 \label{progress-report-chapter}
@@ -376,7 +376,7 @@ of the specification relative to the compilation strategy:
 \item the SCJVM services, which are services required to support the
   core execution environment that may be provided separately and are
   not affected by the compilation strategy.
-\item the core execution enviroment, which manages execution of
+\item the core execution environment, which manages execution of
   bytecode instructions and is refined during the compilation
   strategy, and
 \end{itemize}
@@ -654,7 +654,7 @@ services model, with fewer Z schemas and more reliance on \Circus{}
 actions.
 The core execution environment has more axiomatic definition
 paragraphs than the SCJVM services model as these are used to
-introduce special method identifiers and auxillary functions on given
+introduce special method identifiers and auxiliary functions on given
 types representing SCJVM words.
 The core execution environment model has not yet been the subject of
 proof, though it has been syntax and typechecked using CZT.
