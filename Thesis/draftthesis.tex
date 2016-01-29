@@ -1,0 +1,116 @@
+\documentclass[a4paper,10pt]{report}
+
+\usepackage[in]{fullpage}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{amsmath}
+\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
+\usepackage[section]{placeins}
+\usepackage[color,cntglobally]{circus}
+\usepackage{fixltx2e}
+\usepackage{comment}
+
+\usetikzlibrary{calc}
+
+\title{A Framework for Verifying Safety-Critical Java Virtual Machines}
+\author{James Baxter}
+\date{}
+
+\bibliography{literature} 
+
+\CountDefsfalse
+
+\newif\ifFullModel
+\FullModelfalse
+\newcommand{\ifnFullModel}{\ifFullModel\else}
+
+
+%TC:group zed 0 displaymath
+%TC:group axdef 0 displaymath
+%TC:group schema 1 displaymath
+%TC:group circus 0 displaymath
+%TC:group circusaction 0 displaymath
+%TC:macroword \Circus 1 
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  In recent years Java has been increasingly considered as a language
+  for safety-critical embedded systems.
+  However, some features of Java are unsuitable for such systems and
+  this has resulted in the creation of Safety-Critical Java (SCJ).
+  The different scheduling and memory management model of SCJ means
+  that a specialised virtual machine is required to run SCJ programs.
+  Given the safety-critical nature of the applications, it must be
+  ensured that the virtual machine is correct, but so far no SCJ
+  virtual machine has been formally verified.
+  In this dissertation, we propose a framework for verification of SCJ
+  virtual machines.
+  We consider the differences between SCJ and standard Java, and
+  discuss some of the existing virtual machines for SCJ.
+  Seeing that many SCJ virtual machines precompile to native code, we
+  then survey some of the literature on compiler correctness.
+  Finally, we present some preliminary results identifying the
+  requirements of the services of an SCJ virtual machine and
+  constructing a formal model of those requirements.
+\end{abstract}
+
+\tableofcontents
+
+\include{introduction}
+
+\include{field-survey}
+
+\include{scjvm-services}
+
+\include{cee}
+
+\include{conclusion}
+
+{\raggedright \printbibliography}
+
+\appendix
+
+\chapter{Full SCJVM Services Model}
+\label{full-scjvm-services-model}
+\FullModeltrue
+\section{Memory Manager}
+\input{\string~/SCJ-VM/James/memorymanager.zed}
+
+\section{Scheduler}
+\input{\string~/SCJ-VM/James/scheduler.zed}
+
+\section{Real-Time Clock}
+\input{\string~/SCJ-VM/James/realtimeclock.zed}
+
+\section{Complete SCJVM Services Model}
+\input{\string~/SCJ-VM/James/scjvmservices.zed}
+
+\chapter{Z/Eves Theorems and Proofs}
+\label{zeves-proofs}
+
+\section{Additional Toolkit Lemmas}
+\label{additional-lemmas}
+\normalsize
+\input{\string~/SCJ-VM/James/additional_lemmas.zed}
+
+\section{Proofs of Additional Toolkit Lemmas}
+\label{additional-lemmas-proofs}
+\scriptsize
+\input{\string~/SCJ-VM/James/additional_lemmas_sets_proofs.zed}
+\input{\string~/SCJ-VM/James/additional_lemmas_relations_proofs.zed}
+\input{\string~/SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
+
+\section{Memory Manager Theorems}
+\label{memory-manager-theorems}
+\normalsize
+\input{\string~/SCJ-VM/James/memorymanager_theorems.zed}
+
+\section{Proofs of Memory Manager Theorems}
+\label{memory-manager-proofs}
+\scriptsize
+\input{\string~/SCJ-VM/James/memorymanager_proofs.zed}
+
+\end{document}

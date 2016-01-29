@@ -1,0 +1,270 @@
+
+\chapter{Introduction}
+
+This chapter begins by explaining the motivation for the work
+described in this dissertation.
+Afterwards, the objectives of the work, which come from the
+motivation, are described and, finally, the structure of the remainder
+of this dissertation is described.
+
+\section{Motivation}
+
+Since its release in 1995, the Java programming
+language~\cite{gosling2013} has increased in popularity and is now in
+use on many platforms.
+This popularity means that Java has been used in a wide variety of
+areas including desktop applications, on the internet in the form of
+Java applets, on smartcards~\cite{chen2000} and on mobile
+devices~\cite{oracle2014}.
+Several languages derived from Java have also been created, including
+Scala~\cite{lausanne2015} and Ceylon~\cite{redhat2015}, as well as
+older variants of Java such as MultiJava~\cite{clifton2006} and
+Pizza~\cite{odersky1997}, which have in turn contributed to the
+development of Java.
+Scala adds functional programming features to Java, some of which have
+been incorporated into Java 8.
+Ceylon extends Java's type system with features such as union types,
+allowing some common Java errors to be checked at compile time through
+the type system.
+
+One use of Java that is of particular interest is in embedded systems.
+While early versions of Java were developed for programming,
+particularly TV set-top boxes, the technology was not well received.
+It was only in the growing sector of the internet that Java initially
+found a market~\cite{horstmann2002}.
+However, it was soon realised that the portability, modularity, safety
+and security benefits of Java could be of great use in embedded
+systems~\cite{mulchandani1998}.
+This required the creation of specialised Java virtual machines as the
+standard JVM is too large for most embedded systems.
+Much research has gone into making smaller and smaller virtual
+machines to widen the range of devices that Java can be used
+on~\cite{caska2011,thomm2010}.
+
+Many embedded systems are also real-time systems, and features of Java
+such as the garbage collector and the concurrency model make it
+unsuitable for real-time systems, for which strict guarantees about
+timing properties must be made.
+To address this issue the Real-Time Specification for Java
+(RTSJ)~\cite{gosling2000} was created.
+The RTSJ extends Java with a scoped memory model and a more
+predictable scheduling system.
+
+While the RTSJ addresses real-time requirements of embedded systems,
+many embedded systems are also safety-critical.
+For these conformance to certain standards, such as \mbox{DO-178C} and
+ISO~26262, is required.
+To support the development of safety-critical programs that meet these
+requirements in Java, the Safety-Critical Java (SCJ)
+specification~\cite{locke2013} has been created.
+SCJ is a subset of the RTSJ that removes the features that cannot be
+easily statically reasoned about, which means that features such as
+the garbage-collected heap and dynamic class loading are absent from
+SCJ.
+This facilitates the creation of SCJ programs that fulfil formal
+specifications; indeed work has already been done on developing
+correct SCJ programs from formal specifications~\cite{cavalcanti2011,
+  cavalcanti2013}.
+
+On the other hand, even if it can be shown that SCJ programs are
+correct, it must still be ensured those programs are executed
+correctly.
+In the case of Java-like languages, this generally means ensuring the
+Java compiler and Java Virtual Machine (JVM) are correct.
+
+Work has been done on modelling virtual machines for Java, and on the
+formal correctness of compilers targeting those virtual machines.
+Some of the most complete work in that area was by St\"{a}rk, Schmid
+and B\"{o}rger~\cite{stark2001}, who present a model of the full Java
+language and virtual machine, along with a formally verified compiler,
+although for an older version of Java than is current.
+Other work has also been done on modelling the JVM and Java
+compilation using refinement techniques~\cite{duran2010}.
+Additionally there has been work considering machine checked models of
+Java virtual machines and compilers~\cite{lochbihler2012, nipkow2000,
+  strecker2002}.
+Work has also been done on the semantics of Java bytecode and
+verification of standard JVMs~\cite{bertelsen2000, jones1998}.
+
+However, SCJ has a number of differences from standard Java.
+Firstly, as already indicated the SCJ memory model is rather different
+to the standard Java memory model, abandoning the garbage collector in
+favour of a scoped memory model.
+Garbage collection is less predictable and often quite complex, and so
+difficult to reason about and unsuitable for some of the strictest
+certifiability requirements of safety-critical systems.
+By contrast, the scoped memory model provides greater predictability
+on when memory is freed.
+Similarly, the SCJ approach to scheduling differs from that of
+standard Java, using a preemptive priority scheduling approach rather
+than the unpredictable scheduling of standard Java threads.
+These differences of SCJ from standard Java mean that the standard JVM
+is not suitable for running SCJ programs.
+A specialised virtual machine is required.
+
+In the case of virtual machines for embedded systems, the priorities
+are usually size and speed, which generally results in machines that
+are hard to verify.
+Moreover, virtual machines that rely on interpreting bytecode are
+unsuitable for real-time embedded systems as they are likely to be
+slower.
+An alternative method to run a Java program is to compile it to native
+code and some authors have suggested doing so either
+directly~\cite{schultz2003} or via C~\cite{varma2004}.
+There are several virtual machines that take this approach including
+Fiji VM~\cite{pizlo2009}, Icecap HVM~\cite{sondergaard2012} and
+OVM~\cite{armbruster2007}.
+This allows correct running of an otherwise correct SCJ program to be
+viewed as a compiler verification problem.
+
+There has been much research into compiler correctness.
+Much of the work follows a commuting diagram approach, in which the
+compilation is shown to be consistent with transformation between the
+semantics of the source and target languages\cite{morris1973,
+  thatcher1979}.
+This approach is apparent in much of the early work such as that of
+McCarthy and Painter~\cite{mccarthy1967}, as well as in more recent
+work such as the CompCert project~\cite{leroy2009a, leroy2009b}.
+There has also been work that follows this approach and employs
+automated theorem provers~\cite{klein2006, milner1972, nipkow2000}.
+They provide additional certainty that the proof is correct and can
+also provide code generation facilities to allow creation of a working
+compiler.
+
+An alternative is the algebraic approach to compiler
+verification~\cite{hoare1991, sampaio1993}, based on modelling
+compilation using refinement calculi~\cite{back1981, morgan1990,
+  morris1987}.
+This approach appears to be less commonly used but has been applied to
+Java~\cite{duran2005, duran2010} and hardware description
+languages~\cite{perna2010, perna2011}.
+This approach is also quite amenable to automation as it relies on
+refinement laws that can be applied by a term rewriting system.
+
+There is a clear need for formal verification of SCJ virtual machines
+due to the safety-critical nature of the systems involved and the fact
+that safety standards such as DO-178C require it at the highest safety
+levels.
+However, there appears to be little work done in that area and, as far
+as we know, no SCJ virtual machine has been formally verified.
+
+% explain that there is a gap with no verification for SCJ compilers
+% for embedded systems
+
+\section{Objectives}
+
+Our objective is to construct a framework for verification of an SCJ
+virtual machine.
+It will provide the following resources for developers and verifiers:
+\begin{itemize}
+\item a specification of the requirements of an SCJ virtual machine,
+\item a compilation strategy from Java bytecode to native C code,
+\item a formal model of the virtual machine specification,
+\item proofs for validation of the formal model and verification of
+  the compilation strategy, and
+\item a mechanisation of the model and proofs.
+\end{itemize}
+
+The first component required is a specification of the requirements
+for an SCJ virtual machine.
+This specification will shape the rest of the work and there is at
+present no clear specification of what is required of an SCJ virtual
+machine or how it differs from a standard Java virtual machine.
+The specification of requirements needs to consider the requirements
+imposed, both explicitly and implicitly, on virtual machines by the
+SCJ specification~\cite{locke2013} as that provides the authoritative
+source for information on SCJ.
+It is also helpful to consider the approach taken by some existing SCJ
+virtual machines on points where the SCJ specification is unclear.
+The virtual machine must also meet the standard Java Virtual Machine
+specification~\cite{lindholm2014} on points such as how to interpret
+Java bytecode instructions.
+There is much existing work on the semantics of Java bytecode that can
+be used in our work~\cite{bertelsen2000, jones1998, stark2001}.
+
+As many existing virtual machines for SCJ precompile programs to
+native code in order to allow faster execution on embedded systems, it
+seems wise to include that in our framework.
+We will focus on compilation of Java bytecode to C as that is the
+approach adopted by several existing virtual machines for embedded
+systems, including Fiji VM~\cite{pizlo2009} and icecap
+HVM~\cite{sondergaard2012}, and C is already widely used for embedded
+systems software.
+
+There are two main approaches to the specification and verification of
+compilers: the commuting diagram approach and the algebraic approach.
+The commuting diagram approach involves specifying the compiler as a
+function from the source language to the target language and showing
+that it is consistent with transformation between the semantics of the
+source and target languages~\cite{morris1973, thatcher1979}.
+This approach has been used in much of the work on compiler
+correctness, including some of the earliest work~\cite{mccarthy1967}
+and recent work such as that of the CompCert project~\cite{leroy2009a,
+  leroy2009b}.
+
+The algebraic approach involves defining the source and target
+languages in the same specification space, and using proved
+specialised rewrite rules to characterise compilation as model
+transformation in the extended language.
+This approach was first proposed in the early nineties by
+Hoare~\cite{hoare1991} and further developed by
+Sampaio~\cite{hoare1993, sampaio1993}.
+The algebraic approach does not seem to be as popular as the commuting
+diagram approach, but it does have the advantage that the
+specification of the compilation strategy is correct by construction
+as the rewrite rules that comprise it have all been proved.
+
+In order to ensure that the specification is precise and to facilitate
+proofs of its correctness, it must have a model written in some formal
+specification language.
+We will focus on using the \Circus{} specification
+language~\cite{oliveira2009}, as it has been used in some of the
+previous work on formalising SCJ~\cite{cavalcanti2011,
+  cavalcanti2013}.
+It is important that the correctness of the formal models and
+compilation strategy can be shown via mathematical proof, which
+requires the specification language to have a well-defined semantics.
+\Circus{} has such a semantics, defined using the model of Unifying
+Theories of Programming (UTP)~\cite{hoare1998}.
+
+To prevent mistakes in the proofs, it is helpful to mechanise the
+formal model and proofs.
+There are various systems that can be used for this, but we will focus
+on the proof assistant Isabelle~\cite{nipkow2002, nipkow2014}.
+It has existing mechanisations of \Circus{}~\cite{feliachi2012} and
+the UTP~\cite{foster2015}, and has been used in previous work
+verifying compilers for Java-like languages~\cite{klein2006,
+  strecker2002, lochbihler2010}, making it well placed for our work.
+
+We have already made some progress towards the construction of the
+proposed framework with a specification and formal model of the
+requirements of an SCJ virtual machine.
+It is expected that the model will be checked using a theorem prover;
+our next task is then the development of a compilation strategy to
+native code.
+
+\section{Document Structure}
+
+Having given a brief overview of the area of study and identified the
+problem we wish to consider, the remainder of this dissertation
+proceeds as follows.
+
+In Chapter~\ref{literature-review-chapter} we examine the literature
+on safety-critical virtual machines and compilers for Java-like
+languages.
+This includes a discussion of why a safety-critical variant of Java is
+necessary and how it differs from standard Java.
+We also explain why a specialised virtual machine is necessary for
+SCJ.
+This is followed by a survey of the existing virtual machines for
+Safety-Critical Java and the techniques used in verifying compilers.
+
+In Chapter~\ref{scjvm-services-chapter} we present an identification of the
+requirements of SCJ virtual machine services, with a formal model of
+those requirements in the \Circus{} specification language.
+This is followed by a model of the an SCJ virtual machine core
+execution environment in Chapter~\ref{cee-chapter}.
+
+Finally, we conclude in Chapter~\ref{conclusions-chapter} by
+summarising our contributions and mentioning the wider context of this
+research.
