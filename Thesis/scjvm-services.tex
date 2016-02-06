@@ -162,7 +162,6 @@ is always a fixed base for the layout of memory.
 The root backing store is used as the backing store for the immortal
 memory area.
 
-
 A backing store may have other backing stores nested within it, so
 that a possible memory layout is as shown in Figure~\ref{memory-fig}.
 In this example, the backing store of the mission memory is nested
@@ -310,11 +309,18 @@ operation and is required by the infrastructure for obtaining the
 memory area of a given object.
 
 Allocation within backing stores is possible through the
-\texttt{allocate\-Memory} operation, which allocates blocks of
-memory within the current allocation context.
+\texttt{allocate\-Memory} operation, which allocates blocks of memory
+within the current allocation context.
 This operation is provided in order for the core execution environment
 to implement the \texttt{new} bytecode instruction and is not directly
 available to the program or infrastructure.
+Though the memory manager allocates space for objects, there is no
+notion of objects in the memory manager since they only exist at the
+level of Java code, and so are dealt with by the core execution
+environment. 
+Dealing solely with blocks of memory in the SCJVM services allows for
+objects to be represented in a way appropriate to the structure of the
+core execution environment.
 Allocations within backing stores must not cause fragmentation, so as
 to fulfil real-time predictability requirements.
 The operation \texttt{allocate\-Memory} must also zero the memory it
@@ -433,14 +439,14 @@ Table~\ref{scheduler-table}.
     (none)
     \\\texttt{makeThread} &
     priority level \newline
-    backing store identifier \newline
     class identifier \newline
     method identifier \newline 
     argument list &
     thread identifier &
     (none)
     \\\texttt{startThread} &
-    thread identifier &
+    thread identifier \newline
+    backing store identifier &
     (none) &
     invalid identifier \newline
     thread already started
@@ -539,8 +545,9 @@ The main thread's identifier can be retrieved using the
 
 Threads other than the main thread can be created by the
 \texttt{makeThread} operation, which takes the entry point and
-priority level of the thread to be created, as well as a backing store
-as the allocation context and a stack.
+priority level of the thread to be created.
+The entry point is expressed as the class and identifier of the method
+that the thread is to run, along with any arguments for the method.
 This operation returns the identifier of the newly created thread,
 which must be stored by the infrastructure.
 The SCJVM does not distinguish between the different thread-release
@@ -549,9 +556,6 @@ must set a timer separately using the real-time clock API when a
 thread is created.
 The only priorities allowed for threads are the software priorities,
 as hardware priorities are reserved for interrupts.
-The backing store supplied is only used to set the backing store in
-the memory manager when the thread starts and is not stored by the
-scheduler.
 
 The SCJVM threads that are eligible to run must be scheduled as if
 they are placed in queues with one queue for each priority.
@@ -566,6 +570,12 @@ The reason for the separation between thread creation and thread start
 is to facilitate the implementation of the SCJ control flow, which
 requires that threads all start together after mission initialisation
 has been completely finished.
+A backing store is provided when a thread is started to serve as the
+allocation context of the thread since the per-release memory of an
+event handler is only created as the handler thread is started.
+The backing store supplied is only used to set the backing store in
+the memory manager and core execution environment when the thread
+starts and is not stored by the scheduler.
 
 The identifier of the currently running thread can be obtained through
 \texttt{get\-Current\-Thread}.
@@ -761,20 +771,21 @@ Section~\ref{scjvm-services-section}
 \subsection{Memory Manager}
 \label{memory-manager-model-section}
 
-The SCJVM memory manager is responsible for managing the backing
-stores that underlie memory areas, including creation, clearing, and
-resizing of backing stores, and allocation within them.
+As already said, the SCJVM memory manager is responsible for managing
+the backing stores that underlie memory areas, including creation,
+clearing, and resizing of backing stores, and allocation within them.
 The memory manager must also manage allocation and freeing of stack
 space.
 
-We begin this section by declaring the types and channels needed for
-the memory manager model, then build up the model in several layers,
-beginning with memory blocks that allow allocation, then adding in the
-structure of backing stores that may contain other backing stores
-nested inside.
-The global memory manager covering all the backing stores is then
-specified and then thread handling considerations are taken into account.
-Finally, the stack memory management is specified, with the stack area
+In our formal model, we first declare the types and channels needed
+for the memory manager model, then build up the model in several
+layers, beginning with memory blocks that allow allocation, then
+adding in the structure of backing stores that may contain other
+backing stores nested inside.
+Afterwards, the global memory manager covering all the backing stores
+is specified and thread handling considerations are taken into
+account.
+Finally, the stack memory management is defined, with the stack area
 based on the memory blocks model.
 
 \input{\string~/SCJ-VM/James/memorymanager.zed}
