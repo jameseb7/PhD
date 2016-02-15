@@ -203,7 +203,7 @@ Table~\ref{memory-manager-table} as well.
 \begin{table*}[ht]
   \centering
   \footnotesize
-  \begin{tabular}{|l|p{3.2cm}|p{3.2cm}|p{5cm}|}
+  \begin{tabular}{|l|p{3.1cm}|p{3.1cm}|p{3.9cm}|}
     Operation & Inputs & Outputs & Error Conditions \\
     \hline
     \texttt{getRootBackingStore} &
@@ -213,12 +213,12 @@ Table~\ref{memory-manager-table} as well.
     \\\texttt{getCurrentAllocationContext} &
     (none) &
     backing store identifier &
-    no current thread allocation context
+    no current allocation context
     \\\texttt{setCurrentAllocationContext} &
     backing store identifier &
     (none) &
     invalid identifier \newline
-    no current thread allocation context
+    no current allocation context
     \\\texttt{getTotalSize} &
     backing store identifier &
     size in bytes &
@@ -239,7 +239,7 @@ Table~\ref{memory-manager-table} as well.
     size in bytes &
     memory pointer &
     insufficient free memory \newline
-    no current thread allocation context
+    no current allocation context
     \\\texttt{makeBackingStore} &
     backing store identifier \newline
     size in bytes & 
@@ -249,7 +249,7 @@ Table~\ref{memory-manager-table} as well.
     \\\texttt{clearBackingStore} &
     backing store identifier &
     (none) &
-    invalid identifier
+    invalid identifier \newline
     nested backing store in use
     \\\texttt{resizeBackingStore} &
     backing store identifier \newline
@@ -812,6 +812,10 @@ Outputs from operations with output are provided via a separate return
 channel and all operations also report whether an error occurred via a
 separate error reporting channel.
 
+Having specified the SCJVM services related to memory management in
+this section, we cover the next group of services, relating to
+scheduling, in the next section.
+
 \subsection{Scheduler}
 \label{scheduler-model-section}
 
@@ -859,7 +863,7 @@ the scheduler.
 
 \input{\string~/SCJ-VM/James/realtimeclock.zed}
 
-We have specified the real-time clock by tracking the current time and
+We have specified the real-time clock that tracks the current time and
 any alarm that may be set.
 Operations are provided to set and clear the alarm.
 The state of the clock is updated when a clock interrupt signal is
@@ -884,9 +888,8 @@ We have divided these services into three areas, the memory manager,
 the scheduler, and the real-time clock, and detailed the services
 provided in each area.
 We have also presented our model of the SCJVM services in the
-\Circus{} specification language, of which a full version without
-explanatory text can be found in
-Appendix~\ref{full-scjvm-services-model}.
+\Circus{} specification language, of which a full version can be found
+in Appendix~\ref{full-scjvm-services-model}.
 Our model is constructed with a \Circus{} process for each of the
 three areas of the model.
 The memory manager process largely consists of Z data operations on
@@ -907,9 +910,9 @@ between the processes in the model.
 The use of \Circus{} has allowed us to specify the few necessary
 points of communication between these processes, and also their
 relation to hardware interrupts and the core execution environment.
-The fact that the requirements scheduler and memory manager model are
-largely expressed in Z allows them to be checked and proved using Z
-proof tools.
+The fact that the requirements of scheduler and memory manager model
+are largely expressed in Z allows them to be checked and proved using
+Z proof tools.
 Indeed, we have already partially subjected the memory manager model
 to proof using Z/Eves.
 The proofs we have performed are consistency proofs and proofs that
