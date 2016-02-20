@@ -757,11 +757,11 @@ Tables~\ref{memory-manager-table}, \ref{scheduler-table}, and
 
 We now present the formal model of the SCJVM services in the \Circus{}
 specification language.
-The model is structured with a single process for each group of SCJVM
+The model is structured using a single process for each group of SCJVM
 services described above, which are then combined in parallel to form
 a complete model of the SCJVM services.
 We describe the model of the memory manager in
-Section~\ref{memory-manager-model-section}, the scheduler model in
+Section~\ref{memory-manager-model-section}, the scheduler in
 Section~\ref{scheduler-model-section}, and the real-time clock in
 Section~\ref{realtime-clock-model-section}.
 Finally, the parts of the model are combined in
@@ -771,22 +771,25 @@ Section~\ref{scjvm-services-section}
 \subsection{Memory Manager}
 \label{memory-manager-model-section}
 
-As already said, the SCJVM memory manager is responsible for managing
-the backing stores that underlie memory areas, including creation,
-clearing, and resizing of backing stores, and allocation within them.
-The memory manager must also manage allocation and freeing of stack
-space.
+As already said, the SCJVM memory manager is the component that
+manages the backing stores that underlie memory areas, and provides
+operations for creating, clearing, and resizing backing stores, and
+allocating within them.
+The memory manager also handles allocation and freeing of stack space.
 
 In our formal model, we first declare the types and channels needed
 for the memory manager model, then build up the model in several
-layers, beginning with memory blocks that allow allocation, then
-adding in the structure of backing stores that may contain other
-backing stores nested inside.
+layers, beginning with memory blocks that allow operations such as
+allocation, clearing, and resizing, then adding in the structure of
+backing stores that may contain other backing stores nested inside.
 Afterwards, the global memory manager covering all the backing stores
-is specified and thread handling considerations are taken into
+is specified, and thread handling considerations are taken into
 account.
 Finally, the stack memory management is defined, with the stack area
 based on the memory blocks model.
+In this section, we present a \Circus{} process that defines the
+memory manager; the paragraphs of this process include a Z
+specification that defines each of these layers separately.
 
 \input{\string~/SCJ-VM/James/memorymanager.zed}
 
