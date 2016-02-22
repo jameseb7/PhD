@@ -29,13 +29,18 @@
 \FullModelfalse
 \newcommand{\ifnFullModel}{\ifFullModel\else}
 
+\newcommand{\directsubclass}{\prec_\mathrm{d}}
+\newcommand{\directsubclassid}{\prec_\mathrm{D}}
+\newcommand{\subclassid}{\preceq}
 
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
 %TC:group schema 1 displaymath
 %TC:group circus 0 displaymath
 %TC:group circusaction 0 displaymath
-%TC:macroword \Circus 1 
+%TC:macroword \Circus 1
+%TC:group theorem 1 displaymath
+%TC:group zproof 0 displaymath 
 
 \begin{document}
 \maketitle
@@ -81,16 +86,38 @@
 \label{full-scjvm-services-model}
 \FullModeltrue
 \section{Memory Manager}
-\input{\string~/SCJ-VM/James/memorymanager.zed}
+\input{../../SCJ-VM/James/memorymanager.zed}
 
 \section{Scheduler}
-\input{\string~/SCJ-VM/James/scheduler.zed}
+\input{../../SCJ-VM/James/scheduler.zed}
 
 \section{Real-Time Clock}
-\input{\string~/SCJ-VM/James/realtimeclock.zed}
+\input{../../SCJ-VM/James/realtimeclock.zed}
 
 \section{Complete SCJVM Services Model}
-\input{\string~/SCJ-VM/James/scjvmservices.zed}
+\input{../../SCJ-VM/James/scjvmservices.zed}
+
+\chapter{Full Core Execution Environment Model}
+\label{full-cee-model}
+
+\section{Classes}
+\input{../../SCJ-VM/James/Bytecode/classes.zed}
+
+\section{Code Area}
+\input{../../SCJ-VM/James/Bytecode/code_area.zed}
+
+\section{Objects and Memory}
+\input{../../SCJ-VM/James/Bytecode/memory.zed}
+
+\section{Stack Frames}
+\input{../../SCJ-VM/James/Bytecode/stack_frames.zed}
+
+\section{Interpreter}
+\input{../../SCJ-VM/James/Bytecode/interpreter.zed}
+
+\section{Launcher}
+\input{../../SCJ-VM/James/Bytecode/launcher.zed}
+
 
 \chapter{Z/Eves Theorems and Proofs}
 \label{zeves-proofs}
@@ -98,23 +125,35 @@
 \section{Additional Toolkit Lemmas}
 \label{additional-lemmas}
 \normalsize
-\input{\string~/SCJ-VM/James/additional_lemmas.zed}
+
+%TC:ignore
+\input{../../SCJ-VM/James/additional_lemmas.zed} 
+%TC:endignore
 
 \section{Proofs of Additional Toolkit Lemmas}
 \label{additional-lemmas-proofs}
 \scriptsize
-\input{\string~/SCJ-VM/James/additional_lemmas_sets_proofs.zed}
-\input{\string~/SCJ-VM/James/additional_lemmas_relations_proofs.zed}
-\input{\string~/SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
+
+%TC:ignore
+\input{../../SCJ-VM/James/additional_lemmas_sets_proofs.zed}
+\input{../../SCJ-VM/James/additional_lemmas_relations_proofs.zed}
+\input{../../SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
+%TC:endignore
 
 \section{Memory Manager Theorems}
 \label{memory-manager-theorems}
 \normalsize
-\input{\string~/SCJ-VM/James/memorymanager_theorems.zed}
+
+%TC:ignore
+\input{../../SCJ-VM/James/memorymanager_theorems.zed}
+%TC:endignore
 
 \section{Proofs of Memory Manager Theorems}
 \label{memory-manager-proofs}
 \scriptsize
-\input{\string~/SCJ-VM/James/memorymanager_proofs.zed}
+
+%TC:ignore
+\input{../../SCJ-VM/James/memorymanager_proofs.zed}
+%TC:endignore
 
 \end{document}

@@ -2,12 +2,12 @@
 \label{cee-chapter}
 
 This chapter describes the core execution environment (CEE) of an
-SCJVM; it is responsible for executing Java bytecode instructions.
-The CEE is aware of the structure of Java objects
-and classes in order to properly handle some bytecode instructions.
-In addition, the CEE of an SCJVM manages the flow of execution surrounding the
-execution of bytecode instructions, including handling safelet setup
-and mission execution.
+SCJVM, which executes Java bytecode instructions.
+The CEE is aware of the structure of Java objects and classes in order
+to properly handle some bytecode instructions.
+In addition, the CEE of an SCJVM manages the flow of execution
+surrounding the execution of bytecode instructions, including handling
+safelet setup and mission execution.
 
 As shown in Figure~\ref{cee-fig}, we view the core execution
 environment as being composed of four parts:
@@ -129,17 +129,19 @@ First, the code area is described, beginning with a description of the
 class structure in Section~\ref{cee-classes-section} that is then used
 in the description of the code area itself in
 Section~\ref{cee-code-area-section}.
-The memory component, along with the structure of objects, is described
-in Section~\ref{cee-memory-section}.
+The memory component, along with the structure of objects, is
+described in Section~\ref{cee-memory-section}.
 The interpreter is described by first describing the stack frame
 structure in Section~\ref{cee-stack-frames-section}, then the
 interpreter itself is presented in
 Section~\ref{cee-interpreter-section}.
 The launcher is presented in Section~\ref{cee-launcher-section}.
 Finally the parts are drawn together into the complete model in
-Section~\ref{complete-cee-section}.
+Section~\ref{complete-cee-section}. 
+A full version of the CEE model can be found in
+Appendix~\ref{full-cee-model}.
 
-\section{Assumptions and Bytecode Subset}
+\section{Bytecode Subset}
 \label{cee-assumptions-section}
 
 Due to the complexity of the JVM and Java bytecode, we model a subset
@@ -156,9 +158,25 @@ that are most of interest in creating the compilation strategy.
 
 The bytecode instructions in our subset are described in
 Table~\ref{bytecode-subset-table}.
-We mainly focus on manipulation of objects and method invocation,
-since those are core concepts of Java bytecode and are likely to
-require special handling by the compilation strategy.
+Java bytecode instructions operate over a state that consists of
+information on all loaded classes, a stack frame, and the object data
+residing in memory.
+Various pieces of class information are required for execution of
+bytecode instructions but the constant pool, which stores all the
+constants and names required by the class, is the main information
+used.
+The constant pool contains references to classes, methods and fields
+used by the bytecode instructions in the class, as well as constant
+values used in the code.
+The form of the constant pool is a large array.
+Indices into this array are used as parameters to instructions
+requiring information from the constant pool.
+For example, the \texttt{getfield} and \texttt{putfield} instructions
+take constant pool index parameters pointing to a reference to a field
+whose value should be obtained or set.
+Other class information used at runtime includes information on fields
+and methods belonging to the class, which is required for creation of
+objects and invocation of methods.
 
 \begin{table}
   \centering
@@ -222,6 +240,37 @@ require special handling by the compilation strategy.
   \label{bytecode-subset-table}
 \end{table}
 
+The frame stack forms the second part of the JVM manipulated by
+bytecode instructions and consists of a series of frames that contain
+the runtime information for each invocation of a method.
+When a method is invoked, a new stack frame is created for it and
+pushed onto the frame stack, and when the method returns, the stack
+frame is popped from the stack.
+Each stack frame contains an operand stack, which is used to store
+values manipulated by bytecode instructions, and an array of local
+variables.
+Most bytecode instructions manipulate the operand stack in some way,
+popping arguments from it, pushing results to it or performing
+specific operations upon it (such as in the case of the \texttt{dup}
+instruction, which duplicates the value on top of the operand stack).
+The local variables are used to store the arguments of a method and
+the results of computations performed on the operand stack.
+Operations are not performed directly on the local variables, so the
+only bytecode instructions that affect them are those for moving
+values between the operand stack and the local variables
+(\texttt{aload} and \texttt{astore} are examples of such
+instructions).
+
+Some bytecode instructions also manipulate objects, which in our case
+reside in backing store memory.
+Such instructions include \texttt{new}, which creates objects, and
+\texttt{getfield}, which gets the value from a field of an object.
+
+In our choice of instructions for the subset, we mainly focus on
+manipulation of objects and method invocation, since those are core
+concepts of Java bytecode and are likely to require special handling
+by the compilation strategy.
+
 The instruction \texttt{dup} is included as an example of a simple
 instruction that operates on the operand stack.
 It has been chosen for its frequent occurrence in object initialisation.
@@ -235,9 +284,9 @@ instructions and can be emulated, albeit inefficiently, with the
 instructions given here.
 
 Both \texttt{invokevirtual} and \texttt{invokespecial}, which invoke
-methods on objects, are supplied, as \texttt{invokespecial} chooses
-the method to invoke in a different way and is required for object
-initialisation.
+methods on objects, are supplied, since the \texttt{invokespecial}
+instruction chooses the method to invoke in a different way and is
+required for object initialisation.
 
 We do not handle exceptions are not handled; errors in the SCJVM are
 instead handled by simply aborting execution.
@@ -329,7 +378,7 @@ The class type will be used in the code area defined the next section
 but is defined in its own section as it is a large data type of
 interest in its own right as a representation of Java classes.
 
-\input{\string~/SCJ-VM/James/Bytecode/classes.zed}
+\input{../../SCJ-VM/James/Bytecode/classes.zed}
 
 \section{Code Area}
 \label{cee-code-area-section}
@@ -341,7 +390,7 @@ The code area is defined as a \Circus{} process with channels to
 access the classes and code contained within it, which do not change
 throughout the execution of the SCJ program.
 
-\input{\string~/SCJ-VM/James/Bytecode/code_area.zed}
+\input{../../SCJ-VM/James/Bytecode/code_area.zed}
 
 \section{Objects and Memory}
 \label{cee-memory-section}
@@ -353,7 +402,7 @@ As objects are used throughout the core execution environment, in both
 the interpreter and launcher, the management of objects is handled in
 a separate \Circus{} process, which is described in this section.
 
-\input{\string~/SCJ-VM/James/Bytecode/memory.zed}
+\input{../../SCJ-VM/James/Bytecode/memory.zed}
 
 \section{Stack Frames}
 \label{cee-stack-frames-section}
@@ -366,7 +415,7 @@ significant part of the JVM state.
 The stack frames are used to form the frame stack used by the
 interpreter in the next section.
 
-\input{\string~/SCJ-VM/James/Bytecode/stack_frames.zed}
+\input{../../SCJ-VM/James/Bytecode/stack_frames.zed}
 
 \section{Interpreter}
 \label{cee-interpreter-section}
@@ -379,7 +428,7 @@ The interpreter must also handle thread switches, maintaining an
 interpreter state for each thread, since thread switches may occur
 between bytecode instructions.
 
-\input{\string~/SCJ-VM/James/Bytecode/interpreter.zed}
+\input{../../SCJ-VM/James/Bytecode/interpreter.zed}
 
 \section{Launcher}
 \label{cee-launcher-section}
@@ -389,7 +438,7 @@ responsible for coordinating the execution of bytecode instructions by
 the interpreter and managing parts of the SCJ infrastructure such as
 the safelet and mission model.
 
-\input{\string~/SCJ-VM/James/Bytecode/launcher.zed}
+\input{../../SCJ-VM/James/Bytecode/launcher.zed}
 
 \section{Complete Core Execution Environment Model}
 \label{complete-cee-section}
@@ -398,4 +447,4 @@ We now combine the four \Circus{} processes representing the different
 parts of the core execution environment into a single \Circus{}
 process representing then entire core execution environment.
 
-\input{\string~/SCJ-VM/James/Bytecode/complete_cee.zed}
+\input{../../SCJ-VM/James/Bytecode/complete_cee.zed}

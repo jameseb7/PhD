@@ -791,7 +791,7 @@ In this section, we present a \Circus{} process that defines the
 memory manager; the paragraphs of this process include a Z
 specification that defines each of these layers separately.
 
-\input{\string~/SCJ-VM/James/memorymanager.zed}
+\input{../../SCJ-VM/James/memorymanager.zed}
 
 This concludes the specification of the memory manager.
 We have built the memory manager in several layers, first defining the
@@ -828,7 +828,7 @@ run, and handling locks and blocking of threads.
 The scheduler must also manage interrupts as they interfere with
 thread scheduling.
 
-\input{\string~/SCJ-VM/James/scheduler.zed}
+\input{../../SCJ-VM/James/scheduler.zed}
 
 This concludes the specification of the scheduler.
 We have specified threads and information about them, including their
@@ -864,7 +864,7 @@ for the real-time clock.
 The type used for interrupt identifiers is the same as that used by
 the scheduler.
 
-\input{\string~/SCJ-VM/James/realtimeclock.zed}
+\input{../../SCJ-VM/James/realtimeclock.zed}
 
 We have specified the real-time clock that tracks the current time and
 any alarm that may be set.
@@ -880,7 +880,7 @@ Having defined the three processes that model the three components of
 the VM services, we now compose them in parallel to form the complete
 model of the VM services.
 
-\input{\string~/SCJ-VM/James/scjvmservices.zed}
+\input{../../SCJ-VM/James/scjvmservices.zed}
 
 \section{Final Considerations}
 
