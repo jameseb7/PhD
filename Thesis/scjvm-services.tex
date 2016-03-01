@@ -824,7 +824,7 @@ scheduling, in the next section.
 
 The SCJVM scheduler must manage separate threads of execution, which
 involves tracking information about threads, selecting which thread to
-run, and handling locks and blocking of threads.
+run, handling locks, and blocking threads.
 The scheduler must also manage interrupts as they interfere with
 thread scheduling.
 
@@ -842,7 +842,7 @@ resume threads.
 A mechanism for locking objects to prevent interference has also been
 specified, with priority ceiling emulation as a mechanism for avoiding
 priority inversion problems.
-We also described the mechanism by which interrupt handlers are
+We have also described the mechanism by which interrupt handlers are
 specified and how interrupt processing is performed by starting
 interrupt threads.
 Finally, we have lifted the scheduler operations to \Circus{} actions
@@ -857,17 +857,15 @@ real-time clock, which is used by the SCJ clock API.
 The periodic clock interrupt from the hardware is handled by the SCJVM
 clock and used to manage alarms that trigger when a certain time is
 reached. 
-The interrupt is passed to the scheduler when an alarm triggers and
-the SCJ API implementation should attach an interrupt handler to it
-that simply calls the \texttt{triggerAlarm()} method of \texttt{Clock}
-for the real-time clock. 
-The type used for interrupt identifiers is the same as that used by
-the scheduler.
+If an alarm is set, the interrupt is passed to the scheduler when the
+alarm triggers, the SCJ API implementation should attach an interrupt
+handler to it that simply calls the \texttt{triggerAlarm()} method of
+\texttt{Clock} for the real-time clock. 
 
 \input{../../SCJ-VM/James/realtimeclock.zed}
 
-We have specified the real-time clock that tracks the current time and
-any alarm that may be set.
+We have now specified the real-time clock that tracks the current time
+and any alarm that may be set.
 Operations are provided to set and clear the alarm.
 The state of the clock is updated when a clock interrupt signal is
 received and the clock is checked against the alarm, forwarding the
@@ -884,7 +882,7 @@ model of the VM services.
 
 \section{Final Considerations}
 
-In this chapter we have presented the services that must be provided
+In this chapter, we have presented the services that must be provided
 by an SCJVM in order to support the core execution environment and the
 SCJ API.
 We have divided these services into three areas, the memory manager,
@@ -893,12 +891,13 @@ provided in each area.
 We have also presented our model of the SCJVM services in the
 \Circus{} specification language, of which a full version can be found
 in Appendix~\ref{full-scjvm-services-model}.
-Our model is constructed with a \Circus{} process for each of the
-three areas of the model.
+
+Our model is composed of a \Circus{} process for each of the three
+classes of services we have identified.
 The memory manager process largely consists of Z data operations on
 the state of the memory, which are then lifted to \Circus{} actions
 that can be accessed via channels.
-The scheduler also consists of a large Z model but requires more
+The scheduler also consists of a large Z model, but requires more
 reliance on \Circus{} to specify interaction with interrupts.
 The real-time clock model is mainly made up of \Circus{} actions with
 few Z schemas, though it is also a smaller component than the other
@@ -908,14 +907,15 @@ Overall, the division of the SCJVM services into the three areas we
 have chosen appears to give a good separation between the components
 with little coupling.
 This is shown in Figure~\ref{scjvm-services-model-fig}, where it can
-be seen that only three channels are required for communication
-between the processes in the model.
+be seen that only one channel, $RTCclockInterrupt$, is required for
+communication between the processes in the model.
 The use of \Circus{} has allowed us to specify the few necessary
 points of communication between these processes, and also their
 relation to hardware interrupts and the core execution environment.
+
 The fact that the requirements of scheduler and memory manager model
-are largely expressed in Z allows them to be checked and proved using
-Z proof tools.
+are largely expressed in Z allows them to be checked using Z proof
+tools.
 Indeed, we have already partially subjected the memory manager model
 to proof using Z/Eves.
 The proofs we have performed are consistency proofs and proofs that
@@ -925,39 +925,31 @@ manager model, covering memory blocks and backing stores, and also the
 global memory manager state.
 The theorems we have proved about the memory manager, along with their
 proofs and some additional lemmas about mathematical toolkit objects
-that we proved in the course of our work, can be found in
+that we have proved in the course of our work, can be found in
 Appendix~\ref{zeves-proofs}.
 
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
-        \node[draw,align=center] (MM)  at (9cm,4.5cm) {Memory\\Manager};
-        \node[draw,align=center] (S)   at (1.5cm,3cm)  {Scheduler};
+        \node[draw,align=center] (MM)  at (7cm,2cm) {Memory\\Manager};
+        \node[draw,align=center] (S)   at (1.5cm,1.5cm)  {Scheduler};
         \node[draw,align=center] (RTC) at (9cm,0cm)  {Real-Time\\Clock};
-        \draw (0cm,-2.1cm) rectangle (10.5cm,6cm);
-        \node at (1.5cm,5.5cm) {SCJVM Services};
+        \draw (0cm,-2.1cm) rectangle (10.5cm,3cm);
+        \node at (1.5cm,2.7cm) {SCJVM Services};
         
-        \node[align=center] (HW) at (4.5cm,-3cm) {Hardware};
+        \node[align=center] (HW) at (2.5cm,-3cm) {Hardware};
         
-        \draw[->] (RTC) edge node[below right] {RTCclockInterrupt} (S);
-        \draw[->] (S)   edge[bend left]  node[right] {ScurrentThread}    (MM);
-        \draw[->] (S)   edge             node[right] {MMaddThread}       (MM);
-        \draw[->] (S)   edge[bend right] node[right] {MMremoveThread}    (MM);
+        \draw[->] (RTC) edge node {$RTCclockInterrupt$} (S);
         
-        \draw[-] (HW) -- node[right] {HWinterrupt} coordinate[pos=1] (X) ++(0cm,2cm);
+        \draw[-] (HW) -- node[right] {$HWinterrupt$} coordinate[pos=1] (X) ++(0cm,2.5cm);
         \draw[->] (X) to (S);
         \draw[->] (X) to (RTC);
         
-        \node[align=center] (CEE) at (-2cm,3cm) {Core\\Execution\\Environment};
+        \node[align=center] (CEE) at (-2cm,1.5cm) {Core\\Execution\\Environment};
         \draw[<->] (S) -- (CEE);
-        %\draw[->] (S)   edge             node[] {CEEgetProgramCounter} (CEE);
-        %\draw[->] (S)   edge[bend right] node[] {CEEsetProgramCounter} (CEE);
-
-        \node[align=center] (App) at (5.25cm,7cm) {SCJ Application\\and API};
-        \draw[<->] (5.25cm,6cm) -- (App);
-        % \draw[<->] (S)   edge[bend left] (App);
-        % \draw[<->] (MM)  edge[] (App);
-        % \draw[<->] (RTC) edge[bend right] (App);
+        
+        \node[align=center] (App) at (5.25cm,4cm) {SCJ Application\\and API};
+        \draw[<->] (5.25cm,3cm) -- (App);
       \end{tikzpicture}
       \caption{The structure of the SCJVM services model, showing the
         channels used for communication between the processes in the
