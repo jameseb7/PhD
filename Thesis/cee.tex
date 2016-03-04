@@ -41,7 +41,7 @@ core execution environment.
   \begin{tikzpicture}
 
     \coordinate (width)  at (10cm,0cm);
-    \coordinate (height) at (0cm,7cm);
+    \coordinate (height) at (0cm,6cm);
 
     \path (0,0) -- (height)
     coordinate[pos=0.18] (OS boundary)
@@ -121,6 +121,57 @@ The CEE is the starting point for our compilation strategy, which is
 another main component of our framework for verification of SCJVMs,
 the SCJVM services are unaffected by the compilation strategy and can
 be implemented a separate library.
+
+Each of the components of the CEE is represented by a single \Circus{}
+process in our model.
+The structure of the communication between the processes is show in
+Figure~\ref{cee-model-fig}.
+The code area is used by the memory to obtain class information when
+creating objects, and by the interpreter to obtain bytecode
+instructions and check if one class inherits from another.
+The memory is used by the interpreter and launcher to create objects
+and enter backing stores.
+The memory then communicates the memory manager described in the previous
+chapter to allocate memory for objects and clear backing stores.
+The launcher also communicates with the memory manager to allocate
+backing stores and handle calls to SCJVM memory manager services.
+It must also communicate with the scheduler for the same reason.
+The launcher and interpreter communicate with each other as the
+launcher executes methods in the interpreter and the interpreter
+passes special method invocations back to the launcher for handling.
+Finally, the scheduler, in addition to accepting calls to its services
+from the launcher, informs the interpreter and memory when a thread is
+started, removed or switched to, so that thread switches can be
+properly handled.
+
+\begin{figure}[ht]
+  \centering
+  \begin{tikzpicture}
+    \node[draw, minimum size = 2cm]                  (C) {Code Area};
+    \node[draw, minimum size = 2cm, below right=2cm]       (M) {Memory};
+    \node[draw, minimum size = 2cm, below=2cm]       (I) {Interpreter};
+    \node[draw, minimum size = 2cm, right=2cm] (L) {Launcher};
+
+    \draw[-latex, bend left=10] (I) edge (L);
+    \draw[-latex, bend left=10]  (L) edge (I);
+    \draw[-latex] (I) edge (M);
+    \draw[-latex] (L) edge (M);
+    \draw[-latex] (M) edge (C);
+    \draw[-latex] (I) edge (C);
+
+    \node[below=1.5cm, right=4.5cm] (MM) {Memory Manager};
+    \node[below=5cm, right=5cm] (S) {Scheduler};
+    \draw[-latex] (M) edge (MM);
+    \draw (S) -- +(-4,0) coordinate (X);
+    \draw (X) edge[-latex] (M);
+    \draw (X) edge[-latex] (node cs:name=I, anchor=south);
+    \draw (L) edge[-latex] (S);
+    \draw (L) edge[-latex] (MM);
+  \end{tikzpicture}
+  \caption{The processes in the core execution environment model and
+    their communcation with the each other and the SCJVM services}
+  \label{cee-model-fig}
+\end{figure}
 
 This chapter begins in Section~\ref{cee-assumptions-section} with an
 explanation of the bytecode subset used in our work.
