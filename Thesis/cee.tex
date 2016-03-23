@@ -261,6 +261,18 @@ objects and invocation of methods.
     index for the referenced object, and pushes it onto the operand
     stack.
     \\
+    \texttt{iadd} & (none) &
+    Pops two integer values from the operand stack, adds them, and
+    pushes the result back onto the operand stack.
+    \\
+    \texttt{iconst} & integer value &
+    Pushes the given integer value onto the operand stack of the
+    current method.
+    \\
+    \texttt{ineg} & (none) &
+    Pops an integer value from the operand stack, negates it, and
+    pushes the negated value onto the operand stack.
+    \\
     \texttt{invokespecial} & constant pool index &
     Gets the method and class identifier at the given constant pool
     index and invokes the specified method of the specified class,
@@ -366,17 +378,30 @@ approach can be easily extended to deal with more types.
 
 Further, we do not make a distinction between the different virtual
 machine types in our bytecode instructions.
+This is justified as the bytecode instructions simply handle values as
+32-bit words, with the type information only used for typechecking
+during bytecode validation, which the code passed into the core
+execution environment can be assumed to have already passed (it may be
+done by a separate component, which can be made safe using existing
+work on bytecode validation~\cite{klein2003, stark2001, coglio2000,
+  xavier2003}). 
 Instead, we include instructions that handle values as object
 references, since many of the instructions behave the same for
 different types.
 We would introduce a lot of duplication in the model if, for example,
 both the \texttt{areturn} and \texttt{ireturn} instructions were to be
 included.
-Equally, the arithmetic instructions are also quite simple and type
-specific, so we have excluded them from our model for the sake of
-brevity.
-It is fairly simple to consider more types and arithmetic instructions
-if necessary.
+
+We also include a few arithmetic instructions as an example of how
+integers would be handled.
+Specifically, we include the integer addition operation,
+\texttt{iadd}, as an example of a binary operation, and the integer
+negation operation, \texttt{ineg}, as an example of an unary
+operation.
+We do not include operations for floating point values since the
+operations upon them are not substantially different from those on
+integers at the level of modelling and compilation.
+The model can be easily extended to include more integer operations.
 
 We also do not consider static methods and fields.
 That would add some complexity to our model and most of the
