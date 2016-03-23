@@ -431,9 +431,8 @@ Table~\ref{scheduler-table}.
     argument list &
     thread identifier &
     (none)
-    \\\texttt{startThread} &
-    thread identifier \newline
-    backing store identifier &
+    \\\texttt{startThreads} &
+    list of thread and backing store identifiers \newline
     (none) &
     invalid identifier \newline
     thread already started
@@ -550,8 +549,10 @@ At each moment in time, the thread at the front of the highest
 priority non-empty queue is running.
 A thread becomes eligible to run after it is started, and stops being
 eligible to run when it is blocked.
-A thread is started using the \texttt{start\-Thread} operation and
-must be started by the infrastructure when its enclosing mission
+Threads are started using the \texttt{start\-Threads} operation, which
+takes a list of threads to start, together with the backing stores
+associated with them.
+They must be started by the infrastructure when its enclosing mission
 starts.
 The reason for the separation between thread creation and thread start
 is to facilitate the implementation of the SCJ control flow, which
