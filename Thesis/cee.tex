@@ -540,14 +540,11 @@ process representing the entire core execution environment.
 In this chapter we have presented our model of the core execution
 environment (CEE) of an SCJVM and specified the subset of Java
 bytecode covered in our model.
-Our bytecode subset consists of 11 instructions, which focus on method
+Our bytecode subset consists of 14 instructions, which focus on method
 invocation and the manipulation of objects, since those are core
 concepts of Java.
-We have omitted instructions for arithmetic, since those are
-relatively simple from a perspective of considering compilation to
-native code and can be easily added to the subset.
-We hav also omitted instructions for exception handling, since that
-would compilicate the model while adding little power.
+We have omitted instructions for exception handling, since that would
+compilicate the model while adding little power.
 Our subset is sufficiently small to permit reasoning, but large enough
 to express a variety of SCJ programs.
 
@@ -565,6 +562,20 @@ describes the semantics of each of the bytecode instructions in our
 subset and provides for executing methods.
 The final component is the interpreter, which manages the SCJ mission
 model and coordinates execution.
+
+One interesting point about our model is the handling of special
+methods in the interpreter and launcher.
+This is necessary for several reasons: to allow methods running in the
+interpreter to access the SCJVM services defined in the previous
+chapter, to allow mission setup methods to interact with the launcher,
+and to permit entering of memory areas by interaction with the CEE
+memory component.
+The handling of special methods works by having the interpreter check
+upon invocation of a method whether it requires special handling.
+If it does require special handling, it is passed to the launcher to
+be handled.
+The launcher then performs the required handling of the method,
+communicating with the SCJVM services and the memory as required.
 
 This model forms the first part of our compilation strategy, which is
 the specification of the source language.
