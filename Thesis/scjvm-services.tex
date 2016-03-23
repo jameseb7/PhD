@@ -210,15 +210,6 @@ Table~\ref{memory-manager-table} as well.
     (none) &
     backing store identifier &
     (none)
-    \\\texttt{getCurrentAllocationContext} &
-    (none) &
-    backing store identifier &
-    no current allocation context
-    \\\texttt{setCurrentAllocationContext} &
-    backing store identifier &
-    (none) &
-    invalid identifier \newline
-    no current allocation context
     \\\texttt{getTotalSize} &
     backing store identifier &
     size in bytes &
@@ -236,8 +227,10 @@ Table~\ref{memory-manager-table} as well.
     backing store identifier &
     no backing store found
     \\\texttt{allocateMemory} &
+    backing store identifier \newline
     size in bytes &
     memory pointer &
+    invalid identifier \newline
     insufficient free memory \newline
     no current allocation context
     \\\texttt{makeBackingStore} &
@@ -282,19 +275,6 @@ An SCJ program, on the other hand, does not have direct access to the
 root backing store except through memory areas provided by the
 infrastructure.
 
-In addition to managing the layout of backing stores in general, the
-memory manager must track the current allocation context.
-The operations \texttt{get\-Current\-Allocation\-Context} and
-\texttt{set\-Current\-Allocation\-Context} provide a means to
-get and set the current allocation context.
-Change of the allocation context is used by the methods of the SCJ API
-that allow code to be run with a different memory area as allocation
-context, such as \texttt{execute\-In\-Area\-Of()} and
-\texttt{enter\-Private\-Memory()}.
-The memory manager stores each thread's allocation context and queries
-the scheduler as to which thread is current when it performs
-operations affecting the current allocation context.
-
 It is possible to obtain information about the used and available
 space in a given backing store using the operations
 \texttt{get\-Total\-Size}, \texttt{get\-Used\-Size}, and
@@ -310,7 +290,7 @@ memory area of a given object.
 
 Allocation within backing stores is possible through the
 \texttt{allocate\-Memory} operation, which allocates blocks of memory
-within the current allocation context.
+within a given backing store.
 This operation is provided in order for the core execution environment
 to implement the \texttt{new} bytecode instruction and is not directly
 available to the program or infrastructure.
@@ -377,6 +357,13 @@ Due to the fact that resizing a backing store can move it and that a
 backing store identifier may be a pointer to the backing store, the
 identifier may change and so the new identifier is output from this
 operation.
+
+These operations on backing stores each take a backing store
+identifier as input since the memory manager does not handle
+allocation contexts.
+Management of allocation contexts is instead left to the core
+execution environment, which must pass the appropriate backing store
+identifier when using the memory manager services.
 
 The memory manager must also manage stacks, which are placed in a
 separate area of memory to the backing stores.
@@ -931,25 +918,26 @@ Appendix~\ref{zeves-proofs}.
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
-        \node[draw,align=center] (MM)  at (7cm,2cm) {Memory\\Manager};
-        \node[draw,align=center] (S)   at (1.5cm,1.5cm)  {Scheduler};
-        \node[draw,align=center] (RTC) at (9cm,0cm)  {Real-Time\\Clock};
-        \draw (0cm,-2.1cm) rectangle (10.5cm,3cm);
+        \node[draw,align=center] (MM)  at (3.5cm,1.5cm) {Memory\\Manager};
+        \node[draw,align=center] (S)   at (1.5cm,0cm)  {Scheduler};
+        \node[draw,align=center] (RTC) at (7.5cm,0cm)  {Real-Time\\Clock};
+        \draw (0cm,-2.1cm) rectangle (9cm,3cm);
         \node at (1.5cm,2.7cm) {SCJVM Services};
         
-        \node[align=center] (HW) at (2.5cm,-3cm) {Hardware};
+        \node[align=center] (HW) at (5cm,-3cm) {Hardware};
         
-        \draw[->] (RTC) edge node {$RTCclockInterrupt$} (S);
+        \draw[-latex] (RTC) edge node[above] {$RTCclockInterrupt$} (S);
         
-        \draw[-] (HW) -- node[right] {$HWinterrupt$} coordinate[pos=1] (X) ++(0cm,2.5cm);
-        \draw[->] (X) to (S);
-        \draw[->] (X) to (RTC);
+        \draw[-] (HW) -- node[above right] {$HWinterrupt$} coordinate[pos=1] (X) ++(0cm,2cm);
+        \draw[-latex] (X) to (S);
+        \draw[-latex] (X) to (RTC);
         
-        \node[align=center] (CEE) at (-2cm,1.5cm) {Core\\Execution\\Environment};
-        \draw[<->] (S) -- (CEE);
+        \node[align=center] (CEE) at (-2cm,0.5cm) {Core\\Execution\\Environment};
+        \draw[latex-latex] (S) -- (CEE);
+        \draw[latex-latex] (MM) -- (CEE);
         
-        \node[align=center] (App) at (5.25cm,4cm) {SCJ Application\\and API};
-        \draw[<->] (5.25cm,3cm) -- (App);
+        \node[align=center] (App) at (4.5cm,4cm) {SCJ Application\\and API};
+        \draw[latex-latex] (4.5cm,3cm) -- (App);
       \end{tikzpicture}
       \caption{The structure of the SCJVM services model, showing the
         channels used for communication between the processes in the
