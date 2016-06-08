@@ -1,0 +1,417 @@
+\documentclass[a4paper,10pt]{report}
+
+\usepackage[in]{fullpage}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{pgfgantt}
+\usepackage{amsmath}
+\usepackage[color,cntglobally]{circus}
+\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
+\usepackage[section]{placeins}
+\usepackage{fixltx2e}
+\usepackage{rotating}
+\usepackage{pdfpages}
+
+
+%\newcommand{\Circus}{{\sf\slshape Circus}}
+
+\title{A Framework for Verifying Safety-Critical Java Virtual Machines
+with Ahead-of-time Compilation \\ \hfill \\
+\Large Thesis Outline}
+\author{James Baxter}
+\date{}
+
+\bibliography{../Thesis/literature.bib} 
+
+%TC:group zed 0 displaymath
+%TC:group axdef 0 displaymath
+%TC:group schema 1 displaymath
+%TC:group circus 0 displaymath
+%TC:group circusaction 0 displaymath
+%TC:macroword \Circus 1 
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+  In recent years Java has been increasingly considered as a language
+  for safety-critical embedded systems.
+  However, some features of Java are unsuitable for such systems and
+  this has resulted in the creation of Safety-Critical Java (SCJ).
+  The different scheduling and memory management model of SCJ means
+  that a specialised virtual machine is required to run SCJ programs.
+  Given the safety-critical nature of the applications, it must be
+  ensured that the virtual machine is correct, but so far no SCJ
+  virtual machine has been formally verified.
+  We propose a framework for verification of SCJ virtual machines
+  comprising a formal model of requirements and a compilation strategy
+  from Java bytecode to native code together with mechanised proofs of
+  correctness.
+  In this report, we describe our progress in creating a model of the
+  requirements for an SCJ virtual machine and set out a plan for the
+  remainder of our research in this area.
+\end{abstract}
+
+\tableofcontents
+
+\chapter{Introduction}
+
+% short explanation of chapter: motivation, objectives, document
+% structure
+In this chapter, we present a present a description of the motivation
+for and objectives of our work.
+The overall scope of our research has not changed substantially since
+the qualifying dissertation so this chapter simply presents a brief
+introduction to our work.
+This chapter begins with a description of the motivation of our work
+in Section~\ref{motivation-section}, followed by an explanation of the
+overall objectives of our work in Section~\ref{objectives-section}.
+The structure of the remainder of this report is then described in
+Section~\ref{document-structure-section}.
+
+
+\section{Motivation}
+\label{motivation-section}
+
+The Java programming language~\cite{gosling2013} has achieved great
+popularity and is now used in a wide variety of areas.
+One particular area of interest in which Java is used is that of
+embedded systems, where it was realised that the features of
+portability, modularity, safety and security that Java offers could be
+of use~\cite{mulchandani1998}.
+As Java programs are compiled to be run by the Java Virtual Machine
+(JVM), this required creating JVMs for embedded devices and, indeed,
+research has gone into making smaller and smaller JVMs to accommodate
+a wider range of embedded devices~\cite{caska2011,thomm2010}.
+
+However, many embedded systems have real-time requirements, meaning
+that strict timing properties are required to be adhered to.
+Features of Java such as the garbage collector and its concurrency
+model make it difficult to ensure such properties, thus making
+standard Java unsuitable for real-time systems.
+To address this problem, the Real-Time Specification for Java
+(RTSJ)~\cite{gosling2000} was created.
+The RTSJ extends Java with some additional features that allow for
+greater time predictability.
+One feature the RTSJ adds is scoped memory, allowing memory to be
+allocated for use in a particular scope and deallocated when that
+scope is left, thus allowing for prediction of when memory
+deallocations occur.
+Another feature of the RTSJ is a more predictable priority scheduler
+that better allows the execution time of higher priority threads to be
+computed.
+
+Though the RTSJ provides for real-time considerations, many real-time
+embedded systems require certification under safety standards such as
+\mbox{DO-178C} and ISO~26262.
+To facilitate the certification of such systems, Safety-Critical Java
+(SCJ)~\cite{locke2013} was created.
+SCJ is based on the RTSJ but removes the features of the RTSJ that
+would make it difficult to certify programs written using it.
+Some particular differences of SCJ from standard Java are in the areas
+of scheduling and memory management.
+
+SCJ's scheduling model is based around organising a program into a
+series of missions, which are executed sequentially in an order chosen
+by a programmer-supplied mission sequencer.
+Each mission may contain multiple asynchronous event handler threads,
+which are created when the mission is initialised and run throughout
+the duration of the mission.
+The event handlers within a mission are scheduled according to a
+priority scheduling system, in which the running handler is always one
+of the released handlers with the highest priority so that high
+priority handlers are not sharing processor time with low priority
+handlers.
+Once the mission is requested to terminate, the event handler threads
+are stopped, the mission's resources are cleaned up, and the mission
+sequencer selects the next mission.
+
+The memory management of SCJ makes use of the scoped memory areas of
+RTSJ, adapted for the SCJ mission model.
+Memory is allocated in memory areas, which have varying lifetimes.
+Each mission has a memory area associated with it that persists for
+the duration of the mission, while each event handler within the
+mission has a memory area that persists only during releases of the
+handler.
+Additional nested private memory areas can be created, which can be
+entered and left as needed, being cleared when they are left.
+There is also an immortal memory area, in which memory is never freed
+and persists for the entire duration of the program.
+A system of annotations allows for static checking that dangling
+pointers cannot arise from misuse of the scoped memory
+model~\cite{tang2010}.
+
+Due to the safety-critical nature of the software SCJ is designed to
+create, it is necessary to show that it is correct.
+While the design of SCJ allows for it to be more easily shown that
+programs will execute correctly, greater certainty and precision can
+be obtained through the use of formal methods.
+There has already been work on generating correct SCJ programs from
+formal specifications~\cite{cavalcanti2011, cavalcanti2013}, which
+ensures that an SCJ program will have the behaviour intended.
+Some work has also been done on formalising the SCJ memory
+model~\cite{cavalcanti2011a}, allowing its correctness to be ensured.
+
+However, although SCJ can be compiled by a standard Java compiler, SCJ
+requires a specialised virtual machine due to the differences between
+SCJ and standard Java.
+There have been several SCJ virtual machines (SCJVMs) created,
+including the icecap HVM~\cite{sondergaard2012}, Fiji
+VM~\cite{pizlo2009}, OVM~\cite{armbruster2007},
+HVM\textsubscript{TP}~\cite{luckow2014} and PERC Pico~\cite{atego2015,
+  richard2010}.
+Of these, only Fiji VM and icecap HVM appear to be maintained and,
+while icecap provides support for most of SCJ, Fiji VM does not
+necessarily provide proper support for all aspects of SCJ.
+Since the correct execution of an SCJ program depends on the
+correctness of the underlying virtual machine, it must be ensured in
+addition to checking the correctness of the program.
+While there has been work on using formal methods to show SCJ program
+correctness, no SCJVM has been verified.
+
+Additionally, having to execute a program via a virtual machine
+presents a cost in terms of memory and time resources, which may not
+be available on the embedded real-time systems SCJ targets.
+For this reason, all known SCJVMs, including the ones listed above
+compile the Java bytecode to native code ahead-of-time.
+This can be particularly seen in the examples of Fiji VM and the
+icecap HVM, which compile Java bytecode to C code.
+The correctness of this compilation to native code must also be
+ensured, in addition to the correctness of the infrastructure
+supporting the running program.
+So the problem of ensuring the correctness of an SCJVM is, in part, a
+compiler verification problem.
+
+There has already been much research in the area of compiler
+correctness, with most of the research following one of two
+approaches.
+The majority of the literature on compiler correctness follows a
+commuting-diagram approach, in which the compilation function is shown
+to commute with functions defining the semantics of the source and
+target languages.
+This approach was first identified by Lockwood
+Morris~\cite{morris1973} and later refined by Thatcher \emph{et
+  al.}~\cite{thatcher1979}, but can be seen in much of the earlier
+work, including the earliest work by McCarthy and
+Painter~\cite{mccarthy1967}.
+The commuting-diagram approach has also been used in more recent work,
+including some very comprehensive work as part of the CompCert
+project~\cite{leroy2009a, leroy2009b}.
+As this approach is based on the use of ordinary functions to describe
+compiler correctness, it can be readily encoded in an automated
+theorem prover and there have been several works that have made use of
+automated theorem provers~\cite{klein2006, milner1972, nipkow2000}.
+
+A recent variation of the commuting-diagram approach is based on an
+operational semantics of the source language~\cite{bahr2015}.
+In this work, the operational semantics of the source language and a
+way of relating the source and target semantics are used to derive a
+different operational semantics of the source language acting on the
+state of the target machine.
+The semantics of the target language are then identified as part of
+that operational semantics and it is transformed to extract a
+compilation function.
+This approach may be viewed as variant of the commuting-diagram
+approach in which the compilation function is derived from the source
+and target semantics and the relationship between them, rather than
+being verified by those elements of the commuting-diagram.
+
+The second main approach to compiler verification is the algebraic
+approach proposed by Hoare~\cite{hoare1991} and implemented by
+Sampaio~\cite{hoare1993, sampaio1993}.
+The algebraic approach is based around the notion of refinement, which
+formally captures the idea of a program being an implementation of a
+less deterministic specification.
+In the algebraic approach, the source and target languages are defined
+in the same semantic space and proven refinement laws are used to
+refine the source program to a normal form representing the target
+machine running the target code.
+This approach has the advantage that the rules used to perform the
+compilation are known to be correct, thus making the resultant
+compiler correct by construction.
+It also allows for passing seamlessly from the source language to the
+target language using algebraic laws, since the source and target
+languages are in the same semantic space.
+The algebraic approach has not been used particularly widely but, in
+addition to Sampaio's work, there has been work using the algebraic
+approach for compilation of object-oriented languages~\cite{duran2005,
+  duran2010} and for hardware compilation~\cite{perna2010, perna2011}.
+
+\section{Objectives}
+\label{objectives-section}
+
+Since there appears to be no formally verified SCJVM and formal
+verification of an SCJVM is desirable, we propose to create a
+framework for formal verification of an SCJVM.
+This framework will consist of the following parts:
+\begin{itemize}
+\item A specification of the services required to be provided by an
+  SCJVM,
+\item A compilation strategy from Java bytecode to C,
+\item A formal model of the specification and compilation strategy,
+\item Proofs of the correctness of the formal model, and
+\item A mechanisation of the proofs in an automated theorem prover.
+\end{itemize}
+Each of these parts will be discussed in what follows.
+
+First, it is necessary to have an explicit account of what is required
+of an SCJVM.
+Even though the ultimate aim is one of formal verification, an
+informal specification is still needed to guide the development of the
+formal model.
+There is currently no clear specification for SCJVMs.
+
+It should be noted that the role of an SCJVM is not merely to execute
+bytecode instructions.
+An SCJVM must also provide services to support the SCJ API in areas
+such as scheduling and memory management.
+An informal specification of all aspects of the SCJVM is required to
+support creation of a formal model.
+On the other hand, the semantics of SCJ bytecode does not differ much
+from that of standard Java bytecode, so much of the Java Virtual
+Machine specification~\cite{lindholm2014} also applies to SCJVMs.
+
+The need for a compilation strategy arises from the fact that most
+existing SCJVMs compile Java bytecode to some native code in order to
+improve performance on embedded systems.
+We will focus on compilation from Java bytecode to C for much the same
+reasons as the icecap HVM and Fiji VM:~C is a language already widely
+used in embedded systems and is sufficiently low level to enable its
+use as an efficient target language while retaining enough abstraction
+to be used by the programmer.
+
+The specification and compilation strategy must be formalised.
+As noted previously, there are two main approaches to formalising
+compilers and showing their correctness: the commuting-diagram
+approach and the algebraic approach.
+We will follow the algebraic approach in our work as it relates the
+source and target languages in a clearer way than the
+commuting-diagram approach.
+Additionally, the commuting-diagram approach requires the definition
+of additional functions to relate the source and target semantics,
+thus relying more on definitions, which may be incorrect, than on
+mathematically derived results.
+The approach of deriving a compiler from an operational semantics
+could be of use as it does not have this issue.
+That approach, however, relies on knowledge of the state of the target
+machine and a way of identifying the semantics of the target code
+within the compilation function.
+This is not easily done with a complex language like C, though it
+works well for machine languages.
+
+We require a formal language in which to specify the source and target
+languages, as well as for specifying the virtual machine services.
+For this we will use the \Circus{} specification
+language~\cite{oliveira2009}, which is based on Z
+notation~\cite{woodcock1996} and CSP~\cite{roscoe2011}.
+\Circus{} uses CSP to specify processes that communicate over channels
+and uses Z notation to specify state and data operations that can be
+encapsulated in processes.
+The reason for the choice of \Circus{} as our formal notation is due
+to the fact that \Circus{} is designed as a notation for refinement
+and so works well with the algebraic approach.
+The combination of Z notation and CSP also gives far greater
+expressive power than using those languages separately.
+Finally, the use of \Circus{} helps to tie this work into the existing
+specification work surrounding SCJ~\cite{cavalcanti2011,
+  cavalcanti2011a, cavalcanti2013, zeyda2011}.
+
+The consistency of the specification and the correctness of the
+compilation strategy must be proved by formal mathematical proof from
+algebraic laws known to be correct.
+\Circus{} has many such laws already developed and has an underlying
+semantics given using the model of Hoare and He's Unifying Theories of
+Programming (UTP)~\cite{hoare1998} that can be used to verify the
+correctness of the laws.
+
+To ensure the laws are understood and applied correctly, it is helpful
+to mechanise the proofs in an automated theorem prover.
+There are a variety of tools for machine checking of \Circus{}
+specifications.
+The \Circus{} parser and typechecker included as part of the Community
+Z Tools~\cite{malik2011, xavier2008, malik2005, miller2005} can be
+used to perform basic checking of a \Circus{} specification and
+integration with the Z/Eves theorem prover~\cite{saaltink1997} can be
+used to prove the Z portions of the \Circus{} specification.
+Process properties such as deadlock-freedom can be checked by
+translating the \Circus{} specification to CSP and checking with a
+tool such as FDR~\cite{gibson-robinson2014}.
+For more comprehensive proving of properties about \Circus{}
+specifications, recent work on Isabelle/UTP~\cite{foster2015} can be
+used to permit reasoning about \Circus{} in the Isabelle theorem
+prover~\cite{nipkow2002}.
+
+Altogether, our objective is a framework for verification of SCJVMs
+consisting of mechanised formal models together with proofs of
+properties about them.
+These formal models will cover both the services that must be provided
+by a running SCJVM and a compilation strategy for translating Java
+bytecode to native code.
+With our results, SCJVM developers will be able to create provably
+correct ahead-of-time compiling SCJVM implementations and check the
+correctness of those implementations.
+
+
+\section{Document Structure}
+\label{document-structure-section}
+
+% The remainder of this report proceeds with a report of the progress of
+% our research in Chapter~\ref{progress-report-chapter}, followed by a
+% presentation of the plan for the remainder of the research in
+% Chapter~\ref{research-plan-chapter}.
+% There is a technical report that describes the work done so far and
+% will contribute toward the thesis included as
+% Appendix~\ref{techreport}.
+% We have also included a paper written in the course of the work as
+% Appendix~\ref{ifmpaper}.
+% Another paper that we have written has been published
+% as~\cite{baxter2015a}.
+% 
+
+\chapter{Thesis Structure}
+
+\section{Introduction}
+
+\section{Compilers and Virtual Machines for Java-like languages in the
+  Safety-critical Domain}
+
+\section{Safety-Critical Java Virtual Machine Services}
+
+\section{Core Execution Environment}
+
+\section{Compilation Strategy}
+
+\section{Evaluation}
+
+\section{Conclusion}
+
+\chapter{Plan}
+
+\begin{sidewaysfigure}
+\centering
+\begin{minipage}{\textheight}
+\centering
+\begin{ganttchart}[
+  vgrid,
+  x unit=0.7cm,
+  time slot format = isodate-yearmonth,
+  compress calendar
+  ]{2016-01}{2017-12}
+  \gantttitlecalendar{year, month=shortname} \\
+  \ganttbar{Define C subset semantics}{2016-03}{2016-04} \\
+  \ganttbar{Develop compilation strategy}{2016-05}{2016-08} \\
+  \ganttbar{Hand proofs of compilation rules}{2016-08}{2017-01} \\
+  \ganttbar{Mechanise proofs of compilation rules}{2017-01}{2017-03} \\
+  \ganttbar{Implementation and example development}{2017-04}{2017-05} \\
+  \ganttbar{Writing up results}{2016-04}{2016-04}
+  \ganttbar{}{2016-08}{2016-08}
+  \ganttbar{}{2017-06}{2017-09} \\
+\end{ganttchart}
+\end{minipage}
+\caption{A Gantt chart showing the schedule for the planned research}
+\end{sidewaysfigure}
+
+\printbibliography
+
+\end{document}
