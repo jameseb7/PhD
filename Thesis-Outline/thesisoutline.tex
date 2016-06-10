@@ -407,6 +407,50 @@ It should only require some minor revision for the final thesis.
 \section{Compilers and Virtual Machines for Java-like languages in the
   Safety-critical Domain}
 
+In the second chapter we review the literature relevant to our work
+and explain various preliminary concepts that must be introduced
+before the work in the thesis can be fully understood.
+As the work involves the application of formal methods to
+safety-critical real-time systems, there are a wide range of concepts
+that must be considered in this chapter, including the details of the
+differences between SCJ and Java, the different approaches to compiler
+verification, and description of the \Circus{} specification language.
+
+The first thing we discuss is SCJ itself, beginning with the history
+of SCJ and why it is necessary to have a variant of SCJ for
+safety-critical systems.
+This is then followed by a description of SCJ, including the fact that
+SCJ is divided into three compliance levels, the mission model of SCJ,
+and the memory model of SCJ.
+We then consider some of the existing SCJVM implementations, looking
+at their approaches to running SCJ programs, the extent to which they
+implement the SCJ specification, whether they are still maintained,
+and noting that no formal verification work has been performed on any
+existing SCJVM.
+This helps to justify the originality of our work and to provide an
+understanding of the main concepts of SCJ.
+
+The next topic that must be discussed in this chapter of the thesis is
+the method of verifying the compilation from Java bytecode to C.
+We discuss the two main approaches, the commuting-diagram approach and
+the algebraic approach, describing and reviewing the literature on
+each.
+The purpose of this is to explain the different approaches used in
+the literature and justify the choice of approach used in our work.
+
+The final thing to be discussed in this thesis chapter is the
+\Circus{} specification language.
+We justify the decision to use it as the language for the model and
+compilation strategy and describe the language so that the
+presentation of the model in subsequent chapters can be understood.
+
+The only research that needs to be performed for this chapter is the
+literature review, which has already been completed prior to beginning
+the bulk of the work.
+As with the introduction, the content for this chapter has already
+been written up and will only require minor changes to take into
+account new developments in the literature.
+
 \section{Safety-Critical Java Virtual Machine Services}
 
 \section{Core Execution Environment}
