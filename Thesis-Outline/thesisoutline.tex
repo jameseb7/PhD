@@ -374,28 +374,28 @@ correctness of those implementations.
 In this chapter, we describe the proposed structure of the thesis that
 will be written.
 Each section in this chapter corresponds to a chapter in the thesis
-and in it we detail the contents of the chapter.
+and in it we detail the contents of the corresponding thesis chapter.
 We also discuss the progress of the research documented in each
 chapter of the thesis.
 
 \section{Introduction}
 
-The first chapter is an introductory chapter, in which we lay out the
-main problem solved in the thesis, and describe the overall objectives
-and structure of thesis.
-This includes describing what SCJ is and why it is necessary,
-explaining why a specialised SCJVM is necessary and the need for
-verification of an SCJVM.
-We also discuss the main objective of the work, which is the
+The first chapter of the thesis will be an introductory chapter, in
+which we will lay out the main problem solved in the thesis, and
+describe the overall objectives and structure of thesis.
+This will include describing what SCJ is and why it is necessary,
+explaining why a specialised SCJVM is necessary, and showing the need
+for verification of an SCJVM.
+We will also discuss the main objective of the work, which is the
 construction of the framework for verifying SCJVMs, and explain the
 different components of that framework.
-This helps to set the context for the remaining chapters of the
+This will help to set the context for the remaining chapters of the
 thesis, ensuring that all the main ideas have been introduced and the
 overarching goal of the work is clear.
 
-As this is an introductory chapter, no specific research is required
-for it, but only development of an overall plan, which is largely an
-extension of the original research proposal.
+As this will be an introductory chapter, no specific research is
+required for it, but only development of an overall plan, which is
+largely an extension of the original research proposal.
 Some information from the literature review also feeds back into the
 introduction, though the main purpose of the introduction is not to
 review the literature, since some discussion of the literature is
@@ -407,41 +407,41 @@ It should only require some minor revision for the final thesis.
 \section{Compilers and Virtual Machines for Java-like languages in the
   Safety-critical Domain}
 
-In the second chapter we review the literature relevant to our work
-and explain various preliminary concepts that must be introduced
-before the work in the thesis can be fully understood.
+In the second thesis chapter we will review the literature relevant to
+our work and explain various preliminary concepts that must be
+introduced before the work in the thesis can be fully understood.
 As the work involves the application of formal methods to
 safety-critical real-time systems, there are a wide range of concepts
 that must be considered in this chapter, including the details of the
 differences between SCJ and Java, the different approaches to compiler
 verification, and description of the \Circus{} specification language.
 
-The first thing we discuss is SCJ itself, beginning with the history
-of SCJ and why it is necessary to have a variant of SCJ for
+The first thing we will discuss is SCJ itself, beginning with the
+history of SCJ and why it is necessary to have a variant of SCJ for
 safety-critical systems.
-This is then followed by a description of SCJ, including the fact that
-SCJ is divided into three compliance levels, the mission model of SCJ,
-and the memory model of SCJ.
-We then consider some of the existing SCJVM implementations, looking
-at their approaches to running SCJ programs, the extent to which they
-implement the SCJ specification, whether they are still maintained,
-and noting that no formal verification work has been performed on any
-existing SCJVM.
-This helps to justify the originality of our work and to provide an
-understanding of the main concepts of SCJ.
+This will then be followed by a description of SCJ, including the fact
+that SCJ is divided into three compliance levels, the mission model of
+SCJ, and the memory model of SCJ.
+We will then consider some of the existing SCJVM implementations,
+looking at their approaches to running SCJ programs, the extent to
+which they implement the SCJ specification, and whether they are still
+maintained, and we will note that no formal verification work has been
+performed on any existing SCJVM.
+This will help to justify the originality of our work and to provide
+an understanding of the main concepts of SCJ.
 
 The next topic that must be discussed in this chapter of the thesis is
 the method of verifying the compilation from Java bytecode to C.
-We discuss the two main approaches, the commuting-diagram approach and
-the algebraic approach, describing and reviewing the literature on
-each.
-The purpose of this is to explain the different approaches used in
-the literature and justify the choice of approach used in our work.
+We will discuss the two main approaches, the commuting-diagram
+approach and the algebraic approach, describing and reviewing the
+literature on each.
+The purpose of this is to explain the different approaches used in the
+literature and justify the choice of approach used in our work.
 
 The final thing to be discussed in this thesis chapter is the
 \Circus{} specification language.
-We justify the decision to use it as the language for the model and
-compilation strategy and describe the language so that the
+We will justify the decision to use it as the language for the model
+and compilation strategy and describe the language so that the
 presentation of the model in subsequent chapters can be understood.
 
 The only research that needs to be performed for this chapter is the
@@ -453,16 +453,16 @@ account new developments in the literature.
 
 \section{Safety-Critical Java Virtual Machine Services}
 
-This is the first technical chapter of the thesis and covers the first
-part of the SCJVM model, which consists of the services that must be
-offered by an SCJVM to support the running of an SCJ program but will
-not be directly affected by the compilation strategy.
-We first give an informal explanation of each of the services that
-must be offered, and then describe the formal \Circus{} model when all
-of the services have been informally presented.
+This will be the first technical chapter of the thesis and will cover
+the first part of the SCJVM model, which consists of the services that
+must be offered by an SCJVM to support the running of an SCJ program
+but will not be directly affected by the compilation strategy.
+We will first give an informal explanation of each of the services
+that must be offered, and then describe the formal \Circus{} model
+when all of the services have been informally presented.
 The services are divided into three areas:~memory management,
 scheduling and the real-time clock.
-Each of these areas is detailed in a separate section, since the
+Each of these areas will be detailed in a separate section, since the
 services in each area often relate to each other so the area as a
 whole must be covered together.
 
@@ -483,15 +483,15 @@ a briefer style.
 \section{Core Execution Environment}
 
 Following the explanation of the SCJVM Services model in the previous
-thesis chapter, the Core Execution Environment chapter details the
+thesis chapter, the Core Execution Environment chapter will detail the
 part of the SCJVM model that will be affected by the compilation
 strategy, including interpretation of bytecode instructions and
 handling of objects.
-We begin the chapter with an overview of the structure of the model
-and an informal description of the subset of Java bytecode that the
-SCJVM descrbed by our model executes.
-This is then followed with a detailed description of each part of the
-\Circus{} core execution environment model.
+We will begin the chapter with an overview of the structure of the
+model and an informal description of the subset of Java bytecode that
+the SCJVM described by our model executes.
+This will then be followed by a detailed description of each part of
+the \Circus{} core execution environment model.
 
 The model itself has already been created but, due to the interaction
 of this part of the model with the compilation strategy, it may
@@ -505,19 +505,20 @@ model.
 
 \section{Compilation Strategy}
 
-This thesis chapter describes the strategy for transforming the core
-execution environment model loaded with a given SCJ program to a form
-representing an equivalent C program.
-We begin by describing how each of the constructs of C are represented
-in the \Circus{} model produced by the compilation strategy.
-Then, we provide an overview of the compilation strategy, describing
-each of the stages and stating the main compilation theorem that the
-strategy proves, which is that the model can be transformed to a
-particular form representing a valid C program.
+This thesis chapter will describe the strategy for transforming the
+core execution environment model loaded with a given SCJ program to a
+form representing an equivalent C program.
+We will begin by describing how each of the constructs of C are
+represented in the \Circus{} model produced by the compilation
+strategy.
+Then we will provide an overview of the compilation strategy,
+describing each of the stages and stating the main compilation theorem
+that the strategy proves, which is that the model can be transformed
+to a particular form representing a valid C program.
 The detailed rules that must be applied at each stage of the
-compilation strategy are then described and we explain how the
-bytecode program is transformed into a C program through provably
-correct transformations. 
+compilation strategy will then be described and we will explain how
+the bytecode program is transformed into a C program through provably
+correct transformations.
 
 We are part of the way through the research for this chapter, with the
 structure of the C program model that the compilation strategy is
@@ -530,21 +531,22 @@ None of the material for this chapter has been written up yet.
 
 \section{Evaluation}
 
-The focus of this chapter is evaluation of the compilation strategy.
-This is performed by demostrating some examples of how the compilation
-strategy acts on the bytecode produced from real SCJ programs, so that
-it can be seen that equivalent C code is generated by the compilation
+The focus of this chapter will be evaluation of the compilation
 strategy.
+This will be performed by demostrating some examples of how the
+compilation strategy acts on the bytecode produced from real SCJ
+programs, so that it can be seen that equivalent C code is generated
+by the compilation strategy.
 The C code that results from application of the compilation strategy
-is compared to code generated by the icecap HVM as that is the most
-developed publicly available implementation of SCJ.
+will be compared to code generated by the icecap HVM as that is the
+most developed publicly available implementation of SCJ.
 
 Mechanisation of the correctness proofs for the compilation strategy
-is also considered in this chapter, since that provides greater
+will also be considered in this chapter, since that provides greater
 certainty that the strategy is valid.
-We describe the basic principles of the mechanisation and the discuss
-the results obtained from it in terms of evaluating the correctness of
-the compilation strategy.
+We will describe the basic principles of the mechanisation and the
+discuss the results obtained from it in terms of evaluating the
+correctness of the compilation strategy.
 
 The work for this thesis chapter remains to be done.
 Some of the work of developing examples of the application of the
@@ -557,11 +559,11 @@ has been written forit yet.
 
 \section{Conclusions}
 
-The final chapter of the thesis is the Conclusions chapter, in which
-we summarise the contributions of the thesis, including discussion of
-how it builds upon the existing work in the field.
-We also discuss some possible directions for future work outside the
-scope of the thesis.
+The final chapter of the thesis will be the Conclusions chapter, in
+which we will summarise the contributions of the thesis, including
+discussing how it builds upon the existing work in the field.
+We will also discuss some possible directions for future work outside
+the scope of the thesis.
 Most of the material for this chapter has already been written but
 more will be written as progress is made on the rest of the thesis. 
 
