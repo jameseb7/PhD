@@ -13,7 +13,6 @@
 \usepackage{rotating}
 \usepackage{pdfpages}
 
-
 %\newcommand{\Circus}{{\sf\slshape Circus}}
 
 \title{A Framework for Verifying Safety-Critical Java Virtual Machines
@@ -23,6 +22,9 @@ with Ahead-of-time Compilation \\ \hfill \\
 \date{}
 
 \bibliography{../Thesis/literature.bib} 
+
+\let\olditem\item
+\renewcommand{\item}[1][]{\olditem{\bfseries #1}}
 
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
@@ -381,28 +383,16 @@ chapter of the thesis.
 \section{Introduction}
 
 The first chapter of the thesis will be an introductory chapter, in
-which we will lay out the main problem solved in the thesis, and
-describe the overall objectives and structure of thesis.
-This will include describing what SCJ is and why it is necessary,
-explaining why a specialised SCJVM is necessary, and showing the need
-for verification of an SCJVM.
-We will also discuss the main objective of the work, which is the
-construction of the framework for verifying SCJVMs, and explain the
-different components of that framework.
-This will help to set the context for the remaining chapters of the
-thesis, ensuring that all the main ideas have been introduced and the
-overarching goal of the work is clear.
-
+which we will lay out the main problem solved in the thesis.
+We describe its relevance, the overall objectives pursued in the work,
+and the structure of thesis.
 As this will be an introductory chapter, no specific research is
-required for it, but only development of an overall plan, which is
-largely an extension of the original research proposal.
-Some information from the literature review also feeds back into the
-introduction, though the main purpose of the introduction is not to
-review the literature, since some discussion of the literature is
-required in explaining the context of the work.
+required for it.
 The content of this chapter has already been written, primarily as
 part of writing previous deliverables over the course of the work.
 It should only require some minor revision for the final thesis.
+The material in the previous chapter of this document is very close to
+the current draft of the introduction of the thesis.
 
 \section{Compilers and Virtual Machines for Java-like languages in the
   Safety-critical Domain}
@@ -410,62 +400,47 @@ It should only require some minor revision for the final thesis.
 In the second thesis chapter we will review the literature relevant to
 our work and explain various preliminary concepts that must be
 introduced before the work in the thesis can be fully understood.
-As the work involves the application of formal methods to
-safety-critical real-time systems, there are a wide range of concepts
-that must be considered in this chapter, including the details of the
-differences between SCJ and Java, the different approaches to compiler
-verification, and description of the \Circus{} specification language.
-
-The first thing we will discuss is SCJ itself, beginning with the
-history of SCJ and why it is necessary to have a variant of SCJ for
-safety-critical systems.
-This will then be followed by a description of SCJ, including the fact
-that SCJ is divided into three compliance levels, the mission model of
-SCJ, and the memory model of SCJ.
-We will then consider some of the existing SCJVM implementations,
-looking at their approaches to running SCJ programs, the extent to
-which they implement the SCJ specification, and whether they are still
-maintained, and we will note that no formal verification work has been
-performed on any existing SCJVM.
-This will help to justify the originality of our work and to provide
-an understanding of the main concepts of SCJ.
-
-The next topic that must be discussed in this chapter of the thesis is
-the method of verifying the compilation from Java bytecode to C.
-We will discuss the two main approaches, the commuting-diagram
-approach and the algebraic approach, describing and reviewing the
-literature on each.
-The purpose of this is to explain the different approaches used in the
-literature and justify the choice of approach used in our work.
-
-The final thing to be discussed in this thesis chapter is the
-\Circus{} specification language.
-We will justify the decision to use it as the language for the model
-and compilation strategy and describe the language so that the
-presentation of the model in subsequent chapters can be understood.
-
 The only research that needs to be performed for this chapter is the
 literature review, which has already been completed prior to beginning
 the bulk of the work.
 As with the introduction, the content for this chapter has already
 been written up and will only require minor changes to take into
 account new developments in the literature.
+We refer to~\cite{baxter2016}~for the current contents of this
+chapter.
+It is structured with the following sections:
+\begin{enumerate}
+\item[Java for Safety-critical Systems], in which we describe the
+  history of SCJ and explains why a specialised variant of Java is
+  necessary for safety-critical systems.
+\item[Safety-Critical Java], in which we describe SCJ itself, including the
+  fact that SCJ is divided into three compliance levels, the mission
+  model of SCJ, and the memory model of SCJ.
+\item[Virtual Machines for Safety-Critical Java], in which we consider
+  some of the existing SCJVM implementations, looking at their
+  approaches to running SCJ programs, the extent to which they
+  implement the SCJ specification, and whether they are still
+  maintained, and we note that no formal verification work has
+  been performed on any existing SCJVM.
+\item[Compiler Correctness], in which we discuss different methods of
+  verifying compilation, in particular the commuting-diagram approach
+  and the algebraic approach, which are the two main approaches.
+\item[\Circus{}], in which we describe the \Circus{} specification
+  language so that the presentation of the model in subsequent
+  chapters can be understood.
+\item[Final Considerations], in which we summarise and consider the
+  contents of the chapter and conclude that we should adopt the
+  algebraic approach to verifying the compilation, with \Circus{} as
+  the specification language.
+\end{enumerate}
 
 \section{Safety-Critical Java Virtual Machine Services}
 
 This will be the first technical chapter of the thesis and will cover
-the first part of the SCJVM model, which consists of the services that
-must be offered by an SCJVM to support the running of an SCJ program
-but will not be directly affected by the compilation strategy.
-We will first give an informal explanation of each of the services
-that must be offered, and then describe the formal \Circus{} model
-when all of the services have been informally presented.
-The services are divided into three areas:~memory management,
-scheduling and the real-time clock.
-Each of these areas will be detailed in a separate section, since the
-services in each area often relate to each other so the area as a
-whole must be covered together.
-
+the first part of the SCJVM model.
+It consists of the services that must be offered by an SCJVM to
+support the running of an SCJ program but will not be directly
+affected by the compilation strategy.
 The work that needs to be carried out for this chapter is the writing
 of the SCJVM services model and that has largely already been
 completed, though further changes to the model may be required to
@@ -475,10 +450,27 @@ explanation of the SCJVM services based on material from a paper we
 published at the 13th International Workshop on Java Technologies for
 Real-time and Embedded Systems~\cite{baxter2015a}, which described an
 earlier version of the model.
-The model has been explained in detail in a draft of the thesis, but
-the existing material for the chapter will need to be revised to make
-it consistent with more recent changes to the model and present it in
-a briefer style.
+The model has been explained in detail in~\cite{baxter2016}, but the
+existing material for the chapter will need to be revised to make it
+consistent with more recent changes to the model and present it in a
+briefer style.
+Its envisaged structure of sections is as follows:
+\begin{enumerate}
+\item[Memory Manager API], in which we give an informal description of
+  the services related to memory management that are specified in the
+  model.
+\item[Scheduler API], in which we give an informal description of the
+  services related to scheduling that are specified in the model.
+\item[Real-time Clock API], in which we give an informal description
+  of the services related to the real-time clock and timekeeping that
+  are specified in the model.
+\item[Formal Model], in which we explain the formal model of the SCJVM
+  services, with each part of the model explained in a separate
+  subsection.
+\item[Final Considerations], in which we summarise the contents of the
+  chapter, explain the relationship between the different parts of the
+  model, and discuss the progress in subjecting the model to proof.
+\end{enumerate} 
 
 \section{Core Execution Environment}
 
@@ -487,12 +479,6 @@ thesis chapter, the Core Execution Environment chapter will detail the
 part of the SCJVM model that will be affected by the compilation
 strategy, including interpretation of bytecode instructions and
 handling of objects.
-We will begin the chapter with an overview of the structure of the
-model and an informal description of the subset of Java bytecode that
-the SCJVM described by our model executes.
-This will then be followed by a detailed description of each part of
-the \Circus{} core execution environment model.
-
 The model itself has already been created but, due to the interaction
 of this part of the model with the compilation strategy, it may
 require some changes as development of the compilation strategy
@@ -502,6 +488,18 @@ changes in the model.
 The explanation of the bytecode subset at the start of the chapter
 must also be expanded to reflect new bytecode intructions added to the
 model.
+The structure of this chapter is as follows:
+\begin{enumerate}
+\item[Bytecode Subset]
+\item[Classes]
+\item[Code Area]
+\item[Objects and Memory]
+\item[Stack Frames]
+\item[Interpreter]
+\item[Launcher]
+\item[Complete Core Execution Environment Model]
+\item[Final Considerations]
+\end{enumerate}
 
 \section{Compilation Strategy}
 
