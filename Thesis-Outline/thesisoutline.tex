@@ -490,15 +490,32 @@ must also be expanded to reflect new bytecode intructions added to the
 model.
 The structure of this chapter is as follows:
 \begin{enumerate}
-\item[Bytecode Subset]
-\item[Classes]
-\item[Code Area]
-\item[Objects and Memory]
-\item[Stack Frames]
-\item[Interpreter]
-\item[Launcher]
-\item[Complete Core Execution Environment Model]
-\item[Final Considerations]
+\item[Bytecode Subset], in which we describe the subset of Java
+  bytecode that the JVM specified by our model handles.
+\item[Classes], in which we describe the representation of classes in
+  our CEE model.
+\item[Code Area], in which we describe the first component of the CEE
+  model, which provides the class information and bytecode
+  instructions of the program run by the SCJVM.
+\item[Objects and Memory], in which we describe the representation of
+  objects in the model and explain the second component of the model
+  which handles creation of object and interaction with the memory
+  manager services.
+\item[Stack Frames], in which we describe the structure of the frames
+  that make up the Java stack and define some operations on stack
+  frames.
+\item[Interpreter], in which we explain the third component of the CEE
+  model, which executes bytecode instructions and specifies their
+  semantics.
+\item[Launcher], in which we explain the final component of the CEE
+  model, which manages the SCJ initialisation procedure and mission
+  model.
+\item[Complete Core Execution Environment Model], in which we show how
+  the different components of the model are combined together into a
+  single process representing the CEE.
+\item[Final Considerations], in which we summarise the contents of the
+  chapter, and discuss some interesting points about the model and its
+  possible uses.
 \end{enumerate}
 
 \section{Compilation Strategy}
@@ -526,6 +543,26 @@ The next stage of the research will be to work out detailed
 compilation rules for each stage of the compilation strategy and show
 that those rules are mathematically correct.
 None of the material for this chapter has been written up yet.
+The planned structure for the chapter is as follows:
+\begin{enumerate}
+\item[Overview], in which we describe the overall compilation strategy
+  and list the major steps of the compilation, which are defined in
+  detail in later sections of the chapter.
+\item[Elimination of Program Counter], in which we explain the
+  compilation rules necessary to remove dependence on an explicit
+  program counter and introduce control structures.
+\item[Elimination of Stack], in which we explain how information from
+  the Java stack is converted to variables and parameters in C in
+  order to remove dependence on the stack.
+\item[Collapsing of Interpreter and Launcher], in which we describe
+  how the interpreter and launcher components of the model are merged
+  in order to remove the interpreter's state.
+\item[Data Refinement of Memory], in which we describe how the
+  representation of objects is introduced via a data refinement.
+\item[Final Considerations], in which we summarise the compilation
+  strategy and discuss any additional considerations that could not be
+  addressed when explaining the strategy itself.
+\end{enumerate}
 
 \section{Evaluation}
 
@@ -549,11 +586,20 @@ correctness of the compilation strategy.
 The work for this thesis chapter remains to be done.
 Some of the work of developing examples of the application of the
 compilation strategy will be done during the creation of the
-compilation strategy but it is unlikely that work will done on the
+compilation strategy, but it is unlikely that work will done on the
 mechanisation until after the full compilation strategy has been
 constructed.
 As the research for this chapter has not yet been completed, nothing
-has been written forit yet.
+has been written for it yet.
+The structure of this chapter is expected to be as follows:
+\begin{enumerate}
+\item[Examples], in which we illustrate the use of the compilation
+  strategy by applying it to several examples of small SCJ programs.
+\item[Mechanisation], in which we show how the compilation strategy
+  and the proofs of its correctness can be mechanised.
+\item[Final Considerations], in which we summarise and discuss the
+  overall evaluation of the compilation strategy.
+\end{enumerate}
 
 \section{Conclusions}
 
@@ -562,8 +608,15 @@ which we will summarise the contributions of the thesis, including
 discussing how it builds upon the existing work in the field.
 We will also discuss some possible directions for future work outside
 the scope of the thesis.
-Most of the material for this chapter has already been written but
-more will be written as progress is made on the rest of the thesis. 
+Most of the material for this chapter has already been written, but
+more will be written as progress is made on the rest of the thesis.
+Its envisaged structure is standard:
+\begin{enumerate}
+\item[Summary of Contributions], in which we summarise the
+  contributions of the thesis in the context of existing work.
+\item[Future Work], in which we discuss possible future directions for
+  the work beyond the thesis.
+\end{enumerate}
 
 % \chapter{Plan}
 
