@@ -452,6 +452,8 @@ chapter will need to be revised to make it consistent with more recent
 changes to the model and present it in a briefer style.
 Its envisaged structure of sections is as follows:
 \begin{enumerate}
+\item[Overview], in which we describe the overall structure of the
+  SCJVM services and how it relates to the rest of the SCJVM.
 \item[Memory Manager API], in which we give an informal description of
   the services related to memory management that are specified in the
   model.
@@ -473,42 +475,28 @@ Its envisaged structure of sections is as follows:
 Following the explanation of the SCJVM Services model in the previous
 thesis chapter, the Core Execution Environment chapter will detail the
 part of the SCJVM model that will be affected by the compilation
-strategy, including interpretation of bytecode instructions and
-handling of objects.
-The model itself has already been created but, due to the interaction
-of this part of the model with the compilation strategy, it may
-require some changes as development of the compilation strategy
-continues.
-This chapter has been written up but must be changed to reflect
-changes in the model.
-The explanation of the bytecode subset at the start of the chapter
-must also be expanded to reflect new bytecode intructions added to the
-model.
+strategy, including execution of the code and handling of objects.
+The code execution includes both interpretation of the bytecode and
+execution of the C program that results from compilation of the
+bytecode.
+The model of the bytecode interpreter and the structure of the C code
+that the compilation strategy will generate have already been created.
+However, due to the interaction of this part of the model with the
+compilation strategy, it may require some changes as development of
+the compilation strategy continues.
+The bytecode interpreter model has been written up but must be changed
+to reflect changes in the model and include the C code model.
 The structure of this chapter is as follows:
 \begin{enumerate}
-\item[Bytecode Subset], in which we describe the subset of Java
-  bytecode that the JVM specified by our model handles.
-\item[Classes], in which we describe the representation of classes in
-  our CEE model.
-\item[Code Area], in which we describe the first component of the CEE
-  model, which provides the class information and bytecode
-  instructions of the program run by the SCJVM.
-\item[Objects and Memory], in which we describe the representation of
-  objects in the model and explain the second component of the model
-  which handles creation of object and interaction with the memory
-  manager services.
-\item[Stack Frames], in which we describe the structure of the frames
-  that make up the Java stack and define some operations on stack
-  frames.
-\item[Interpreter], in which we explain the third component of the CEE
-  model, which executes bytecode instructions and specifies their
-  semantics.
-\item[Launcher], in which we explain the final component of the CEE
-  model, which manages the SCJ initialisation procedure and mission
-  model.
-\item[Complete Core Execution Environment Model], in which we show how
-  the different components of the model are combined together into a
-  single process representing the CEE.
+\item[Overview], in which we describe the overall purpose of the core
+  execution environment, its structure, and the different approaches
+  of interpretation and compilation to C.
+\item[Bytecode Interpreter Model], in which we describe each of the
+  components of our model for the core execution environment with an
+  interpreter.
+\item[C Code Model], in which we describe the structure and
+  representation of the C code that will be generated from compilation
+  of the bytecode.
 \item[Final Considerations], in which we summarise the contents of the
   chapter, and discuss some interesting points about the model and its
   possible uses.
@@ -517,11 +505,9 @@ The structure of this chapter is as follows:
 \section{Compilation Strategy}
 
 This thesis chapter will describe the strategy for transforming the
-core execution environment model loaded with a given SCJ program to a
-form representing an equivalent C program.
-We will begin by describing how each of the constructs of C are
-represented in the \Circus{} model produced by the compilation
-strategy.
+core execution environment model loaded with a given SCJ program to an
+equivalent C program of the form described in the previous thesis
+chapter.
 Then we will provide an overview of the compilation strategy,
 describing each of the stages and stating the main compilation theorem
 that the strategy proves, which is that the model can be transformed
@@ -531,10 +517,8 @@ compilation strategy will then be described and we will explain how
 the bytecode program is transformed into a C program through provably
 correct transformations.
 
-We are part of the way through the research for this chapter, with the
-structure of the C program model that the compilation strategy is
-attempting to create decided and a rough outline of the compilation
-strategy drawn up.
+We are part of the way through the research for this chapter, with a
+rough outline of the compilation strategy already drawn up.
 The next stage of the research will be to work out detailed
 compilation rules for each stage of the compilation strategy and show
 that those rules are mathematically correct.
@@ -564,7 +548,7 @@ The planned structure for the chapter is as follows:
 
 The focus of this chapter will be evaluation of the compilation
 strategy.
-This will be performed by demostrating some examples of how the
+This will be performed by giving some examples of how the
 compilation strategy acts on the bytecode produced from real SCJ
 programs, so that it can be seen that equivalent C code is generated
 by the compilation strategy.
