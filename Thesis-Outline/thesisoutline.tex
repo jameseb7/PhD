@@ -502,6 +502,28 @@ The structure of this chapter is as follows:
 \item[Bytecode Interpreter Model], in which we describe each of the
   components of our model for the core execution environment with an
   interpreter.
+  \begin{enumerate}
+  \item[Bytecode Subset], in which we describe the subset of Java
+    bytecode that the JVM specified by our model handles.
+  \item[Classes], in which we describe the representation of classes
+    in our CEE model.
+  \item[Code Area], in which we describe the first component of the
+    CEE model, which provides the class information and bytecode
+    instructions of the program run by the SCJVM.
+  \item[Objects and Memory], in which we describe the representation
+    of objects in the model and explain the second component of the
+    model which handles creation of object and interaction with the
+    memory manager services.
+  \item[Stack Frames], in which we describe the structure of the
+    frames that make up the Java stack and define some operations on
+    stack frames.
+  \item[Interpreter], in which we explain the third component of the
+    CEE model, which executes bytecode instructions and specifies
+    their semantics.
+  \item[Launcher], in which we explain the final component of the CEE
+    model, which manages the SCJ initialisation procedure and mission
+    model.
+  \end{enumerate}
 \item[C Code Model], in which we describe the structure and
   representation of the C code that will be generated from compilation
   of the bytecode.
