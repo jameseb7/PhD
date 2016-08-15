@@ -28,8 +28,9 @@ allowing some common Java errors to be checked at compile time through
 the type system.
 
 One use of Java that is of particular interest is in embedded systems.
-While early versions of Java were developed for programming,
-particularly TV set-top boxes, the technology was not well received.
+While early versions of Java were developed for programming embedded
+systems, particularly TV set-top boxes, the technology was not well
+received.
 It was only in the growing sector of the internet that Java initially
 found a market~\cite{horstmann2002}.
 However, it was soon realised that the portability, modularity, safety
@@ -153,9 +154,12 @@ as we know, no SCJ virtual machine has been formally verified.
 
 \section{Objectives}
 
-Our objective is to construct a framework for verification of an SCJ
-virtual machine.
-It will provide the following resources for developers and verifiers:
+Our objective is to construct an approach to verification of an SCJ
+virtual machine that allows the production and verification of correct
+SCJ virtual machines, although the actual creation and verification of
+such machines is outside the scope of our work.
+Our work provides the following resources for developers and
+verifiers:
 \begin{itemize}
 \item a specification of the requirements of an SCJ virtual machine,
 \item a compilation strategy from Java bytecode to native C code,
@@ -164,6 +168,14 @@ It will provide the following resources for developers and verifiers:
   the compilation strategy, and
 \item a mechanisation of the model and proofs.
 \end{itemize}
+
+We will try to follow the design of existing SCJ virtual machines to
+ensure that our work is of the greatest benefit to the SCJ community.
+We will particularly focus on the icecap HVM~\cite{sondergaard2012},
+as that is the only publicly-available SCJ virtual machine that is
+up-to-date with the SCJ specification.
+
+\subsection{SCJ Virtual Machine Specification}
 
 The first component required is a specification of the requirements
 for an SCJ virtual machine.
@@ -182,9 +194,11 @@ Java bytecode instructions.
 There is much existing work on the semantics of Java bytecode that can
 be used in our work~\cite{bertelsen2000, jones1998, stark2001}.
 
+\subsection{Compilation Strategy}
+
 As many existing virtual machines for SCJ precompile programs to
 native code in order to allow faster execution on embedded systems, it
-seems wise to include that in our framework.
+seems wise to include that in our approach.
 We will focus on compilation of Java bytecode to C as that is the
 approach adopted by several existing virtual machines for embedded
 systems, including Fiji VM~\cite{pizlo2009} and icecap
@@ -214,6 +228,8 @@ diagram approach, but it does have the advantage that the
 specification of the compilation strategy is correct by construction
 as the rewrite rules that comprise it have all been proved.
 
+\subsection{Formal Model and Proofs}
+
 In order to ensure that the specification is precise and to facilitate
 proofs of its correctness, it must have a model written in some formal
 specification language.
@@ -227,6 +243,8 @@ requires the specification language to have a well-defined semantics.
 \Circus{} has such a semantics, defined using the model of Unifying
 Theories of Programming (UTP)~\cite{hoare1998}.
 
+\subsection{Mechanisation}
+
 To prevent mistakes in the proofs, it is helpful to mechanise the
 formal model and proofs.
 There are various systems that can be used for this, but we will focus
@@ -236,12 +254,17 @@ the UTP~\cite{foster2015}, and has been used in previous work
 verifying compilers for Java-like languages~\cite{klein2006,
   strecker2002, lochbihler2010}, making it well placed for our work.
 
-We have already made some progress towards the construction of the
-proposed framework with a specification and formal model of the
-requirements of an SCJ virtual machine.
-It is expected that the model will be checked using a theorem prover;
-our next task is then the development of a compilation strategy to
-native code.
+\subsection{Summary}
+
+In conclusion, our objective is an approach verification of SCJVMs
+consisting of mechanised formal models together with proofs of
+properties about them.
+These formal models will cover both the services that must be provided
+by a running SCJVM and a compilation strategy for translating Java
+bytecode to native code.
+With our results, SCJVM developers will be able to create provably
+correct ahead-of-time compiling SCJVM implementations and check the
+correctness of those implementations.
 
 \section{Document Structure}
 
