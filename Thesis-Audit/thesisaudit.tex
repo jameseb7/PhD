@@ -1,0 +1,110 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage{circus}
+\usepackage{fullpage}
+
+
+\title{An Approach to Verification of Safety-Critical Java Virtual
+  Machines with Ahead-of-time Compilation
+  \\[1cm]
+  \Large Thesis Audit}
+\author{James Baxter}
+
+\begin{document}
+\maketitle
+
+This document describes the progress on our work and on writing the
+thesis. 
+The structure of the thesis has not changed substantially since the
+Thesis Outline document so we just provide an update on the work for
+each of the chapters proposed there. 
+Each of the following sections corresponds to a chapter of the thesis
+and provides an overview of the work carried out for that chapter and
+the work that remains to be done.
+
+\section{Introduction}
+
+This chapter just introduces the content of the thesis and describes
+its structure. 
+Because of this, there is no specific research work associated with
+this chapter. 
+The content of the chapter has already been written and will only
+require very minor revision for the final thesis.
+
+\section{Compilers and Virtual Machines for Java-like languages in the
+  Safety-critical Domain}
+
+This chapter is a literature review chapter, so the only work required
+for it is that of reviewing the literature, which has already been
+performed.
+The content of this chapter has already been written and will only
+require minor changes before the submission of the final thesis,
+taking into account new developments in the literature.
+
+\section{Safety-Critical Java Virtual Machine Services}
+
+This chapter describes the first part of our model of Safety-Critical
+Java Virtual Machines (SCJVMs). 
+All of the work on the model itself has been completed, and it is
+expected that it will not require any further changes.
+An explanation of the model, which forms the content of this chapter
+of the thesis, has been written but will need to be updated to reflect
+changes in the model.
+This should take no longer than a month.
+
+\section{Core Execution Environment}
+
+This chapter describes the second part of our SCJVM model, which forms
+the starting point for our compilation strategy, and our shallow
+embedding of C in \Circus{}, which forms the target of our compilation
+strategy.
+As for the first part of the model, the work on the second part of the
+SCJVM model has already been completed and an explanation of the model
+has been written but the explanation will need to be revised to tske
+into account changes to the model.
+However, the changes required for this should be simpler than for the
+previous chapter as the changes tothe model make it easier to present.
+The work on our shallow embedding of C is also complete and a
+description of it has been written as part of preparing a paper for
+submission to a conference.
+However, this description is yet to be expanded and incorporated into
+the thesis. 
+Work on the content of this chapter (both the model explanation and
+the shallow embedding description) is expected to take no more than a
+few weeks.
+
+\section{Compilation Strategy}
+
+This chapter describes our compilation strategy to translate Java
+bytecode to C.
+The overall structure of this strategy has already been decided and we
+have a plan for how each stage of the strategy should proceed.
+An overview of the strategy has been written as part of the conference
+paper mentioned in the previous section of this document, but needs adjusting to fit
+with changes to the model and incorporating into the thesis.
+The changes to the model that affect the compilation strategy all work
+to simplify the presentation of the strategy, so the adjustments to
+the overview should not take long.
+
+For the remaining sections of this thesis chapter, writing of the
+thesis is being performed alongside working out the details of each
+stage of the strategy, so that the thesis forms the main account of
+the compilation strategy.
+Writing of the section for the first stages of the strategy,
+\emph{Elimination of Program Counter}, is underway and this section is
+already well developed.
+The sections for remaining stages of the strategy, \emph{Elimination
+  of Stack} and \emph{Data Refinement of Memory}, though they mainly
+comprise data refinements that should be relatively simple to present.
+The \emph{Collapsing of Intepreter and Launcher} stage of the
+strategy, which was mentioned in the Thesis Outline, was deemed to not
+be necessary so it no longer requires a section in the thesis.
+Overall, we expect the work on this chapter to take no longer than 2
+months, based on the time taken for work so far on the Elimination of
+Program Counter section.
+
+\section{Evaluation}
+
+\section{Conclusions}
+
+\end{document}
