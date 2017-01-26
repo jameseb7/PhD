@@ -2,13 +2,15 @@
 
 \usepackage{circus}
 \usepackage{fullpage}
+\usepackage{tikz}
+\usepackage{pgfgantt}
 
 
-\title{An Approach to Verification of Safety-Critical Java Virtual
-  Machines with Ahead-of-time Compilation
-  \\[1cm]
-  \Large Thesis Audit}
-\author{James Baxter}
+\title{An Approach to Verification of \\
+  Safety-Critical Java Virtual Machines \\
+  with Ahead-of-time Compilation
+  \\[0.8cm]
+  \Large Thesis Audit} \author{James Baxter}
 
 \begin{document}
 \maketitle
@@ -20,7 +22,8 @@ Thesis Outline document so we just provide an update on the work for
 each of the chapters proposed there. 
 Each of the following sections corresponds to a chapter of the thesis
 and provides an overview of the work carried out for that chapter and
-the work that remains to be done.
+the work that remains to be done. 
+Figure~\ref{schedule-figure} shows the overall schedule for the work.
 
 \section{Introduction}
 
@@ -49,7 +52,7 @@ All of the work on the model itself has been completed, and it is
 expected that it will not require any further changes.
 An explanation of the model, which forms the content of this chapter
 of the thesis, has been written but will need to be updated to reflect
-changes in the model.
+some changes we have already made in the model.
 This should take no longer than a month.
 
 \section{Core Execution Environment}
@@ -60,10 +63,12 @@ embedding of C in \Circus{}, which forms the target of our compilation
 strategy.
 As for the first part of the model, the work on the second part of the
 SCJVM model has already been completed and an explanation of the model
-has been written but the explanation will need to be revised to tske
+has been written but the explanation will need to be revised to take
 into account changes to the model.
-However, the changes required for this should be simpler than for the
-previous chapter as the changes tothe model make it easier to present.
+However, the changes required to the text should be simpler than for
+the previous chapter as the changes to the model make it easier to
+present.
+
 The work on our shallow embedding of C is also complete and a
 description of it has been written as part of preparing a paper for
 submission to a conference.
@@ -96,9 +101,10 @@ already well developed.
 The sections for remaining stages of the strategy, \emph{Elimination
   of Stack} and \emph{Data Refinement of Memory}, though they mainly
 comprise data refinements that should be relatively simple to present.
-The \emph{Collapsing of Intepreter and Launcher} stage of the
+The \emph{Collapsing of Interpreter and Launcher} stage of the
 strategy, which was mentioned in the Thesis Outline, was deemed to not
 be necessary so it no longer requires a section in the thesis.
+
 Overall, we expect the work on this chapter to take no longer than 2
 months, based on the time taken for work so far on the
 \emph{Elimination of Program Counter} section.
@@ -109,6 +115,7 @@ This chapter will largely involve evaluating the strategy through
 consideration of several examples of SCJ programs.
 Some examples have already been prepared but it may take some time to
 put them through the compilation strategy.
+
 Work on mechanising proofs of the compilation strategy is not expected
 to be feasible as there is insufficient tool support at this time.
 Hence we are unable to provide a discussion of mechanisation of the
@@ -117,8 +124,9 @@ the Thesis Outline.
 However, some consideration will be given in the evaluation to how
 implementations of the strategy could be created and how the strategy
 could be extended in the future.
+
 Overall, we expect working on the examples and writing up the
-evaluation to take at most two months, which is the time alotted for
+evaluation to take at most two months, which is the time allotted for
 this section of the work in the plan given in the Thesis Outline
 document.
 
@@ -130,5 +138,26 @@ The content of this chapter is already written but a small amount of
 new material may need to be written to summarise the remaining work.
 The time required for writing this extra material is expected to be
 fairly short.
+
+\begin{figure}[b!]
+\centering
+\begin{ganttchart}[
+  vgrid,
+  x unit=0.7cm,
+  time slot format = isodate-yearmonth,
+  compress calendar
+  ]{2017-01}{2017-10}
+  \gantttitlecalendar{year, month=shortname} \\
+  \ganttbar{Work on Compilation Strategy Chapter}{2017-01}{2017-03} \\
+  \ganttbar{Work on Evaluation Chapter}{2017-04}{2017-05} \\
+  \ganttbar{Revise SCJVM Services Chapter}{2017-06}{2017-06} \\
+  \ganttbar{Revise Core Execution Environment Chapter}{2017-07}{2017-07} \\
+  \ganttbar{Minor Revisions}{2017-08}{2017-09}
+  
+\end{ganttchart}
+\caption{A Gantt chart showing the schedule for the remainder of the
+  planned research}
+\label{schedule-figure}
+\end{figure}
 
 \end{document}
