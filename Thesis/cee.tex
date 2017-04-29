@@ -10,12 +10,10 @@ dictated by the SCJ programming model, including, for example, safelet
 setup and mission execution.
 
 As shown in Figure~\ref{cee-fig}, we view the core execution
-environment as having four components:
+environment as having three components:
 \begin{itemize}
-\item the code area, which stores the classes and bytecode
-  instructions that are statically loaded on the SCJVM at startup,
-\item the memory, which manages information about objects created
-  during execution of the bytecode,
+\item the object manager, which manages information about objects
+  created during execution of the bytecode,
 \item the interpreter, which handles execution of bytecode
   instructions, and
 \item the launcher, which coordinates the startup of the SCJVM, the
@@ -26,15 +24,14 @@ The interpreter is central to the main functionality of the core
 execution environment, but proper handling of infrastructure methods
 requires handling the SCJ mission-based programming model, which is
 dealt with by the launcher.
-Both the launcher and interpreter require access to memory, but the
-class information and bytecode instructions do not change throughout
-the execution of the SCJVM, so they are separated out into the code
-area.
+The interpreter requires access to memory, but the class information
+and bytecode instructions do not change throughout the execution of
+the SCJVM, so they are provided as global constants in our model that
+are passed to the interpreter as parameters.
 Objects do change throughout the execution of the SCJVM and are in a
 separate region of memory to classes and bytecode instructions.
-The management of objects is handled by the memory component of the
-core execution environment.
- 
+The management of objects is handled by the object manager component
+of the core execution environment.
 
 \begin{figure}[ht]
   \centering
@@ -89,23 +86,22 @@ core execution environment.
     \node[align=center] at (VM Services)  {SCJVM\\Services};
     \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
 
-    \foreach \x in {1,...,4}
-    \pgfmathsetmacro{\a}{0.25*(\x - 1)}
-    \pgfmathsetmacro{\b}{0.25*\x}
+    \foreach \x in {1,...,3}
+    \pgfmathsetmacro{\a}{0.33*(\x - 1)}
+    \pgfmathsetmacro{\b}{0.33*\x}
     \path ($(CEE left) + (VM part bottom)!0.07!(VM part top)$) -- 
     node[pos=\a] (CEE part \x start) {}
     node[pos=\b] (CEE part \x end) {}
     ($(CEE right) + (VM part bottom)!0.07!(VM part top) - (CEE part sep)$);
 
-    \foreach \x in {1,...,4} 
+    \foreach \x in {1,...,3} 
     \draw ($(CEE part \x start) + (CEE part sep)$)
     rectangle node[pos=0.5] (CEE part \x) {}
     (CEE part \x end |- CEE part top);
-
-    \node[align=center] at (CEE part 1) {\small Code\\Area};
-    \node[align=center] at (CEE part 2) {\small Memory};
-    \node[align=center] at (CEE part 3) {\small Interpreter};
-    \node[align=center] at (CEE part 4) {\small Launcher};
+    
+    \node[align=center] at (CEE part 1) {\small Object \\ \small Manager};
+    \node[align=center] at (CEE part 2) {\small Interpreter};
+    \node[align=center] at (CEE part 3) {\small Launcher};
   \end{tikzpicture}
   \caption{Structure of an SCJVM and its relation to the SCJ
     infrastructure and the operating system/hardware abstraction
@@ -126,9 +122,6 @@ Each of the components of the CEE is represented by a single \Circus{}
 process in our model.
 The structure of the communication between the processes is show in
 Figure~\ref{cee-model-fig}.
-The code area is used by the memory to obtain class information when
-creating objects, and by the interpreter to obtain bytecode
-instructions and check if one class inherits from another.
 The memory is used by the interpreter and launcher to create objects
 and enter backing stores.
 The memory then communicates the memory manager described in the previous
@@ -147,8 +140,7 @@ properly handled.
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
-    \node[draw, minimum size = 2cm]                  (C) {Code Area};
-    \node[draw, minimum size = 2cm, below right=2cm]       (M) {Memory};
+    \node[draw, minimum size = 2cm, below right=2cm, align=center]       (M) {Object\\Manager};
     \node[draw, minimum size = 2cm, below=2cm]       (I) {Interpreter};
     \node[draw, minimum size = 2cm, right=2cm] (L) {Launcher};
 
@@ -156,8 +148,7 @@ properly handled.
     \draw[-latex, bend left=10]  (L) edge (I);
     \draw[-latex] (I) edge (M);
     \draw[-latex] (L) edge (M);
-    \draw[-latex] (M) edge (C);
-    \draw[-latex] (I) edge (C);
+    
 
     \node[below=1.5cm, right=4.5cm] (MM) {Memory Manager};
     \node[below=5cm, right=5cm] (S) {Scheduler};
@@ -177,11 +168,7 @@ This chapter begins in Section~\ref{cee-assumptions-section} with an
 explanation of the bytecode subset used in our work.
 Afterwards, each part of the \Circus{} model of the core execution
 environment is presented in a separate section.
-First, the code area is described, beginning with a description of the
-class structure in Section~\ref{cee-classes-section} that is then used
-in the description of the code area itself in
-Section~\ref{cee-code-area-section}.
-The memory component, along with the structure of objects, is
+The object manager, along with the structure of objects, is
 described in Section~\ref{cee-memory-section}.
 The interpreter is described by first describing the stack frame
 structure in Section~\ref{cee-stack-frames-section}, then the
@@ -458,25 +445,12 @@ information in Java class files.
 We identify the information that is relevant to our bytecode subset
 and present a Z schema to represent the class information needed by
 the SCJVM at runtime.
-The class type is used in the model of the code area defined the next
-section, but is defined in its own section as it is a large data type
-of interest in its own right as a representation of Java classes.
+The class type is used in the definition of the class information that
+is passed to the object manager and the interpreter.
 
 \input{../../SCJ-VM/James/classes.zed}
 
-\section{Code Area}
-\label{cee-code-area-section}
-
-The code area contains all the classes loaded by the SCJVM (fixed at
-startup as dynamic class loading is not permitted) together with the
-bytecode of their methods.
-The code area is defined as a \Circus{} process with channels to
-access the classes and code contained within it, which do not change
-throughout the execution of the SCJ program.
-
-\input{../../SCJ-VM/James/code_area.zed}
-
-\section{Objects and Memory}
+\section{Object Manager}
 \label{cee-memory-section}
 
 The SCJVM memory manager deals with memory solely in terms of sets of
@@ -548,20 +522,16 @@ compilicate the model while adding little power.
 Our subset is sufficiently small to permit reasoning, but large enough
 to express a variety of SCJ programs.
 
-Our CEE model is divided in four components, with a \Circus{} process
+Our CEE model is divided in three components, with a \Circus{} process
 representing each component.
-The first component is the code area, which stores the bytecode
-instructions and class information for the program.
-They do not change throughout its execution, but are required by all
-the other components of the model.
-The second component is the memory, which manages objects and the
+The first component is the memory, which manages objects and the
 entering of backing stores, since the memory manager discussed in the
 previous chapter has no knowledge of the structure of objects.
-The third component of the CEE model is the interpreter, which
+The second component of the CEE model is the interpreter, which
 describes the semantics of each of the bytecode instructions in our
 subset and provides for executing methods.
-The final component is the interpreter, which manages the SCJ mission
-model and coordinates execution.
+The third and final component is the interpreter, which manages the
+SCJ mission model and coordinates execution.
 
 One interesting point about our model is the handling of special
 methods in the interpreter and launcher.
