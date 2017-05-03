@@ -1,0 +1,2869 @@
+\chapter{Compilation Strategy}
+\label{strategy-chapter}
+
+Our compilation strategy refines the $CEE(bc,cs,sid)$ process defined
+in Section~\ref{model-section} to obtain a process that includes a
+representation of C code as described in
+Section~\ref{embedding-section}. 
+The overall theorem for the strategy is as follows.
+\begin{thm}[Compilation Strategy]\label{main-theorem}
+  Given $bc$, $cs$ and $sid$, there are processes $StructMan_{cs}$ and
+  $CProg_{bc,cs}$ such that,
+  \begin{circus}
+    CEE(bc,cs,sid) \circrefines StructMan_{cs} \parallel
+    CProg_{bc,cs} \parallel Launcher(sid).
+  \end{circus}
+\end{thm}
+$StructMan_{cs}$ manages objects represented by C structs that
+incorporate the class information from $cs$, refining the process
+$ObjMan$, which handles abstract objects.
+$StructMan_{cs}$ has Z schemas representing struct types for objects
+of each class.
+%
+% \begin{zed}
+%   InputHandlerObj == [classid : ClassID; input, buffer : ObjectID]
+% \end{zed}
+%
+These schemas contain the identifier $classid$ of the object's class, so
+that polymorphic method calls can be made by choice over the object's
+class. 
+There are also components for each of the fields of the
+object.
+
+The schema types for each type of object are combined into a single
+free type $ObjectStruct$.
+% \begin{zed}
+%   ObjectStruct ::= \dots | InputHandlerCon \ldata InputHandlerObj \rdata \dots
+% \end{zed}
+% We also define functions for casting between objects of different
+% classes and for obtaining the class identifier of any object. 
+% This matches the casting of object pointers in the C code that the
+% icecap HVM generates.
+$StructMan_{cs}$ contains a map from memory addresses managed by the
+SCJVM to the $ObjectStruct$ type, representing the C structs in
+memory, and provides access to the individual values in that map.
+
+$CProg_{bc,cs}$ refines the $Interpreter$, with the $Thr$ processes
+refined into the $CThr_{bc,cs}$ processes described in the previous
+section.
+This means that the threads from SCJ are mapped onto threads in C,
+since we do not dictate a particular thread switch mechanism in either
+the source or target models.
+
+The compilation strategy is split into three stages, described in the
+following section.
+Each stage has a theorem describing it, for which the strategy acts as
+a proof.
+The proof of Theorem~\ref{main-theorem} is obtained by an application
+of the theorems for each stage.
+
+\subsection{Overview}
+
+Each stage of the compilation strategy handles a different part of the
+$Interpreter$ state:~the $pc$, the $frameStack$, and objects.
+They operate over each of the $Thr$ processes, managed by the SCJVM
+services.
+
+The first stage introduces the control constructs of the C code.
+This removes the use of $pc$ to determine the control flow of the
+program.
+The choice over $pc$ values is then replaced with a choice over method
+identifiers pointing to sequences of operations representing method
+bodies.
+
+In the second stage, the information contained on the $frameStack$,
+which is the local variable array and operand stack for each method,
+is introduced in the C code.
+This is done by introducing variables and parameters to represent each
+method's local variables and operand stack slots.
+A data refinement is then used to transform each operation over the
+$frameStack$ to operate on the new variables.
+The $frameStack$ is then eliminated from the state.
+
+In the final stage, the class information from $cs$ is used to create
+a representation of C structs.
+This means that $ObjMan$, which has a very abstract representation of
+objects, is transformed into $StructMan$.
+The process for each thread is then made to access the structs for the
+objects in a more concrete way that represents the way struct fields
+are accessed in C code.
+
+% This yields final method actions of a form similar to that of the
+% example shown below, which is taken from the \texttt{InputHandler}
+% presented in Section~\ref{model-section}.
+% \begin{circusaction}
+%   InputHandler\_HandleAsyncEvent \circdef \\
+%   \t1 \circval var0 \circspot \circvar var1, stack0, stack1 : Word \circspot \\
+%   \t1 stack0 := var0 \circseq Poll \circseq getObject!stack0 \then getObjectRet?struct \\
+%   \t1 {} \then stack0 := (castInputHandler~struct).input \circseq \dots
+% \end{circusaction}
+% The \texttt{handleAsyncEvent()} method of \texttt{InputHandler} is
+% compiled to the action $InputHandler\_HandleAsyncEvent$, with the
+% implicit \texttt{this} parameter represented as a value parameter
+% $var0$.
+% The local variable ($var1$) and stack slots ($stack0$ and $stack1$)
+% are represented as \Circus{} variables.
+% The operations of the C code are composed in sequence, with an action
+% named $Poll$ that polls for thread switches present at the points
+% where thread switches may occur. 
+% Stack operations are represented as assignments. 
+% For instance, $stack0 := var0$ arises from the compilation to load a
+% local variable into a stack slot.
+% Access to objects is performed by communicating with $StructMan_{cs}$
+% to obtain the struct for the object, then casting it to the correct
+% type, and accessing the required value.
+% Above, we obtain the value of the $input$ field from an $InputHandler$
+% object.
+% The communication with $StructMan_{cs}$ is performed via the
+% $getObject$ channel and the function $castInputHandler$ is used to map
+% the $ObjectStruct$ returned from the communication to a type
+% representing an object of \texttt{InputHandler}.
+
+We describe each of these stages in a separate section.
+The first stage, which we call \emph{Elimination of Program Counter},
+is described in Section~\ref{elimination-of-program-counter-section}.
+The second stage, called \emph{Elimination of Frame Stack}, is
+described in Section~\ref{elimination-of-frame-stack-section}.
+Finally, third of the strategy, which is called \emph{Data Refinement
+  of Objects}, is described in
+Section~\ref{data-refinement-of-objects-section}.
+
+\section{Elimination of Program Counter}
+\label{elimination-of-program-counter-section}
+
+This stage eliminates $pc$ from the state of each
+thread's process, $Thr(bc,cs,t)$, introducing the control flow constructs of C in the
+process. 
+It may be summarised by the following theorem.
+%
+\begin{thm}[Elimination of Program Counter]\label{thread-splitting-thm}
+  \begin{circus}
+    Thr(bc,cs,t) \circrefines ThrCF_{bc,cs}(cs,t)
+  \end{circus}%
+\end{thm}
+%
+In this stage we act mainly upon the $Running$ action of $Thr$; its
+loop is unrolled to introduce the control flow that follows each
+bytecode instruction.
+The aim is to get each method's bytecode instructions into a form in
+which the control flow, but not the data operations, are described
+using C constructs and, moreover, each path of execution (including
+every branch of the conditionals) ends in a return instruction or a
+loop.
+We refer to a method in this form as a \emph{complete} method.
+
+It is important to observe that it is possible to transform the
+bytecode instructions of every method so that they become complete.
+If we consider the control flow of a method beginning from that
+method's entry point, each bytecode instruction reached must either be
+a return instruction, or followed by another bytecode.
+If another bytecode follows the bytecode's execution, then it must be
+either a bytecode already considered, resulting in a loop, or one not
+already considered.
+Since there are finitely many bytecode instructions in a method, a
+loop or return must eventually be reached.
+Failure to do so would lead to an instruction beyond the end of the
+method, which is forbidden by the structural restrictions on Java
+bytecode~\cite{lindholm2014}. 
+We assume bytecode input to our strategy will have undergone bytecode
+verification so this cannot happen.
+
+When a method is complete, it can be defined by a separate \Circus{}
+action.
+When the code for all the methods has been split in this way, the
+choice of bytecode instruction using the program counter value can be
+removed and replaced with a choice over method identifiers.
+Thus dependency on the program counter can be completely removed,
+allowing it to be eliminated from the state of $Thr$.
+
+The overall strategy for transforming $Thr$ in this stage and
+achieving this elimination is described by
+Algorithm~\ref{epc-algorithm}.
+It begins at line~\ref{algorithm-expand-bytecode} by expanding the
+\Circus{} definitions of the bytecode instructions from the $bc$ map
+into the $Running$ action, pulling out the program counter updates so
+that they can be more easily manipulated by the strategy.
+In line~\ref{algorithm-introduce-forward-sequence}, instructions that
+are forward \texttt{goto}s or are simply followed by execution of the
+bytecode at the next $pc$ value are sequenced with the instructions
+following them.
+After that, for each method, its loops and conditionals are introduced
+in line~\ref{algorithm-introduce-loops-and-conditionals}. 
+Afterwards, any complete methods are separated out, in
+line~\ref{algorithm-separate-complete-methods}, and any method calls
+involving completed methods are resolved by sequencing the method call
+with the \Circus{} action representing the method, in
+line~\ref{algorithm-resolve-method-calls}.
+
+This is repeated until all methods have been separated out, as
+indicated by the while loop in line~\ref{algorithm-method-loop}.
+The $MainThread$ and $NotStarted$ actions are then refined in
+line~\ref{algorithm-refine-main-actions} to provide a choice over
+method identifiers, rather than $pc$ values, thus removing all uses of
+$pc$ from the interpreter.
+The $pc$ component is then removed from the state in
+line~\ref{algorithm-remove-pc-from-state} of the algorithm.
+
+\begin{algorithm}[t]
+  \begin{algorithmic}[1]
+    \State \Call{ExpandBytecode}{} \label{algorithm-expand-bytecode}
+    \State \Call{IntroduceSequentialComposition}{} \label{algorithm-introduce-forward-sequence}
+    \While{$\lnot$\Call{AllMethodsSeparated}{}} \label{algorithm-method-loop}
+    \State \Call{IntroduceLoopsAndConditionals}{} \label{algorithm-introduce-loops-and-conditionals}
+    \State \Call{SeparateCompleteMethods}{} \label{algorithm-separate-complete-methods}
+    \State \Call{ResolveMethodCalls}{} \label{algorithm-resolve-method-calls}
+    \EndWhile
+    \State \Call{RefineMainActions}{} \label{algorithm-refine-main-actions}
+    \State \Call{RemovePCFromState}{} \label{algorithm-remove-pc-from-state}
+  \end{algorithmic}
+  \caption{Elimination of Program Counter}
+  \label{epc-algorithm}
+\end{algorithm}
+
+Each of the procedures used in Algorithm~\ref{epc-algorithm} is
+defined in a separate section in the sequel.
+Beforehand, we give a more detailed overview of the strategy.
+
+\subsection{Overview}
+\label{overview-subsection}
+
+We explain the strategy with an example, the Java code for which is
+shown in Figure~\ref{example-code-figure}.
+\begin{figure}[t!]
+  \begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
+    import java.io.InputStream;
+    import java.io.OutputStream;
+    import javax.realtime.AperiodicParameters;
+    import javax.realtime.ConfigurationParameters;
+    import javax.realtime.PriorityParameters;
+    import javax.safetycritical.AperiodicEventHandler;
+    import javax.safetycritical.StorageParameters;
+    import javax.safetycritical.io.ConsoleConnection;
+    
+    public class TPK extends AperiodicEventHandler {
+      
+      public TPK(PriorityParameters priority,
+                 AperiodicParameters release,
+                 StorageParameters storage,
+                 ConfigurationParameters config) {
+        super(priority, release, storage, config);
+      }
+      
+      public void handleAsyncEvent() {
+        ConsoleConnection console = new ConsoleConnection(null);
+        
+        InputStream input = console.openInputStream();
+        OutputStream output = console.openOutputStream();
+        
+        for(int i = 0; i <= 10; i = i + 1) {
+          int y = f(input.read());
+          
+          if (y > 400) {
+            output.write(0);
+          } else {
+            output.write(y);
+          }
+        }
+      }
+      
+      public static int f(int x){
+        return x + x + x + 5;
+      }
+      
+    }
+  \end{lstlisting}
+  \caption{Our example program}
+  \label{example-code-figure}
+\end{figure}
+\begin{figure}[p]
+  \scriptsize
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0.1cm}
+  \setlength{\linewidth}{10cm}
+  \begin{vwcol}[widths={0.7,0.3},rule=none]
+    \begin{axdef}
+      TPK : Class
+    \where
+      TPK = \lblot \\
+      \t1 constantPool == \{ \\
+      \t2 1 \mapsto ClassRef~TPKClassID, \\
+      \t2 3 \mapsto ClassRef~AperiodicEventHandlerClassID, \\
+      \t2 8 \mapsto MethodRef~AperiodicEventHandlerClassID~APEHinit, \\
+      \t2 27 \mapsto ClassRef~ConsoleConnectionClassID, \\
+      \t2 29 \mapsto  MethodRef~ConsoleConnectionClassID~CCinit, \\
+      \t2 32 \mapsto MethodRef~ConsoleConnectionClassID~openInputStream, \\
+      \t2 36 \mapsto MethodRef~ConsoleConnectionClassID~openOutputStream, \\
+      \t2 40 \mapsto MethodRef~InputStreamClassID~read, \\
+      \t2 41 \mapsto ClassRef~InputStreamClassID, \\
+      \t2 46 \mapsto MethodRef~TPKClassID~f, \\
+      \t2 50 \mapsto MethodRef~OutputStreamClassID~write, \\
+      \t2 51 \mapsto ClassRef~OutputStreamClassID \\
+      \t1 \}, \\
+      \t1 this == 1, \\
+      \t1 super == 3, \\
+      \t1 interfaces == \{\}, \\
+      \t1 methodEntry == \{ \\
+      \t2 f \mapsto 43, \\
+      \t2 handleAsyncEvent \mapsto 7, \\
+      \t2 APEHinit \mapsto 0, \\
+      \t1 \}, \\
+      \t1 methodEnd == \{ \\
+      \t2 f \mapsto 50, \\
+      \t2 handleAsyncEvent \mapsto 42, \\
+      \t2 APEHinit \mapsto 6 \\
+      \t1 \}, \\
+      \t1 methodLocals == \{ \\
+      \t2 f \mapsto 1, \\
+      \t2 handleAsyncEvent \mapsto 6, \\
+      \t2 APEHinit \mapsto 5, \\
+      \t1 \}, \\
+      \t1 methodStackSize == \{ \\
+      \t2 f \mapsto 2, \\
+      \t2 handleAsyncEvent \mapsto 3, \\
+      \t2 APEHinit \mapsto 5, \\
+      \t1 \}, \\
+      \t1 fields == \{\}, \\
+      \t1 staticFields == \{\} \\
+      \rblot
+    \end{axdef}
+    \begin{axdef}
+      cs : ClassID \pfun Class
+      \where
+      cs = \{ \\
+      \t1 TPKClassID \mapsto TPK \\
+      \t1 \cdots \\
+      \}
+    \end{axdef}
+    %\columnbreak
+    \begin{axdef}
+      bc : ProgramAddress \pfun Bytecode
+      \where
+      bc = \{ \\
+      	\t1 0 \mapsto aload~0, \\
+        \t1 1 \mapsto aload~1, \\
+        \t1 2 \mapsto aload~2, \\
+        \t1 3 \mapsto aload~3, \\
+        \t1 4 \mapsto aload~4, \\
+        \t1 5 \mapsto invokespecial~8, \\
+        \t1 6 \mapsto return, \\
+        \t1 7 \mapsto new~27, \\
+        \t1 8 \mapsto dup, \\
+        \t1 9 \mapsto aconst\_null, \\
+        \t1 10 \mapsto invokespecial~29, \\
+        \t1 11 \mapsto astore~1, \\
+        \t1 12 \mapsto aload~1, \\
+        \t1 13 \mapsto invokevirtual~32, \\
+        \t1 14 \mapsto astore~2, \\
+        \t1 15 \mapsto aload~1, \\
+        \t1 16 \mapsto invokevirtual~36, \\
+        \t1 17 \mapsto astore~3, \\
+        \t1 18 \mapsto iconst~0, \\
+        \t1 19 \mapsto astore~4, \\
+        \t1 20 \mapsto goto~19, \\
+        \t1 21 \mapsto aload~2, \\
+        \t1 22 \mapsto invokevirtual~40, \\
+        \t1 23 \mapsto invokestatic~46, \\
+        \t1 24 \mapsto astore~5, \\
+        \t1 25 \mapsto aload~5, \\
+        \t1 26 \mapsto iconst~400, \\
+        \t1 27 \mapsto if\_icmple~5, \\
+        \t1 28 \mapsto aload~3, \\
+        \t1 29 \mapsto iconst~0, \\
+        \t1 30 \mapsto invokevirtual~50, \\
+        \t1 31 \mapsto goto~4, \\
+        \t1 32 \mapsto aload~3, \\
+        \t1 33 \mapsto aload~5, \\
+        \t1 34 \mapsto invokevirtual~50, \\
+        \t1 35 \mapsto aload~4, \\
+        \t1 36 \mapsto iconst~1, \\
+        \t1 37 \mapsto iadd, \\
+        \t1 38 \mapsto astore~4, \\
+        \t1 39 \mapsto aload~4, \\
+        \t1 40 \mapsto iconst~10, \\
+        \t1 41 \mapsto if\_icmple~(\negate 20), \\
+        \t1 42 \mapsto return, \\
+        \t1 43 \mapsto aload~0, \\
+        \t1 44 \mapsto aload~0, \\
+        \t1 45 \mapsto iadd, \\
+        \t1 46 \mapsto aload~0, \\
+        \t1 47 \mapsto iadd, \\
+        \t1 48 \mapsto iconst~5, \\
+        \t1 49 \mapsto iadd, \\
+        \t1 50 \mapsto areturn, \\
+        \t1 {} \cdots {} \\
+        \}
+      \end{axdef}
+      \vspace{0.1cm}
+  \end{vwcol}
+  \caption{The \Circus{} code corresponding to our example program}
+  \label{example-model-figure}
+\end{figure}%
+Our example is based on the Trabb Pardo-Knuth
+algorithm~\cite{knuth1980}, used for comparison of programming
+languages, since it includes a variety of programming language
+constructs that provide a good test of the strategy.
+We have simplified the algorithm by removing the reading into an
+array, since our bytecode subset does not include array operations.
+Attempting to add arrays makes the example much longer, while not
+giving any interesting insight into our compilation strategy.
+
+We have also written the example as an SCJ program, with the algorithm
+as the body of an aperiodic event handler, \texttt{TPK}, one or more
+instances of which can be registered as part of a mission and released
+during mission execution.
+As already mentioned, each release of the handler causes its
+\texttt{handleAsyncEvent()} method to be executed.
+This method creates an instance of a \texttt{ConsoleConnection}, which
+is the only standard input/output connection required by SCJ.
+Instances of \texttt{InputStream} and \texttt{OutputStream} are then
+obtained from the \texttt{ConsoleConnection}.
+
+After the input and output streams have been obtained, we enter a for
+loop in which an integer is read from the \texttt{InputStream}, a
+static method \texttt{f()} is applied to it, and the result is output
+if it is less than 400, otherwise 0 is output.
+The method \texttt{f()} takes an integer as input, multiplies it by 3
+and adds 5 to it.
+
+The \texttt{TPK} class is part of a larger program that includes many
+other classes, including a \texttt{Safelet}, a
+\texttt{MissionSequencer}, a \texttt{Mission}, and the classes that
+make up the SCJ API.
+Considering these classes in our example would make the example much
+larger and more complex, while not introducing any more interesting
+aspects for the strategy to consider.
+We, therefore, omit a presentation of these classes, though it should be
+noted that they are part of the complete example.
+
+Throughout the strategy we assume the extra classes have gone through
+similar processing to that we illustrate for the $TPK$ class.
+This adds little complexity to the strategy since the bytecode
+instructions the strategy acts upon are placed in a contiguous array
+that is acted upon consistently for all classes, and the current class
+of a given bytecode instruction can always be determined from its
+address in the array.
+
+The Java code must be run through a Java compiler to generate the
+corresponding bytecode, which then defines the $bc$ and $cs$ constants
+of our model.
+The $bc$ and $cs$ values for our example are shown in
+Figure~\ref{example-model-figure}.
+
+
+Applying the bytecode expansion on
+line~\ref{algorithm-expand-bytecode} of Algorithm~\ref{epc-algorithm}
+yields the $Running$ action shown in
+Figure~\ref{bytecode-expansion-example-figure}.
+\begin{figure}[t]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0.1cm}
+  \begin{circus}
+    Running \circdef \\
+    \t1 \circif frameStack = \emptyset \circthen \Skip \\
+    \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+    \t2 \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \\
+    \t2 {} \circelse pc = 1 \circthen HandleAloadEPC(1) \circseq pc := 2 \\
+    \t2 {} \circelse pc = 2 \circthen HandleAloadEPC(2) \circseq pc := 3 \\
+    \t2 {} \circelse pc = 3 \circthen HandleAloadEPC(3) \circseq pc := 4 \\
+    \t2 {} \circelse pc = 4 \circthen HandleAloadEPC(4) \circseq pc := 5 \\
+    \t2 {} \circelse pc = 5 \circthen HandleInvokespecialEPC(8) \\
+    \t2 {} \circelse pc = 6 \circthen HandleReturnEPC \\
+    \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \\
+    \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \\
+    \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \\
+    \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \\
+    \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \\
+    % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \\
+    % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \\
+    % \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \\
+    % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \\
+    % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \\
+    % \t2 {} \circelse pc = 17 \circthen HandleAstoreEPC(3) \circseq pc := 18 \\
+    % \t2 {} \circelse pc = 18 \circthen HandleIconstEPC(0) \circseq pc := 19 \\
+    % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \\
+    % \t2 {} \circelse pc = 20 \circthen pc := 39 \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \\
+    % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \\
+    % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \\
+    % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \\
+    % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \\
+    % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \\
+    % \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \\
+    % \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \\
+    % \t2 {} \circelse pc = 30 \circthen HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 31 \circthen pc := 35 \\
+    % \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \\
+    % \t2 {} \circelse pc = 33 \circthen HandleAloadEPC(5) \circseq pc := 34 \\
+    % \t2 {} \circelse pc = 34 \circthen HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \\
+    % \t2 {} \circelse pc = 36 \circthen HandleIconstEPC(1) \circseq pc := 37 \\
+    % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \\
+    % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \\
+    % \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \\
+    % \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \\
+    % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+    % \t2 {} \circelse pc = 43 \circthen HandleAloadEPC(0) \circseq pc := 44 \\
+    % \t2 {} \circelse pc = 44 \circthen HandleAloadEPC(0) \circseq pc := 45 \\
+    % \t2 {} \circelse pc = 45 \circthen HandleIaddEPC \circseq pc := 46 \\
+    % \t2 {} \circelse pc = 46 \circthen HandleAloadEPC(0) \circseq pc := 47 \\
+    % \t2 {} \circelse pc = 47 \circthen HandleIaddEPC \circseq pc := 48 \\
+    % \t2 {} \circelse pc = 48 \circthen HandleIconstEPC(5) \circseq pc := 49 \\
+    % \t2 {} \circelse pc = 49 \circthen HandleIaddEPC \circseq pc := 50 \\
+    % \t2 {} \circelse pc = 50 \circthen HandleAreturnEPC \\
+    \t2 \circfi \circseq Poll \circseq Running \\
+    \t1 \circfi
+  \end{circus}
+  \caption{The $Running$ action after bytecode expansion}
+  \label{bytecode-expansion-example-figure}
+\end{figure}
+This step expands the bytecode instruction definitions, by copying
+$HandleInstruction$ into $Running$, and converting it to a choice of
+actions based on the value of the program counter, mirroring the
+contents of the $bc$ map for each value.
+
+The actions that make up $HandleInstruction$ are also replaced with
+actions that incorporate instruction parameters from the $bc$ map and
+have $pc$ updates separated from stack updates so they can be more
+easily operated on in this stage of the strategy.
+This can be seen in Figure~\ref{bytecode-expansion-example-figure},
+where, in the $pc = 0$ case, $aload~0$ has been converted to
+$HandleAloadEPC(0) \circseq pc := 1$, with the parameter, $0$, to the
+bytecode instruction becoming a parameter of the new instruction
+handling action $HandleAloadEPC$, and the update to $pc$ placed after
+the data operation.
+
+The reason for making parameters of the bytecode instructions into
+parameters of the handling actions is to remove the need to reference
+the bytecode instructions in the $bc$ map, as that involves use of the
+$pc$ value, which we seek to remove in this stage.
+This also has the benefit of fully incorporating $bc$ into the $Thr$
+process, ensuring all the information required to introduce C code
+constructs is available directly in \Circus{}, which makes stating
+compilation laws simpler.
+This is described in more detail in
+Section~\ref{expand-bytecode-subsection}, where we define the
+\Call{ExpandBytecode}{} procedure.
+
+\begin{figure}[t!]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0.1cm}
+  \begin{circus}
+    Running \circdef \\
+    \t1 \circif frameStack = \emptyset \circthen \Skip \\
+    \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+    \t2 \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t3 pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(4) \circseq \\
+    \t3 pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 1 \circthen HandleAloadEPC(1) \circseq pc := 2 \\
+    % \t2 {} \circelse pc = 2 \circthen HandleAloadEPC(2) \circseq pc := 3 \\
+    % \t2 {} \circelse pc = 3 \circthen HandleAloadEPC(3) \circseq pc := 4 \\
+    % \t2 {} \circelse pc = 4 \circthen HandleAloadEPC(4) \circseq pc := 5 \\
+    % \t2 {} \circelse pc = 5 \circthen HandleInvokespecialEPC(8) \\
+    \t2 {} \circelse pc = 6 \circthen HandleReturnEPC \\
+    \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
+    \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \\
+    % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \\
+    % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \\
+    \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \\
+    % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \\
+    \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \\
+    % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \\
+    \t2 {} \circelse pc = 17 \circthen HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 18 \circthen HandleIconstEPC(0) \circseq pc := 19 \\
+    % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \\
+    % \t2 {} \circelse pc = 20 \circthen pc := 39 \\
+    % \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq HandleInvokevirtualEPC(40) \\
+    % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \\
+    % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \\
+    % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
+    % \t3 pc := 26 \circseq Poll \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \\
+    % \t3 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \\
+    % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \\
+    % \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \\
+    % \t2 {} \circelse pc = 30 \circthen HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 31 \circthen pc := 35 \\
+    % \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
+    % \t3 pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 33 \circthen HandleAloadEPC(5) \circseq pc := 34 \\
+    % \t2 {} \circelse pc = 34 \circthen HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq \\
+    % \t3 pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq \\
+    % \t3 pc := 39 \\
+    % \t2 {} \circelse pc = 36 \circthen HandleIconstEPC(1) \circseq pc := 37 \\
+    % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \\
+    % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \\
+    \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq \\
+    \t3 pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \\
+    % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+    \t2 {} \circelse pc = 43 \circthen HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq \\
+    \t3 pc := 45 \circseq Poll \circseq HandleIaddEPC \circseq pc := 46 \circseq Poll \circseq HandleAloadEPC(0) \circseq \\
+    \t3 pc := 47 \circseq Poll \circseq HandleIaddEPC \circseq pc := 48 \circseq Poll \circseq HandleIaddEPC \circseq \\
+    \t3 pc := 50 \circseq Poll \circseq HandleAreturnEPC \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 44 \circthen HandleAloadEPC(0) \circseq pc := 45 \\
+    % \t2 {} \circelse pc = 45 \circthen HandleIaddEPC \circseq pc := 46 \\
+    % \t2 {} \circelse pc = 46 \circthen HandleAloadEPC(0) \circseq pc := 47 \\
+    % \t2 {} \circelse pc = 47 \circthen HandleIaddEPC \circseq pc := 48 \\
+    % \t2 {} \circelse pc = 48 \circthen HandleIconstEPC(5) \circseq pc := 49 \\
+    % \t2 {} \circelse pc = 49 \circthen HandleIaddEPC \circseq pc := 50 \\
+    % \t2 {} \circelse pc = 50 \circthen HandleAreturnEPC \\
+    \t2 \circfi \circseq Poll \circseq Running \\
+    \t1 \circfi
+  \end{circus}
+  \caption{The $Running$ action after forward sequence introduction}
+  \label{forward-sequence-introduction-example-figure}
+\end{figure}
+
+On line~\ref{algorithm-introduce-forward-sequence} of the algorithm,
+sequential composition is introduced for instructions that do not
+affect the sequential flow of the program.
+Such instructions are identified by considering the control flow graph
+of the program and locating nodes with a single outgoing edge going to
+target node exactly one incoming edge.
+The introduction of sequential composition is performed by unrolling
+the loop in $Running$ to introduce the control flow following each of
+these instructions.
+This causes the instruction to be sequentially composed with the next
+instruction, with $Poll$ in between to allow for thread switches
+between instructions.
+This is performed exhaustively to get the code in the form shown in
+Figure~\ref{forward-sequence-introduction-example-figure}, where the
+choice over $pc$ has sequences of instructions collected together at
+the point where they start, up to the point at which a more complex
+control flow (such as a method call, conditional or a loop) occurs.
+The introduction of sequential composition is described in more detail in
+Section~\ref{introduce-forward-sequence-subsection}, where we define
+the \Call{IntroduceSequentialComposition}{} procedure.
+
+Handling the remaining constructs requires consideration of dependency
+between methods to ensure method calls can be resolved correctly.
+We say a method call is \emph{resolved} when the method invocation
+bytecode has been placed in sequential composition with a call to a
+\Circus{} action containing the body of the method being invoked,
+which is then followed by the sequence of instructions that occur
+after the invocation bytecode instruction in the calling method.
+After a method call has been resolved, it no longer breaks up the
+sequence of instructions it occurs in.
+
+Since we have the bytecode instructions of all the methods needed, we
+can always resolve the call of a complete method, provided that method
+has already been split into its own \Circus{} action.
+To ensure the method that a method call depends on is complete, we
+first perform loop and conditional introduction upon it.
+Since introducing loops and conditionals requires unbroken sequences
+of instructions that form the bodies of loops and branches of
+conditionals, introduction of loops and conditionals can only be
+performed on methods that have no unresolved method calls.
+For this reason, we perform method call resolution and loop and
+conditional introduction repeatedly until all method calls are
+resolved and the resulting complete methods have all been separated
+out.
+This is expressed in Algorithm~\ref{epc-algorithm} by the while loop
+on line~\ref{algorithm-method-loop}.
+
+Introduction of loops and conditionals to the body of a method with no
+unresolved method calls occurs on
+line~\ref{algorithm-introduce-loops-and-conditionals} of the
+algorithm.
+To introduce loops and conditionals we consider the control flow graph
+of the method again, though it is now much simpler than the control
+flow graph used for sequence introduction since straight sequences of
+instructions have already been combined together.
+Patterns representing conditionals and loops are then identified using
+the control flow graph and the corresponding constructs are
+introduced.
+As loops and conditionals are introduced, nodes in the control flow
+graph are merged until the graph consists of a single node, which is
+the starting point of the method, containing the complete method body.
+
+In our example, \texttt{handleAsyncEvent()} is the only method that
+needs loops and conditionals introducing but, since it also contains
+method calls that break up the body of a loop, we must wait until its
+method calls have been resolved before introducing loops and
+conditionals.
+The result of introducing loops and conditionals after method calls
+have been resolved in \texttt{handleAsyncEvent()} is shown in
+Figure~\ref{loop-and-conditional-introduction-example-figure}.
+The process of introducing loops and conditionals is described in more
+detail in Section~\ref{introduce-loops-and-conditionals-subsection},
+where we define the \Call{IntroduceLoopsAndConditionals}{} procedure.
+\begin{figure}[t!]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0.1cm}
+  \begin{circus}
+    Running \circdef \\
+    \t1 \circif frameStack = \emptyset \circthen \Skip \\
+    \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+    \t2 {} \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t3 pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq \\
+    \t3 pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq \\
+    \t3 HandleInvokespecialEPC(8) \circseq Poll \circseq AperiodicEventHandler\_APEHInit \circseq \\
+    \t3 Poll \circseq HandleReturnEPC \\
+    \t2 {} \cdots {} \\
+    \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
+    \t3 {} \cdots {} \\
+    % \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
+    % \t3 Poll \circseq ConsoleConnection\_CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
+    % \t3 OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
+    % \t3 OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq \\
+    % \t3 HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq \\
+    \t3 Poll \circseq pc := 39 \circseq Poll \circseq \circmu Y \circspot \\
+    \t4 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    \t4 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t4 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+    \t4 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
+    \t5 {} \cdots {} \\
+    \t5 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
+    \t5 InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \circseq Poll \circseq \\
+    \t5 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \\
+    \t6 HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t6 Poll \circseq ConsoleOutput\_Write \\
+    \t5 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \\
+    \t6  HandleIconstEPC(0) \circseq pc := 30 \circseq  Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t6 Poll \circseq ConsoleOutput\_Write \\
+    \t5 \circfi \circseq pc := 35 \circseq Poll \circseq  HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \\
+    \t5 HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq \\
+    \t5 Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq Y \\
+    \t5 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
+    \t4 \circfi \\
+    % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \circseq Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq \\
+    % \t3 Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq \\
+    % \t3 pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq \\
+    % \t3 HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq \\
+    % \t3 pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    % \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    % \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 17 \circthen HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 18 \circthen HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \circseq Poll \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 30 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 31 \circthen pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 33 \circthen HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 34 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 36 \circthen HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+    \t2 {} \cdots {} \\
+    \t2 {} \circelse pc = 43 \circthen TPK\_F \\
+    \t2 {} \cdots {} \\
+    \t2 \circfi \circseq Poll \circseq Running \\
+    \t1 \circfi
+  \end{circus}
+  \caption{The $Running$ action after loop and conditional introduction}
+  \label{loop-and-conditional-introduction-example-figure}
+\end{figure}
+
+After loops and conditionals have been introduced, methods that are
+then complete can be copied into separate actions.
+This occurs in line~\ref{algorithm-separate-complete-methods} of this
+algorithm.
+This is done with a simple application of the copy rule, replacing the
+actions at the entry points of the split methods with references to
+newly created method actions.
+This can be seen in
+Figure~\ref{method-call-resolution-example-figure}, where the $TPK\_F$
+action has been created by splitting the sequence of actions for the
+\texttt{f()} method of \texttt{TPK} from the $pc = 43$ case.
+As this step is relatively simple, we do not explain it in a separate
+section.
+\begin{figure}[t]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0cm}
+  \begin{circus}
+    Running \circdef \\
+    \t1 \circif frameStack = \emptyset \circthen \Skip \\
+    \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+    \t2 {} \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t3 pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq \\
+    \t3 pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq \\
+    \t3 HandleInvokespecialEPC(8) \circseq Poll \circseq AperiodicEventHandler\_APEHInit \circseq \\
+    \t3 Poll \circseq HandleReturnEPC \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 1 \circthen HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq \\
+    % \t3 Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq \\
+    % \t3 Poll \circseq HandleInvokespecialEPC(8) \circseq Poll \circseq APEHInit \circseq Poll \circseq HandleReturnEPC \\
+    % \t2 {} \circelse pc = 2 \circthen HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq \\
+    % \t3 Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \circseq \\
+    % \t3 Poll \circseq APEHInit \circseq Poll \circseq HandleReturnEPC \\
+    % \t2 {} \circelse pc = 3 \circthen HandleAloadEPC(3) \circseq pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq \\
+    % \t3 Poll \circseq HandleInvokespecialEPC(8) \circseq Poll \circseq APEHInit \circseq Poll \circseq HandleReturnEPC \\
+    % \t2 {} \circelse pc = 4 \circthen HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \circseq \\
+    % \t3 Poll \circseq APEHInit \circseq Poll \circseq HandleReturnEPC \\
+    % \t2 {} \circelse pc = 5 \circthen HandleInvokespecialEPC(8) \circseq Poll \circseq APEHInit \circseq Poll \circseq HandleReturnEPC \\
+    % \t2 {} \circelse pc = 6 \circthen HandleReturnEPC \\
+    % \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
+    % \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
+    % \t3 Poll \circseq ConsoleConnection\_CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
+    % \t3 OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
+    % \t3 OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq \\
+    % \t3 HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq \\
+    % \t3 Poll \circseq pc := 39 \\
+    % \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \circseq Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq \\
+    % \t3 Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq \\
+    % \t3 pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq \\
+    % \t3 HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq \\
+    % \t3 pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    % \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    % \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 17 \circthen HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 18 \circthen HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
+    \t3 HandleInvokevirtualEPC(40) \circseq Poll \circseq ConsoleInput\_Read \circseq Poll \circseq \\
+    \t3 HandleInvokestaticEPC(46) \circseq Poll \circseq TPK\_F \circseq Poll \circseq HandleAstoreEPC(5) \circseq \\
+    \t3 pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq \\
+    \t3 pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \circseq Poll \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 30 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 31 \circthen pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39  \\
+    % \t2 {} \circelse pc = 33 \circthen HandleAloadEPC(5) \circseq pc := 34 \\
+    % \t2 {} \circelse pc = 34 \circthen HandleInvokevirtualEPC(50) \\
+    % \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq \\
+    % \t3 pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq \\
+    % \t3 pc := 39 \\
+    % \t2 {} \circelse pc = 36 \circthen HandleIconstEPC(1) \circseq pc := 37 \\
+    % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \\
+    % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \\
+    \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq \\
+    \t3 pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \\
+    % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+    \t2 {} \cdots {} \\
+    \t2 {} \circelse pc = 43 \circthen TPK\_F \\
+    \t2 {} \cdots {} \\
+    % \t2 {} \circelse pc = 44 \circthen HandleAloadEPC(0) \circseq pc := 45 \\
+    % \t2 {} \circelse pc = 45 \circthen HandleIaddEPC \circseq pc := 46 \\
+    % \t2 {} \circelse pc = 46 \circthen HandleAloadEPC(0) \circseq pc := 47 \\
+    % \t2 {} \circelse pc = 47 \circthen HandleIaddEPC \circseq pc := 48 \\
+    % \t2 {} \circelse pc = 48 \circthen HandleIconstEPC(5) \circseq pc := 49 \\
+    % \t2 {} \circelse pc = 49 \circthen HandleIaddEPC \circseq pc := 50 \\
+    % \t2 {} \circelse pc = 50 \circthen HandleAreturnEPC \\
+    \t2 \circfi \circseq Poll \circseq Running \\
+    \t1 \circfi
+  \end{circus}
+  \begin{circus}
+    TPK\_F \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 45 \circseq \\
+    \t1 Poll \circseq HandleIaddEPC \circseq pc := 46 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 47 \circseq \\
+    \t1 Poll \circseq HandleIaddEPC \circseq pc := 48 \circseq Poll \circseq HandleIconstEPC(5) \circseq pc := 49 \circseq \\
+    \t1 Poll \circseq HandleIaddEPC \circseq pc := 50 \circseq Poll \circseq HandleAreturnEPC
+  \end{circus}
+  \caption{The $Running$ action after method call resolution}
+  \label{method-call-resolution-example-figure}
+\end{figure}
+
+Calls to those methods can then be resolved, sequencing the method
+invocation instruction with a call to the \Circus{} action representing its body and the
+instructions following the method call. 
+This occurs on line~\ref{algorithm-resolve-method-calls} of the
+algorithm, and can be seen in
+Figure~\ref{method-call-resolution-example-figure}, which shows our
+example after method call resolution has been applied.
+
+The target of each method call can be determined from the parameter to
+the method invocation instruction.
+This parameter is an index into the constant pool of the current class
+that points to a method reference for the method being called.
+The correct current class for each bytecode instruction is always
+known, since the information on the method entries and ends is
+contained in the class information, and there is a one-to-one mapping
+between classes and blocks of bytecode instructions that form methods.
+After the target of the method call has been determined, the
+invocation instruction can be sequenced with a call to the
+corresponding \Circus{} action.
+
+An example of this is the occurrence of $HandleInvokestaticEPC(46)$ in
+the sequence of actions at $pc = 21$.
+As can be seen from Figure~\ref{example-model-figure}, the constant
+pool index $46$ corresponds to the method identifier for the method
+\texttt{f()} of the \texttt{TPK}.
+The sequence of instructions corresponding to this method is in an
+action $TPK\_F$, created in the previous step, on
+line~\ref{algorithm-separate-complete-methods}.
+This action is sequenced with the invocation instruction, with the
+$Poll$ action inbetween (to allow thread switches before the first
+instruction of the called method).
+The instructions following the method call are then sequenced after
+it, with another $Poll$ action (to allow thread switches following the
+return instruction).
+Method call resolution is described in more detail in
+Section~\ref{resolve-method-calls-subsection}, where we define the
+\Call{SeparateCompleteMethods}{} and \Call{ResolveMethodCalls}{}
+procedures.
+
+\begin{figure}[p!]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0.1cm}
+  \begin{circus}
+    Running \circdef \\
+    \t1 \circif frameStack = \emptyset \circthen \Skip \\
+    \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+    \t2 {} \circif pc = 0 \circthen TPK\_APEHInit \\
+    \t2 {} \cdots {} \\
+    \t2 {} \circelse pc = 7 \circthen TPK\_HandleAsyncEvent \\
+    % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \circseq Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq \\
+    % \t3 Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq \\
+    % \t3 pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq \\
+    % \t3 HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq \\
+    % \t3 pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    % \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    % \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 17 \circthen HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
+    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 18 \circthen HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \circseq Poll \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    % \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 30 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 31 \circthen pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 33 \circthen HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 34 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 36 \circthen HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+    \t2 {} \cdots {} \\
+    \t2 {} \circelse pc = 43 \circthen F \\
+    \t2 {} \cdots {} \\
+    \t2 \circfi \circseq Poll \circseq Running \\
+    \t1 \circfi
+  \end{circus}
+  \vspace{-1cm}
+  \begin{circus}
+    TPK\_APEHInit \circdef HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq \\
+    \t3 Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq \\
+    \t3 Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \circseq \\
+    \t3 Poll \circseq AperiodicEventHandler\_APEHInit \circseq Poll \circseq HandleReturnEPC \\
+  \end{circus}
+  \vspace{-1.5cm}
+  \begin{circus}
+    TPK\_HandleAsyncEvent \circdef HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq \\
+    \t1 {} \cdots {} \\
+    % \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
+    % \t3 Poll \circseq ConsoleConnection\_CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
+    % \t3 OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq \\
+    % \t3 HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
+    % \t3 OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq \\
+    % \t3 HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq \\
+    \t1 Poll \circseq pc := 39 \circseq Poll \circseq \circmu Y \circspot \\
+    \t2 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
+    \t2 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t2 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+    \t2 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
+    \t3 {} \cdots {} \\
+    \t3 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
+    \t3 InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \circseq Poll \circseq \\
+    \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \\
+    \t4 HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t4 Poll \circseq ConsoleOutput\_Write \\
+    \t3 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \\
+    \t4  HandleIconstEPC(0) \circseq pc := 30 \circseq  Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t4 Poll \circseq ConsoleOutput\_Write \\
+    \t3 \circfi \circseq pc := 35 \circseq Poll \circseq  HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \\
+    \t3 HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq \\
+    \t3 Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq Y \\
+    \t3 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
+    \t2 \circfi \\
+  \end{circus}
+  \caption{The $Running$ action after all the methods are separated}
+  \label{final-method-separation-example-figure}
+\end{figure}
+
+As mentioned previously, these steps are then repeated, in the loop
+beginning at line~\ref{algorithm-method-loop} to introduce the loops
+and conditionals in methods that would otherwise have unresolved
+method calls in the middle of loops and conditionals.
+Afterwards, those methods can be separated out and this loop, conditional and
+method resolution repeated until every method has been separated out
+in this way.
+
+We do not allow recursion to ensure this terminates, since this
+requires all the methods called by a given method to be resolved
+before the method itself can be resolved.
+This is a sensible restriction since recursion is not normally allowed
+in safety-critical applications because of the potential for
+unpredictable failure due to stack overflow.
+
+The $Running$ action of our example at the end of the loop, when all
+loops and conditionals have been introduced, all the methods have been
+separated out, and all method calls have been resolved, is shown in
+Figure~\ref{final-method-separation-example-figure}.
+At this point, the choice over the $pc$ value maps entry points of
+methods onto the actions representing those methods, with the other
+$pc$ values now redundant.
+
+\begin{figure}[t!]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0.1cm}
+  \begin{circusaction}
+    ExecuteMethod \circdef \circval cid : ClassID; mid : MethodID \circspot \\
+    \t1 \circif (cid, mid) = (TPKClassID, APEHInit) \circthen TPK\_APEHInit \\
+    \t1 {} \circelse (cid, mid) = (TPKClassID, handleAsyncEvent) \circthen TPK\_HandleAsyncEvent \\
+    \t1 {} \circelse (cid, mid) = (TPKClassID, f) \circthen TPK\_F \\
+    \t1 {} \cdots {} \\
+    \t1 \circfi
+  \end{circusaction}
+  \begin{circusaction}
+    MainThread \circdef \\
+    \t1 \circblockbegin
+    \circvar cid : ClassID; method : MethodID; methodArgs : \seq Word \circspot \\
+    interpreter?c?m?a \then cid, method, methodArgs := c, m, a \circseq  \\
+    \lschexpract \exists class? == cs~cid; baseFrame? == \true @ InterpreterNewStackFrame \rschexpract \circseq \\
+    ExecuteMethod(cid, method) \circseq MainThread \\
+    \circblockend \\
+    \t1 {} \extchoice {} \\
+    \t1 CEEswitchThread?from?to \prefixcolon (from = main) \then Blocked \circseq MainThread
+  \end{circusaction}
+  \begin{circusaction}
+    NotStarted \circdef \circvar cid : ClassID; method : MethodID; methodArgs : \seq Word \circspot \\
+    \t1 CEEstartThread?toStart?bsid?c?m?a \prefixcolon (toStart = thread) \then {} \\
+    \t2 cid, method, methodArgs := c, m, a \circseq \\
+    \t1 \lschexpract \exists class? == cs~cid; baseFrame? == \true @ InterpreterNewStackFrame \rschexpract \circseq \\
+    \t1 Blocked \circseq ExecuteMethod(cid, method) \circseq CEEremoveThread!thread \then NotStarted
+  \end{circusaction}
+  \caption{The $ExecuteMethod$, $NotStarted$, and $MainThread$ actions after main action refinement}
+  \label{refine-main-actions-example-figure}
+\end{figure}
+
+\begin{figure}[p!]
+  \begin{circus}
+    HandleAsyncEvent \circdef HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq \\
+    \t1 Poll \circseq HandleAconst\_nullEPC \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
+    \t1 Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq Poll \circseq \\
+    \t1 HandleAloadEPC(1) \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
+    \t1 OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq Poll \circseq \\
+    \t1 HandleAloadEPC(1) \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
+    \t1 OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq Poll \circseq \\
+    \t1 HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq \\
+    \t1 Poll \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq \\
+    \t1 HandleIconstEPC(10) \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
+    \t1 InterpreterPop2 \circseq Poll \circseq \circmu Y \circspot \\
+    \t1 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq Poll \circseq \\
+    \t2 HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq \\
+    \t2 HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq \\
+    \t2 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
+    \t2 HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
+    \t2 InterpreterPop2 \circseq Poll \circseq \\
+    \t2 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq \\
+    \t3 HandleAloadEPC(5) \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t3 Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq \\
+    \t3 HandleIconstEPC(1) \circseq Poll \circseq HandleIaddEPC \circseq Poll \circseq \\
+    \t3 HandleAstoreEPC(4) \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq \\
+    \t3 HandleIconstEPC(10) \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
+    \t3 InterpreterPop2 \circseq Poll \circseq \\
+    \t3 \circif value1 \leq value2 \circthen Y \\
+    \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
+    \t3 \circfi \\
+    \t2 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq \\
+    \t3 HandleIconstEPC(0) \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t3 Poll \circseq Write \circseq Poll \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq \\
+    \t3 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
+    \t3 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq Poll \circseq \\
+    \t3 \circif value1 \leq value2 \circthen Y \\
+    \t3 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
+    \t3 \circfi \\
+    \t2 \circfi \\
+    \t1 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
+    \t1 \circfi \\
+  \end{circus}
+  \caption{The $HandleAsyncEvent$ action after $pc$ has been eliminated from the state}
+  \label{pc-elimination-HandleAsyncEvent-example-figure}
+\end{figure}
+
+The next step is then to eliminate these redundant paths and remove
+the dependency on $pc$ to select the method action.
+This occurs at line~\ref{algorithm-refine-main-actions} of the
+algorithm, in which the $NotStarted$ and $MainThread$ actions are
+refined to replace the $Running$ action with an $ExecuteMethod$ action
+that contains a choice of method action based on the method and class
+identifier of the method.
+This can be seen in Figure~\ref{refine-main-actions-example-figure},
+which shows the $ExecuteMethod$ action corresponding to our example,
+and the refined $NotStarted$ and $MainThread$ actions that reference
+it.
+We describe this refinement in more detail in
+Section~\ref{refine-main-actions-subsection}, where we define the
+\Call{RefineMainActions}{} procedure.
+
+When all of the previous steps are completed, reliance on $pc$ to
+determine control flow has been completely removed.
+The $pc$ state component can then be removed in a simple data
+refinement that also removes all the assignments to $pc$, resulting in
+the $HandleAsyncEvent$ action shown in
+Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}.
+
+The remaining instruction handling actions then only affect the stack,
+the removal of which is the concern of the next stage of the
+compilation strategy.
+The data refinement to remove $pc$ is applied at the end of the
+algorithm, on line~\ref{algorithm-remove-pc-from-state}, and is
+described in more detail in
+Section~\ref{remove-pc-from-state-subsection}, where we define the
+\Call{RemovePCFromState}{} procedure.
+
+We now proceed to describe each of the steps of program counter
+elimination in more detail.
+
+\FloatBarrier
+
+\subsection{Expand Bytecode}
+\label{expand-bytecode-subsection}
+
+Before the control flow can be introduced, the bytecode instructions
+provided in the $bc$ parameter to $Thr$ must be expanded to allow
+consideration of their semantics.
+This is achieved using the procedure shown in
+Algorithm~\ref{expand-bytecode-algorithm}.
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{ExpandBytecode}{}
+    \State \Call{IntroduceChoiceOverPC}{} \label{algorithm-introduce-choice-over-pc}
+    \For{$pc \gets \dom bc$}
+    \State \Call{CollapseHandleInstruction}{} \label{algorithm-collapse-handle-instruction}
+    \State \Call{ExpandHandleAction}{} \label{algorithm-expand-handle-action}
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Expand Bytecode}
+  \label{expand-bytecode-algorithm}
+\end{algorithm}
+This begins on line~\ref{algorithm-introduce-choice-over-pc} by
+introducing a choice over all the possible values of $pc$ associated
+with the $HandleInstruction$ action in $Running$, replacing
+$HandleInstruction$ with a choice of the form shown below.
+\begin{circus}
+  \circif pc = 0 \circthen HandleInstruction \\
+  {} \circelse pc = 1 \circthen HandleInstruction \\
+  {} \circelse pc = 2 \circthen HandleInstruction \\
+  {} \cdots {} \\
+  \circfi
+\end{circus}
+After that, we operate on the occurrence of $HandleInstruction$ at
+each $pc$ value, replacing it with its definition, which is a choice
+between actions to handle each type of instruction (e.g.\ $HandleDup$,
+$HandleAload$ etc.).
+For brevity, we refer to these handling actions that define
+$HandleInstruction$ as $Handle^*$ actions.
+Since the value of $bc$ at a given $pc$ value is known, we can
+determine which of the $Handle^*$ actions is chosen for each
+occurrence of $HandleInstruction$.
+The occurrences of $HandleInstruction$ are therefore collapsed to the
+appropriate $Handle^*$ actions on line~\ref{algorithm-collapse-handle-instruction}.
+This produces the following choice for our example.
+\begin{circus}
+  \circif pc = 0 \circthen HandleAload \\
+  {} \circelse pc = 1 \circthen HandleAload \\
+  {} \circelse pc = 2 \circthen HandleAload \\
+  {} \cdots {} \\
+  {} \circelse pc = 7 \circthen HandleNew \\
+  {} \circelse pc = 8 \circthen HandleDup \\
+  {} \circelse pc = 9 \circthen HandleAconst\_null \\
+  {} \cdots {} \\
+  \circfi
+\end{circus}
+The $Handle^*$ actions are then replaced with new actions.
+Those new actions are not guarded on the value of $bc$ at the
+current $pc$ value, since the choice those guards mediate has already
+been collapsed.
+The parameters of the bytecode instructions are also transferred to
+become parameters of the new actions.
+Finally, the updates to $pc$ contained in the $Handle^*$ actions are
+extracted in the form of assignments to $pc$.
+
+This final transformation is not carried out in the case of the method
+invocation and return instructions, where the $pc$ updates are closely
+connected to the operations on the stack and require special handling.
+The new actions' names are formed by appending $EPC$ to the names of
+the $Handle^*$ actions.
+The overall mapping from bytecode instructions to the new actions is
+shown in Table~\ref{handle-action-table}.
+\begin{table}
+  \centering
+  \begin{tabular}{lp{8.5cm}}
+    \hline
+    Bytecode ($bc~i$) & Action ($handleAction(bc~i)$) \\
+    \hline
+    $aconst\_null$ & $HandleAconst\_nullEPC \circseq pc := i+1$ \\
+    $dup$ & $HandleDupEPC \circseq pc := i+1$ \\
+    $aload~lvi$ & $HandleAloadEPC(lvi) \circseq pc := i+1$ \\
+    $astore~lvi$ & $HandleAstoreEPC(lvi) \circseq pc := i+1$ \\
+    $iadd$ & $HandleIaddEPC \circseq pc := i+1$ \\
+    $iconst~n$ & $HandleIconstEPC(n) \circseq pc := i+1$ \\
+    $ineg$ & $HandleInegEPC \circseq pc := i+1$ \\
+    $goto~ofst$ & $pc := i+ofst$ \\
+    $if\_icmple(ofst)$ & $\circvar value1, value2 : Word \circspot$ \endgraf
+                         \t1 $InterpreterPop2 \circseq$ \endgraf
+                         \t1 $\IF value1 \leq value2 \THEN i+ofst \ELSE i+1$ \\
+    $areturn$ & $HandleAreturnEPC$ \\
+    $return$ & $HandleReturnEPC$ \\
+    $getfield~cpi$ & $HandleGetfieldEPC(cpi) \circseq pc := i+1$ \\
+    $putfield~cpi$ & $HandlePutfieldEPC(cpi) \circseq pc := i+1$ \\
+    $getstatic~cpi$ & $HandleGetstaticEPC(cpi) \circseq pc := i+1$ \\
+    $putstatic~cpi$ & $HandlePutstaticEPC(cpi) \circseq pc := i+1$ \\
+    $invokevirtual~cpi$ & $pc := i \circseq HandleInvokevirtualEPC(cpi)$ \\
+    $invokespecial~cpi$ & $pc := i \circseq HandleInvokespecialEPC(cpi)$ \\
+    $invokestatic~cpi$ & $pc := i \circseq HandleInvokestaticEPC(cpi)$ \\
+    \hline
+  \end{tabular}
+  \caption{The syntactic function $handleAction$}
+  \label{handle-action-table}
+\end{table}
+Note that the $Handle^*$ actions are eliminated completely in the case
+of the \texttt{goto} and \texttt{if\_icmple} instructions, since the
+$pc$ update is the main effect of these actions.
+
+This replacement of the $Handle*$ actions with these new actions
+occurs in line~\ref{algorithm-expand-handle-action}. 
+After this transformation has been applied, the $Running$ action for
+our example is as shown in
+Figure~\ref{bytecode-expansion-example-figure}.
+
+The overall transformation of the $HandleInstruction$ action in this
+step is summarised by Lemma~\ref{bytecode-expansion-lemma}, which
+makes use of a syntactic function $handleAction$ that maps bytecode
+instructions onto \Circus{} actions as shown in
+Table~\ref{handle-action-table}.
+\begin{lem}[Bytecode Expansion]
+  \label{bytecode-expansion-lemma}
+  For a given $bc$
+  \begin{circus}
+    HandleInstruction_{bc} \circrefines_A
+    \begin{array}{l}
+      \circif {} \circelse_i pc = i \then handleAction(bc~i) \circfi
+    \end{array}
+  \end{circus}
+  where $handleAction$ is a syntactic function defined by
+  Table~\ref{handle-action-table}.
+\end{lem}
+After the bytecode semantics is expanded in the $Running$ action, the
+control flow that corresponds to each $pc$ update can be introduced.
+
+\subsection{Introduce Sequential Composition}
+\label{introduce-forward-sequence-subsection}
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{IntroduceSequentialComposition}{}
+    \State $cfg \gets$ \Call{MakeControlFlowGraph}{} \label{algorithm-make-control-flow-graph}
+    \For{$node \gets cfg$} \label{algorithm-sequence-cfg-loop}
+    \While{\Call{HasSimpleSequence}{$node$}} \label{algorithm-forward-sequence-condition}
+    \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$} \label{algorithm-forward-sequence-application}
+    \EndWhile
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Introduce Sequential Composition}
+  \label{introduce-forward-sequence-algorithm}
+\end{algorithm}
+The simplest control flow to introduce is that of instructions where
+execution continues at the next program counter value.
+These control flows are introduced as shown in
+Algorithm~\ref{introduce-forward-sequence-algorithm}.
+The algorithm consists of constructing a control flow graph for each
+method in the program, as specified on
+line~\ref{algorithm-make-control-flow-graph}.
+Since the introduction of sequential composition does not depend on
+the relationships between methods, the control flow graph is
+constructed as a disconnected control flow graph containing the
+control flow of all the methods in the program.
+Although method calls have not had their $pc$ updates formally made
+explicit, we can assume a method call will be followed by the
+instruction at the next program counter value.
+The control flow graph for our example is shown in
+Figure~\ref{example-control-flow-graph-figure}.
+
+\begin{figure}
+  \begin{center}
+    \footnotesize
+    \begin{tikzpicture}[every new ->/.style={-latex}]
+      % \node (start) at (0,0) {};
+      \foreach \x in {0,...,6}  { \node (\x) at (\x, 1cm) {\x}; }
+      \foreach \x in {7,...,20}  { \node (\x) at (0.85*\x - 0.85*7,0) {\x}; }
+      \foreach \x in {21,...,27} { \node (\x) at (0.85*\x - 0.85*21, -2cm) {\x}; }
+      \foreach \x in {28,...,31} { \node (\x) at (0.85*\x - 0.85*21, -1cm) {\x}; }
+      \foreach \x in {32,...,34} { \node (\x) at (0.85*\x - 0.85*25, -3cm) {\x}; }
+      \foreach \x in {35,...,42} { \node (\x) at (0.85*\x - 0.85*24.3, -2cm) {\x}; }
+      \foreach \x in {43,...,50} { \node (\x) at (-43+\x, -4.5cm) {\x}; }
+
+      \graph{ (7) -> (8) -> (9) -> (10) -> (11) -> (12) ->
+        (13) -> (14) -> (15) -> (16) -> (17) -> (18) -> (19) -> (20)
+        -> (39) -> (40) -> (41) -> (42); (21) -> (22) -> (23) -> (24)
+        -> (25) -> (26) -> (27) -> {
+          (28) -> (29) -> (30) -> (31);
+          (32) -> (33) -> (34);
+        } -> (35) -> (36) -> (37) -> (38) -> (39);
+      };
+
+      \graph{(0) -> (1) -> (2) -> (3) -> (4) -> (5) -> (6)};
+      \graph{(43) -> (44) -> (45) -> (46) -> (47) -> (48) -> (49) -> (50)};
+
+      \draw[-latex] (41) edge[out=270,in=270,looseness=0.35] (21);
+    \end{tikzpicture}
+  \end{center}
+  \caption{Control flow graph for our example program}
+  \label{example-control-flow-graph-figure}
+\end{figure}
+
+After the control flow graph is constructed, we consider each node in
+turn, as specified by the for loop on
+line~\ref{algorithm-sequence-cfg-loop}.
+As mentioned earlier, we require a node to have only a single outgoing
+edge and its target to have only a single incoming edge in order to be
+considered for the introduction of sequential composition.
+The reason for this is that nodes with two outgoing edges are points
+at which conditionals should be introduced, rather than sequential
+compositions.
+Such nodes in our example are the nodes for $pc$ values $27$ and $41$,
+which represent the start of conditionals.
+Likewise, nodes with multiple incoming edges represent points at which
+a more complex control flows occur.
+For our example, such nodes include $39$, which is the start of a
+loop, and $35$, which is the end of a conditional.
+These prevent introduction of sequential composition for the $pc$
+values $20$, $31$, $34$, and $38$, since those the targets of those
+nodes are nodes $35$ and $39$.
+
+For a node that meets the above requirement and isn't a method call,
+we can introduce sequential composition at that node by applying
+Lemma~\ref{sequence-introduction-lemma}, on line
+\ref{algorithm-forward-sequence-application} of the algorithm.
+\begin{lem}[Sequence introduction]
+  \label{sequence-introduction-lemma}
+  \def\zedindent{0.25cm}
+  If $i \neq j$ and
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then,
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif {} \cdots {} \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif {} \cdots {} \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 A \circseq pc := j \circseq Poll \circseq B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+\end{lem}
+This lemma works by unrolling the loop in $Running$ to sequence an
+instruction with the instruction that is executed after it, inserting
+$Poll$ inbetween.
+It is required that the $pc$ value of the node's target, $j$, not be
+the same as the $pc$ value of the node, $i$, since that would
+introduce a loop, rather than a sequential composition.
+Also, the sequence of instructions at the node, $A$, must not affect
+the non-emptiness of the $frameStack$ to ensure that the choice at the
+start of the main loop in $Running$ can be resolved.
+
+Since Lemma~\ref{sequence-introduction-lemma} pulls two nodes
+together, we can continue to introduce sequential composition at a
+node after the first application of
+Lemma~\ref{sequence-introduction-lemma}, until that node no longer
+satisfies the conditions for introducing sequential composition.
+This is specified by the while loop at
+line~\ref{algorithm-forward-sequence-condition} of the algorithm.
+This means the control flow graph is updated as
+Lemma~\ref{sequence-introduction-lemma} is applied, to take into
+account the merging of nodes.
+The resulting control flow graph after introduction of sequential
+composition has been performed at every point is shown in
+Figure~\ref{example-control-flow-graph-after-sequence-introduction-figure}.
+\begin{figure}
+  \begin{center}
+    \begin{tikzpicture}[every new ->/.style={-latex}]
+      \path (0,0) node (0) {0} -- ++(1,0) node (6) {6};
+      \path (0,-1cm) node (7) {7} -- ++(1,0) node (11) {11} -- ++(1,0) node (14) {14} -- ++(1,0) node (17) {17};
+      \path (0,-3cm) node (21) {21} -- ++(1,0) node (23) {23} -- ++(1,0) node (24) {24};
+      \path (3,-2.3cm) node (28) {28} -- ++(1,0) node (31) {31};
+      \node at (3,-3.7cm) (32) {32};
+      \path (5,-3cm) node (35) {35} -- ++(1,0) node (39) {39} -- ++(1,0) node (42) {42};
+      
+      \graph{
+        (7) -> (11) -> (14) -> (17) -> (39) -> (42);
+        (21) -> (23) -> (24) -> {
+          (28) -> (31);
+          (32);
+        } -> (35) -> (39);
+      };
+
+      \graph[grow down]{(0) -> (6)};
+      \node at (0,-5cm) {43};
+
+      \draw[-latex] (39) edge[out=270,in=270,looseness=0.6] (21);
+    \end{tikzpicture}
+  \end{center}
+  \caption{Control flow graph for our example after sequential composition introduction}
+  \label{example-control-flow-graph-after-sequence-introduction-figure}
+\end{figure}
+The only remaining nodes in this graph are those where the sequence of
+instructions ends with a method call or which represent a more complex
+control flow.
+In particular, the instructions for the \texttt{f()} method of
+\texttt{TPK}, which begin at $pc = 43$, have been completely sequenced
+together into a single node.
+The code which corresponds to this control flow graph is that shown
+earlier in Figure~\ref{forward-sequence-introduction-example-figure}
+
+\subsection{Introduce Loops and Conditionals}
+\label{introduce-loops-and-conditionals-subsection}
+
+After sequential composition has been introduced for all methods, we
+must begin considering each method separately to ensure method calls
+are handled properly.
+This means the strategy must loop, introducing loops and conditionals
+to those methods that have no unresolved method calls and resolving
+calls of methods that are then complete, until every method is
+complete and has been separated into its own action.
+Introducing loops and conditionals is performed as described by
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+This considers each method individually, as specified by the for loop
+on line~\ref{algorithm-introduce-loops-and-conditionals-method-loop}
+of the algorithm. 
+The condition on line~\ref{algorithm-no-unresolved-calls-condition}
+ensures that only those methods where all method calls have already
+been resolved undergo loop and conditional introduction.
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{IntroduceLoopsAndConditionals}{}
+    \For{$m \gets methods$}
+    \label{algorithm-introduce-loops-and-conditionals-method-loop}
+    \If{\Call{HasNoUresolvedCalls}{$m$}}
+    \label{algorithm-no-unresolved-calls-condition}
+    \State $cfg \gets$
+    \Call{MakeControlFlowGraph}{$m$}
+    \label{algorithm-make-control-flow-graph2}
+    \While{$\lnot$\Call{IsComplete}{$m$}}
+    \label{algorithm-loop-until-complete}
+    \State $innerLoopBodies \gets$ \Call{IdentifyInnermostLoops}{$cfg$}
+    \label{algorithm-identify-innermost-loops}
+    \For{$node \gets$ \Call{ReverseNodes}{$innerLoopBodies$}}
+    %
+    %
+    %
+    %
+    \label{algorithm-node-checking-loop}
+    \State \Call{ApplyLemma\ref{conditional-introduction-lemma}}{$node$}
+    \label{algorithm-introduce-conditional}
+    \If{\Call{HasSimpleSequence}{$node$}}
+    \label{algorithm-conditional-introduce-sequence-start}
+    \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$}
+    \EndIf \label{algorithm-conditional-introduce-sequence-end}
+    \If{\Call{FirstBranchIsEndNode}{$node$}}
+    \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$}
+    \EndIf
+    \EndFor
+    \State \Call{ApplyLemma\ref{loop-introduction-lemma}}{$innerLoops$}
+    \label{algorithm-introduce-loop}
+    \State \Call{ApplyLemma\ref{conditional-loop-introduction-lemma}}{$innerLoops$}
+    \label{algorithm-introduce-conditional-loop}
+    \State \Call{Move$Running$LoopInsideConditionals}{}
+    \label{algorithm-move-running-loop-inside}
+    \State \Call{ApplyLemma\ref{loop-introduction-in-arbitrary-context-lemma}}{$innerLoops$}
+    \label{algorithm-introduce-nested-loop}
+    \State \Call{ApplyLemma\ref{conditional-loop-introduction-in-arbitrary-context-lemma}}{$innerLoops$}
+    \label{algorithm-introduce-nested-conditional-loop}
+    \State \Call{Move$Running$LoopOutsideConditionals}{}
+    \label{algorithm-move-running-loop-outside}
+    \EndWhile
+    \EndIf
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Introduce Loops and Conditionals}
+  \label{introduce-loops-and-conditionals-algorithm}
+\end{algorithm}
+
+For each method that undergoes loop and conditional introduction, we
+must again consider the control flow graph of the method to ensure the
+loops and conditionals are introduced in the correct order to properly
+form the bodies of loops and conditionals.
+This involves constructing a control flow graph for the method, at
+line~\ref{algorithm-make-control-flow-graph2}, beginning at the entry
+point of the method and following each \texttt{goto} and
+\texttt{if\_icmple} instruction until a loop is detected or a
+\texttt{return} or \texttt{areturn} instruction is reached.
+The graph for the our example, beginning at $pc=7$ (the entry point of
+the \texttt{handleAsyncEvent()} method), is shown in
+Figure~\ref{example-simplified-control-flow-graph-figure}, alongside
+the \Circus{} code obtained at the beginning of this stage for the
+method.
+\begin{figure}
+  \begin{center}
+    \begin{multicols}{4}
+      \begin{tikzpicture}
+        \node (7)  at (0,0)  {7};
+        \node (39)  at (0,-1) {39};
+        \node (42) at (-1,-2) {42};
+        \node (21) at (1,-2) {21};
+        \node (28) at (0.5,-3) {28};
+        \node (32) at (1.5,-3) {32};
+        \node (35) at (1,-4) {35};
+        \draw[-latex] (7) to (39);
+        \draw[-latex] (39) to (42);
+        \draw[-latex] (39) to (21);
+        \draw[-latex] (21) to (28);
+        \draw[-latex] (21) to (32);
+        \draw[-latex] (28) to (35);
+        \draw[-latex] (32) to (35);
+        % \draw[-latex,red!70!black,dashed,out=0,in=0,looseness=1.1] (35) to (39);
+        \draw[-latex,dashed,out=0,in=0,looseness=1.1] (35) to (39);
+      \end{tikzpicture}
+      \columnbreak
+      \scriptsize
+      \setlength{\zedindent}{0cm}
+      \begin{circus}
+        Running \circdef \\
+        \t1 \circif frameStack = \emptyset \circthen \Skip \\
+        \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+        \t2 \circif pc = 0 \circthen {} \cdots {} \\
+        \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq \cdots \circseq pc := 39 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \cdots \circseq pc := 35 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \cdots \circseq pc := 35 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq pc := 39 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+        \t2 \circfi \circseq Poll \circseq Running \\
+        \t1 \circfi
+      \end{circus}
+    \end{multicols}
+  \end{center}
+  \caption{Simplified control flow graph and corresponding code for our example
+    program}
+  \label{example-simplified-control-flow-graph-figure}
+\end{figure}
+
+The loops must be introduced beginning with the innermost loop and
+working outwards, with the constructs in the body of each loop
+introduced before the loop itself is introduced.
+We identify the innermost loops as specified in
+Algorithm~\ref{identify-innermost-loops-algorithm}, which defines the
+\Call{IdentifyInnermostLoops}{} function used to identify the
+innermost loops on line~\ref{algorithm-identify-innermost-loops} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+\begin{algorithm}[t]
+  \begin{algorithmic}[1]
+    \Procedure{IdentifyInnermostLoops}{$cfg$}
+    % Find looping edges
+    \State $loopingEdges \gets$ \Call{FindLoopingEdges}{$cfg$} \label{algorithm-find-looping-edges}
+    % Merge loops with the same start
+    \State $groupedLoopEdges \gets$ \Call{GroupEdgesWithSameTarget}{$loopingEdges$} \label{algorithm-group-loop-edges}
+    % Check if there are no loops
+    \If{$groupedloopEdges = \{\}$} \label{algorithm-check-for-no-loops}
+    \State \textbf{return} \Call{Nodes}{$cfg$}
+    \EndIf
+    % Get sets of nodes in the loop body
+    \State $loopBodies \gets \{\}$
+    \For{$edgeGroup \gets groupedLoopEdges$} \label{algorithm-loop-group-loop}
+    \State $loopBody \gets \{\}$
+    \For{$edge \gets edgeGroup$} \label{algorithm-loop-body-loop}
+    \State $loopBody \gets loopBody \cup {}$\Call{NodesBetweenTargetAndSource}{$edge$} \label{algorithm-collect-loop-nodes}
+    \EndFor
+    \State $loopBodies \gets loopBodies \cup \{loopBody\}$
+    \EndFor
+    % Find loop bodies that are disjoint or contained in all other loop bodies
+    \State $innermostLoops \gets \{\}$
+    \For{$loopBody \gets loopBodies$} \label{algorithm-loop-body-check-loop}
+    \If{$\forall lb2 : loopBodies \circspot loopBody \cap lb2 = \{\} \lor loopBody \subseteq lb2$} \label{algorithm-loop-body-check}
+    \State $innermostLoops \gets innermostLoops \cup \{loopBody\}$ \label{algorithm-add-innermost-loop}
+    \EndIf
+    \EndFor
+    \If{$innermostLoops = \{\}$} \label{algorithm-empty-innermost-check}
+    \State \textbf{fail} \label{algorithm-abort-on-no-innermost}
+    \EndIf
+    \State \textbf{return} $innermostLoops$ \label{algorithm-return-innermost-loops}
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Identify Innermost Loops}
+  \label{identify-innermost-loops-algorithm}
+\end{algorithm}
+
+The finding of innermost loops begins by identifying the looping edges
+in the control flow graph, on line~\ref{algorithm-find-looping-edges}.
+Looping edges are easily identified as those that return to an earlier
+node in the control flow graph.
+However, a loop may have multiple points at which it loops.
+Such loops can be identified by the fact that all the looping edges
+have the same target, which is the first node in the loop.
+An example of such a loop can be seen in the control flow graph below,
+where the thick edges are the looping edges.
+\begin{center}
+\begin{tikzpicture}
+  \node (1) at (0, 0.0) {$\bullet$};
+  \node (2) at (2, 0.5) {$\bullet$};
+  \node (3) at (2,-0.5) {$\bullet$};
+  \node (4) at (4, 0.5) {$\cdots$};
+  \node (5) at (4,-0.5) {$\cdots$};
+  \node (6) at (6, 0.5) {$\bullet$};
+  \node (7) at (6,-0.5) {$\bullet$};
+
+  \draw[-latex] (-1,0) to (1);
+  
+  \draw[-latex] (1) to (2);
+  \draw[-latex] (1) to (3);
+  \draw         (2) to (4);
+  \draw         (3) to (5);
+  \draw[-latex] (4) to (6);
+  \draw[-latex] (5) to (7);
+  
+  \draw[-latex, very thick, out=90, in=90, looseness=0.3] (6) to (1);
+  \draw[-latex, very thick, out=270, in=270, looseness=0.3] (7) to (1);
+\end{tikzpicture}
+\end{center}
+To ensure such loops are considered as a single loop (rather than a
+loop per looping edge), we group together the looping edges that have
+the same target.
+This occurs on line~\ref{algorithm-group-loop-edges} of the algorithm.
+
+There may be no loops in a method. 
+In such cases we want to work over all the remaining nodes in the
+method, treating them as if they were the body of a loop.
+This is handled in the check on
+line~\ref{algorithm-check-for-no-loops}.
+
+We then obtain the nodes in the bodies of each of the loops.
+This is done for each of the groups of looping edges, in the loop on
+line~\ref{algorithm-loop-group-loop}.
+For each of the looping edges in those groups, we collect the nodes
+between the target and source of the edge.
+That is, we take all the nodes in paths beginning at the target of the
+looping edge and ending at the source node of the looping edge.
+This occurs on line~\ref{algorithm-collect-loop-nodes} of the
+algorithm, inside a loop over the looping edges on
+line~\ref{algorithm-loop-body-loop}.
+
+After all the edges in the loops are collected, we compare the loops
+to find which are the innermost.
+Each of the loop bodies is considered, in the loop on
+line~\ref{algorithm-loop-body-check-loop}.
+In order to be an innermost loop, a loop must either be contained in
+or disjoint from every other loop.
+This is checked in the conditional on
+line~\ref{algorithm-loop-body-check}, and an innermost loop is added
+to the set of innermost loops on
+line~\ref{algorithm-add-innermost-loop}.
+
+It is possible that this algorithm will generate an empty set of
+innermost loops, if the input program contains overlapping loops.
+Below is an example of the control flow graph of such a program.
+\begin{center}
+\begin{tikzpicture}
+  \node (1) at (00, 0.0) {$\bullet$};
+  \node (2) at (02, 0.0) {$\bullet$};
+  \node (3) at (04, 0.0) {$\circ$};
+  \node (4) at (06, 0.0) {$\circ$};
+  \node (5) at (08, 0.0) {$\bullet$};
+
+  \draw[-latex] (-1,0) to (1);
+  
+  \draw[-latex] (1) to (2);
+  \draw[-latex] (2) to (3);
+  \draw[-latex] (3) to (4);
+  \draw[-latex] (4) to (5);
+  
+  \draw[-latex, very thick, out=90, in=90, looseness=0.4] (4) to (2);
+  \draw[-latex, very thick, out=270, in=270, looseness=0.4] (5) to (3);
+\end{tikzpicture}
+\end{center}
+In this graph, the nodes marked by white circles are counted as being
+in both loops, but the loops are not completely contained within each
+other. 
+This means that the loops cannot be transformed into a well-structured
+C loop.
+Since such loops would not be generated in the bytecode resulting from
+an SCJ program (though they are valid in Java class files in general),
+we do not allow such loops in input to our strategy.
+This is consistent with the restrictions imposed by MISRA-C.
+So we must check if an empty set of innermost loops is generated, and
+abort the strategy if it is.
+This is specified in the conditional on
+line~\ref{algorithm-empty-innermost-check} of the algorithm, where we
+abort on line~\ref{algorithm-abort-on-no-innermost} if the set of
+innermost loops is empty.
+
+If there is a non-empty set of innermost loops, then that is returned
+as the sets of nodes that are considered first in
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+In our example there is only a single looping edge, from the $pc = 35$
+node to the $pc = 39$ node, so the nodes $39$, $21$, $28$, $32$, and
+$35$ are considered first as the interior of the loop formed by that
+edge.
+The remaining nodes in the method's control flow graph are considered
+after the loop's nodes have been considered and the loop has been
+introduced.
+
+In general we iteratively work outwards from the innermost loop until
+the method being considered is complete.
+This is indicated by the loop beginning at
+line~\ref{algorithm-loop-until-complete} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+Within each loop, we introduce control flow constructs to collect the
+body of the loop into a single node.
+This is performed working backwards from the last node within the body
+of a loop, as specified by the for loop on
+line~\ref{algorithm-node-checking-loop} of the algorithm, to ensure
+that the innermost nested conditionals are introduced first.
+
+An example where this handling of innermost conditionals is necessary
+is shown below.
+\begin{center}
+\begin{tikzpicture}
+  \node (1) at (0, 0.0) {$\bullet$};
+  \node (2) at (2, 0.5) {$\bullet$};
+  \node (3) at (2,-0.5) {$\bullet$};
+  \node (4) at (4, 1.0) {$\bullet$};
+  \node (5) at (4,-1.0) {$\bullet$};
+  \node (6) at (4, 0.1) {$\bullet$};
+  \node (7) at (4,-0.1) {$\bullet$};
+  \node (8) at (6, 0.0) {$\bullet$};
+
+  \draw[-latex] (-1,0) to (1);
+  
+  \draw[-latex] (1) to (2);
+  \draw[-latex] (1) to (3);
+  \draw[-latex] (2) to (4);
+  \draw[-latex] (3) to (5);
+  \draw[-latex] (2) to (6);
+  \draw[-latex] (3) to (7);
+  \draw[-latex] (4) to (8);
+  \draw[-latex] (5) to (8);
+  \draw[-latex] (6) to (8);
+  \draw[-latex] (7) to (8);
+\end{tikzpicture}
+\end{center}
+This example contains two levels of nested conditionals, which then
+end at the final node in the graph.
+If the introduction of the conditionals were to start at the first
+node, then the second level of conditionals would have to be
+introduced from within the branches of the conditional.
+While this is possible (and, as we shall see later, it is the method
+used for introduction of loops in some cases), it complicates the
+strategy and can easily be avoided by starting the introduction of
+conditionals at the end of the graph.
+Then the innermost conditionals are introduced first and are absorbed
+into the body of the outer conditional, without the need to introduce
+the conditionals within its body.
+
+
+Within the body of a loop, conditionals can be identified as nodes
+whose sequence of instructions ends with an assignment of the form
+$pc := \IF b \THEN x \ELSE y$ and which have two target nodes, neither
+of which are earlier in the method (so as to distinguish them from
+loops).
+The conditionals come in several different kinds, depending on whether
+each branch of the conditional ends with a loop, a return or a
+sequential composition.
+The first kind of conditional we consider is one in which both
+branches end with a sequential composition, such that the flow of
+execution continues after the end of the conditional.
+Such conditionals can be identified by the fact that both branches of
+the conditional end in an assignment of the same value to the $pc$,
+and they have control flow graphs of the following form.
+\begin{center}
+  \begin{tikzpicture}
+    \useasboundingbox (-2,-0.5) rectangle (6,0.5);
+    \node (0) at (-2,  0) {$\cdots$};
+    \node (1) at (0, 0.0) {$\bullet$};
+    \node (2) at (2, 0.5) {$\bullet$};
+    \node (3) at (2,-0.5) {$\bullet$};
+    \node (4) at (4, 0.0) {$\bullet$};
+    \node (5) at (6, 0.0) {$\cdots$};
+
+    \draw[-latex] (0) to (1);
+    \draw[-latex] (1) to (2);
+    \draw[-latex] (1) to (3);
+    \draw[-latex] (2) to (4);
+    \draw[-latex] (3) to (4);
+    \draw         (4) to (5);
+  \end{tikzpicture}
+\end{center}
+Such conditionals are introduced using
+Lemma~\ref{conditional-introduction-lemma}, on
+line~\ref{algorithm-introduce-conditional} of the algorithm.
+This lemma introduces a conditional and distributes the $pc$
+assignment at the end of both branches outside the conditional.
+As in Lemma~\ref{sequence-introduction-lemma}, the sequence of actions
+for the node must not affect the nonemptiness of the $frameStack$.
+A similar condition is required for all the lemmas in this section.
+We also require that the targets of the conditional are different from
+the node at which the conditional is introduced, since that would
+introduce a loop, which is not the purpose of this lemma.
+\begin{lem}[Conditional introduction]
+  \label{conditional-introduction-lemma}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  If $i \neq j$, $i \neq k$, and 
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+      \t3 \circif b \circthen B \\
+      \t3 {} \circelse \lnot b \circthen C \\
+      \t3 \circfi \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{lem}
+After applying Lemma~\ref{conditional-introduction-lemma}, we may be
+able to introduce sequential composition at a node that could not
+previously be introduced.
+Such sequential compositions could not be introduced earlier as the
+node following the conditional has two incoming edges.
+This is performed in the same manner as in
+Section~\ref{introduce-forward-sequence-subsection}, checking for a
+simple sequence and applying Lemma~\ref{sequence-introduction-lemma},
+on lines~\ref{algorithm-conditional-introduce-sequence-start}
+to~\ref{algorithm-conditional-introduce-sequence-end} of the
+algorithm.
+The check for simple sequence is still necessary as we must wait until
+the outer conditionals have been introduced in the case of nested
+conditionals.
+
+The next kinds of conditional we consider are those in which only one
+branch ends in a sequential composition with the instructions after
+the conditional.
+Such conditionals will only occur in the presence of other
+conditionals or loops, as in the control flow graph below.
+The node at the end of the graph below cannot be sequenced with the
+end of the conditionals, since there are two edges leading to the
+node.
+If there were only a single conditional, then only one edge would lead
+to the node after the conditional and sequential composition would
+have been introduced in the previous section.
+\begin{center}
+  \begin{tikzpicture}
+    \node (0) at (-2, 0.0) {$\cdots$};
+    \node (1) at (0, 0.0) {$\bullet$};
+    \node (2) at (2, 0.5) {$\bullet$};
+    \node (3) at (2,-0.5) {$\bullet$};
+    \node (4) at (4, 1.0) {$\bullet$};
+    \node (5) at (4,-1.0) {$\bullet$};
+    \node (6) at (4, 0.3) {$\bullet$};
+    \node (7) at (4,-0.3) {$\bullet$};
+    \node (8) at (6, 0.0) {$\bullet$};
+    \node (9) at (8, 0.0) {$\cdots$};
+
+    \draw[-latex] (0) to (1);
+    \draw[-latex] (1) to (2);
+    \draw[-latex] (1) to (3);
+    \draw[-latex] (2) to (4);
+    \draw[-latex] (3) to (5);
+    \draw[-latex] (2) to (6);
+    \draw[-latex] (3) to (7);
+    \draw[-latex] (6) to (8);
+    \draw[-latex] (7) to (8);
+    \draw         (8) to (9);
+  \end{tikzpicture}
+\end{center}
+The other branch of the conditional (that does not end in a sequential
+composition), may end in a loop, a return, or another conditional.
+If the branch ends in a return, then that means the return does not
+occur at the end of the method.
+Since we target C code that has only a single return at the end of a
+function, we cannot translate such return instructions directly.
+We must instead sequence the branch of the conditional without the
+return with the instructions after the conditional.
+In the case of the control flow graph above, this means that it will
+be treated as if it had the form of the control flow graph below,
+effectively duplicating the node after the conditional.
+\begin{center}
+  \begin{tikzpicture}
+    \node (A) at (-2, 0.0) {$\cdots$};
+    \node (B) at (0, 0.0) {$\bullet$};
+    \node (C) at (2, 0.5) {$\bullet$};
+    \node (D) at (2,-0.5) {$\bullet$};
+    \node (E) at (4, 1.0) {$\bullet$};
+    \node (F) at (4,-1.0) {$\bullet$};
+    \node (G) at (4, 0.3) {$\bullet$};
+    \node (H) at (4,-0.3) {$\bullet$};
+    \node (I) at (6, 0.3) {$\bullet$};
+    \node (J) at (8, 0.3) {$\cdots$};
+    \node (K) at (6,-0.3) {$\bullet$};
+    \node (L) at (8,-0.3) {$\cdots$};
+    
+
+    \draw[-latex] (A) to (B);
+    \draw[-latex] (B) to (C);
+    \draw[-latex] (B) to (D);
+    \draw[-latex] (C) to (E);
+    \draw[-latex] (D) to (F);
+    \draw[-latex] (C) to (G);
+    \draw[-latex] (D) to (H);
+    \draw[-latex] (G) to (I);
+    \draw[-latex] (H) to (K);
+    \draw         (I) to (J);
+    \draw         (K) to (L);
+  \end{tikzpicture}
+\end{center}
+This pushes the conditional to the end of the method, slightly
+breaking the form of the method in the original Java code but bringing
+it form required for the C code.
+Thus such conditionals are introduced using
+Lemma~\ref{seq-ret-conditional-introduction-lemma}, which introduces
+the sequential composition along with the conditional.
+The preconditions for this lemma are the same as those for
+Lemma~\ref{conditional-introduction-lemma}, but the second branch of
+the conditional is required to end with an assignment to the $pc$.
+% TODO: are conditions on x needed? e.g. x \neq i
+\begin{lem}[Sequential composition--conditional introduction 1]
+  \label{seq-ret-conditional-introduction-lemma}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  If $i \neq j$, $i \neq k$,  and 
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = x \circthen D \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+      \t3 \circif b \circthen B \\
+      \t3 {} \circelse \lnot b \circthen {} \\
+      \t4 C \circseq pc := x \circseq Poll \circseq D \\
+      \t3 \circfi \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = x \circthen D \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{lem}
+This lemma is applied on line~\ref{}
+
+As mentioned above, we then repeat these steps, working backward
+through the control flow graph for all the nodes in the loop being
+considered.
+In our example this means that we next introduce a conditional at the
+$pc = 39$ node, bringing the body of the loop into a single node and
+yielding the code below.
+Note that the $pc = 42$ node is also included in the introduced
+conditional, along with the body of the loop.
+{
+  \setlength{\zedindent}{0.7cm}
+\begin{circus}
+  Running \circdef \\
+  \t1 \circif frameStack = \emptyset \circthen \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+  \t2 \circif pc = 0 \circthen {} \cdots {} \\
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
+  \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+  \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \cdots \circseq \\
+  \t4 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \circseq Poll \circseq \\
+  \t4 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq \cdots \\
+  \t4 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq \cdots \\
+  \t4 \circfi \circseq pc := 35 \circseq Poll \circseq HandleAloadEPC(4) \circseq \cdots \circseq pc := 39 \\
+  \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
+  \t3 \circfi \\
+  \t2 {} \cdots {} \\
+  \t2 \circfi \circseq Poll \circseq Running \\
+  \t1 \circfi
+\end{circus}
+}
+
+After the body of the loop has been reduced to a single node, we can
+introduce the loop at that node.
+If the loop is caused by a simple assignment of the form $pc := x$
+then the loop introduction is performed using
+Lemma~\ref{loop-introduction-lemma}, which introduces a recursion to
+the beginning of the node that constitutes the body of the loop.
+This occurs at line~\ref{algorithm-introduce-loop} of the algorithm.
+\begin{lem}[Loop introduction]
+  \label{loop-introduction-lemma}
+  If
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \def\zedindent{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 A \circseq pc := i \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 \circmu Y \circspot A \circseq pc := i \circseq Poll \circseq Y \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+\end{lem}%
+
+The other type of loop to be introduced is a loop that is caused by an
+assignment of the form $pc := \IF b \THEN x \ELSE y$, which we refer
+to as a conditional loop.
+Note that the loop body will start at $pc = x$, since the conditional
+instructions only branch if the condition is met, going to the next
+instruction if it is not, so only the $pc = x$ branch can result in a
+loop.
+To introduce conditional loops, we use
+Lemma~\ref{conditional-loop-introduction-lemma}, at
+line~\ref{algorithm-introduce-conditional-loop} of the algorithm.
+This lemma requires that the $pc$ value of the second branch of the
+conditional must not be the same as that of the first branch (which is
+the loop body), since that is impossible for Java bytecode
+instructions, as discussed above.
+\begin{lem}[Conditional loop introduction]
+  \label{conditional-loop-introduction-lemma}
+  \def\zedindent{0.25cm}
+  If $i \neq j$,
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN i \ELSE j \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \circmu Y \circspot A \circseq Poll \circseq \\
+      \t3 \circif b \circthen Y \\
+      \t3 {} \circelse \lnot b \circthen B \\
+      \t3 \circfi \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{lem}%
+
+In some cases the $pc$ update that causes a loop may be in a branch of
+a conditional.
+Such a case occurs our example, where the loop beginning at $pc = 39$
+loops at the end of the first branch of a conditional.
+The introduction of the conditional before the loop is introduced is
+necessary to bring the body of the loop into a single node, so we must
+handle the loop inside the conditional.
+This is performed by first distributing the $Poll \circseq Running$ at
+the end of the $Running$ action into the branches of the conditional,
+on line~\ref{algorithm-move-running-loop-inside} of the algorithm.
+This results in the code below for our example.
+{ \setlength{\zedindent}{0.7cm}
+\begin{circus}
+  Running \circdef \\
+  \t1 \circif frameStack = \emptyset \circthen \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+  \t2 \circif pc = 0 \circthen {} \cdots {} \\
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
+  \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+  \t3 \circif value1 \leq value2 \circthen \cdots \circseq pc := 39 \circseq Poll \circseq Running \\
+  \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \circseq Poll \circseq Running \\
+  \t3 \circfi \\
+  \t2 {} \cdots {} \\
+  \t2 \circfi \\
+  \t1 \circfi
+\end{circus}}
+Lemmas~\ref{loop-introduction-in-arbitrary-context-lemma}
+and~\ref{conditional-loop-introduction-in-arbitrary-context-lemma} are
+then used to introduce the loops at the points where they occur, on
+lines~\ref{algorithm-introduce-nested-loop}
+and~\ref{algorithm-introduce-nested-conditional-loop} of the
+algorithm. 
+These lemmas allow loops and conditional loops to be introduced in an
+arbitrary context, loops and conditional loops to be introduced in an
+arbitrary context.
+These lemmas make use of context notation, in which $A[B]$ for a
+particular action $B$ represents and action $A$ in which there is at
+least one occurrence of $B$. 
+Replacing $A[B]$ with an action $A[C]$ then means replacing all
+occurrences of $B$ in $A$ with $C$.
+These lemmas operate similarly to Lemmas~\ref{loop-introduction-lemma}
+and~\ref{conditional-loop-introduction-lemma}.
+\begin{lem}[Loop introduction in arbitrary context]
+  If
+  \begin{circus}
+    \{ frameStack \neq \emptyset \} \circseq A[pc := i \circseq Poll \circseq X] \\
+    {} = {} \\
+    \{ frameStack \neq \emptyset \} \circseq A[\{ frameStack \neq \emptyset \} \circseq pc := i \circseq Poll \circseq X]
+  \end{circus}
+  then,
+  \label{loop-introduction-in-arbitrary-context-lemma}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedtab}{1.3em}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 A[pc := i \circseq Poll \circseq X] \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \circmu Y \circspot \\
+      \t3 A[pc := i \circseq Poll \circseq Y] \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \\
+      \t1 \circfi  
+    \end{array}
+  \end{circus}
+\end{lem}%
+\begin{lem}[Conditional loop introduction in arbitrary context]
+  \label{conditional-loop-introduction-in-arbitrary-context-lemma}
+  If $i \neq j$ and
+  \begin{circus}
+    \{ frameStack \neq \emptyset \} \circseq A[pc := \IF b \THEN i \ELSE j \circseq  Poll \circseq X] \\
+    {} = {} \\
+    \{ frameStack \neq \emptyset \} \circseq A[\{ frameStack \neq \emptyset \} \circseq pc := \IF b \THEN i \ELSE j \circseq  Poll \circseq X]
+  \end{circus}
+  then,
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedtab}{1.3em}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 A[pc := \IF b \THEN i \ELSE j \circseq \\
+      \t4 Poll \circseq X] \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq Poll \circseq X \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \circmu Y \circspot \\
+      \t3 A[pc := \IF b \THEN i \ELSE j \circseq Poll \circseq \\
+      \t4 \circif b \circthen Y \\
+      \t4 {} \circelse \lnot b \circthen B \circseq Poll \circseq X \\
+      \t4 \circfi {} ] \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq Poll \circseq X \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \\
+      \t1 \circfi  
+    \end{array}
+  \end{circus}
+\end{lem}
+After introducing the loops inside conditionals, we distribute the
+$Poll \circseq Running$ actions back outside the conditionals, on
+line~\ref{algorithm-move-running-loop-outside} of the algorithm.
+For our example, this results in the following code after the loop at
+$pc = 39$ has been introduced.
+{ \setlength{\zedindent}{0.7cm}
+\begin{circus}
+  Running \circdef \\
+  \t1 \circif frameStack = \emptyset \circthen \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+  \t2 \circif pc = 0 \circthen {} \cdots {} \\
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 39 \circthen \circmu Y \circspot HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
+  \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+  \t3 \circif value1 \leq value2 \circthen \cdots \circseq pc := 39 \circseq Poll \circseq Y \\
+  \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
+  \t3 \circfi \\
+  \t2 {} \cdots {} \\
+  \t2 \circfi \circseq Poll \circseq Running \\
+  \t1 \circfi
+\end{circus}}
+
+Then, as discussed previously, we continue to introduce conditionals
+in the next innermost loop, working outwards until all the loops and
+conditionals in the whole method are introduced, making the method
+complete as specified by the loop on
+line~\ref{algorithm-loop-until-complete} of the algorithm.
+In our example there are no further loops in the method so we consider
+all the remaining nodes in the method's control flow graph.
+All that remains to be done is to introduce a sequential composition
+between the instructions at $pc = 7$ and the loop at $pc = 39$.
+This results in the code shown for $pc = 7$ in
+Figure~\ref{loop-and-conditional-introduction-example-figure} in
+Section~\ref{overview-subsection}.
+
+\subsection{Resolve Method Calls}
+\label{resolve-method-calls-subsection}
+
+When a method is complete, calls to that method can then be resolved.
+This is performed after introduction of loops and conditionals,
+ensuring methods with loops and conditionals are complete so that this
+step can be applied.
+% As mentioned previously, since this requires all the method calls in a
+% given method to be resolved first, we do not allow recursion.
+
+This step begins with the copying of the method into a separate
+action, so that it can be referenced elsewhere.
+This is performed by as described by
+Algorithm~\ref{separate-complete-methods-algorithm}.
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{SeparateCompleteMethods}{}
+    \For{$m \gets methods$} \label{algorithm-method-separation-loop}
+    % \For{$mc \gets$ \Call{MethodsCalls}{$m$}}
+    % \EndFor
+    \If{\Call{MethodIsComplete}{$m$}} \label{algorithm-check-method-completeness}
+    \State \Call{ApplyCopyRule}{$m$}
+    \EndIf
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Separate Complete Methods}
+  \label{separate-complete-methods-algorithm}
+\end{algorithm}
+
+Algorithm~\ref{separate-complete-methods-algorithm} looks at each
+method separately, as specified by the loop on
+line~\ref{algorithm-method-separation-loop}, and determines if it is
+complete, on line~\ref{algorithm-check-method-completeness}.
+This involves a simple syntactic check that each conditional branch
+ends in a return instruction or a recursion.
+Those methods that are complete are moved into a separate action by an
+application of the copy rule.
+
+In our example, the method \texttt{f()} of the \texttt{TPK} class,
+which starts at $pc = 43$, is complete on the first iteration of the
+loop on line~\ref{algorithm-method-loop} of
+Algorithm~\ref{epc-algorithm}, with the $Running$ action as shown
+below.
+The method is complete in this case because it consists of a straight
+sequence of instructions ending with $HandleAreturnEPC$, which
+represents the \texttt{areturn} instruction.
+\begin{circus}
+  Running \circdef \\
+  \t1 \circif frameStack = \emptyset \circthen \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+  \t2 \circif pc = 0 \circthen {} \cdots {} \\
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 43 \circthen HandleAloadEPC(0) \circseq Poll \circseq HandleAloadEPC(0) \circseq \\
+  \t3 Poll \circseq HandleIaddEPC \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq \\
+  \t3 HandleIaddEPC \circseq Poll \circseq HandleIconstEPC(5) \circseq Poll \circseq \\
+  \t3 HandleIaddEPC \circseq Poll \circseq HandleAreturnEPC \\
+  \t2 {} \cdots {} \\
+  \t2 \circfi \circseq Poll \circseq Running \\
+  \t1 \circfi
+\end{circus}
+The sequence of instructions at $pc = 43$ can then be copied into a
+separate action, shown below.
+The name of this action contains the name of the class and method
+identifier of the method it represents.
+\begin{circus}
+  TPK\_f \circdef HandleAloadEPC(0) \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq \\
+  \t1 HandleIaddEPC \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq HandleIaddEPC \circseq \\
+  \t1 Poll \circseq HandleIconstEPC(5) \circseq Poll \circseq  HandleIaddEPC \circseq Poll \circseq \\
+  \t1 HandleAreturnEPC 
+\end{circus}
+
+After all the complete methods have been copied into separate actions,
+calls to those methods are resolved.
+This is performed as described by
+Algorithm~\ref{resolve-method-calls-algorithm}.
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{ResolveMethodCalls}{}
+    \For{$m \gets methods$}
+    \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
+    \State $targets \gets$ \Call{DetermineMethodCallTargets}{$mc$}
+    \If{$\# targets = 1$}
+    \State \Call{ApplyLemma\ref{method-call-resolution-lemma}}{}
+    \Else
+    \State \Call{ApplyLemma\ref{dynamic-method-call-resolution-lemma}}{}
+    \EndIf
+    \EndFor
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Resolve Method Calls}
+  \label{resolve-method-calls-algorithm}
+\end{algorithm}
+
+
+%%%%
+
+To resolve a method call, the type of method call must be considered.
+Some methods are handled directly by the SCJVM as they relate to the
+SCJVM services.
+Such methods are treated specially by the interpreter, communicating
+with the launcher to perform the behaviour of the method.
+In cases where the method invocation is simply handled by
+communication with the launcher and then followed by execution of the
+next instruction, the control flow can be introduced using
+Lemma~\ref{sequence-introduction-lemma} as for other instructions with
+simple control flow.
+
+% TODO: discuss special methods with nested calls here
+
+For method calls that do not require special handling, the control
+flow is that of the corresponding method's action, followed by
+execution of the next instruction.
+If the method is called with static dispatch (as is the case with the
+\texttt{invokespecial} and \texttt{invokestatic} instructions), the
+correct method, and hence the corresponding action can be easily
+determined.
+The method call is then resolved using
+Lemma~\ref{method-call-resolution-lemma}.
+We require as a precondition of the lemma that the method action
+returns to the return address stored on the stack, to ensure that the
+control flow is resolved correctly.
+This will be the case for a method where every path of execution ends
+in a return or loop, since returns establish the condition and loops
+will either lead to a return eventually or form an infinite loop that
+may be followed by any action (including the assumption we require).
+%
+\begin{lem}[Method call resolution]
+  \label{method-call-resolution-lemma}
+  If an action $M$ is such that
+  \[\{ (head~frameStack).storedPC = i \land frameStack = fs \} \circseq M \\
+    {} = {} \\
+    \{ (head~frameStack).storedPC = i \land frameStack = fs \}
+    \circseq M \circseq \\
+    \t1 \{ pc = i \land frameStack = tail~fs \}\]
+  and $i \neq j$,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \{ pc = k \} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := j \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \{ pc = k \} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := j \circseq Poll \circseq M \circseq Poll \circseq B \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+  %TODO: elimination of pc assignment
+\end{lem}
+%
+For method calls that have dynamic dispatch (as in the case of
+\texttt{invokevirtual} instructions), we must determine what classes
+the method may be called on.
+The control flow is then a choice over the class of the object the
+method is called on, with the method action corresponding to that
+class chosen.
+As with the static case, we require the method action to return to the
+return address stored on the stack.
+In the dynamic case, this requirement must be met by all the method
+actions so that the next instruction can be executed after the choice
+of methods.
+Lemma~\ref{dynamic-method-call-resolution-lemma} is used to introduce
+this choice.
+%
+\begin{lem}[Dynamic method call resolution]
+  \label{dynamic-method-call-resolution-lemma}
+  If actions $M_1, \dots, M_n$ are such that
+  \[\{ returnAddress = i \land frameStack = fs \} \circseq M_k \\
+    {} = {} \\
+    \{ returnAddress = i \land frameStack = fs \}
+    \circseq M_k \circseq \{ pc = i \land frameStack = tail~fs \}\]
+   for $k in \{ 1, \dots, n \}$ and $i \neq j$,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A(class, method) \circseq \\
+      \t3 \{ class \in \{ c_1, \dots, c_n \}\} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := entry(class, method) \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j_1 \circthen M_1 \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A(class, method) \circseq \\
+      \t3 \{ class \in \{ c_1, \dots, c_n \} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := entry(class, method) \circseq Poll \circseq \\
+      \t3 \circif class = c_1 \circthen M_1 \\
+      \t3 \cdots \\
+      \t3 {} \circelse class = c_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq B \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j_1 \circthen M_1 \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+  %TODO: elimination of pc assignment
+\end{lem}
+
+The resolution of loops, conditionals and methods is performed in a
+loop until all the methods have been separated into their own action.
+The remaining use of the program counter in the main actions of $Thr$
+can then be eliminated as described in the next section.
+
+\subsection{Refine Main Actions}
+\label{refine-main-actions-subsection}
+
+At this stage of the strategy, the only place that the program counter
+is used is when the first method is started, when it is used to select
+the method action to execute, which will then proceed without any need
+for the program counter value.
+This can be eliminated by replacing it with a choice over the method
+rather than the program counter.
+This must be performed in the two places that the $Running$ action
+occurs:~the $MainThread$ and $NotStarted$ actions.
+Since the main action of $Thr$ is a guarded choice of these actions
+depending on whether its thread parameter is the $main$ thread, these
+actions may be thought of as two alternative main actions for $Thr$.
+
+The context of the $Running$ action in both of these main actions is
+the same:~the frame stack has only one frame and the program counter
+is set to the entry point of a method.
+This means that the same lemma can be used for both main actions by
+introducing an assumption that states that context.
+Additionally, we can use the fact that each method action will, when
+started with a frame stack containing a single frame, cause the frame
+stack to become empty.
+This allows us to eliminate the loop in $Running$, reducing it
+entirely to a choice of method action from the class and method
+identifier.
+The overall transformation of $Running$ in its context is described by
+Lemma~\ref{main-action-refinement-lemma}.
+\begin{lem}[Main Action Refinement]
+  \label{main-action-refinement-lemma}
+  If $entry(c_i,m_i) = j_i$ for $i \in \{1, \dots, n\}$ and
+  \begin{circus}
+    \{ \# frameStack = 1 \} \circseq M_i \\
+    {} = {} \\
+    \{ \# frameStack = 1 \} \circseq M_i \circseq \{ frameStack = \emptyset \}
+  \end{circus}
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \{ \# frameStack = 1 \\
+      \t1 {} \land pc = entry(cid, mid) \} \circseq \\
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t2 \circif pc = j_1 \circthen M_1 \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ \# frameStack = 1 \} \circseq \\
+      \circif (cid, mid) = (c_1, m_1) \circthen M_1 \\
+      \cdots \\
+      {} \circelse (cid, mid) = (c_n, m_n) \circthen M_n \\
+      \circfi \\
+    \end{array}
+  \end{circus}
+\end{lem}
+Once this has been performed, the program counter value is no longer
+used to determine the control flow of the program, so a trivial data
+refinement can be performed to eliminate $pc$ from the state of the
+$Thr$ process.
+
+\subsection{Remove $pc$ From State}
+\label{remove-pc-from-state-subsection}
+
+\section{Elimination of Frame Stack}
+\label{elimination-of-frame-stack-section}
+
+\section{Data Refinement of Objects}
+\label{data-refinement-of-objects-section}
+

@@ -5,13 +5,23 @@
 \usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
 \usepackage[section]{placeins}
 \usepackage[color,cntglobally]{circus}
+\usepackage{mathdots}
+\usepackage{multicol}
+\usepackage{listings}
+\usepackage{vwcol}
 \usepackage{fixltx2e}
 \usepackage{comment}
 
 \usetikzlibrary{calc}
+\usetikzlibrary{arrows}
+\usetikzlibrary{graphs}
 
 \setcounter{secnumdepth}{4}
 
@@ -34,6 +44,20 @@
 \newcommand{\directsubclassid}{\prec_\mathrm{D}}
 \newcommand{\subclassid}{\preceq}
 
+\makeatletter
+\def\@endtheorem{\endtrivlist}
+\makeatother
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{lem}[thm]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{defn}[thm]{Definition}
+
+\renewcommand{\circblockbegin}{\left(\begin{array}{l}}
+\renewcommand{\circblockend}{\end{array}\right)}
+
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
 %TC:group schema 1 displaymath
@@ -42,6 +66,7 @@
 %TC:macroword \Circus 1
 %TC:group theorem 1 displaymath
 %TC:group zproof 0 displaymath 
+%TC:group algorithm 0 float
 
 \begin{document}
 \maketitle
@@ -76,6 +101,8 @@
 \include{scjvm-services}
 
 \include{cee}
+
+\include{compilationstrategy}
 
 \include{conclusion}
 
