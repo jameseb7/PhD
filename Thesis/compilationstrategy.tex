@@ -1680,42 +1680,33 @@ been resolved undergo loop and conditional introduction.
     \label{algorithm-introduce-loops-and-conditionals-method-loop}
     \If{\Call{HasNoUresolvedCalls}{$m$}}
     \label{algorithm-no-unresolved-calls-condition}
-    \State $cfg \gets$
-    \Call{MakeControlFlowGraph}{$m$}
+    \State $cfg \gets$ \Call{MakeControlFlowGraph}{$m$}
     \label{algorithm-make-control-flow-graph2}
-    \While{$\lnot$\Call{IsComplete}{$m$}}
-    \label{algorithm-loop-until-complete}
-    \State $innerLoopBodies \gets$ \Call{IdentifyInnermostLoops}{$cfg$}
-    \label{algorithm-identify-innermost-loops}
-    \For{$node \gets$ \Call{ReverseNodes}{$innerLoopBodies$}}
-    %
-    %
-    %
-    %
+    \For{$node \gets$ \Call{ReverseNodes}{$cfg$}}
     \label{algorithm-node-checking-loop}
-    \State \Call{ApplyLemma\ref{conditional-introduction-lemma}}{$node$}
-    \label{algorithm-introduce-conditional}
+    \State \Call{ApplyLemma\ref{if-introduction-lemma}}{$node$}
+    \label{algorithm-introduce-if}
+    \State \Call{ApplyLemma\ref{if-else-introduction-lemma}}{$node$}
+    \label{algorithm-introduce-if-else}
     \If{\Call{HasSimpleSequence}{$node$}}
-    \label{algorithm-conditional-introduce-sequence-start}
-    \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$}
-    \EndIf \label{algorithm-conditional-introduce-sequence-end}
-    \If{\Call{FirstBranchIsEndNode}{$node$}}
     \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$}
     \EndIf
-    \EndFor
+    \If{\Call{IsSimpleConditional}{$node$}}
+    \State \Call{ApplyLemma\ref{conditional-introduction-lemma}}{$node$}
+    \label{algorithm-introduce-conditional}
+    \EndIf
+    \State \Call{Move$Running$LoopInsideConditionals}{}
+    \label{algorithm-move-running-loop-inside}
     \State \Call{ApplyLemma\ref{loop-introduction-lemma}}{$innerLoops$}
     \label{algorithm-introduce-loop}
     \State \Call{ApplyLemma\ref{conditional-loop-introduction-lemma}}{$innerLoops$}
     \label{algorithm-introduce-conditional-loop}
-    \State \Call{Move$Running$LoopInsideConditionals}{}
-    \label{algorithm-move-running-loop-inside}
-    \State \Call{ApplyLemma\ref{loop-introduction-in-arbitrary-context-lemma}}{$innerLoops$}
-    \label{algorithm-introduce-nested-loop}
-    \State \Call{ApplyLemma\ref{conditional-loop-introduction-in-arbitrary-context-lemma}}{$innerLoops$}
-    \label{algorithm-introduce-nested-conditional-loop}
+    % \State \Call{ApplyLemma\ref{while-loop-introduction-lemma}}{$innerLoops$}
+    % \label{algorithm-introduce-while-loop}
     \State \Call{Move$Running$LoopOutsideConditionals}{}
     \label{algorithm-move-running-loop-outside}
-    \EndWhile
+
+    \EndFor
     \EndIf
     \EndFor
     \EndProcedure
@@ -1738,6 +1729,9 @@ the \texttt{handleAsyncEvent()} method), is shown in
 Figure~\ref{example-simplified-control-flow-graph-figure}, alongside
 the \Circus{} code obtained at the beginning of this stage for the
 method.
+The edge which forms a loop from $pc=35$ to $pc=39$ is shown as a
+dashed line since looping edges are ignored at certain points in this
+part of the strategy.
 \begin{figure}
   \begin{center}
     \begin{multicols}{4}
@@ -1792,223 +1786,216 @@ method.
   \label{example-simplified-control-flow-graph-figure}
 \end{figure}
 
-The loops must be introduced beginning with the innermost loop and
-working outwards, with the constructs in the body of each loop
-introduced before the loop itself is introduced.
-We identify the innermost loops as specified in
-Algorithm~\ref{identify-innermost-loops-algorithm}, which defines the
-\Call{IdentifyInnermostLoops}{} function used to identify the
-innermost loops on line~\ref{algorithm-identify-innermost-loops} of
+We require that the control flow graph be well-structured in order to
+produce well-structured C code.
+In particular, we target the requirements imposed by
+MISRA-C~\cite{misra2012}.
+This means that we do not allow \texttt{goto}s in the final C code and
+that loops must have a simple structure, with no use of
+\texttt{continue} and a single exit point.
+A single return per method is also a requirement of MISRA-C, but in a
+control flow graph there is no way to distinguish between a
+conditional return in the middle of a method and a conditional at the
+end of a method of which both branches are returns.
+Thus we treat all occurrences of returns in the middle of functions in
+the second way, which can then be treated as a single return at the
+end of the function in the translation to C code by extracting the
+returns from each branch.
+
+Taking these requirements into consideration, we follow the analysis
+of program structure due to Dijkstra~\cite{dijkstra1972}.
+This views structured programs as graphs composed of blocks, which are
+themselves structured programs.
+Thus the definition of structured program is recursive, with the
+trivial case of a single node control flow graph forming the base
+case.
+The more complex structured control flow graphs have the forms shown
+in Figure~\ref{structured-cfg-figures}.
+\begin{figure}
+  \begin{subfigure}{0.33\textwidth}
+    \begin{center}
+      \begin{tikzpicture}
+        \useasboundingbox (-1,-1) rectangle (1,1.5);
+        \node at (0,1)  (A) {$\bullet$};
+        \node at (-1,0) (B) {$\bullet$};
+        \node at (0,-1) (C) {$\bullet$};
+        \draw[-latex] (A) -- (B);
+        \draw[-latex] (A) -- (C);
+        \draw[-latex] (B) -- (C);
+      \end{tikzpicture}
+    \end{center}
+    \caption{\texttt{if} conditional}
+    \label{if-figure}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \begin{center}
+      \begin{tikzpicture}
+        \useasboundingbox (-1,-1) rectangle (1,1.5);
+        \node at (0,1)  (A) {$\bullet$};
+        \node at (1,0)  (B) {$\bullet$};
+        \node at (-1,0) (C) {$\bullet$};
+        \node at (0,-1) (D) {$\bullet$};
+        \draw[-latex] (A) -- (B);
+        \draw[-latex] (A) -- (C);
+        \draw[-latex] (B) -- (D);
+        \draw[-latex] (C) -- (D);
+      \end{tikzpicture}
+    \end{center}
+    \caption{\texttt{if}-\texttt{else} conditional}
+    \label{if-else-figure}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \begin{center}
+      \begin{tikzpicture}
+        \useasboundingbox (-1,-1) rectangle (1,1.5);
+        \node at (0,1)  (A) {$\bullet$};
+        \node at (1,0)  (B) {$\bullet$};
+        \node at (-1,0) (C) {$\bullet$};
+        \draw[-latex] (A) -- (B);
+        \draw[-latex] (A) -- (C);
+      \end{tikzpicture}
+    \end{center}
+    \caption{divergent conditional}
+    \label{divergent-figure}
+  \end{subfigure}
+  \\
+  \begin{subfigure}{0.33\textwidth}
+    \begin{center}
+      \begin{tikzpicture}
+        \useasboundingbox (-1,-1) rectangle (1,1.5);
+        \node at (0,1) (A) {$\bullet$};
+        \node at (0,-1) (B) {$\bullet$};
+        \node at (1,-1) (C) {$\bullet$};
+        \draw[-latex] (A) to (B);
+        \draw[-latex] (A) to (C);
+        \draw[-latex] (B) to[in=200,out=150] (A);
+      \end{tikzpicture}
+    \end{center}
+    \caption{\texttt{while} loop}
+    \label{while-figure}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \begin{center}
+      \begin{tikzpicture}
+        \useasboundingbox (-1,-1) rectangle (1,1.5);
+        \node at (0,1)  (A) {$\bullet$};
+        \node at (1,0)  (B) {$\bullet$};
+        \draw[-latex] (A) to (B);
+        \draw[-latex] (A) to[out=235,in=180,looseness=10] (A);
+      \end{tikzpicture}
+    \end{center}
+    \caption{\texttt{do}-\texttt{while} loop}
+    \label{do-while-figure}
+  \end{subfigure}
+  \begin{subfigure}{0.33\textwidth}
+    \begin{center}
+      \begin{tikzpicture}
+        \useasboundingbox (-1,-1) rectangle (1,1.5);
+        \node at (0,1)  (A) {$\bullet$};
+        \draw[-latex] (A) to[out=270,in=180,looseness=10] (A);
+      \end{tikzpicture}
+    \end{center}
+    \caption{infinite loop}
+    \label{infinite-loop-figure}
+  \end{subfigure}
+  \caption{Control flow graphs of program structures}
+  \label{structured-cfg-figures}
+\end{figure}
+
+The first three structures
+(Figure~\ref{if-figure}--\subref{divergent-figure}) are conditional
+structures:~Figure~\ref{if-figure} shows an \texttt{if} statement with
+no \texttt{else} clause, Figure~\ref{if-else-figure} shows an
+\texttt{if} statement with an \texttt{else} clause, and
+Figure~\ref{divergent-figure} shows a conditional in which both
+branches end with a (infinite) loop or a return so that there is
+nothing following the conditional.
+The remaining three structures
+(Figure~\ref{while-figure}--\subref{infinite-loop-figure}) are all
+loop structures:~Figure~\ref{while-figure} shows a loop in which the
+loop condition is checked at the beginning (a \texttt{while} loop),
+Figure~\ref{do-while-figure} show a loop in which the loop condition
+is checked at the end (a \texttt{do}-\texttt{while} loop), and
+Figure~\ref{infinite-loop-figure} shows a loop which loops
+unconditionally, forming an infinite loop.
+
+Each of the nodes in the graphs shown in
+Figure~\ref{structured-cfg-figures} may itself be another of those
+graphs.
+The node at the end of one of the graphs may be the node at the start
+of another graph, representing the structures placed in sequential
+composition with each other (we do not show simple cases of sequential
+composition in the control flow graphs in this subsection, since they
+will already have been removed by the algorithm in
+Section~\ref{introduce-forward-sequence-subsection}).
+There may instead be an edge connecting these nodes if the second
+structure is a loop (since the looping edge prevents sequential
+composition from being introduced between the two structures).
+Similarly, a single node may be added before the beginning of a loop
+structure.
+For the nodes within loops, only graphs with a single start and end
+node may take their place so that no additional exit points are added
+to the loop.
+This means that the structure shown in Figure~\ref{divergent-figure}
+cannot occcur within loops.
+
+The control flow graph in our example, shown in
+Figure~\ref{example-simplified-control-flow-graph-figure}, may be
+viewed as a \texttt{while} loop structure, with a node within the
+replaced by an \texttt{if}-\texttt{else} conditional.
+There is also an additional node at the beginning ($pc=7$) with an
+edge leading to the start of the loop ($pc=39$).
+Thus the \texttt{handleAsyncEvent()} method example is
+well-structured according to the above definition.
+
+Having defined the desired program structure in terms of a small
+number of standard structures, the strategy can identify each of these
+structures in the control flow graph and introduce them into the
+program, collapsing the control flow graph in the process.
+In order to identify the structures in isolation from other
+structures, we begin at the end nodes of the method (ignoring looping
+edges for the purposes of determining end nodes) and work backwards,
+considering each node in turn.
+This is specified by the loop beginning on
+line~\ref{algorithm-node-checking-loop} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
-\begin{algorithm}[t]
-  \begin{algorithmic}[1]
-    \Procedure{IdentifyInnermostLoops}{$cfg$}
-    % Find looping edges
-    \State $loopingEdges \gets$ \Call{FindLoopingEdges}{$cfg$} \label{algorithm-find-looping-edges}
-    % Merge loops with the same start
-    \State $groupedLoopEdges \gets$ \Call{GroupEdgesWithSameTarget}{$loopingEdges$} \label{algorithm-group-loop-edges}
-    % Check if there are no loops
-    \If{$groupedloopEdges = \{\}$} \label{algorithm-check-for-no-loops}
-    \State \textbf{return} \Call{Nodes}{$cfg$}
-    \EndIf
-    % Get sets of nodes in the loop body
-    \State $loopBodies \gets \{\}$
-    \For{$edgeGroup \gets groupedLoopEdges$} \label{algorithm-loop-group-loop}
-    \State $loopBody \gets \{\}$
-    \For{$edge \gets edgeGroup$} \label{algorithm-loop-body-loop}
-    \State $loopBody \gets loopBody \cup {}$\Call{NodesBetweenTargetAndSource}{$edge$} \label{algorithm-collect-loop-nodes}
-    \EndFor
-    \State $loopBodies \gets loopBodies \cup \{loopBody\}$
-    \EndFor
-    % Find loop bodies that are disjoint or contained in all other loop bodies
-    \State $innermostLoops \gets \{\}$
-    \For{$loopBody \gets loopBodies$} \label{algorithm-loop-body-check-loop}
-    \If{$\forall lb2 : loopBodies \circspot loopBody \cap lb2 = \{\} \lor loopBody \subseteq lb2$} \label{algorithm-loop-body-check}
-    \State $innermostLoops \gets innermostLoops \cup \{loopBody\}$ \label{algorithm-add-innermost-loop}
-    \EndIf
-    \EndFor
-    \If{$innermostLoops = \{\}$} \label{algorithm-empty-innermost-check}
-    \State \textbf{fail} \label{algorithm-abort-on-no-innermost}
-    \EndIf
-    \State \textbf{return} $innermostLoops$ \label{algorithm-return-innermost-loops}
-    \EndProcedure
-  \end{algorithmic}
-  \caption{Identify Innermost Loops}
-  \label{identify-innermost-loops-algorithm}
-\end{algorithm}
+In our example this means we consider the $pc=42$ and $pc=35$ nodes
+first, then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally
+$pc=7$.
 
-The finding of innermost loops begins by identifying the looping edges
-in the control flow graph, on line~\ref{algorithm-find-looping-edges}.
-Looping edges are easily identified as those that return to an earlier
-node in the control flow graph.
-However, a loop may have multiple points at which it loops.
-Such loops can be identified by the fact that all the looping edges
-have the same target, which is the first node in the loop.
-An example of such a loop can be seen in the control flow graph below,
-where the thick edges are the looping edges.
-\begin{center}
-\begin{tikzpicture}
-  \node (1) at (0, 0.0) {$\bullet$};
-  \node (2) at (2, 0.5) {$\bullet$};
-  \node (3) at (2,-0.5) {$\bullet$};
-  \node (4) at (4, 0.5) {$\cdots$};
-  \node (5) at (4,-0.5) {$\cdots$};
-  \node (6) at (6, 0.5) {$\bullet$};
-  \node (7) at (6,-0.5) {$\bullet$};
+%%%%%$$$
 
-  \draw[-latex] (-1,0) to (1);
+% \begin{center}
+% \begin{tikzpicture}
+%   \node (1) at (0, 0.0) {$\bullet$};
+%   \node (2) at (2, 0.5) {$\bullet$};
+%   \node (3) at (2,-0.5) {$\bullet$};
+%   \node (4) at (4, 1.0) {$\bullet$};
+%   \node (5) at (4,-1.0) {$\bullet$};
+%   \node (6) at (4, 0.1) {$\bullet$};
+%   \node (7) at (4,-0.1) {$\bullet$};
+%   \node (8) at (6, 0.0) {$\bullet$};
+
+%   \draw[-latex] (-1,0) to (1);
   
-  \draw[-latex] (1) to (2);
-  \draw[-latex] (1) to (3);
-  \draw         (2) to (4);
-  \draw         (3) to (5);
-  \draw[-latex] (4) to (6);
-  \draw[-latex] (5) to (7);
-  
-  \draw[-latex, very thick, out=90, in=90, looseness=0.3] (6) to (1);
-  \draw[-latex, very thick, out=270, in=270, looseness=0.3] (7) to (1);
-\end{tikzpicture}
-\end{center}
-To ensure such loops are considered as a single loop (rather than a
-loop per looping edge), we group together the looping edges that have
-the same target.
-This occurs on line~\ref{algorithm-group-loop-edges} of the algorithm.
-
-There may be no loops in a method. 
-In such cases we want to work over all the remaining nodes in the
-method, treating them as if they were the body of a loop.
-This is handled in the check on
-line~\ref{algorithm-check-for-no-loops}.
-
-We then obtain the nodes in the bodies of each of the loops.
-This is done for each of the groups of looping edges, in the loop on
-line~\ref{algorithm-loop-group-loop}.
-For each of the looping edges in those groups, we collect the nodes
-between the target and source of the edge.
-That is, we take all the nodes in paths beginning at the target of the
-looping edge and ending at the source node of the looping edge.
-This occurs on line~\ref{algorithm-collect-loop-nodes} of the
-algorithm, inside a loop over the looping edges on
-line~\ref{algorithm-loop-body-loop}.
-
-After all the edges in the loops are collected, we compare the loops
-to find which are the innermost.
-Each of the loop bodies is considered, in the loop on
-line~\ref{algorithm-loop-body-check-loop}.
-In order to be an innermost loop, a loop must either be contained in
-or disjoint from every other loop.
-This is checked in the conditional on
-line~\ref{algorithm-loop-body-check}, and an innermost loop is added
-to the set of innermost loops on
-line~\ref{algorithm-add-innermost-loop}.
-
-It is possible that this algorithm will generate an empty set of
-innermost loops, if the input program contains overlapping loops.
-Below is an example of the control flow graph of such a program.
-\begin{center}
-\begin{tikzpicture}
-  \node (1) at (00, 0.0) {$\bullet$};
-  \node (2) at (02, 0.0) {$\bullet$};
-  \node (3) at (04, 0.0) {$\circ$};
-  \node (4) at (06, 0.0) {$\circ$};
-  \node (5) at (08, 0.0) {$\bullet$};
-
-  \draw[-latex] (-1,0) to (1);
-  
-  \draw[-latex] (1) to (2);
-  \draw[-latex] (2) to (3);
-  \draw[-latex] (3) to (4);
-  \draw[-latex] (4) to (5);
-  
-  \draw[-latex, very thick, out=90, in=90, looseness=0.4] (4) to (2);
-  \draw[-latex, very thick, out=270, in=270, looseness=0.4] (5) to (3);
-\end{tikzpicture}
-\end{center}
-In this graph, the nodes marked by white circles are counted as being
-in both loops, but the loops are not completely contained within each
-other. 
-This means that the loops cannot be transformed into a well-structured
-C loop.
-Since such loops would not be generated in the bytecode resulting from
-an SCJ program (though they are valid in Java class files in general),
-we do not allow such loops in input to our strategy.
-This is consistent with the restrictions imposed by MISRA-C.
-So we must check if an empty set of innermost loops is generated, and
-abort the strategy if it is.
-This is specified in the conditional on
-line~\ref{algorithm-empty-innermost-check} of the algorithm, where we
-abort on line~\ref{algorithm-abort-on-no-innermost} if the set of
-innermost loops is empty.
-
-If there is a non-empty set of innermost loops, then that is returned
-as the sets of nodes that are considered first in
-Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
-In our example there is only a single looping edge, from the $pc = 35$
-node to the $pc = 39$ node, so the nodes $39$, $21$, $28$, $32$, and
-$35$ are considered first as the interior of the loop formed by that
-edge.
-The remaining nodes in the method's control flow graph are considered
-after the loop's nodes have been considered and the loop has been
-introduced.
-
-In general we iteratively work outwards from the innermost loop until
-the method being considered is complete.
-This is indicated by the loop beginning at
-line~\ref{algorithm-loop-until-complete} of
-Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
-Within each loop, we introduce control flow constructs to collect the
-body of the loop into a single node.
-This is performed working backwards from the last node within the body
-of a loop, as specified by the for loop on
-line~\ref{algorithm-node-checking-loop} of the algorithm, to ensure
-that the innermost nested conditionals are introduced first.
-
-An example where this handling of innermost conditionals is necessary
-is shown below.
-\begin{center}
-\begin{tikzpicture}
-  \node (1) at (0, 0.0) {$\bullet$};
-  \node (2) at (2, 0.5) {$\bullet$};
-  \node (3) at (2,-0.5) {$\bullet$};
-  \node (4) at (4, 1.0) {$\bullet$};
-  \node (5) at (4,-1.0) {$\bullet$};
-  \node (6) at (4, 0.1) {$\bullet$};
-  \node (7) at (4,-0.1) {$\bullet$};
-  \node (8) at (6, 0.0) {$\bullet$};
-
-  \draw[-latex] (-1,0) to (1);
-  
-  \draw[-latex] (1) to (2);
-  \draw[-latex] (1) to (3);
-  \draw[-latex] (2) to (4);
-  \draw[-latex] (3) to (5);
-  \draw[-latex] (2) to (6);
-  \draw[-latex] (3) to (7);
-  \draw[-latex] (4) to (8);
-  \draw[-latex] (5) to (8);
-  \draw[-latex] (6) to (8);
-  \draw[-latex] (7) to (8);
-\end{tikzpicture}
-\end{center}
-This example contains two levels of nested conditionals, which then
-end at the final node in the graph.
-If the introduction of the conditionals were to start at the first
-node, then the second level of conditionals would have to be
-introduced from within the branches of the conditional.
-While this is possible (and, as we shall see later, it is the method
-used for introduction of loops in some cases), it complicates the
-strategy and can easily be avoided by starting the introduction of
-conditionals at the end of the graph.
-Then the innermost conditionals are introduced first and are absorbed
-into the body of the outer conditional, without the need to introduce
-the conditionals within its body.
+%   \draw[-latex] (1) to (2);
+%   \draw[-latex] (1) to (3);
+%   \draw[-latex] (2) to (4);
+%   \draw[-latex] (3) to (5);
+%   \draw[-latex] (2) to (6);
+%   \draw[-latex] (3) to (7);
+%   \draw[-latex] (4) to (8);
+%   \draw[-latex] (5) to (8);
+%   \draw[-latex] (6) to (8);
+%   \draw[-latex] (7) to (8);
+% \end{tikzpicture}
+% \end{center}
 
 
-Within the body of a loop, conditionals can be identified as nodes
-whose sequence of instructions ends with an assignment of the form
-$pc := \IF b \THEN x \ELSE y$ and which have two target nodes, neither
-of which are earlier in the method (so as to distinguish them from
-loops).
+Conditionals can be identified as nodes whose sequence of instructions
+ends with an assignment of the form $pc := \IF b \THEN x \ELSE y$ and
+which have two target nodes, neither of which are earlier in the
+method (so as to distinguish them from loops).
 The conditionals come in several different kinds, depending on whether
 each branch of the conditional ends with a loop, a return or a
 sequential composition.

@@ -1,11 +1,11 @@
 \documentclass[a4paper,10pt]{report}
 
 \usepackage[in]{fullpage}
-\usepackage{parskip}
 \usepackage{hyperref}
 \usepackage{tikz}
 \usepackage{amsmath}
 \usepackage{amsthm}
+\usepackage{parskip}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
@@ -18,6 +18,7 @@
 \usepackage{vwcol}
 \usepackage{fixltx2e}
 \usepackage{comment}
+\usepackage{subcaption}
 
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
@@ -32,8 +33,6 @@
 
 \bibliography{literature} 
 
-\setcounter{secnumdepth}{4}
-
 \CountDefsfalse
 
 \newif\ifFullModel
@@ -46,10 +45,13 @@
 
 \makeatletter
 \def\@endtheorem{\endtrivlist}
+\def\thm@space@setup{%
+  \thm@preskip=\parskip \thm@postskip=0pt
+}
 \makeatother
 
 \theoremstyle{plain}
-\newtheorem{thm}{Theorem}[subsection]
+\newtheorem{thm}{Theorem}[section]
 \newtheorem{lem}[thm]{Lemma}
 
 \theoremstyle{definition}
