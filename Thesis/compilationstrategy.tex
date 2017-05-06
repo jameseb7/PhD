@@ -1963,34 +1963,237 @@ In our example this means we consider the $pc=42$ and $pc=35$ nodes
 first, then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally
 $pc=7$.
 
-%%%%%$$$
+For each node, we check each type of structure to see if the control
+flow graph starting at that point matches the structure, and introduce
+the structure if it does.
+The first type of structure we check for are conditionals, beginning
+with those conditionals that are followed by another node, that is,
+those shown in Figure~\ref{if-figure} and~\subref{if-else-figure}.
+These may be nested within one of the branches of another conditional
+in one of the two ways shown below:
+\begin{center}
+  \begin{tikzpicture}
+    \node (1) at (0, 0.0) {$\bullet$};
+    \node (2) at (2, 0.5) {$\bullet$};
+    \node (3) at (2,-0.5) {$\bullet$};
+    \node (4) at (4, 1.0) {$\bullet$};
+    \node (5) at (4,-1.0) {$\bullet$};
+    \node (6) at (4, 0.2) {$\bullet$};
+    \node (7) at (4,-0.2) {$\bullet$};
+    \node (8) at (6, 0.0) {$\bullet$};
+    
+    \draw[-latex] (-1,0) to (1);
+    
+    \draw[-latex] (1) to (2);
+    \draw[-latex] (1) to (3);
+    \draw[-latex] (2) to (4);
+    \draw[-latex] (3) to (5);
+    \draw[-latex] (2) to (6);
+    \draw[-latex] (3) to (7);
+    \draw[-latex] (4) to (8);
+    \draw[-latex] (5) to (8);
+    \draw[-latex] (6) to (8);
+    \draw[-latex] (7) to (8);
+  \end{tikzpicture}
+  \hfill
+  \begin{tikzpicture}
+    \node (1) at (0.0, 0.0) {$\bullet$};
+    \node (2) at (1.5, 0.5) {$\bullet$};
+    \node (3) at (1.5,-0.5) {$\bullet$};
+    \node (4) at (3.0, 1.0) {$\bullet$};
+    \node (5) at (3.0,-1.0) {$\bullet$};
+    \node (6) at (3.0, 0.2) {$\bullet$};
+    \node (7) at (3.0,-0.2) {$\bullet$};
+    \node (8) at (4.0, 0.5) {$\bullet$};
+    \node (9) at (4.0,-0.5) {$\bullet$};
+    \node (0) at (5.0, 0.0) {$\bullet$};
+    
+    \draw[-latex] (-1,0) to (1);
+    
+    \draw[-latex] (1) to (2);
+    \draw[-latex] (1) to (3);
+    \draw[-latex] (2) to (4);
+    \draw[-latex] (3) to (5);
+    \draw[-latex] (2) to (6);
+    \draw[-latex] (3) to (7);
+    \draw[-latex] (4) to (8);
+    \draw[-latex] (5) to (9);
+    \draw[-latex] (6) to (8);
+    \draw[-latex] (7) to (9);
+    \draw[-latex] (8) to (0);
+    \draw[-latex] (9) to (0);
+  \end{tikzpicture}
+\end{center}
+In the first case the sequential composition with the node at the end
+cannot be introduced until the outermost conditional is introduced,
+because both of the inner conditionals end at the same point.
+However, in the second case the inner conditionals can be completely
+introduced, including the sequential composition with the node after
+the end of each inner conditional, before the outer conditional is
+introduced.
+To ensure both cases are covered, we separate the introduction of the
+conditional itself and the sequential composition with the node after
+the conditional. 
+In the first case the introduction of the sequential compostion is
+deferred until after the outermost conditional is resolved, whereas in
+the second case it may be performed immediately after the introduction
+of the conditional.
 
-% \begin{center}
-% \begin{tikzpicture}
-%   \node (1) at (0, 0.0) {$\bullet$};
-%   \node (2) at (2, 0.5) {$\bullet$};
-%   \node (3) at (2,-0.5) {$\bullet$};
-%   \node (4) at (4, 1.0) {$\bullet$};
-%   \node (5) at (4,-1.0) {$\bullet$};
-%   \node (6) at (4, 0.1) {$\bullet$};
-%   \node (7) at (4,-0.1) {$\bullet$};
-%   \node (8) at (6, 0.0) {$\bullet$};
+We provide separate compilation rules for introducing \texttt{if}
+conditionals and \texttt{if}-\texttt{else} conditionals.
+An \texttt{if} conditional with no else branch may be recognized from
+the control flow graph as having the form shown in
+Figure~\ref{if-figure}.
+However, it can also be recognized from the form of the \Circus{} code
+in the $Running$ action, which will be that of a node whose sequence
+of instructions ends with an assignment of the form
+$pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$ node ends in
+an assignment $pc := x$.
+Note that the branches will not be the other way round (i.e. 
+the $pc = x$ branch will not be the body of the conditional) since the
+conditional branches come from Java's branching instructions which
+branch to the specified address if the condition is true and go to the
+next instruction if it is false.
+We provide Lemma~\ref{if-introduction-lemma} for introducing such
+conditionals.
+\begin{lem}[\texttt{if} conditional introduction]
+  \label{if-introduction-lemma}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  If $i \neq j$, $i \neq k$, and 
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+      \t3 \circif b \circthen \Skip \\
+      \t3 {} \circelse \lnot b \circthen B \\
+      \t3 \circfi \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{lem}
+Lemma~\ref{if-introduction-lemma} introduces a conditional for nodes
+that match the form described above, which in the lemma is the
+$pc = i$ node.
+The conditional is introduced with the true branch being empty
+(represented here by $\Skip$) and the false branch containing the
+instructions in the body of the conditional.
+The assignment $pc := j$ is moved outside the conditional from both
+the empty true branch and the end of the false branch, so that a
+sequential composition with the node after the conditional can be
+introduced later on.
+As in Lemma~\ref{sequence-introduction-lemma}, the sequence of actions
+for the node must not affect the nonemptiness of the $frameStack$.
+A similar condition is required for all the lemmas in this section.
+We also require that the targets of the conditional are different from
+the node at which the conditional is introduced, since that would
+introduce a loop, which is not the purpose of this lemma.
+Lemma~\ref{if-introduction-lemma} is applied on
+line~\ref{algorithm-introduce-if} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+Note that, since the structure can be identified from the form of the
+\Circus{} code alone, it is node necessary to guard the application of
+the lemma with a condition on the control flow graph.
 
-%   \draw[-latex] (-1,0) to (1);
-  
-%   \draw[-latex] (1) to (2);
-%   \draw[-latex] (1) to (3);
-%   \draw[-latex] (2) to (4);
-%   \draw[-latex] (3) to (5);
-%   \draw[-latex] (2) to (6);
-%   \draw[-latex] (3) to (7);
-%   \draw[-latex] (4) to (8);
-%   \draw[-latex] (5) to (8);
-%   \draw[-latex] (6) to (8);
-%   \draw[-latex] (7) to (8);
-% \end{tikzpicture}
-% \end{center}
-
+After attempting to introduce an \texttt{if} conditional, we attempt
+to introduce an \texttt{if}-\texttt{else} conditional, the form of
+which is shown in Figure~\ref{if-else-figure}.
+As with an \texttt{if} conditional, a node with an
+\texttt{if}-\texttt{else} conditional will end with an assignment of
+the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
+nodes are required to end with a common assignment $pc := z$.
+Conditionals matching this form may be introduced using
+Lemma~\ref{if-else-introduction-lemma}.
+\begin{lem}[\texttt{if}-\texttt{else} conditional introduction]
+  \label{if-else-introduction-lemma}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  If $i \neq j$, $i \neq k$, and 
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+      \t3 \circif b \circthen B \\
+      \t3 {} \circelse \lnot b \circthen C \\
+      \t3 \circfi \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{lem}
+Lemma~\ref{if-else-introduction-lemma} operates similarly to
+Lemma~\ref{if-introduction-lemma} in how it introduces the conditional
+and moves the common $pc$ assignment outside the conditional.
+However, Lemma~\ref{if-else-introduction-lemma} includes sequences of
+instructions for both branches of the introduced conditional, each of
+which end with a $pc$ assignment to jump to the node after the
+conditional.
+The preconditions of Lemma~\ref{if-else-introduction-lemma} are the
+same as those of Lemmma~\ref{if-introduction-lemma}.
+Lemma~\ref{if-else-introduction-lemma} is applied on
+line~\ref{algorithm-introduce-if-else} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 
 Conditionals can be identified as nodes whose sequence of instructions
 ends with an assignment of the form $pc := \IF b \THEN x \ELSE y$ and
@@ -2238,7 +2441,6 @@ the conditional is required to end with an assignment to the $pc$.
     \end{array}
   \end{circus}
 \end{lem}
-This lemma is applied on line~\ref{}
 
 As mentioned above, we then repeat these steps, working backward
 through the control flow graph for all the nodes in the loop being
