@@ -1689,17 +1689,20 @@ been resolved undergo loop and conditional introduction.
     \State \Call{ApplyLemma\ref{if-else-introduction-lemma}}{$node$}
     \label{algorithm-introduce-if-else}
     \If{\Call{HasSimpleSequence}{$node$}}
+    \label{algorithm-lci-sequence-check}
     \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$}
+    \label{algorithm-lci-sequence-introduction}
     \EndIf
     \If{\Call{IsSimpleConditional}{$node$}}
+    \label{algorithm-conditional-check}
     \State \Call{ApplyLemma\ref{conditional-introduction-lemma}}{$node$}
     \label{algorithm-introduce-conditional}
     \EndIf
     \State \Call{Move$Running$LoopInsideConditionals}{}
     \label{algorithm-move-running-loop-inside}
-    \State \Call{ApplyLemma\ref{loop-introduction-lemma}}{$innerLoops$}
+    \State \Call{ApplyLemma\ref{loop-introduction-lemma}}{$node$}
     \label{algorithm-introduce-loop}
-    \State \Call{ApplyLemma\ref{conditional-loop-introduction-lemma}}{$innerLoops$}
+    \State \Call{ApplyLemma\ref{conditional-loop-introduction-lemma}}{$node$}
     \label{algorithm-introduce-conditional-loop}
     % \State \Call{ApplyLemma\ref{while-loop-introduction-lemma}}{$innerLoops$}
     % \label{algorithm-introduce-while-loop}
@@ -2195,48 +2198,72 @@ Lemma~\ref{if-else-introduction-lemma} is applied on
 line~\ref{algorithm-introduce-if-else} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 
-Conditionals can be identified as nodes whose sequence of instructions
-ends with an assignment of the form $pc := \IF b \THEN x \ELSE y$ and
-which have two target nodes, neither of which are earlier in the
-method (so as to distinguish them from loops).
-The conditionals come in several different kinds, depending on whether
-each branch of the conditional ends with a loop, a return or a
-sequential composition.
-The first kind of conditional we consider is one in which both
-branches end with a sequential composition, such that the flow of
-execution continues after the end of the conditional.
-Such conditionals can be identified by the fact that both branches of
-the conditional end in an assignment of the same value to the $pc$,
-and they have control flow graphs of the following form.
+Once a conditional has been introduced, we can attempt to introduce
+the sequential composition with the node after the conditional.
+The requirement for this to occur is that the sequential composition
+be a simple sequential composition from a node with a single outgoing
+edge to a node with a single incoming edge, as in
+Section~\ref{introduce-forward-sequence-subsection}.
+Thus we check for a simple sequence on
+line~\ref{algorithm-lci-sequence-check} of
+Algorithm~\ref{loop-and-conditional-introduction-algorithm} and
+introduce the sequential composition on
+line~\ref{algorithm-lci-sequence-introduction}.
+This also catches the case of a sequential composition before the
+start of a loop, such as occurs at the $pc=7$ node in our example.
+
+Having attempted to introduce conditionals with a node following them,
+we then consider conditionals that are not followed by a node.
+These conditionals are those where both branches end in a return or an
+infinite loop.
+This includes conditionals where both branches are a return, which can
+arise from multiple returns in the Java source code. 
+Though multiple returns are not allowed in the final C code, the
+returns will all end up in branches of conditionals at the end of the
+method, so the actual return statement can be placed after the
+conditionals to create a single return statement at the end of the C
+function.
+
+The form of this type of conditionals is that shown in
+Figure~\ref{divergent-figure}.
+We require that the nodes in both branches of the conditional have
+only a single incoming edge each, and do not have any outgoing edges
+(at the point in the strategy where this type of conditional is
+introduced, that is, there may be more complex structures that have
+already been introduced in the branches).
+We check that the control flow graph beginning at the node being
+considered has this form on line~\ref{algorithm-conditional-check} of
+the algorithm.
+This is to ensure unstructured conditionals such as the one shown
+below are ruled out by the strategy.
 \begin{center}
   \begin{tikzpicture}
-    \useasboundingbox (-2,-0.5) rectangle (6,0.5);
-    \node (0) at (-2,  0) {$\cdots$};
+    \node (0) at (-2, 0.0) {$\cdots$};
     \node (1) at (0, 0.0) {$\bullet$};
     \node (2) at (2, 0.5) {$\bullet$};
     \node (3) at (2,-0.5) {$\bullet$};
-    \node (4) at (4, 0.0) {$\bullet$};
-    \node (5) at (6, 0.0) {$\cdots$};
+    \node (4) at (4, 1.0) {$\bullet$};
+    \node (5) at (4,-1.0) {$\bullet$};
+    \node (6) at (4, 0.0) {$\bullet$};
 
     \draw[-latex] (0) to (1);
     \draw[-latex] (1) to (2);
     \draw[-latex] (1) to (3);
     \draw[-latex] (2) to (4);
-    \draw[-latex] (3) to (4);
-    \draw         (4) to (5);
+    \draw[-latex] (3) to (5);
+    \draw[-latex] (2) to (6);
+    \draw[-latex] (3) to (6);
   \end{tikzpicture}
 \end{center}
-Such conditionals are introduced using
-Lemma~\ref{conditional-introduction-lemma}, on
-line~\ref{algorithm-introduce-conditional} of the algorithm.
-This lemma introduces a conditional and distributes the $pc$
-assignment at the end of both branches outside the conditional.
-As in Lemma~\ref{sequence-introduction-lemma}, the sequence of actions
-for the node must not affect the nonemptiness of the $frameStack$.
-A similar condition is required for all the lemmas in this section.
-We also require that the targets of the conditional are different from
-the node at which the conditional is introduced, since that would
-introduce a loop, which is not the purpose of this lemma.
+
+If the correct structure is present, then we introduce the conditional
+by applying Lemma~\ref{conditional-introduction-lemma} on
+line~\ref{algorithm-introduce-conditional}.
+This lemma introduces the conditional in much the same way as
+Lemmas~\ref{if-introduction-lemma}
+and~\ref{if-else-introduction-lemma}, but it does not place any
+requirement on the structure of the conditional or move a $pc$
+assignment outside of it.
 \begin{lem}[Conditional introduction]
   \label{conditional-introduction-lemma}
   \setlength{\zedindent}{0.25cm}
@@ -2258,9 +2285,9 @@ introduce a loop, which is not the purpose of this lemma.
       \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 pc := \IF b \THEN j \ELSE k \\
       \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \circelse pc = j \circthen B \\
       \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \circelse pc = k \circthen C \\
       \t2 {} \cdots {} \\
       \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi
@@ -2271,468 +2298,537 @@ introduce a loop, which is not the purpose of this lemma.
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \circseq Poll \circseq \\
       \t3 \circif b \circthen B \\
       \t3 {} \circelse \lnot b \circthen C \\
-      \t3 \circfi \circseq pc := x \\
+      \t3 \circfi \\
       \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \circelse pc = j \circthen B \\
       \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \circelse pc = k \circthen C \\
       \t2 {} \cdots {} \\
       \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi 
     \end{array}
   \end{circus}
 \end{lem}
-After applying Lemma~\ref{conditional-introduction-lemma}, we may be
-able to introduce sequential composition at a node that could not
-previously be introduced.
-Such sequential compositions could not be introduced earlier as the
-node following the conditional has two incoming edges.
-This is performed in the same manner as in
-Section~\ref{introduce-forward-sequence-subsection}, checking for a
-simple sequence and applying Lemma~\ref{sequence-introduction-lemma},
-on lines~\ref{algorithm-conditional-introduce-sequence-start}
-to~\ref{algorithm-conditional-introduce-sequence-end} of the
-algorithm.
-The check for simple sequence is still necessary as we must wait until
-the outer conditionals have been introduced in the case of nested
-conditionals.
 
-The next kinds of conditional we consider are those in which only one
-branch ends in a sequential composition with the instructions after
-the conditional.
-Such conditionals will only occur in the presence of other
-conditionals or loops, as in the control flow graph below.
-The node at the end of the graph below cannot be sequenced with the
-end of the conditionals, since there are two edges leading to the
-node.
-If there were only a single conditional, then only one edge would lead
-to the node after the conditional and sequential composition would
-have been introduced in the previous section.
-\begin{center}
-  \begin{tikzpicture}
-    \node (0) at (-2, 0.0) {$\cdots$};
-    \node (1) at (0, 0.0) {$\bullet$};
-    \node (2) at (2, 0.5) {$\bullet$};
-    \node (3) at (2,-0.5) {$\bullet$};
-    \node (4) at (4, 1.0) {$\bullet$};
-    \node (5) at (4,-1.0) {$\bullet$};
-    \node (6) at (4, 0.3) {$\bullet$};
-    \node (7) at (4,-0.3) {$\bullet$};
-    \node (8) at (6, 0.0) {$\bullet$};
-    \node (9) at (8, 0.0) {$\cdots$};
 
-    \draw[-latex] (0) to (1);
-    \draw[-latex] (1) to (2);
-    \draw[-latex] (1) to (3);
-    \draw[-latex] (2) to (4);
-    \draw[-latex] (3) to (5);
-    \draw[-latex] (2) to (6);
-    \draw[-latex] (3) to (7);
-    \draw[-latex] (6) to (8);
-    \draw[-latex] (7) to (8);
-    \draw         (8) to (9);
-  \end{tikzpicture}
-\end{center}
-The other branch of the conditional (that does not end in a sequential
-composition), may end in a loop, a return, or another conditional.
-If the branch ends in a return, then that means the return does not
-occur at the end of the method.
-Since we target C code that has only a single return at the end of a
-function, we cannot translate such return instructions directly.
-We must instead sequence the branch of the conditional without the
-return with the instructions after the conditional.
-In the case of the control flow graph above, this means that it will
-be treated as if it had the form of the control flow graph below,
-effectively duplicating the node after the conditional.
-\begin{center}
-  \begin{tikzpicture}
-    \node (A) at (-2, 0.0) {$\cdots$};
-    \node (B) at (0, 0.0) {$\bullet$};
-    \node (C) at (2, 0.5) {$\bullet$};
-    \node (D) at (2,-0.5) {$\bullet$};
-    \node (E) at (4, 1.0) {$\bullet$};
-    \node (F) at (4,-1.0) {$\bullet$};
-    \node (G) at (4, 0.3) {$\bullet$};
-    \node (H) at (4,-0.3) {$\bullet$};
-    \node (I) at (6, 0.3) {$\bullet$};
-    \node (J) at (8, 0.3) {$\cdots$};
-    \node (K) at (6,-0.3) {$\bullet$};
-    \node (L) at (8,-0.3) {$\cdots$};
+% Conditionals can be identified as nodes whose sequence of instructions
+% ends with an assignment of the form $pc := \IF b \THEN x \ELSE y$ and
+% which have two target nodes, neither of which are earlier in the
+% method (so as to distinguish them from loops).
+% The conditionals come in several different kinds, depending on whether
+% each branch of the conditional ends with a loop, a return or a
+% sequential composition.
+% The first kind of conditional we consider is one in which both
+% branches end with a sequential composition, such that the flow of
+% execution continues after the end of the conditional.
+% Such conditionals can be identified by the fact that both branches of
+% the conditional end in an assignment of the same value to the $pc$,
+% and they have control flow graphs of the following form.
+% \begin{center}
+%   \begin{tikzpicture}
+%     \useasboundingbox (-2,-0.5) rectangle (6,0.5);
+%     \node (0) at (-2,  0) {$\cdots$};
+%     \node (1) at (0, 0.0) {$\bullet$};
+%     \node (2) at (2, 0.5) {$\bullet$};
+%     \node (3) at (2,-0.5) {$\bullet$};
+%     \node (4) at (4, 0.0) {$\bullet$};
+%     \node (5) at (6, 0.0) {$\cdots$};
+
+%     \draw[-latex] (0) to (1);
+%     \draw[-latex] (1) to (2);
+%     \draw[-latex] (1) to (3);
+%     \draw[-latex] (2) to (4);
+%     \draw[-latex] (3) to (4);
+%     \draw         (4) to (5);
+%   \end{tikzpicture}
+% \end{center}
+% Such conditionals are introduced using
+% Lemma~\ref{conditional-introduction-lemma}, on
+% line~\ref{algorithm-introduce-conditional} of the algorithm.
+% This lemma introduces a conditional and distributes the $pc$
+% assignment at the end of both branches outside the conditional.
+% As in Lemma~\ref{sequence-introduction-lemma}, the sequence of actions
+% for the node must not affect the nonemptiness of the $frameStack$.
+% A similar condition is required for all the lemmas in this section.
+% We also require that the targets of the conditional are different from
+% the node at which the conditional is introduced, since that would
+% introduce a loop, which is not the purpose of this lemma.
+% \begin{lem}[Conditional introduction]
+%   \label{conditional-introduction-lemma}
+%   \setlength{\zedindent}{0.25cm}
+%   % \setlength{\abovedisplayskip}{0.1cm}
+%   % \setlength{\belowdisplayskip}{0.1cm}
+%   If $i \neq j$, $i \neq k$, and 
+%   \begin{circus}
+%     \{frameStack \neq \emptyset\} \circseq A \\
+%     {} = {} \\
+%     \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+%   \end{circus}
+%   then
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen A \circseq \\
+%       \t3 pc := \IF b \THEN j \ELSE k \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+%       \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+%       \t3 \circif b \circthen B \\
+%       \t3 {} \circelse \lnot b \circthen C \\
+%       \t3 \circfi \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi 
+%     \end{array}
+%   \end{circus}
+% \end{lem}
+% After applying Lemma~\ref{conditional-introduction-lemma}, we may be
+% able to introduce sequential composition at a node that could not
+% previously be introduced.
+% Such sequential compositions could not be introduced earlier as the
+% node following the conditional has two incoming edges.
+% This is performed in the same manner as in
+% Section~\ref{introduce-forward-sequence-subsection}, checking for a
+% simple sequence and applying Lemma~\ref{sequence-introduction-lemma},
+% on lines~\ref{algorithm-conditional-introduce-sequence-start}
+% to~\ref{algorithm-conditional-introduce-sequence-end} of the
+% algorithm.
+% The check for simple sequence is still necessary as we must wait until
+% the outer conditionals have been introduced in the case of nested
+% conditionals.
+
+% The next kinds of conditional we consider are those in which only one
+% branch ends in a sequential composition with the instructions after
+% the conditional.
+% Such conditionals will only occur in the presence of other
+% conditionals or loops, as in the control flow graph below.
+% The node at the end of the graph below cannot be sequenced with the
+% end of the conditionals, since there are two edges leading to the
+% node.
+% If there were only a single conditional, then only one edge would lead
+% to the node after the conditional and sequential composition would
+% have been introduced in the previous section.
+
+% The other branch of the conditional (that does not end in a sequential
+% composition), may end in a loop, a return, or another conditional.
+% If the branch ends in a return, then that means the return does not
+% occur at the end of the method.
+% Since we target C code that has only a single return at the end of a
+% function, we cannot translate such return instructions directly.
+% We must instead sequence the branch of the conditional without the
+% return with the instructions after the conditional.
+% In the case of the control flow graph above, this means that it will
+% be treated as if it had the form of the control flow graph below,
+% effectively duplicating the node after the conditional.
+% \begin{center}
+%   \begin{tikzpicture}
+%     \node (A) at (-2, 0.0) {$\cdots$};
+%     \node (B) at (0, 0.0) {$\bullet$};
+%     \node (C) at (2, 0.5) {$\bullet$};
+%     \node (D) at (2,-0.5) {$\bullet$};
+%     \node (E) at (4, 1.0) {$\bullet$};
+%     \node (F) at (4,-1.0) {$\bullet$};
+%     \node (G) at (4, 0.3) {$\bullet$};
+%     \node (H) at (4,-0.3) {$\bullet$};
+%     \node (I) at (6, 0.3) {$\bullet$};
+%     \node (J) at (8, 0.3) {$\cdots$};
+%     \node (K) at (6,-0.3) {$\bullet$};
+%     \node (L) at (8,-0.3) {$\cdots$};
     
 
-    \draw[-latex] (A) to (B);
-    \draw[-latex] (B) to (C);
-    \draw[-latex] (B) to (D);
-    \draw[-latex] (C) to (E);
-    \draw[-latex] (D) to (F);
-    \draw[-latex] (C) to (G);
-    \draw[-latex] (D) to (H);
-    \draw[-latex] (G) to (I);
-    \draw[-latex] (H) to (K);
-    \draw         (I) to (J);
-    \draw         (K) to (L);
-  \end{tikzpicture}
-\end{center}
-This pushes the conditional to the end of the method, slightly
-breaking the form of the method in the original Java code but bringing
-it form required for the C code.
-Thus such conditionals are introduced using
-Lemma~\ref{seq-ret-conditional-introduction-lemma}, which introduces
-the sequential composition along with the conditional.
-The preconditions for this lemma are the same as those for
-Lemma~\ref{conditional-introduction-lemma}, but the second branch of
-the conditional is required to end with an assignment to the $pc$.
-% TODO: are conditions on x needed? e.g. x \neq i
-\begin{lem}[Sequential composition--conditional introduction 1]
-  \label{seq-ret-conditional-introduction-lemma}
-  \setlength{\zedindent}{0.25cm}
-  % \setlength{\abovedisplayskip}{0.1cm}
-  % \setlength{\belowdisplayskip}{0.1cm}
-  If $i \neq j$, $i \neq k$,  and 
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = x \circthen D \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
-      \t3 \circif b \circthen B \\
-      \t3 {} \circelse \lnot b \circthen {} \\
-      \t4 C \circseq pc := x \circseq Poll \circseq D \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = x \circthen D \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-\end{lem}
+%     \draw[-latex] (A) to (B);
+%     \draw[-latex] (B) to (C);
+%     \draw[-latex] (B) to (D);
+%     \draw[-latex] (C) to (E);
+%     \draw[-latex] (D) to (F);
+%     \draw[-latex] (C) to (G);
+%     \draw[-latex] (D) to (H);
+%     \draw[-latex] (G) to (I);
+%     \draw[-latex] (H) to (K);
+%     \draw         (I) to (J);
+%     \draw         (K) to (L);
+%   \end{tikzpicture}
+% \end{center}
+% This pushes the conditional to the end of the method, slightly
+% breaking the form of the method in the original Java code but bringing
+% it form required for the C code.
+% Thus such conditionals are introduced using
+% Lemma~\ref{seq-ret-conditional-introduction-lemma}, which introduces
+% the sequential composition along with the conditional.
+% The preconditions for this lemma are the same as those for
+% Lemma~\ref{conditional-introduction-lemma}, but the second branch of
+% the conditional is required to end with an assignment to the $pc$.
+% % TODO: are conditions on x needed? e.g. x \neq i
+% \begin{lem}[Sequential composition--conditional introduction 1]
+%   \label{seq-ret-conditional-introduction-lemma}
+%   \setlength{\zedindent}{0.25cm}
+%   % \setlength{\abovedisplayskip}{0.1cm}
+%   % \setlength{\belowdisplayskip}{0.1cm}
+%   If $i \neq j$, $i \neq k$,  and 
+%   \begin{circus}
+%     \{frameStack \neq \emptyset\} \circseq A \\
+%     {} = {} \\
+%     \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+%   \end{circus}
+%   then
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen A \circseq \\
+%       \t3 pc := \IF b \THEN j \ELSE k \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = j \circthen B \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = x \circthen D \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+%       \t3 pc := \IF b \THEN j \ELSE k \circseq \\
+%       \t3 \circif b \circthen B \\
+%       \t3 {} \circelse \lnot b \circthen {} \\
+%       \t4 C \circseq pc := x \circseq Poll \circseq D \\
+%       \t3 \circfi \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = j \circthen B \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = x \circthen D \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi 
+%     \end{array}
+%   \end{circus}
+% \end{lem}
 
-As mentioned above, we then repeat these steps, working backward
-through the control flow graph for all the nodes in the loop being
-considered.
-In our example this means that we next introduce a conditional at the
-$pc = 39$ node, bringing the body of the loop into a single node and
-yielding the code below.
-Note that the $pc = 42$ node is also included in the introduced
-conditional, along with the body of the loop.
-{
-  \setlength{\zedindent}{0.7cm}
-\begin{circus}
-  Running \circdef \\
-  \t1 \circif frameStack = \emptyset \circthen \Skip \\
-  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-  \t2 \circif pc = 0 \circthen {} \cdots {} \\
-  \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
-  \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
-  \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \cdots \circseq \\
-  \t4 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \circseq Poll \circseq \\
-  \t4 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq \cdots \\
-  \t4 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq \cdots \\
-  \t4 \circfi \circseq pc := 35 \circseq Poll \circseq HandleAloadEPC(4) \circseq \cdots \circseq pc := 39 \\
-  \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
-  \t3 \circfi \\
-  \t2 {} \cdots {} \\
-  \t2 \circfi \circseq Poll \circseq Running \\
-  \t1 \circfi
-\end{circus}
-}
+% As mentioned above, we then repeat these steps, working backward
+% through the control flow graph for all the nodes in the loop being
+% considered.
+% In our example this means that we next introduce a conditional at the
+% $pc = 39$ node, bringing the body of the loop into a single node and
+% yielding the code below.
+% Note that the $pc = 42$ node is also included in the introduced
+% conditional, along with the body of the loop.
+% {
+%   \setlength{\zedindent}{0.7cm}
+% \begin{circus}
+%   Running \circdef \\
+%   \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%   \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%   \t2 \circif pc = 0 \circthen {} \cdots {} \\
+%   \t2 {} \cdots {} \\
+%   \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
+%   \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+%   \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \cdots \circseq \\
+%   \t4 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \circseq Poll \circseq \\
+%   \t4 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq \cdots \\
+%   \t4 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq \cdots \\
+%   \t4 \circfi \circseq pc := 35 \circseq Poll \circseq HandleAloadEPC(4) \circseq \cdots \circseq pc := 39 \\
+%   \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
+%   \t3 \circfi \\
+%   \t2 {} \cdots {} \\
+%   \t2 \circfi \circseq Poll \circseq Running \\
+%   \t1 \circfi
+% \end{circus}
+% }
 
-After the body of the loop has been reduced to a single node, we can
-introduce the loop at that node.
-If the loop is caused by a simple assignment of the form $pc := x$
-then the loop introduction is performed using
-Lemma~\ref{loop-introduction-lemma}, which introduces a recursion to
-the beginning of the node that constitutes the body of the loop.
-This occurs at line~\ref{algorithm-introduce-loop} of the algorithm.
-\begin{lem}[Loop introduction]
-  \label{loop-introduction-lemma}
-  If
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \def\zedindent{0.25cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen {} \\
-      \t3 A \circseq pc := i \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen {} \\
-      \t3 \circmu Y \circspot A \circseq pc := i \circseq Poll \circseq Y \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-  \end{circus}
-\end{lem}%
+% After the body of the loop has been reduced to a single node, we can
+% introduce the loop at that node.
+% If the loop is caused by a simple assignment of the form $pc := x$
+% then the loop introduction is performed using
+% Lemma~\ref{loop-introduction-lemma}, which introduces a recursion to
+% the beginning of the node that constitutes the body of the loop.
+% This occurs at line~\ref{algorithm-introduce-loop} of the algorithm.
+% \begin{lem}[Loop introduction]
+%   \label{loop-introduction-lemma}
+%   If
+%   \begin{circus}
+%     \{frameStack \neq \emptyset\} \circseq A \\
+%     {} = {} \\
+%     \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+%   \end{circus}
+%   then
+%   \def\zedindent{0.25cm}
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen {} \\
+%       \t3 A \circseq pc := i \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen {} \\
+%       \t3 \circmu Y \circspot A \circseq pc := i \circseq Poll \circseq Y \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi
+%     \end{array}
+%   \end{circus}
+% \end{lem}%
 
-The other type of loop to be introduced is a loop that is caused by an
-assignment of the form $pc := \IF b \THEN x \ELSE y$, which we refer
-to as a conditional loop.
-Note that the loop body will start at $pc = x$, since the conditional
-instructions only branch if the condition is met, going to the next
-instruction if it is not, so only the $pc = x$ branch can result in a
-loop.
-To introduce conditional loops, we use
-Lemma~\ref{conditional-loop-introduction-lemma}, at
-line~\ref{algorithm-introduce-conditional-loop} of the algorithm.
-This lemma requires that the $pc$ value of the second branch of the
-conditional must not be the same as that of the first branch (which is
-the loop body), since that is impossible for Java bytecode
-instructions, as discussed above.
-\begin{lem}[Conditional loop introduction]
-  \label{conditional-loop-introduction-lemma}
-  \def\zedindent{0.25cm}
-  If $i \neq j$,
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN i \ELSE j \\
-      \t2 \cdots \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \circmu Y \circspot A \circseq Poll \circseq \\
-      \t3 \circif b \circthen Y \\
-      \t3 {} \circelse \lnot b \circthen B \\
-      \t3 \circfi \\
-      \t2 \cdots \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-\end{lem}%
+% The other type of loop to be introduced is a loop that is caused by an
+% assignment of the form $pc := \IF b \THEN x \ELSE y$, which we refer
+% to as a conditional loop.
+% Note that the loop body will start at $pc = x$, since the conditional
+% instructions only branch if the condition is met, going to the next
+% instruction if it is not, so only the $pc = x$ branch can result in a
+% loop.
+% To introduce conditional loops, we use
+% Lemma~\ref{conditional-loop-introduction-lemma}, at
+% line~\ref{algorithm-introduce-conditional-loop} of the algorithm.
+% This lemma requires that the $pc$ value of the second branch of the
+% conditional must not be the same as that of the first branch (which is
+% the loop body), since that is impossible for Java bytecode
+% instructions, as discussed above.
+% \begin{lem}[Conditional loop introduction]
+%   \label{conditional-loop-introduction-lemma}
+%   \def\zedindent{0.25cm}
+%   If $i \neq j$,
+%   \begin{circus}
+%     \{frameStack \neq \emptyset\} \circseq A \\
+%     {} = {} \\
+%     \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+%   \end{circus}
+%   then
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen A \circseq \\
+%       \t3 pc := \IF b \THEN i \ELSE j \\
+%       \t2 \cdots \\
+%       \t2 {} \circelse pc = j \circthen B \\
+%       \t2 \cdots \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi 
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen \circmu Y \circspot A \circseq Poll \circseq \\
+%       \t3 \circif b \circthen Y \\
+%       \t3 {} \circelse \lnot b \circthen B \\
+%       \t3 \circfi \\
+%       \t2 \cdots \\
+%       \t2 {} \circelse pc = j \circthen B \\
+%       \t2 \cdots \\
+%       \t2 \circfi \circseq Poll \circseq X \\
+%       \t1 \circfi 
+%     \end{array}
+%   \end{circus}
+% \end{lem}%
 
-In some cases the $pc$ update that causes a loop may be in a branch of
-a conditional.
-Such a case occurs our example, where the loop beginning at $pc = 39$
-loops at the end of the first branch of a conditional.
-The introduction of the conditional before the loop is introduced is
-necessary to bring the body of the loop into a single node, so we must
-handle the loop inside the conditional.
-This is performed by first distributing the $Poll \circseq Running$ at
-the end of the $Running$ action into the branches of the conditional,
-on line~\ref{algorithm-move-running-loop-inside} of the algorithm.
-This results in the code below for our example.
-{ \setlength{\zedindent}{0.7cm}
-\begin{circus}
-  Running \circdef \\
-  \t1 \circif frameStack = \emptyset \circthen \Skip \\
-  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-  \t2 \circif pc = 0 \circthen {} \cdots {} \\
-  \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
-  \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
-  \t3 \circif value1 \leq value2 \circthen \cdots \circseq pc := 39 \circseq Poll \circseq Running \\
-  \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \circseq Poll \circseq Running \\
-  \t3 \circfi \\
-  \t2 {} \cdots {} \\
-  \t2 \circfi \\
-  \t1 \circfi
-\end{circus}}
-Lemmas~\ref{loop-introduction-in-arbitrary-context-lemma}
-and~\ref{conditional-loop-introduction-in-arbitrary-context-lemma} are
-then used to introduce the loops at the points where they occur, on
-lines~\ref{algorithm-introduce-nested-loop}
-and~\ref{algorithm-introduce-nested-conditional-loop} of the
-algorithm. 
-These lemmas allow loops and conditional loops to be introduced in an
-arbitrary context, loops and conditional loops to be introduced in an
-arbitrary context.
-These lemmas make use of context notation, in which $A[B]$ for a
-particular action $B$ represents and action $A$ in which there is at
-least one occurrence of $B$. 
-Replacing $A[B]$ with an action $A[C]$ then means replacing all
-occurrences of $B$ in $A$ with $C$.
-These lemmas operate similarly to Lemmas~\ref{loop-introduction-lemma}
-and~\ref{conditional-loop-introduction-lemma}.
-\begin{lem}[Loop introduction in arbitrary context]
-  If
-  \begin{circus}
-    \{ frameStack \neq \emptyset \} \circseq A[pc := i \circseq Poll \circseq X] \\
-    {} = {} \\
-    \{ frameStack \neq \emptyset \} \circseq A[\{ frameStack \neq \emptyset \} \circseq pc := i \circseq Poll \circseq X]
-  \end{circus}
-  then,
-  \label{loop-introduction-in-arbitrary-context-lemma}
-  \setlength{\zedindent}{0pt}
-  \setlength{\zedtab}{1.3em}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen {} \\
-      \t3 A[pc := i \circseq Poll \circseq X] \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \circmu Y \circspot \\
-      \t3 A[pc := i \circseq Poll \circseq Y] \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi  
-    \end{array}
-  \end{circus}
-\end{lem}%
-\begin{lem}[Conditional loop introduction in arbitrary context]
-  \label{conditional-loop-introduction-in-arbitrary-context-lemma}
-  If $i \neq j$ and
-  \begin{circus}
-    \{ frameStack \neq \emptyset \} \circseq A[pc := \IF b \THEN i \ELSE j \circseq  Poll \circseq X] \\
-    {} = {} \\
-    \{ frameStack \neq \emptyset \} \circseq A[\{ frameStack \neq \emptyset \} \circseq pc := \IF b \THEN i \ELSE j \circseq  Poll \circseq X]
-  \end{circus}
-  then,
-  \setlength{\zedindent}{0pt}
-  \setlength{\zedtab}{1.3em}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen {} \\
-      \t3 A[pc := \IF b \THEN i \ELSE j \circseq \\
-      \t4 Poll \circseq X] \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \circseq Poll \circseq X \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \circmu Y \circspot \\
-      \t3 A[pc := \IF b \THEN i \ELSE j \circseq Poll \circseq \\
-      \t4 \circif b \circthen Y \\
-      \t4 {} \circelse \lnot b \circthen B \circseq Poll \circseq X \\
-      \t4 \circfi {} ] \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \circseq Poll \circseq X \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi  
-    \end{array}
-  \end{circus}
-\end{lem}
-After introducing the loops inside conditionals, we distribute the
-$Poll \circseq Running$ actions back outside the conditionals, on
-line~\ref{algorithm-move-running-loop-outside} of the algorithm.
-For our example, this results in the following code after the loop at
-$pc = 39$ has been introduced.
-{ \setlength{\zedindent}{0.7cm}
-\begin{circus}
-  Running \circdef \\
-  \t1 \circif frameStack = \emptyset \circthen \Skip \\
-  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-  \t2 \circif pc = 0 \circthen {} \cdots {} \\
-  \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 39 \circthen \circmu Y \circspot HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
-  \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
-  \t3 \circif value1 \leq value2 \circthen \cdots \circseq pc := 39 \circseq Poll \circseq Y \\
-  \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
-  \t3 \circfi \\
-  \t2 {} \cdots {} \\
-  \t2 \circfi \circseq Poll \circseq Running \\
-  \t1 \circfi
-\end{circus}}
+% In some cases the $pc$ update that causes a loop may be in a branch of
+% a conditional.
+% Such a case occurs our example, where the loop beginning at $pc = 39$
+% loops at the end of the first branch of a conditional.
+% The introduction of the conditional before the loop is introduced is
+% necessary to bring the body of the loop into a single node, so we must
+% handle the loop inside the conditional.
+% This is performed by first distributing the $Poll \circseq Running$ at
+% the end of the $Running$ action into the branches of the conditional,
+% on line~\ref{algorithm-move-running-loop-inside} of the algorithm.
+% This results in the code below for our example.
+% { \setlength{\zedindent}{0.7cm}
+% \begin{circus}
+%   Running \circdef \\
+%   \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%   \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%   \t2 \circif pc = 0 \circthen {} \cdots {} \\
+%   \t2 {} \cdots {} \\
+%   \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
+%   \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+%   \t3 \circif value1 \leq value2 \circthen \cdots \circseq pc := 39 \circseq Poll \circseq Running \\
+%   \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \circseq Poll \circseq Running \\
+%   \t3 \circfi \\
+%   \t2 {} \cdots {} \\
+%   \t2 \circfi \\
+%   \t1 \circfi
+% \end{circus}}
+% Lemmas~\ref{loop-introduction-in-arbitrary-context-lemma}
+% and~\ref{conditional-loop-introduction-in-arbitrary-context-lemma} are
+% then used to introduce the loops at the points where they occur, on
+% lines~\ref{algorithm-introduce-nested-loop}
+% and~\ref{algorithm-introduce-nested-conditional-loop} of the
+% algorithm. 
+% These lemmas allow loops and conditional loops to be introduced in an
+% arbitrary context, loops and conditional loops to be introduced in an
+% arbitrary context.
+% These lemmas make use of context notation, in which $A[B]$ for a
+% particular action $B$ represents and action $A$ in which there is at
+% least one occurrence of $B$. 
+% Replacing $A[B]$ with an action $A[C]$ then means replacing all
+% occurrences of $B$ in $A$ with $C$.
+% These lemmas operate similarly to Lemmas~\ref{loop-introduction-lemma}
+% and~\ref{conditional-loop-introduction-lemma}.
+% \begin{lem}[Loop introduction in arbitrary context]
+%   If
+%   \begin{circus}
+%     \{ frameStack \neq \emptyset \} \circseq A[pc := i \circseq Poll \circseq X] \\
+%     {} = {} \\
+%     \{ frameStack \neq \emptyset \} \circseq A[\{ frameStack \neq \emptyset \} \circseq pc := i \circseq Poll \circseq X]
+%   \end{circus}
+%   then,
+%   \label{loop-introduction-in-arbitrary-context-lemma}
+%   \setlength{\zedindent}{0pt}
+%   \setlength{\zedtab}{1.3em}
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen {} \\
+%       \t3 A[pc := i \circseq Poll \circseq X] \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \\
+%       \t1 \circfi 
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen \circmu Y \circspot \\
+%       \t3 A[pc := i \circseq Poll \circseq Y] \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \\
+%       \t1 \circfi  
+%     \end{array}
+%   \end{circus}
+% \end{lem}%
+% \begin{lem}[Conditional loop introduction in arbitrary context]
+%   \label{conditional-loop-introduction-in-arbitrary-context-lemma}
+%   If $i \neq j$ and
+%   \begin{circus}
+%     \{ frameStack \neq \emptyset \} \circseq A[pc := \IF b \THEN i \ELSE j \circseq  Poll \circseq X] \\
+%     {} = {} \\
+%     \{ frameStack \neq \emptyset \} \circseq A[\{ frameStack \neq \emptyset \} \circseq pc := \IF b \THEN i \ELSE j \circseq  Poll \circseq X]
+%   \end{circus}
+%   then,
+%   \setlength{\zedindent}{0pt}
+%   \setlength{\zedtab}{1.3em}
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen {} \\
+%       \t3 A[pc := \IF b \THEN i \ELSE j \circseq \\
+%       \t4 Poll \circseq X] \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = j \circthen B \circseq Poll \circseq X \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \\
+%       \t1 \circfi 
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \circmu X \circspot \\
+%       \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%       \t2 \circif \cdots \\
+%       \t2 {} \circelse pc = i \circthen \circmu Y \circspot \\
+%       \t3 A[pc := \IF b \THEN i \ELSE j \circseq Poll \circseq \\
+%       \t4 \circif b \circthen Y \\
+%       \t4 {} \circelse \lnot b \circthen B \circseq Poll \circseq X \\
+%       \t4 \circfi {} ] \\
+%       \t2 {} \cdots {} \\
+%       \t2 {} \circelse pc = j \circthen B \circseq Poll \circseq X \\
+%       \t2 {} \cdots {} \\
+%       \t2 \circfi \\
+%       \t1 \circfi  
+%     \end{array}
+%   \end{circus}
+% \end{lem}
+% After introducing the loops inside conditionals, we distribute the
+% $Poll \circseq Running$ actions back outside the conditionals, on
+% line~\ref{algorithm-move-running-loop-outside} of the algorithm.
+% For our example, this results in the following code after the loop at
+% $pc = 39$ has been introduced.
+% { \setlength{\zedindent}{0.7cm}
+% \begin{circus}
+%   Running \circdef \\
+%   \t1 \circif frameStack = \emptyset \circthen \Skip \\
+%   \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+%   \t2 \circif pc = 0 \circthen {} \cdots {} \\
+%   \t2 {} \cdots {} \\
+%   \t2 {} \circelse pc = 39 \circthen \circmu Y \circspot HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq \cdots \circseq \\
+%   \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
+%   \t3 \circif value1 \leq value2 \circthen \cdots \circseq pc := 39 \circseq Poll \circseq Y \\
+%   \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
+%   \t3 \circfi \\
+%   \t2 {} \cdots {} \\
+%   \t2 \circfi \circseq Poll \circseq Running \\
+%   \t1 \circfi
+% \end{circus}}
 
-Then, as discussed previously, we continue to introduce conditionals
-in the next innermost loop, working outwards until all the loops and
-conditionals in the whole method are introduced, making the method
-complete as specified by the loop on
-line~\ref{algorithm-loop-until-complete} of the algorithm.
-In our example there are no further loops in the method so we consider
-all the remaining nodes in the method's control flow graph.
-All that remains to be done is to introduce a sequential composition
-between the instructions at $pc = 7$ and the loop at $pc = 39$.
-This results in the code shown for $pc = 7$ in
-Figure~\ref{loop-and-conditional-introduction-example-figure} in
-Section~\ref{overview-subsection}.
+% Then, as discussed previously, we continue to introduce conditionals
+% in the next innermost loop, working outwards until all the loops and
+% conditionals in the whole method are introduced, making the method
+% complete as specified by the loop on
+% line~\ref{algorithm-loop-until-complete} of the algorithm.
+% In our example there are no further loops in the method so we consider
+% all the remaining nodes in the method's control flow graph.
+% All that remains to be done is to introduce a sequential composition
+% between the instructions at $pc = 7$ and the loop at $pc = 39$.
+% This results in the code shown for $pc = 7$ in
+% Figure~\ref{loop-and-conditional-introduction-example-figure} in
+% Section~\ref{overview-subsection}.
 
 \subsection{Resolve Method Calls}
 \label{resolve-method-calls-subsection}
