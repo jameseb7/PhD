@@ -1,0 +1,47 @@
+\begin{lem}[\texttt{while} loop introduction 2]
+  \label{while-introduction-lemma2}
+  \def\zedindent{0.25cm}
+  If $i \neq j$,
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := i \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = k \circthen C \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \circmu Y \circspot A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \circseq Poll \circseq \\
+      \t3 \circif b \circthen B \circseq pc := i \circseq Poll \circseq Y \\
+      \t3 {} \circelse \lnot b \circthen C \\
+      \t3 \circfi \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := i \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = k \circthen C \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{lem}
