@@ -1448,12 +1448,12 @@ our example is as shown in
 Figure~\ref{bytecode-expansion-example-figure}.
 
 The overall transformation of the $HandleInstruction$ action in this
-step is summarised by Lemma~\ref{bytecode-expansion-lemma}, which
+step is summarised by \Autoref{bytecode-expansion-rule}, which
 makes use of a syntactic function $handleAction$ that maps bytecode
 instructions onto \Circus{} actions as shown in
 Table~\ref{handle-action-table}.
-\begin{lem}[Bytecode Expansion]
-  \label{bytecode-expansion-lemma}
+\begin{crule}[Bytecode Expansion]
+  \label{bytecode-expansion-rule}
   For a given $bc$
   \begin{circus}
     HandleInstruction_{bc} \circrefines_A
@@ -1463,7 +1463,7 @@ Table~\ref{handle-action-table}.
   \end{circus}
   where $handleAction$ is a syntactic function defined by
   Table~\ref{handle-action-table}.
-\end{lem}
+\end{crule}
 After the bytecode semantics is expanded in the $Running$ action, the
 control flow that corresponds to each $pc$ update can be introduced.
 
@@ -1473,10 +1473,14 @@ control flow that corresponds to each $pc$ update can be introduced.
 \begin{algorithm}
   \begin{algorithmic}[1]
     \Procedure{IntroduceSequentialComposition}{}
-    \State $cfg \gets$ \Call{MakeControlFlowGraph}{} \label{algorithm-make-control-flow-graph}
-    \For{$node \gets cfg$} \label{algorithm-sequence-cfg-loop}
-    \While{\Call{HasSimpleSequence}{$node$}} \label{algorithm-forward-sequence-condition}
-    \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$} \label{algorithm-forward-sequence-application}
+    \State $cfg \gets$ \Call{MakeControlFlowGraph}{}
+    \label{algorithm-make-control-flow-graph}
+    \For{$node \gets cfg$}
+    \label{algorithm-sequence-cfg-loop}
+    \While{\Call{HasSimpleSequence}{$node$}}
+    \label{algorithm-forward-sequence-condition}
+    \State \Call{Apply\Autoref{sequence-introduction-rule}}{$node$}
+    \label{algorithm-forward-sequence-application}
     \EndWhile
     \EndFor
     \EndProcedure
@@ -1554,10 +1558,10 @@ nodes are nodes $35$ and $39$.
 
 For a node that meets the above requirement and isn't a method call,
 we can introduce sequential composition at that node by applying
-Lemma~\ref{sequence-introduction-lemma}, on line
-\ref{algorithm-forward-sequence-application} of the algorithm.
-\begin{lem}[Sequence introduction]
-  \label{sequence-introduction-lemma}
+\Autoref{sequence-introduction-rule}, on
+line~\ref{algorithm-forward-sequence-application} of the algorithm.
+\begin{crule}[Sequence introduction]
+  \label{sequence-introduction-rule}
   \def\zedindent{0.25cm}
   If $i \neq j$ and
   \begin{circus}
@@ -1594,7 +1598,7 @@ Lemma~\ref{sequence-introduction-lemma}, on line
       \t1 \circfi
     \end{array}
   \end{circus}
-\end{lem}
+\end{crule}
 This lemma works by unrolling the loop in $Running$ to sequence an
 instruction with the instruction that is executed after it, inserting
 $Poll$ inbetween.
@@ -1605,15 +1609,15 @@ Also, the sequence of instructions at the node, $A$, must not affect
 the non-emptiness of the $frameStack$ to ensure that the choice at the
 start of the main loop in $Running$ can be resolved.
 
-Since Lemma~\ref{sequence-introduction-lemma} pulls two nodes
+Since \Autoref{sequence-introduction-rule} pulls two nodes
 together, we can continue to introduce sequential composition at a
 node after the first application of
-Lemma~\ref{sequence-introduction-lemma}, until that node no longer
+\Autoref{sequence-introduction-rule}, until that node no longer
 satisfies the conditions for introducing sequential composition.
 This is specified by the while loop at
 line~\ref{algorithm-forward-sequence-condition} of the algorithm.
 This means the control flow graph is updated as
-Lemma~\ref{sequence-introduction-lemma} is applied, to take into
+\Autoref{sequence-introduction-rule} is applied, to take into
 account the merging of nodes.
 The resulting control flow graph after introduction of sequential
 composition has been performed at every point is shown in
@@ -1684,30 +1688,24 @@ been resolved undergo loop and conditional introduction.
     \label{algorithm-make-control-flow-graph2}
     \For{$node \gets$ \Call{ReverseNodes}{$cfg$}}
     \label{algorithm-node-checking-loop}
-    \State \Call{ApplyLemma\ref{if-introduction-lemma}}{$node$}
+    \State \Call{ApplyLemma\Autoref{if-introduction-rule}}{$node$}
     \label{algorithm-introduce-if}
-    \State \Call{ApplyLemma\ref{if-else-introduction-lemma}}{$node$}
+    \State \Call{ApplyLemma\Autoref{if-else-introduction-rule}}{$node$}
     \label{algorithm-introduce-if-else}
     \If{\Call{HasSimpleSequence}{$node$}}
     \label{algorithm-lci-sequence-check}
-    \State \Call{ApplyLemma\ref{sequence-introduction-lemma}}{$node$}
+    \State \Call{Apply\Autoref{sequence-introduction-rule}}{$node$}
     \label{algorithm-lci-sequence-introduction}
     \EndIf
     \If{\Call{IsSimpleConditional}{$node$}}
     \label{algorithm-conditional-check}
-    \State \Call{ApplyLemma\ref{conditional-introduction-lemma}}{$node$}
+    \State \Call{Apply\Autoref{conditional-introduction-rule}}{$node$}
     \label{algorithm-introduce-conditional}
     \EndIf
-    \State \Call{Move$Running$LoopInsideConditionals}{}
-    \label{algorithm-move-running-loop-inside}
-    \State \Call{ApplyLemma\ref{loop-introduction-lemma}}{$node$}
-    \label{algorithm-introduce-loop}
-    \State \Call{ApplyLemma\ref{conditional-loop-introduction-lemma}}{$node$}
-    \label{algorithm-introduce-conditional-loop}
-    % \State \Call{ApplyLemma\ref{while-loop-introduction-lemma}}{$innerLoops$}
-    % \label{algorithm-introduce-while-loop}
-    \State \Call{Move$Running$LoopOutsideConditionals}{}
-    \label{algorithm-move-running-loop-outside}
+    \State \Call{Apply\Autoref{while-introduction-rule1}}{$node$}
+    \label{algorithm-introduce-while1}
+    \State \Call{Apply\Autoref{while-introduction-rule2}}{$node$}
+    \label{algorithm-introduce-while2}
 
     \EndFor
     \EndIf
@@ -2057,10 +2055,10 @@ the $pc = x$ branch will not be the body of the conditional) since the
 conditional branches come from Java's branching instructions which
 branch to the specified address if the condition is true and go to the
 next instruction if it is false.
-We provide Lemma~\ref{if-introduction-lemma} for introducing such
+We provide \Autoref{if-introduction-rule} for introducing such
 conditionals.
-\begin{lem}[\texttt{if} conditional introduction]
-  \label{if-introduction-lemma}
+\begin{crule}[\texttt{if} conditional introduction]
+  \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
@@ -2103,8 +2101,8 @@ conditionals.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{lem}
-Lemma~\ref{if-introduction-lemma} introduces a conditional for nodes
+\end{crule}
+\Autoref{if-introduction-rule} introduces a conditional for nodes
 that match the form described above, which in the lemma is the
 $pc = i$ node.
 The conditional is introduced with the true branch being empty
@@ -2114,13 +2112,13 @@ The assignment $pc := j$ is moved outside the conditional from both
 the empty true branch and the end of the false branch, so that a
 sequential composition with the node after the conditional can be
 introduced later on.
-As in Lemma~\ref{sequence-introduction-lemma}, the sequence of actions
+As in \Autoref{sequence-introduction-rule}, the sequence of actions
 for the node must not affect the nonemptiness of the $frameStack$.
 A similar condition is required for all the lemmas in this section.
 We also require that the targets of the conditional are different from
 the node at which the conditional is introduced, since that would
 introduce a loop, which is not the purpose of this lemma.
-Lemma~\ref{if-introduction-lemma} is applied on
+\Autoref{if-introduction-rule} is applied on
 line~\ref{algorithm-introduce-if} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 Note that, since the structure can be identified from the form of the
@@ -2135,9 +2133,9 @@ As with an \texttt{if} conditional, a node with an
 the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
 nodes are required to end with a common assignment $pc := z$.
 Conditionals matching this form may be introduced using
-Lemma~\ref{if-else-introduction-lemma}.
-\begin{lem}[\texttt{if}-\texttt{else} conditional introduction]
-  \label{if-else-introduction-lemma}
+\Autoref{if-else-introduction-rule}.
+\begin{crule}[\texttt{if}-\texttt{else} conditional introduction]
+  \label{if-else-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
@@ -2184,17 +2182,17 @@ Lemma~\ref{if-else-introduction-lemma}.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{lem}
-Lemma~\ref{if-else-introduction-lemma} operates similarly to
-Lemma~\ref{if-introduction-lemma} in how it introduces the conditional
+\end{crule}
+\Autoref{if-else-introduction-rule} operates similarly to
+\Autoref{if-introduction-rule} in how it introduces the conditional
 and moves the common $pc$ assignment outside the conditional.
-However, Lemma~\ref{if-else-introduction-lemma} includes sequences of
+However, \Autoref{if-else-introduction-rule} includes sequences of
 instructions for both branches of the introduced conditional, each of
 which end with a $pc$ assignment to jump to the node after the
 conditional.
-The preconditions of Lemma~\ref{if-else-introduction-lemma} are the
-same as those of Lemmma~\ref{if-introduction-lemma}.
-Lemma~\ref{if-else-introduction-lemma} is applied on
+The preconditions of \Autoref{if-else-introduction-rule} are the
+same as those of \Autoref{if-introduction-rule}.
+\Autoref{if-else-introduction-rule} is applied on
 line~\ref{algorithm-introduce-if-else} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 
@@ -2206,7 +2204,7 @@ edge to a node with a single incoming edge, as in
 Section~\ref{introduce-forward-sequence-subsection}.
 Thus we check for a simple sequence on
 line~\ref{algorithm-lci-sequence-check} of
-Algorithm~\ref{loop-and-conditional-introduction-algorithm} and
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm} and
 introduce the sequential composition on
 line~\ref{algorithm-lci-sequence-introduction}.
 This also catches the case of a sequential composition before the
@@ -2257,15 +2255,15 @@ below are ruled out by the strategy.
 \end{center}
 
 If the correct structure is present, then we introduce the conditional
-by applying Lemma~\ref{conditional-introduction-lemma} on
+by applying \Autoref{conditional-introduction-rule} on
 line~\ref{algorithm-introduce-conditional}.
 This lemma introduces the conditional in much the same way as
-Lemmas~\ref{if-introduction-lemma}
-and~\ref{if-else-introduction-lemma}, but it does not place any
+\Autoref{if-introduction-rule} and
+\Autoref{if-else-introduction-rule}, but it does not place any
 requirement on the structure of the conditional or move a $pc$
 assignment outside of it.
-\begin{lem}[Conditional introduction]
-  \label{conditional-introduction-lemma}
+\begin{crule}[Conditional introduction]
+  \label{conditional-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
@@ -2312,7 +2310,7 @@ assignment outside of it.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{lem}
+\end{crule}
 
 After attempting to introduce conditionals, we may attempt to
 introduce loops.
@@ -2324,18 +2322,18 @@ A \texttt{while} loop has a form similar to that of a conditional,
 except that one of the branches ends with a jump back to the beginning
 of the node with the conditional.
 This structure may be introduced using
-Lemma~\ref{while-introduction-lemma1}.
-This lemma introduces a conditional at a node $pc=i$ with its false
+\Autoref{while-introduction-rule1}.
+This rule introduces a conditional at a node $pc=i$ with its false
 branch ending in an assignment of $i$ to $pc$, and introduces a
 recursion to the beginning of the $pc=i$ node in that branch of the
 conditional, representing a loop.
 As a \texttt{while} loop may occur with the loop at the end of either
 condition branch (since the loop may be created by a \texttt{goto}
 instruction in the Java bytecode), we also provide a similar rule,
-Lemma~\ref{while-introduction-lemma2}, that introduces the loop in the
+\Autoref{while-introduction-rule2}, that introduces the loop in the
 true branch of the conditional.
-\begin{lem}[\texttt{while} loop introduction 1]
-  \label{while-introduction-lemma1}
+\begin{crule}[\texttt{while} loop introduction 1]
+  \label{while-introduction-rule1}
   \def\zedindent{0.25cm}
   If $i \neq j$,
   \begin{circus}
@@ -2380,7 +2378,7 @@ true branch of the conditional.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{lem}%
+\end{crule}%
 
 % Conditionals can be identified as nodes whose sequence of instructions
 % ends with an assignment of the form $pc := \IF b \THEN x \ELSE y$ and
@@ -2980,9 +2978,9 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
     \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
     \State $targets \gets$ \Call{DetermineMethodCallTargets}{$mc$}
     \If{$\# targets = 1$}
-    \State \Call{ApplyLemma\ref{method-call-resolution-lemma}}{}
+    \State \Call{Apply\Autoref{method-call-resolution-rule}}{}
     \Else
-    \State \Call{ApplyLemma\ref{dynamic-method-call-resolution-lemma}}{}
+    \State \Call{Apply\Autoref{dynamic-method-call-resolution-rule}}{}
     \EndIf
     \EndFor
     \EndFor
@@ -3003,7 +3001,7 @@ with the launcher to perform the behaviour of the method.
 In cases where the method invocation is simply handled by
 communication with the launcher and then followed by execution of the
 next instruction, the control flow can be introduced using
-Lemma~\ref{sequence-introduction-lemma} as for other instructions with
+\Autoref{sequence-introduction-rule} as for other instructions with
 simple control flow.
 
 % TODO: discuss special methods with nested calls here
@@ -3016,7 +3014,7 @@ If the method is called with static dispatch (as is the case with the
 correct method, and hence the corresponding action can be easily
 determined.
 The method call is then resolved using
-Lemma~\ref{method-call-resolution-lemma}.
+\Autoref{method-call-resolution-rule}.
 We require as a precondition of the lemma that the method action
 returns to the return address stored on the stack, to ensure that the
 control flow is resolved correctly.
@@ -3025,8 +3023,8 @@ in a return or loop, since returns establish the condition and loops
 will either lead to a return eventually or form an infinite loop that
 may be followed by any action (including the assumption we require).
 %
-\begin{lem}[Method call resolution]
-  \label{method-call-resolution-lemma}
+\begin{crule}[Method call resolution]
+  \label{method-call-resolution-rule}
   If an action $M$ is such that
   \[\{ (head~frameStack).storedPC = i \land frameStack = fs \} \circseq M \\
     {} = {} \\
@@ -3071,7 +3069,7 @@ may be followed by any action (including the assumption we require).
     \end{array}
   \end{circus}
   %TODO: elimination of pc assignment
-\end{lem}
+\end{crule}
 %
 For method calls that have dynamic dispatch (as in the case of
 \texttt{invokevirtual} instructions), we must determine what classes
@@ -3084,11 +3082,11 @@ return address stored on the stack.
 In the dynamic case, this requirement must be met by all the method
 actions so that the next instruction can be executed after the choice
 of methods.
-Lemma~\ref{dynamic-method-call-resolution-lemma} is used to introduce
+\Autoref{dynamic-method-call-resolution-rule} is used to introduce
 this choice.
 %
-\begin{lem}[Dynamic method call resolution]
-  \label{dynamic-method-call-resolution-lemma}
+\begin{crule}[Dynamic method call resolution]
+  \label{dynamic-method-call-resolution-rule}
   If actions $M_1, \dots, M_n$ are such that
   \[\{ returnAddress = i \land frameStack = fs \} \circseq M_k \\
     {} = {} \\
@@ -3138,7 +3136,7 @@ this choice.
     \end{array}
   \end{circus}
   %TODO: elimination of pc assignment
-\end{lem}
+\end{crule}
 
 The resolution of loops, conditionals and methods is performed in a
 loop until all the methods have been separated into their own action.
@@ -3172,9 +3170,9 @@ This allows us to eliminate the loop in $Running$, reducing it
 entirely to a choice of method action from the class and method
 identifier.
 The overall transformation of $Running$ in its context is described by
-Lemma~\ref{main-action-refinement-lemma}.
-\begin{lem}[Main Action Refinement]
-  \label{main-action-refinement-lemma}
+\Autoref{main-action-refinement-rule}.
+\begin{crule}[Main Action Refinement]
+  \label{main-action-refinement-rule}
   If $entry(c_i,m_i) = j_i$ for $i \in \{1, \dots, n\}$ and
   \begin{circus}
     \{ \# frameStack = 1 \} \circseq M_i \\
@@ -3204,7 +3202,7 @@ Lemma~\ref{main-action-refinement-lemma}.
       \circfi \\
     \end{array}
   \end{circus}
-\end{lem}
+\end{crule}
 Once this has been performed, the program counter value is no longer
 used to determine the control flow of the program, so a trivial data
 refinement can be performed to eliminate $pc$ from the state of the

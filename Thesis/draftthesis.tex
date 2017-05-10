@@ -19,6 +19,9 @@
 \usepackage{fixltx2e}
 \usepackage{comment}
 \usepackage{subcaption}
+%\usepackage{cleveref}
+\usepackage{thmtools}
+\usepackage{thm-restate}
 
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
@@ -50,9 +53,27 @@
 }
 \makeatother
 
-\theoremstyle{plain}
-\newtheorem{thm}{Theorem}[section]
-\newtheorem{lem}[thm]{Lemma}
+% \theoremstyle{plain}
+% \newtheorem{thm}{Theorem}[section]
+% \newtheorem{lem}[thm]{Lemma}
+% \newtheorem{rule}{Rule}
+\declaretheorem[
+name=Theorem,
+numberwithin=section,
+refname={theorem, theorems},
+Refname={Theorem, Theorems}
+]{thm}
+\declaretheorem[
+name=Lemma,
+numberlike=thm,
+refname={lemma, lemmas},
+Refname={Lemma, Lemmas}
+]{lem}
+\declaretheorem[
+name=Rule,
+refname={rule,rules},
+Refname={Rule,Rules}
+]{crule}
 
 \theoremstyle{definition}
 \newtheorem{defn}[thm]{Definition}
