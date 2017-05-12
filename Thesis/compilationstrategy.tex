@@ -1452,7 +1452,7 @@ step is summarised by \Autoref{bytecode-expansion-rule}, which
 makes use of a syntactic function $handleAction$ that maps bytecode
 instructions onto \Circus{} actions as shown in
 Table~\ref{handle-action-table}.
-\begin{crule}[Bytecode Expansion]
+\begin{restatable}[Bytecode Expansion]{crule}{BytecodeExpansionRule}
   \label{bytecode-expansion-rule}
   For a given $bc$
   \begin{circus}
@@ -1463,7 +1463,7 @@ Table~\ref{handle-action-table}.
   \end{circus}
   where $handleAction$ is a syntactic function defined by
   Table~\ref{handle-action-table}.
-\end{crule}
+\end{restatable}
 After the bytecode semantics is expanded in the $Running$ action, the
 control flow that corresponds to each $pc$ update can be introduced.
 
@@ -1560,7 +1560,7 @@ For a node that meets the above requirement and isn't a method call,
 we can introduce sequential composition at that node by applying
 \Autoref{sequence-introduction-rule}, on
 line~\ref{algorithm-forward-sequence-application} of the algorithm.
-\begin{crule}[Sequence introduction]
+\begin{restatable}[Sequence introduction]{crule}{SequenceIntroductionRule}
   \label{sequence-introduction-rule}
   \def\zedindent{0.25cm}
   If $i \neq j$ and
@@ -1598,7 +1598,7 @@ line~\ref{algorithm-forward-sequence-application} of the algorithm.
       \t1 \circfi
     \end{array}
   \end{circus}
-\end{crule}
+\end{restatable}
 This lemma works by unrolling the loop in $Running$ to sequence an
 instruction with the instruction that is executed after it, inserting
 $Poll$ inbetween.
@@ -2302,7 +2302,7 @@ branch to the specified address if the condition is true and go to the
 next instruction if it is false.
 We provide \Autoref{if-introduction-rule} for introducing such
 conditionals.
-\begin{crule}[\texttt{if} conditional introduction]
+\begin{restatable}[\texttt{if} conditional introduction]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
@@ -2346,7 +2346,7 @@ conditionals.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{crule}
+\end{restatable}
 \Autoref{if-introduction-rule} introduces a conditional for nodes
 that match the form described above, which in the lemma is the
 $pc = i$ node.
@@ -2379,7 +2379,7 @@ the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
 nodes are required to end with a common assignment $pc := z$.
 Conditionals matching this form may be introduced using
 \Autoref{if-else-introduction-rule}.
-\begin{crule}[\texttt{if}-\texttt{else} conditional introduction]
+\begin{restatable}[\texttt{if}-\texttt{else} conditional introduction]{crule}{IfElseConditionalIntroductionRule}
   \label{if-else-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
@@ -2427,7 +2427,7 @@ Conditionals matching this form may be introduced using
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{crule}
+\end{restatable}
 \Autoref{if-else-introduction-rule} operates similarly to
 \Autoref{if-introduction-rule} in how it introduces the conditional
 and moves the common $pc$ assignment outside the conditional.
@@ -2507,7 +2507,7 @@ This lemma introduces the conditional in much the same way as
 \Autoref{if-else-introduction-rule}, but it does not place any
 requirement on the structure of the conditional or move a $pc$
 assignment outside of it.
-\begin{crule}[Conditional introduction]
+\begin{restatable}[Conditional introduction]{crule}{ConditionalIntroductionRule}
   \label{conditional-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
@@ -2555,7 +2555,7 @@ assignment outside of it.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{crule}
+\end{restatable}
 
 After attempting to introduce conditionals, we may attempt to
 introduce loops.
@@ -2577,7 +2577,7 @@ condition branch (since the loop may be created by a \texttt{goto}
 instruction in the Java bytecode), we also provide a similar rule,
 \Autoref{while-introduction-rule2}, that introduces the loop in the
 true branch of the conditional.
-\begin{crule}[\texttt{while} loop introduction 1]
+\begin{restatable}[\texttt{while} loop introduction 1]{crule}{WhileLoopIntroductionRule}
   \label{while-introduction-rule1}
   \def\zedindent{0.25cm}
   If $i \neq j$,
@@ -2623,7 +2623,7 @@ true branch of the conditional.
       \t1 \circfi 
     \end{array}
   \end{circus}
-\end{crule}%
+\end{restatable}%
 
 % Conditionals can be identified as nodes whose sequence of instructions
 % ends with an assignment of the form $pc := \IF b \THEN x \ELSE y$ and
@@ -3268,7 +3268,7 @@ in a return or loop, since returns establish the condition and loops
 will either lead to a return eventually or form an infinite loop that
 may be followed by any action (including the assumption we require).
 %
-\begin{crule}[Method call resolution]
+\begin{restatable}[Method call resolution]{crule}{MethodCallResolutionRule}
   \label{method-call-resolution-rule}
   If an action $M$ is such that
   \[\{ (head~frameStack).storedPC = i \land frameStack = fs \} \circseq M \\
@@ -3314,7 +3314,7 @@ may be followed by any action (including the assumption we require).
     \end{array}
   \end{circus}
   %TODO: elimination of pc assignment
-\end{crule}
+\end{restatable}
 %
 For method calls that have dynamic dispatch (as in the case of
 \texttt{invokevirtual} instructions), we must determine what classes
@@ -3330,7 +3330,7 @@ of methods.
 \Autoref{dynamic-method-call-resolution-rule} is used to introduce
 this choice.
 %
-\begin{crule}[Dynamic method call resolution]
+\begin{restatable}[Dynamic method call resolution]{crule}{DynamicMethodCallResolutionRule}
   \label{dynamic-method-call-resolution-rule}
   If actions $M_1, \dots, M_n$ are such that
   \[\{ returnAddress = i \land frameStack = fs \} \circseq M_k \\
@@ -3381,7 +3381,7 @@ this choice.
     \end{array}
   \end{circus}
   %TODO: elimination of pc assignment
-\end{crule}
+\end{restatable}
 
 The resolution of loops, conditionals and methods is performed in a
 loop until all the methods have been separated into their own action.
@@ -3416,7 +3416,7 @@ entirely to a choice of method action from the class and method
 identifier.
 The overall transformation of $Running$ in its context is described by
 \Autoref{main-action-refinement-rule}.
-\begin{crule}[Main Action Refinement]
+\begin{restatable}[Main Action Refinement]{crule}{MainActionRefinementRule}
   \label{main-action-refinement-rule}
   If $entry(c_i,m_i) = j_i$ for $i \in \{1, \dots, n\}$ and
   \begin{circus}
@@ -3447,7 +3447,7 @@ The overall transformation of $Running$ in its context is described by
       \circfi \\
     \end{array}
   \end{circus}
-\end{crule}
+\end{restatable}
 Once this has been performed, the program counter value is no longer
 used to determine the control flow of the program, so a trivial data
 refinement can be performed to eliminate $pc$ from the state of the
