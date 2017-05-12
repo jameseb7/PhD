@@ -75,8 +75,22 @@ refname={rule,rules},
 Refname={Rule,Rules}
 ]{crule}
 
-\theoremstyle{definition}
-\newtheorem{defn}[thm]{Definition}
+\makeatletter
+\declaretheoremstyle[
+style=definition,
+bodyfont={
+  \addtolength{\@totalleftmargin}{0.5cm}
+  \addtolength{\linewidth}{-0.5cm}
+  \parshape 1 0.5cm \linewidth
+}
+]{idefinition}
+\makeatother
+
+\declaretheorem[
+name=Definition,
+refname={definition,definitions},
+Refname={Definition,Definitions}, numberlike=thm, style=idefinition
+]{defn}
 
 \renewcommand{\circblockbegin}{\left(\begin{array}{l}}
 \renewcommand{\circblockend}{\end{array}\right)}
