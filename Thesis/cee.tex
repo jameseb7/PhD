@@ -6,13 +6,13 @@ SCJVM, which handles execution of an SCJ program.
 % The CEE is aware of the structure of Java objects and classes in order
 % to handle bytecode instructions properly.
 In addition, the CEE of an SCJVM manages the flow of execution
-dictated by the SCJ programming model, including, for example, safelet
-setup and mission execution.
+dictated by the SCJ programming model, including, for example,
+\texttt{Safelet} setup and mission execution.
 
 This is the part of our SCJVM model that is handled by our compilation
 strategy, so it make take the form of a bytecode interpreter, which is
 the starting point for the compilation, or C code, which is the output
-of the compliation.
+of the compilation.
 We describe both of these in this chapter, while the compilation
 strategy for transforming between them is described in the next
 chapter.
