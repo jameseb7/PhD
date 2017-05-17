@@ -2,15 +2,25 @@
 \label{cee-chapter}
 
 This chapter describes the core execution environment (CEE) of an
-SCJVM, which executes Java bytecode instructions.
-The CEE is aware of the structure of Java objects and classes in order
-to handle bytecode instructions properly.
+SCJVM, which handles execution of an SCJ program.
+% The CEE is aware of the structure of Java objects and classes in order
+% to handle bytecode instructions properly.
 In addition, the CEE of an SCJVM manages the flow of execution
 dictated by the SCJ programming model, including, for example, safelet
 setup and mission execution.
 
-As shown in Figure~\ref{cee-fig}, we view the core execution
-environment as having three components:
+This is the part of our SCJVM model that is handled by our compilation
+strategy, so it make take the form of a bytecode interpreter, which is
+the starting point for the compilation, or C code, which is the output
+of the compliation.
+We describe both of these in this chapter, while the compilation
+strategy for transforming between them is described in the next
+chapter.
+
+We view both the bytecode interpreter and the C code model as having
+three components.
+The components before compilation are those shown in
+Figure~\ref{cee-fig}:
 \begin{itemize}
 \item the object manager, which manages information about objects
   created during execution of the bytecode,
@@ -20,20 +30,20 @@ environment as having three components:
   execution of missions, and the execution of methods in the
   interpreter.
 \end{itemize}
-The interpreter is central to the main functionality of the core
-execution environment, but proper handling of infrastructure methods
-requires handling the SCJ mission-based programming model, which is
-dealt with by the launcher.
-The interpreter requires access to memory, but the class information
-and bytecode instructions do not change throughout the execution of
-the SCJVM, so they are provided as global constants in our model that
-are passed to the interpreter as parameters.
-Objects do change throughout the execution of the SCJVM and are in a
-separate region of memory to classes and bytecode instructions.
-The management of objects is handled by the object manager component
-of the core execution environment.
+% The interpreter is central to the main functionality of the core
+% execution environment, but proper handling of infrastructure methods
+% requires handling the SCJ mission-based programming model, which is
+% dealt with by the launcher.
+% The interpreter requires access to memory, but the class information
+% and bytecode instructions do not change throughout the execution of
+% the SCJVM, so they are provided as global constants in our model that
+% are passed to the interpreter as parameters.
+% Objects do change throughout the execution of the SCJVM and are in a
+% separate region of memory to classes and bytecode instructions.
+% The management of objects is handled by the object manager component
+% of the core execution environment.
 
-\begin{figure}[ht]
+\begin{figure}[bh]
   \centering
   \begin{tikzpicture}
 
@@ -103,85 +113,131 @@ of the core execution environment.
     \node[align=center] at (CEE part 2) {\small Interpreter};
     \node[align=center] at (CEE part 3) {\small Launcher};
   \end{tikzpicture}
-  \caption{Structure of an SCJVM and its relation to the SCJ
-    infrastructure and the operating system/hardware abstraction
-    layer}
+  \caption{Structure of an SCJVM, showing the components of the CEE,
+    and its relation to the SCJ infrastructure and the operating
+    system/hardware abstraction layer}
   \label{cee-fig}
 \end{figure}
+
+The components after compilation are similar but the object manager is
+replaced with a struct manager, which manages C struct types
+representing objects, and the interpreter is replaced with the C
+program itself.
+The launcher remains unchanged throughout the compilation.
+It is assumed that it is already in the form of native code that can
+be called from the C code.
 
 The CEE is combined with the SCJVM services to form the complete
 SCJVM; this can be seen in Figure~\ref{cee-fig}, which shows the same
 structure described in Figure~\ref{scjvm-services-fig} in the previous
 chapter, but has a focus on the CEE components.
-The CEE is the starting point for our compilation strategy, which is
-another main component of our framework for verification of SCJVMs,
-the SCJVM services are unaffected by the compilation strategy and can
-be implemented a separate library.
+The SCJVM services are unaffected by the compilation strategy and can
+be implemented as a separate library.
 
 Each of the components of the CEE is represented by a single \Circus{}
 process in our model.
-The structure of the communication between the processes is show in
-Figure~\ref{cee-model-fig}.
-The memory is used by the interpreter and launcher to create objects
-and enter backing stores.
-The memory then communicates the memory manager described in the previous
-chapter to allocate memory for objects and clear backing stores.
-The launcher also communicates with the memory manager to allocate
-backing stores and handle calls to SCJVM memory manager services.
-It must also communicate with the scheduler for the same reason.
-The launcher and interpreter communicate with each other as the
-launcher executes methods in the interpreter and the interpreter
-passes special method invocations back to the launcher for handling.
-Finally, the scheduler, in addition to accepting calls to its services
-from the launcher, informs the interpreter and memory when a thread is
-started, removed or switched to, so that thread switches can be
-properly handled.
+The structure of the communication between the processes before
+compilation is show in Figure~\ref{cee-model-fig}.
+The communication is unaffected by the compilation, but after
+compilation the interpreter and object manager are replaced by the C
+program and struct manager respectively.
 
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
-    \node[draw, minimum size = 2cm, below right=2cm, align=center]       (M) {Object\\Manager};
-    \node[draw, minimum size = 2cm, below=2cm]       (I) {Interpreter};
-    \node[draw, minimum size = 2cm, right=2cm] (L) {Launcher};
+    \node[draw, minimum size=2cm, below right=2cm, align=center]
+    (M) {Object\\Manager};
+    \node[draw, minimum size=2cm, below=2cm]
+    (I) {Interpreter};
+    \node[draw, minimum size=2cm, right=2cm]
+    (L) {Launcher};
 
     \draw[-latex, bend left=10] (I) edge (L);
-    \draw[-latex, bend left=10]  (L) edge (I);
+    \draw[-latex, bend left=10] (L) edge (I);
     \draw[-latex] (I) edge (M);
     \draw[-latex] (L) edge (M);
     
 
     \node[below=1.5cm, right=4.5cm] (MM) {Memory Manager};
-    \node[below=5cm, right=5cm] (S) {Scheduler};
+    \node[] (S) {Scheduler};
     \draw[-latex] (M) edge (MM);
-    \draw (S) -- +(-4,0) coordinate (X);
-    \draw (X) edge[-latex] (M);
-    \draw (X) edge[-latex] (node cs:name=I, anchor=south);
     \draw (L) edge[-latex] (S);
+    \draw (S) edge[-latex, bend left=20] (I);
+    \draw (I) edge[-latex, bend left=20] (S);
     \draw (L) edge[-latex] (MM);
   \end{tikzpicture}
-  \caption{The processes in the core execution environment model and
-    their communcation with the each other and the SCJVM services}
+  \caption{The CEE model processes and their communication with each
+    other and the SCJVM services}
   \label{cee-model-fig}
 \end{figure}
 
-This chapter begins in Section~\ref{cee-assumptions-section} with an
-explanation of the bytecode subset used in our work.
-Afterwards, each part of the \Circus{} model of the core execution
-environment is presented in a separate section.
-The object manager, along with the structure of objects, is
-described in Section~\ref{cee-memory-section}.
-The interpreter is described by first describing the stack frame
-structure in Section~\ref{cee-stack-frames-section}, then the
-interpreter itself is presented in
-Section~\ref{cee-interpreter-section}.
-The launcher is presented in Section~\ref{cee-launcher-section}.
-Finally the parts are drawn together into the complete model in
-Section~\ref{complete-cee-section}. 
-A full version of the CEE model can be found in
-Appendix~\ref{full-cee-model}.
+The launcher manages the startup procedure for the SCJVM and the
+execution of missions.
+This involves communication with the interpreter to execute
+initialisation methods.
+The interpreter then communicates back to interpreter to perform tasks
+such as registering a schedulable object with the current mission.
+Allocation of backing stores for the schedulable objects and entering
+the corresponding memory areas involves communication with both the
+object manager in the CEE and the memory manager of the SCJVM
+services.
+The launcher must also communicate with the scheduler to indicate when
+threads should be started or suspended during mission execution.
 
-\section{Bytecode Subset}
-\label{cee-assumptions-section}
+The interpreter must accept the requests to execute methods on the
+main thread from the launcher, and it must also respond to requests
+from the scheduler to start the other threads.
+When a thread has finished execution, the interpreter signals to the
+scheduler that the thread has finished so that it will no longer be
+scheduled.
+The interpreter must also communicate with the launcher to handle
+calls to methods that affect the SCJ infrastructure, such as the
+methods to enter memory areas.
+maybe more examples here Handling of memory allocation during method
+execution is performed via communication with the object manager,
+which then communicates with the SCJVM memory manager, since memory
+allocation does not depend on the structure of missions.
+
+In Section~\ref{cee-launcher-section}, we describe our model of the
+launcher, which is shared between the bytecode interpreter model and
+the C code model.
+We then detail the bytecode interpreter model in
+Section~\ref{cee-interpreter-section} and the format of the C code
+model in Section~\ref{cee-c-code-section}.
+Finally, we conclude in
+Section~\ref{cee-final-considerations-section}.
+
+\section{Launcher}
+\label{cee-launcher-section}
+
+The launcher is the component of the core execution environment
+that coordinates the execution of bytecode instructions by
+the interpreter and manages parts of the SCJ infrastructure such as
+the safelet and mission model.
+
+\input{../../SCJ-VM/James/launcher.zed}
+
+\section{Bytecode Interpreter Model}
+\label{cee-interpreter-section}
+
+% This chapter begins in Section~\ref{cee-assumptions-section} with an
+% explanation of the bytecode subset used in our work.
+% Afterwards, each part of the \Circus{} model of the core execution
+% environment is presented in a separate section.
+% The object manager, along with the structure of objects, is
+% described in Section~\ref{cee-memory-section}.
+% The interpreter is described by first describing the stack frame
+% structure in Section~\ref{cee-stack-frames-section}, then the
+% interpreter itself is presented in
+% Section~\ref{cee-interpreter-section}.
+% The launcher is presented in Section~\ref{cee-launcher-section}.
+% Finally the parts are drawn together into the complete model in
+% Section~\ref{complete-cee-section}. 
+% A full version of the CEE model can be found in
+% Appendix~\ref{full-cee-model}.
+
+\subsection{Bytecode Subset}
+\label{cee-assumptions-subsection}
 
 Due to the complexity of the JVM and Java bytecode, we model a subset
 of Java bytecode.
@@ -437,8 +493,8 @@ making, we now present our model of the core execution environment,
 beginning with an explanation of the class structure in the next
 section.
 
-\section{Classes}
-\label{cee-classes-section}
+\subsection{Classes}
+\label{cee-classes-subsection}
 
 This section discusses the representation in our model of the
 information in Java class files.
@@ -450,8 +506,8 @@ is passed to the object manager and the interpreter.
 
 \input{../../SCJ-VM/James/classes.zed}
 
-\section{Object Manager}
-\label{cee-memory-section}
+\subsection{Object Manager}
+\label{cee-memory-subsection}
 
 The SCJVM memory manager deals with memory solely in terms of sets of
 memory addresses, meaning that it the core execution environment needs
@@ -462,8 +518,8 @@ a separate \Circus{} process, which is described in this section.
 
 \input{../../SCJ-VM/James/memory.zed}
 
-\section{Stack Frames}
-\label{cee-stack-frames-section}
+\subsection{Stack Frames}
+\label{cee-stack-frames-subsection}
 
 The JVM has a stack composed of a series of stack frames, which
 contain information about the invoked methods.
@@ -475,8 +531,8 @@ interpreter in the next section.
 
 \input{../../SCJ-VM/James/stack_frames.zed}
 
-\section{Interpreter}
-\label{cee-interpreter-section}
+\subsection{Interpreter}
+\label{cee-interpreter-subsection}
 
 The interpreter manages the execution of the bytecode instructions of
 methods.
@@ -489,24 +545,276 @@ between bytecode instructions.
 
 \input{../../SCJ-VM/James/interpreter.zed}
 
-\section{Launcher}
-\label{cee-launcher-section}
-
-The launcher is the component of the core execution environment
-that coordinates the execution of bytecode instructions by
-the interpreter and manages parts of the SCJ infrastructure such as
-the safelet and mission model.
-
-\input{../../SCJ-VM/James/launcher.zed}
-
-\section{Complete Core Execution Environment Model}
-\label{complete-cee-section}
+\subsection{Complete Core Execution Environment Model}
+\label{complete-cee-subsection}
 
 We now combine the four \Circus{} processes representing the different
 components of the core execution environment into a single \Circus{}
 process representing the entire core execution environment.
 
 \input{../../SCJ-VM/James/complete_cee.zed}
+
+\section{C Code Model}
+\label{cee-c-code-section}
+
+\subsection{Struct Manager}
+
+$StructMan_{cs}$ manages objects represented by C structs that
+incorporate the class information from $cs$, refining the process
+$ObjMan$, which handles abstract objects.
+$StructMan_{cs}$ has Z schemas representing struct types for objects
+of each class.
+%
+% \begin{zed}
+%   InputHandlerObj == [classid : ClassID; input, buffer : ObjectID]
+% \end{zed}
+%
+These schemas contain the identifier $classid$ of the object's class, so
+that polymorphic method calls can be made by choice over the object's
+class. 
+There are also components for each of the fields of the
+object.
+
+The schema types for each type of object are combined into a single
+free type $ObjectStruct$.
+% \begin{zed}
+%   ObjectStruct ::= \dots | InputHandlerCon \ldata InputHandlerObj \rdata \dots
+% \end{zed}
+% We also define functions for casting between objects of different
+% classes and for obtaining the class identifier of any object. 
+% This matches the casting of object pointers in the C code that the
+% icecap HVM generates.
+$StructMan_{cs}$ contains a map from memory addresses managed by the
+SCJVM to the $ObjectStruct$ type, representing the C structs in
+memory, and provides access to the individual values in that map.
+
+\subsection{Shallow Embedding of C in \Circus{}}
+
+In our approach, compilation generates a C program represented by a
+\Circus{} process.
+The particular definition of this process depends on the Java bytecode
+program, as defined by our constants $bc$ and $cs$, that it
+implements. 
+So, we refer to the \Circus{} process as $CProg_{bc,cs}$, but note
+that it does not include any reference to these constants, since this
+is the process that represents the compiled program. 
+For all values of $bc$ and $cs$, $CProg_{bc,cs}$ has the structure
+defined below. 
+% For particular constants $bc$ and $cs$ defining bytecode and classes,
+% we refer to that process as $CProg_{bc,cs}$. 
+% Its definition depends on the values of $bc$ and $cs$, as indicated by
+% the subscripts, but it always has the structure shown below.
+\begin{circus}
+  \circprocess CProg_{bc,cs} \circdef \Parallel t : TID \setminus \{idle\} \circspot CThr_{bc,cs}(t)
+\end{circus}
+% In a deep embedding we would use a representation of the program
+% counter to handle thread switches. 
+% A shallow embedding does not have an explicit program counter, and so
+% it is natural to use parallel processes to represent C threads.
+The parallelism of C threads is represented by a \Circus{}
+parallelism, like the parallelism of Java threads in the
+$Interpreter$.
+In $CProg_{bc,cs}$ there is a process $CThr_{bc,cs}$ for each
+identifier $t$ in the set $TID$, except for the $idle$ thread
+identifier.
+% We abbreviate the set of thread identifiers excluding $main$ and
+% $idle$ as $TID_{\setminus\{i,m\}}$ here and in what follows. 
+% For simplicity, the definition of $TID$ does not depend on $bc$ and
+% $cs$; we assume that it has enough thread identifiers for any program.
+
+% TODO: rewrite to reflect changes to CThr $CThr_{bc,cs}$ represents a
+% thread that initially has not started and awaits a request from the
+% scheduler to start running a method.
+% The $main$ thread has a special behaviour at program startup, and is
+% modelled by $MCThr_{bc,cs}$, which is initially ready to run a
+% method at the request of $Launcher$.
+% The $idle$ thread, modelled by $IThr$, does not execute any code.
+% but may be switched to and from.
+% so it is modelled by a special process $IThr$ that only accepts a
+% request to switch to the $idle$ thread followed by a request to
+% switch from the $idle$ thread.
+% $MCThr_{bc,cs}$ must synchronise with the $CThr_{bc,cs}$ processes
+% on thread starts, signalled by the channel $CEEstartthread$, so that
+% it can cease executing methods once the first thread starts.
+
+The $CThr_{bc,cs}$ process has a similar structure to the $Thr$
+process presented in the previous section, except that the $Running$
+action is replaced with an $ExecuteMethod$ action that executes the C
+function corresponding to a given method identifier.
+Within the body of $CThr_{bc,cs}$, each function of the generated C
+code is represented by a \Circus{} action of the same name.
+The constructs within the C function are represented using \Circus{}
+constructs.
+
+The constructs we allow within a C function are conditionals, while
+loops, assignment statements, and function calls.
+These are comparable with those allowed in MISRA-C~\cite{MISRA} and
+present in the code generated by icecap.
+These constructs can be represented by the corresponding constructs in
+\Circus{}.
+% For example, assignment statements are represented by \Circus{}
+% assignment actions, and conditionals are represented using \Circus{}
+% conditional constructs.
+% Loops are represented using recursion.
+
+As each function in the C code is a \Circus{} action, function calls
+are represented as references to those actions.
+Function arguments in C are passed by value, although those values may
+be pointers to other values.
+Accordingly, since our SCJVM model represents pointers explicitly, we
+represent function arguments using value parameters of the \Circus{}
+action.
+Local variables of the function are represented using \Circus{}
+variable blocks.
+
+If a function has a return value, it is represented with a result
+parameter of the \Circus{} action, with an assignment to that
+parameter at the end of the action representing return statements. 
+It is not necessary to cater for return statements in the middle of a
+function as we have control over the structure of the functions.
+% is this how icecap does it? I don't think it is...
+We follow guidelines for safety-critical uses of C variants, such as
+MISRA-C~\cite{MISRA}, and use a single return statement at the end of
+a function.
+A function with both a return value and arguments has its value
+parameters (representing the arguments) followed by the result
+parameter (representing the return value).
+
+% \begin{table}[t]
+% \centering
+% \caption{Various constructs in C in our shallow embedding in
+%   \Circus{}}
+% \label{embedding-table}
+% \scriptsize
+% \setlength{\zedindent}{0pt}
+% \setlength{\zedleftsep}{2mm}
+% \setlength{\zedtab}{1em}
+% \setlength{\abovedisplayskip}{-2mm}
+% \setlength{\belowdisplayskip}{-2mm}
+% \setlength{\abovedisplayshortskip}{-2mm}
+% \setlength{\belowdisplayshortskip}{-2mm}
+% \renewcommand{\arraystretch}{1.5}
+% \rowcolors{2}{white}{lightgray}
+% \begin{tabular}{p{4.7cm}p{3.6cm}p{2.8cm}}
+% \hline
+% Construct & C code & \Circus{} equivalent \\
+% \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function definition &
+% \begin{lstlisting}
+% void foo() {...}
+% \end{lstlisting}
+% &
+% \[
+% Foo \circdef \cdots
+% \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function definition with argument &
+% \begin{lstlisting}
+% void bar(int x) {...}
+% \end{lstlisting}
+% &
+% \[
+%   Bar \circdef \\
+%   \t1 \circval x : \num @ \cdots
+% \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function definition with return value &
+% \begin{lstlisting}
+% int baz() {...}
+% \end{lstlisting}
+% &
+% \[
+%   Baz \circdef \\
+%   \t1 \circres retVal : \num @ \cdots
+% \] \\
+% % \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function definition with parameter and return value &
+% \begin{lstlisting}
+% int baz(int x) {...}
+% \end{lstlisting}
+% &
+% \[
+%   Baz \circdef \\
+%   \t1 \circval x : \num; \\
+%   \t1 \circres retVal : \num @ \\
+%   \t1 \cdots
+% \] \\
+% % \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function call &
+% \begin{lstlisting}
+% foo();
+% \end{lstlisting}
+% &
+% \[
+% Foo
+% \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function call with argument &
+% \begin{lstlisting}
+% bar(x);
+% \end{lstlisting}
+% &
+% \[
+% Bar(x)
+% \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Function call with return value &
+% \begin{lstlisting}
+% x = baz();
+% \end{lstlisting}
+% &
+% \[
+% Baz(x)
+% \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Assignment &
+% \begin{lstlisting}
+% x = e;
+% \end{lstlisting}
+% &
+% \begin{circus}
+% x := e
+% \end{circus} \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Variable declaration &
+% \begin{lstlisting}
+% int x;
+% \end{lstlisting}
+% & \[\circvar x : \num @ \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright Variable declaration and initialisation &
+% \begin{lstlisting}
+% int x = e;
+% \end{lstlisting}
+% & \[\circvar x : \num @ x := e\] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright If statement &
+% \begin{lstlisting}
+% if (b) {...}
+% \end{lstlisting}
+% &
+% \[
+% \circif b \circthen \cdots \\
+% {} \circelse \lnot b \circthen \Skip \\
+% \circfi
+% \] \\
+% %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \raggedright While loop &
+% \begin{lstlisting}
+% while (b) {...}
+% \end{lstlisting}
+% &
+% {
+% \def\arraystretch{1.1}
+% \[
+% \circmu X @ \\
+%   \t1 \circif b \circthen \cdots \circseq X \\
+%   \t1 {} \circelse \lnot b \circthen \Skip \\
+%   \t1 \circfi
+% \]}\\
+% \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \end{tabular}
+% \end{table}
 
 \section{Final Considerations}
 \label{cee-final-considerations-section}
