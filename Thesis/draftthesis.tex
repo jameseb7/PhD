@@ -42,9 +42,9 @@
 \FullModelfalse
 \newcommand{\ifnFullModel}{\ifFullModel\else}
 
-\newcommand{\directsubclass}{\prec_\mathrm{d}}
-\newcommand{\directsubclassid}{\prec_\mathrm{D}}
-\newcommand{\subclassid}{\preceq}
+\newcommand{\directsubclass}{\prec_{\mathrm{d}}}
+\newcommand{\directsubclassid}[1]{\prec_{\mathrm{D},#1}}
+\newcommand{\subclassid}[1]{\preceq_{#1}}
 
 \makeatletter
 \def\@endtheorem{\endtrivlist}
@@ -176,6 +176,9 @@ Refname={Definition,Definitions}, numberlike=thm, style=idefinition
 \input{../../SCJ-VM/James/stack_frames.zed}
 
 \section{Interpreter}
+
+\input{../../SCJ-VM/James/interpreter_thread.zed}
+
 \input{../../SCJ-VM/James/interpreter.zed}
 
 \section{Launcher}
