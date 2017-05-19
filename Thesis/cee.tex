@@ -10,24 +10,28 @@ dictated by the SCJ programming model, including, for example,
 \texttt{Safelet} setup and mission execution.
 
 This is the part of our SCJVM model that is handled by our compilation
-strategy, so it make take the form of a bytecode interpreter, which is
-the starting point for the compilation, or C code, which is the output
-of the compilation.
-We describe both of these in this chapter, while the compilation
-strategy for transforming between them is described in the next
-chapter.
+strategy. 
+So, it may take the form of a bytecode interpreter, which is the
+starting point for the compilation, or C code, which is the output of
+the compilation.
+We describe both of these in this chapter
+(Sections~\ref{cee-launcher-section}, \ref{cee-interpreter-section}
+and~\ref{cee-c-code-section}) while the compilation strategy for
+transforming between them is described in the next chapter.
 We begin with an overview of the CEE's structure in the next section.
+We conclude with some final considerations in
+Section~\ref{cee-final-considerations-section}.
 
 \section{Overview}
 
-We view both the bytecode interpreter and the C code model as having
-three components.
-The components before compilation are those shown in
+The core execution environment has three components, two of which
+depend on whether it is interpreting bytecodes or executing C code. 
+For a bytecode interpreter, the components are those shown in
 Figure~\ref{cee-fig}:
 \begin{itemize}
 \item the object manager, which manages information about objects
   created during execution of the bytecode,
-\item the interpreter, which handles execution of bytecode
+\item the interpreter itself, which handles execution of bytecode
   instructions, and
 \item the launcher, which coordinates the startup of the SCJVM, the
   execution of missions, and the execution of methods in the
@@ -122,9 +126,9 @@ Figure~\ref{cee-fig}:
   \label{cee-fig}
 \end{figure}
 
-The components after compilation are similar but the object manager is
-replaced with a struct manager, which manages C struct types
-representing objects, and the interpreter is replaced with the C
+The components after compilation to C are similar, but the object
+manager is replaced with a struct manager, which manages C struct
+types representing objects, and the interpreter is replaced with the C
 program itself.
 The launcher remains unchanged throughout the compilation.
 It is assumed that it is already in the form of native code that can
@@ -141,9 +145,7 @@ Each of the components of the CEE is represented by a single \Circus{}
 process in our model.
 The structure of the communication between the processes before
 compilation is show in Figure~\ref{cee-model-fig}.
-The communication is unaffected by the compilation, but after
-compilation the interpreter and object manager are replaced by the C
-program and struct manager respectively.
+The communication is unaffected by the compilation.
 
 \begin{figure}[ht]
   \centering
@@ -178,8 +180,8 @@ The launcher manages the startup procedure for the SCJVM and the
 execution of missions.
 This involves communication with the interpreter to execute
 initialisation methods.
-The interpreter then communicates back to interpreter to perform tasks
-such as registering a schedulable object with the current mission.
+The interpreter then communicates back to perform tasks such as
+registering a schedulable object with the current mission.
 Allocation of backing stores for the schedulable objects and entering
 the corresponding memory areas involves communication with both the
 object manager in the CEE and the memory manager of the SCJVM
@@ -196,17 +198,17 @@ scheduled.
 The interpreter must also communicate with the launcher to handle
 calls to methods that affect the SCJ infrastructure, such as the
 methods to enter memory areas.
-maybe more examples here Handling of memory allocation during method
-execution is performed via communication with the object manager,
-which then communicates with the SCJVM memory manager, since memory
-allocation does not depend on the structure of missions.
+Handling of memory allocation during method execution is performed via
+communication with the object manager, which then communicates with
+the SCJVM memory manager, since memory allocation does not depend on
+the structure of missions.
 
 In Section~\ref{cee-launcher-section}, we describe our model of the
 launcher, which is shared between the bytecode interpreter model and
 the C code model.
 We then detail the bytecode interpreter model in
-Section~\ref{cee-interpreter-section} and the format of the C code
-model in Section~\ref{cee-c-code-section}.
+Section~\ref{cee-interpreter-section}, and the C code model in
+Section~\ref{cee-c-code-section}.
 Finally, we conclude in
 Section~\ref{cee-final-considerations-section}.
 
