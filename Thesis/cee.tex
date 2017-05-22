@@ -170,6 +170,11 @@ The communication is unaffected by the compilation.
     \draw (S) edge[-latex, bend left=20] (I);
     \draw (I) edge[-latex, bend left=20] (S);
     \draw (L) edge[-latex] (MM);
+
+    \node[below=2.5cm, left=2cm] (In) {Input};
+    \node[below=3.5cm, left=2cm] (Out) {Output};
+    \draw[-latex] (In) to (I.153);
+    \draw[-latex] (I.207) to (Out);
   \end{tikzpicture}
   \caption{The CEE model processes and their communication with each
     other and the SCJVM services}
@@ -202,6 +207,43 @@ Handling of memory allocation during method execution is performed via
 communication with the object manager, which then communicates with
 the SCJVM memory manager, since memory allocation does not depend on
 the structure of missions.
+Additionally, the interpreter communicates input and output to some
+console input/output device, which is the only such device required by
+the SCJ specification.
+Supporting a full range of hardware connections is beyond the scope of
+this work.
+
+Having described the overall communication structure, we now present
+the channels used for these communications.
+The communications with the SCJVM services scheduler and memory
+manager use the channels already described in
+Sections~\ref{memory-manager-model-section}
+and~\ref{scheduler-model-section}.
+The types of values communicated by those channels are also used by
+the CEE processes.
+These include the type of object identifiers, $ObjectID$, the type of
+thread identifiers, $ThreadID$, the type of backing store identifiers,
+$BackingStoreID$, and the type of virtual machine data words, $Word$.
+We also use the $ClassID$ and $MethodID$ types, which are the types of
+class and method identifiers that were declared in the scheduler model
+to provide for the declaration of the $CEEstartThread$ channel.
+Additionally, we declare a field identifier type, $FieldID$.
+\begin{zed}
+  [FieldID]
+\end{zed}
+The class, method and field identifiers may be the full names used in
+Java class files or some shorter representation such as unique
+identification numbers.
+In any case, type information needs to be taken into account so that
+methods and fields with the same name but different type signatures
+have different identifiers.
+This is because the identifiers in Java class files include the type
+information and the correct operation of method overloading relies on
+it.
+
+\input{../../SCJ-VM/James/LIchans.zed}
+
+\input{../../SCJ-VM/James/memory_chans.zed}
 
 In Section~\ref{cee-launcher-section}, we describe our model of the
 launcher, which is shared between the bytecode interpreter model and
@@ -215,10 +257,10 @@ Section~\ref{cee-final-considerations-section}.
 \section{Launcher}
 \label{cee-launcher-section}
 
-The launcher is the component of the core execution environment
-that coordinates the execution of bytecode instructions by
-the interpreter and manages parts of the SCJ infrastructure such as
-the safelet and mission model.
+The launcher is the component of the core execution environment that
+manages parts of the SCJ infrastructure such as the safelet and
+mission model.
+
 
 \input{../../SCJ-VM/James/launcher.zed}
 
