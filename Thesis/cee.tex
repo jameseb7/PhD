@@ -215,8 +215,8 @@ this work.
 
 Having described the overall communication structure, we now present
 the channels used for these communications.
-The communications with the SCJVM services scheduler and memory
-manager use the channels already described in
+The communications with the SCJVM services memory manager and
+scheduler use the channels already described in
 Sections~\ref{memory-manager-model-section}
 and~\ref{scheduler-model-section}.
 The types of values communicated by those channels are also used by
@@ -245,9 +245,27 @@ it.
 
 \input{../../SCJ-VM/James/memory_chans.zed}
 
-In Section~\ref{cee-launcher-section}, we describe our model of the
-launcher, which is shared between the bytecode interpreter model and
-the C code model.
+After the compilation, most of these channels remain in use but are
+taken as representing C function calls.
+The channels used for accessing fields are replaced with channels to
+obtain a struct representing the contents of an object and to store an
+object's struct after updating it.
+The $getClassIDOf$ channel is similarly replaced with an access to a
+field of the struct storing the $ClassID$ of the class of the object.
+Note that, since the launcher is unaffected by the compilation
+strategy, we retain the use of the $getClassIDOf$ channel for the
+launcher as a loose specification that the launcher should get the
+$ClassID$ of an object.
+In an implementation the launcher may be refined to use C struct
+accesses that are the same as those used in the C code.
+We discuss the form of field accesses in the C code and the channels
+used for them in more detail in
+Sections~\ref{cee-struct-manager-section}
+and~\ref{cee-c-program-section}.
+
+Next, in Section~\ref{cee-launcher-section}, we describe our model of
+the launcher, which is shared between the bytecode interpreter model
+and the C code model.
 We then detail the bytecode interpreter model in
 Section~\ref{cee-interpreter-section}, and the C code model in
 Section~\ref{cee-c-code-section}.
@@ -607,6 +625,7 @@ process representing the entire core execution environment.
 \label{cee-c-code-section}
 
 \subsection{Struct Manager}
+\label{cee-struct-manager-section}
 
 $StructMan_{cs}$ manages objects represented by C structs that
 incorporate the class information from $cs$, refining the process
@@ -638,6 +657,7 @@ SCJVM to the $ObjectStruct$ type, representing the C structs in
 memory, and provides access to the individual values in that map.
 
 \subsection{Shallow Embedding of C in \Circus{}}
+\label{cee-c-program-section}
 
 In our approach, compilation generates a C program represented by a
 \Circus{} process.
