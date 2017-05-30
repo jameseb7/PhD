@@ -289,8 +289,10 @@ Some channels are marked with various symbols (*, \dag{}, {}+{} and
       & $enterBackingStore$ & $ThreadID \cross BackingStoreID$ & L & OM \\
       & $exitBackingStore$ & $ThreadID$ & L & OM  \\
       & $exitBackingStoreRet$ & $BackingStoreID \cross \boolean$ & L & OM \\
+      & $getCurrentAC$ & $ThreadID$ & L & OM \\
+      & $getCurrentACRet$ & $BackingStoreID$ & OM & L \\
       & $newObject$ & $ThreadID \cross ClassID$ & I/L & OM  \\
-      & $newObjectRet$ & $ObjectID$ & I/L & OM  \\
+      & $newObjectRet$ & $ObjectID$ & OM & I/L  \\
       \ddag & $getClassIDOf$ & $ObjectID \cross ClassID$ & I/L & OM  \\
       \ddag & $getField$ & $ObjectID \cross FieldID$ & I & OM \\
       \ddag & $getFieldRet$ & $Word$ & OM & I \\
@@ -383,6 +385,10 @@ thread.
 The $BackingStoreID$ of the exited backing store and a boolean value
 indicating if the backing store was cleared are therefore communicated
 back to the launcher on a return channel.
+Additionally, the $getCurrentAC$ channel (and its return channel) is
+used to obtain the $BackingStoreID$ of the backing store used as the
+current allocation context for given thread from the object manager,
+in order to handle some cases of entering memory areas.
 
 The remaining channels used by the launcher to communicate with the
 object manager are used by both the launcher and the interpreter.
@@ -422,7 +428,7 @@ These operate similarly to the channels for object fields but use
 $ClassID$ values rather than $ObjectID$ values, since static fields are
 attached to classes rather than objects.
 
-Finally, channels used by the interpreter are the $addThreadMemory$
+The final channels used by the interpreter are the $addThreadMemory$
 and $removeThreadMemory$ channels.
 The $addThreadMemory$ is used to inform the object manager of a
 thread's initial allocation context when the thread starts.
