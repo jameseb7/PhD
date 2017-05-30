@@ -26,8 +26,8 @@ Section~\ref{cee-final-considerations-section}.
 
 The CEE has three components, two of which depend on whether it is
 interpreting bytecodes or executing C code. 
-For those that use a bytecode interpreter, the components are listed
-below and shown in Figure~\ref{cee-fig}:
+For the CEEs that use a bytecode interpreter, the components are
+listed below and shown in Figure~\ref{cee-fig}:
 \begin{itemize}
 \item the object manager, which manages information about objects
   created during execution of the bytecode;
@@ -145,12 +145,9 @@ Each of the components of the CEE is represented by a single \Circus{}
 process in our model.
 These processes interact as shown in Figure~\ref{cee-model-fig}.
 The overall pattern of the interaction is unaffected by the
-compilation (i.e.\ Figure~\ref{cee-model-fig} holds after compilation,
-except for the renaming of the components), but different channels are
-used for communication between the interpreter and object manager
-after compilation.
-The other channels used for communication between the CEE components
-remain unaffected by the compilation.
+compilation, that is, the model of the compiled code has the same
+overall flow of communication, although the components have different
+names and different channels are used for communication.
 
 \begin{figure}[ht]
   \centering
@@ -188,15 +185,15 @@ remain unaffected by the compilation.
 
 The launcher manages the startup procedure for the SCJVM and the
 execution of missions.
-This involves communication with the interpreter to execute
-initialisation methods.
+This involves communication with the interpreter (or C program) to
+execute initialisation methods.
 The interpreter then communicates back with the launcher when it
 requires services that are provided by the SCJ infrastructure and API,
 such as registering a schedulable object with the current mission.
 Allocation of backing stores for the schedulable objects and entering
 the corresponding memory areas involves communication with both the
-object manager in the CEE and the memory manager of the SCJVM
-services.
+object (or struct) manager in the CEE and the memory manager of the
+SCJVM services.
 The launcher must also communicate with the scheduler to indicate when
 threads should be started or suspended during mission execution.
 
@@ -204,7 +201,7 @@ The interpreter must accept the requests to execute methods on the
 main thread from the launcher, and it must also respond to requests
 from the scheduler to start the other threads.
 When a thread has finished execution, the interpreter signals to the
-scheduler that the thread has finished so that it will no longer be
+scheduler that the thread has finished so that it is no longer
 scheduled.
 The interpreter must also communicate with the launcher to handle
 calls to methods that are provided by the SCJ infrastructure, such as
@@ -250,20 +247,20 @@ The channels used for communication between the CEE processes are
 summarised in Figure~\ref{cee-channel-table}, with the full channel
 declarations shown in Appendix~\ref{cee-model-channels}.
 In addition to presenting the name and type for each channel, in the
-first two columns of the table, we also indicate which components of
-the CEE make use of the channel, in the final two columns.
-In those columns the names of the components are abbreviated due to
-space constraints:~L refers to the launcher, I refers to the
-Interpreter, and OM refers to the object manager.
-I/L refers to a channel that is used by both the launcher and
-interpreter, with communications on that channel interleaved.
+first two columns of the table.
+We also indicate which components of the CEE make use of the channel.
+% L - launcher
+% I - interpreter
+% OM - object manager.
+% I/L refers to a channel that is used by both the launcher and
+% interpreter, with communications on that channel interleaved.
 The channels $output$ and $input$ are used for communication with the
 console device mentioned earlier.
-As we do not nodel the console device itself, these are left as
+As we do not model the console device itself, these are left as
 externally visible channels when the component processes are composed
 into the complete SCJVM model.
-The fact that they are external channels is indicated by the use of
-\textless{}ext.\textgreater{} in the final columns of the table.
+% The fact that they are external channels is indicated by the use of
+% \textless{}ext.\textgreater{} in the final columns of the table.
 Some channels are marked with various symbols (*, \dag{}, {}+{} and
 \ddag{}) so that we can refer to them later in the text.
 
@@ -288,7 +285,7 @@ Some channels are marked with various symbols (*, \dag{}, {}+{} and
       {}+{} & $resumeThread$ & $ThreadID$ & I & L \\
       {}+{} & $resumeThreadRet$ & \textless no parameters\textgreater & L & I  \\
       & $output$ & $Word$ & I & \textless ext.\textgreater \\
-      & $input$ & $Word$ & \textless ext.\textgreater & I \\
+      & $input$ & $Word$ & \textless{}ext.\textgreater{} & I \\
       & $enterBackingStore$ & $ThreadID \cross BackingStoreID$ & L & OM \\
       & $exitBackingStore$ & $ThreadID$ & L & OM  \\
       & $exitBackingStoreRet$ & $BackingStoreID \cross \boolean$ & L & OM \\
@@ -307,24 +304,26 @@ Some channels are marked with various symbols (*, \dag{}, {}+{} and
     \end{tabular}
   \end{center}
   \caption{The channels used for communication between CEE processes
-    before compilation}
+    before compilation. 
+    In the final two columns, L refers to the launcher, I refers to
+    the interpreter, OM refers to the object manager, I/L indicates a
+    channel shared by the interpreter and launcher in interleaving,
+    and \textless{}ext.\textgreater{} indicates and external channel.}
   \label{cee-channel-table}
 \end{table}
 
-Most of the channels occur in pairs of channels:~one channel to
-communicate a signal to begin an operation and supply any inputs to
-the operation, and a return channel to communicate back when the
-operation has finished and supply any outputs of the operation.
+Most of the channels are part of pairs, with one channel to
+communicate a signal to begin an operation and supply any inputs, and
+a return channel to communicate back when the operation has finished
+and supply any outputs.
 The return channel is named by appending $Ret$ to the name of the
 channel used to initiate the operation.
+
 There are some channels that deviate this pattern of having a return
 channel.
-We will discuss the reason for each channels deviation from this
-pattern as we discuss the channels themselves.
-
 The $executeMethod$ channel is used to signal to the interpreter that
 it should begin execution of a method on a given thread.
-The interpreter returns on $executeMethodRet$ channel when it has
+The interpreter signals on $executeMethodRet$ channel when it has
 finished execution of the method.
 Since the launcher may need to take some action, such as exiting a
 memory area, after the interpreter has finished executing a method,
@@ -335,23 +334,21 @@ pattern, it does not have its own return channel.
 
 Before the interpreter can execute methods on the $main$ thread, the
 stack space for the $main$ thread must allocated by the launcher and
-communicated to the interprete.
+communicated to the interpreter.
 This is handled by the $initMainThread$ channel, which carries the
 $StackID$ for the stack space allocated for the $main$ thread.
-This does not require a return channel as there is no return value.
-Also, the interpreter will wait for communication on the
-$executeMethod$ channel before commencing execution, so the launcher
-does not need to wait for the interpreter to finish registering the
-$main$ thread's stack.
+The interpreter waits for communication on the $executeMethod$ channel
+before commencing execution, so the launcher does not need to wait for
+the interpreter to finish registering the $main$ thread's stack.
 
-As mentioned above, While executing a method, the interpreter may
+As mentioned above, while executing a method, the interpreter may
 signal back to the launcher for handling of special methods.
 The channels used for this are the ones marked with a * or a {}+{} in
 Table~\ref{cee-channel-table}.
 The channels marked with a * represent calls to infrastructure methods
 that are part of the SCJ API.
 The inputs and outputs of these methods (and hence the types of the
-channels associated with them) are taken from the SCJ specfication.
+channels associated with them) are taken from the SCJ specification.
 Among these, the ones also marked with a \dag{} are methods that do
 not return a value and involve execution of a method in the
 interpreter as part of their handling.
@@ -359,8 +356,8 @@ Thus, the interpreter waits for a signal on the $executeMethod$
 channel after signalling the launcher to handle one of these methods.
 The methods marked with a \dag{} do not, therefore, require separate
 return channels.
-The channels marked with a + are exposing SCJVM scheduler operations
-to the code executed in the intepreter, in order to allow for the
+The channels marked with a + expose SCJVM scheduler operations to the
+code executed in the interpreter, in order to allow for the
 implementation of event handlers. 
 Their types follow those of the scheduler's channels.
 
@@ -379,7 +376,7 @@ for the launcher to wait while the object manager records the entry to
 a backing store.
 Similarly, the $exitBackingStore$ channel is used to signal an exit
 from the backing store that is the current allocation context of the
-given thread, communicating the $ThreadID$ of that thread.
+given thread.
 This does have a return channel, since the launcher must be informed
 if the backing store was cleared due to no longer being in use by any
 thread.
@@ -425,7 +422,7 @@ These operate similarly to the channels for object fields but use
 $ClassID$ values rather than $ObjectID$ values, since static fields are
 attached to classes rather than objects.
 
-FInally, channels used by the interpreter are the $addThreadMemory$
+Finally, channels used by the interpreter are the $addThreadMemory$
 and $removeThreadMemory$ channels.
 The $addThreadMemory$ is used to inform the object manager of a
 thread's initial allocation context when the thread starts.
@@ -438,14 +435,14 @@ the thread.
 
 As mentioned earlier, some channels used by the interpreter to
 communicate with the object manager are replaced with different
-channels.
+channels during compilation.
 Those channels are marked with a \ddag{} in
 Table~\ref{cee-channel-table}.
 After compilation these channels are replaced with channels to obtain
 the struct representing the contents of an object and to store an
 object’s struct after updating it.
 Note that the $getClassIDOf$ channel is shared between the launcher
-and intepreter.
+and interpreter.
 After compilation, the interpreter accesses a struct field storing the
 $ClassID$ for an object.
 However, the launcher is unaffected by the compilation and is agnostic
@@ -467,13 +464,10 @@ and~\ref{cee-c-program-section}.
 
 
 Next, in Section~\ref{cee-launcher-section}, we describe our model of
-the launcher, which is shared between the bytecode interpreter model
-and the C code model.
+the launcher.
 We then detail the bytecode interpreter model in
 Section~\ref{cee-interpreter-section}, and the C code model in
 Section~\ref{cee-c-code-section}.
-Finally, we conclude in
-Section~\ref{cee-final-considerations-section}.
 
 \section{Launcher}
 \label{cee-launcher-section}
@@ -1093,7 +1087,7 @@ Our bytecode subset consists of 14 instructions, which focus on method
 invocation and the manipulation of objects, since those are core
 concepts of Java.
 We have omitted instructions for exception handling, since that would
-compilicate the model while adding little power.
+complicate the model while adding little power.
 Our subset is sufficiently small to permit reasoning, but large enough
 to express a variety of SCJ programs.
 
