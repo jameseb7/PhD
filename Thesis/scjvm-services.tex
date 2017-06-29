@@ -432,7 +432,9 @@ Table~\ref{scheduler-table}.
     thread identifier &
     (none)
     \\\texttt{startThreads} &
-    list of thread and backing store identifiers &
+                              list of thread, \endgraf
+                              \hspace{0.5cm} backing store \endgraf
+                              \hspace{0.5cm} and stack identifiers &
     (none) &
     invalid identifier \newline
     thread already started
@@ -550,8 +552,8 @@ priority non-empty queue is running.
 A thread becomes eligible to run after it is started, and stops being
 eligible to run when it is blocked.
 Threads are started using the \texttt{start\-Threads} operation, which
-takes a list of threads to start, together with the backing stores
-associated with them.
+takes a list of threads to start, together with the backing stores and
+stacks associated with them.
 They must be started by the infrastructure when its enclosing mission
 starts.
 The reason for the separation between thread creation and thread start

@@ -275,11 +275,12 @@ Some channels are marked with various symbols (*, \dag{}, {}+{} and
       & $executeMethodRet$ & $ThreadID \cross Word$ & I & L  \\
       & $continueExecution$ & $ThreadID$ & I & L \\
       & $initMainThread$ & $StackID$ & L & I \\ 
-      * & $register$ & $ObjectID$ & I & L \\
-      * & $registerRet$ & \textless no parameters\textgreater & L & I \\
+      *\dag & $register$ & $ThreadID \cross ObjectID$ & I & L \\
+      %* & $registerRet$ & \textless no parameters\textgreater & L & I \\
       *\dag & $enterPrivateMemory$ & $ThreadID \cross \nat \cross ObjectID$ & I & L \\
       *\dag & $executeInAreaOf$ & $ThreadID \cross ObjectID \cross ObjectID$ & I & L \\
       *\dag & $executeInOuterArea$ & $ThreadID \cross ObjectID$ & I & L \\
+      \dag & $enterPerReleaseMemory$ & $ThreadID \cross ObjectID$ & I & L \\
       {}+{} & $suspend$ & \textless no parameters\textgreater & I & L \\
       {}+{} & $suspendRet$ & \textless no parameters\textgreater & L & I \\
       {}+{} & $resumeThread$ & $ThreadID$ & I & L \\
@@ -351,9 +352,9 @@ The channels marked with a * represent calls to infrastructure methods
 that are part of the SCJ API.
 The inputs and outputs of these methods (and hence the types of the
 channels associated with them) are taken from the SCJ specification.
-Among these, the ones also marked with a \dag{} are methods that do
-not return a value and involve execution of a method in the
-interpreter as part of their handling.
+The channels marked with a \dag{} are methods that do not return a
+value and involve execution of a method in the interpreter as part of
+their handling.
 Thus, the interpreter waits for a signal on the $executeMethod$
 channel after signalling the launcher to handle one of these methods.
 The methods marked with a \dag{} do not, therefore, require separate
