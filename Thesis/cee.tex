@@ -462,8 +462,8 @@ As an optimisation in an implementation, the launcher could be changed
 to access struct fields in the same way as the interpreter.
 We discuss the form of field accesses in the C code and the channels
 used for them in more detail in
-Sections~\ref{cee-struct-manager-section}
-and~\ref{cee-c-program-section}.
+Sections~\ref{cee-struct-manager-subsection}
+and~\ref{cee-c-program-subsection}.
 
 %\input{../../SCJ-VM/James/LIchans.zed}
 
@@ -487,17 +487,17 @@ It is described by the $Launcher$ process.
 The launcher remains unaffected throughout the compilation strategy,
 because it is agnostic to the class and bytecode information.
 However, the launcher must know where to begin execution, so it takes
-a single parameter, $safeletClass$, which is the $ClassID$ of the
+a parameter, $safeletClass$, which is the $ClassID$ of the
 \texttt{Safelet} class.
 This can be seen in the the $Launcher$ process definition, the
 beginning of which is shown below.
 
 Class initialisers must be executed as part of the SCJVM startup
-procedure, which the launcher manages.
-The order they are executed is determined by the dependencies between
-class initialisers and classes, and is passed to the $Launcher$
-process as a second parameter, $initOrder$, which is a sequence of
-$ClassID$s.
+procedure.
+The order in which they are executed is determined by the dependencies
+between class initialisers and classes, and is passed to the
+$Launcher$ process as a second parameter, $initOrder$, which is a
+sequence of $ClassID$s.
 \begin{circus}
   \circprocess Launcher \circdef safeletClass : ClassID; initOrder : \seq ClassID \circspot \circbegin
 \end{circus}
@@ -508,27 +508,26 @@ The complete definition can be found in
 Appendix~\ref{launcher-appendix}.
 
 The state of the $Launcher$ is divided into three parts.
-The first part contains the identifiers of the objects that form part
-of the SCJ mission model, so that the $Launcher$ can call methods of
-those objects during SCJVM startup.
-The second part contains information on the memory areas objects of
-the program, including the relationship between the memory areas and
+The first part contains the identifiers of the objects that form the
+SCJ mission model, so that the $Launcher$ can call methods of those
+objects during SCJVM startup.
+The second part contains information on the memory-area objects of
+the program, including the relationship between the memory-areas and
 the backing stores they represent, so that methods for entering and
-exiting memory areas can be handled.
+exiting memory-areas can be handled.
 The final part of the state describes the relationship between the
 schedulable objects of SCJ and the threads used by the CEE so that the
 threads can be started when mission execution begins.
 
-We proceed to describe the Z schemas specifying each part of the
-state.
+We use separate Z schemas to specify each part of the state.
 The first part is described by the $MissionManager$ schema, shown
 below.
 It contains the identifiers of three objects:
 \begin{itemize}
 \item $safelet$, the instance of the class implementing the
-  \texttt{Safelet} interface for the program,
+  \texttt{Safelet} interface for the program;
 \item $missionSequencer$, the mission sequencer
-  returned by the safelet's \texttt{getSequencer()} method, and
+  returned by the safelet's \texttt{getSequencer()} method; and
 \item $currentMission$, the mission that is currently executing.
 \end{itemize}
 Methods of these objects are called at various points throughout SCJVM
@@ -538,13 +537,13 @@ startup and mission execution.
 \end{schema}
 
 The second part of the $Launcher$'s state is described by the
-$MemoryAreaManager$ schema, shown below.
-It contains the identifiers of the memory area objects for the
+$MemoryAreaManager$ schema below.
+It contains the identifiers of the memory-area objects for the
 immortal memory, $immortalMemory$, and mission memory,
 $missionMemory$.
-There is a map, $backingStores$, that relates these object
-identifiers, and the identifiers of the other memory area objects, to
-the identifiers of the backing stores they represent.
+There is a map, $backingStores$, that relates these identifiers and
+the identifiers of the other memory-area objects, to the identifiers
+of the backing stores they represent.
 We also record the backing store identifiers of the per-release
 memories for each thread in the $perReleaseMemories$ map.
 Finally, to make sure that nested private memories can be reused,
@@ -559,21 +558,18 @@ private backing stores they contain, $privateMemoryMap$.
   \cdots
 \end{schema}
 Each of the maps in the $MemoryAreaManager$ is injective, since each
-memory area object has a distinct backing store and memory areas
-cannot share a nested private memory area.
-The invariants of $MemoryAreaManager$ ensure that each memory area
-object has a corresponding backing store in $backingStores$ and that
-areas which are not nested private memories do not appear in the range
-of $privateMemoryMap$.
-Since the invariants are quite complex due to the need to describe the
-relationships between all the different components, we do not include
-them here.
+memory-area object has a distinct backing store and memory-areas
+cannot share a nested private memory-area.
+The invariants of $MemoryAreaManager$ are elided above. 
+They ensure that each memory-area object has a corresponding backing
+store in $backingStores$, and that areas which are not nested private
+memories do not appear in the range of $privateMemoryMap$.
 
 The final part of the state is specified in the $SchedulableManager$
-schema, shown below.
-It simply contains a map, $schedulableThreads$, from the identifiers
-of schedulable objects to the identifiers of the threads associated
-with them.
+schema below.
+It contains a map, $schedulableThreads$, from the identifiers of
+schedulable objects to the identifiers of the threads associated with
+them.
 This map must be injective, since every schedulable object has a
 separate thread.
 \begin{schema}{SchedulableManager}
@@ -581,21 +577,17 @@ separate thread.
 \end{schema}
 
 The state of the process is then the conjunction of these three
-schemas, combined into a $LauncherState$ schema as shown below.
+schemas.
 \begin{circusaction}
   \circstate LauncherState == MissionManager \land MemoryAreaManager \land SchedulableManager
 \end{circusaction}
 
 The $Launcher$ state is initialised as described in $LauncherInit$,
 which is shown below.
-The object identifiers ($safelet$, $missionSequencer$,
-$currentMission$, $immortalMemory$ and $missionMemory$) are
-initialised to the $null$ identifier.
+The object identifiers are initialised to the $null$ identifier.
 They are later filled with non-$null$ identifiers as the corresponding
 objects are created during SCJVM execution.
-Similarly, each of the maps ($backingStores$, $perReleaseMemories$,
-$privateMemoryMap$ and $schedulableThreads$) is initialised to the
-empty set, to be filled as the items it records are created.
+Similarly, each of the maps is initialised to the empty set.
 \begin{schema}{LauncherInit}
 	LauncherState~'
 \where
@@ -607,25 +599,19 @@ empty set, to be filled as the items it records are created.
 	schedulableThreads' = \emptyset
 \end{schema}
 
-The main action of the $Interpreter$ then proceeds as shown below.
+The main action of the $Interpreter$ proceeds as shown below.
 The state is first initialised as described by $LauncherInit$ and then
-its behaviour is split into two actions $Startup$ and
-$RunNextMission$, which occur in sequential composition.
-The $Startup$ action represents the SCJVM startup procedure that must
-only be performed once at the start of SCJVM execution, whereas
-$RunNextMission$ is the procedure that must be performed for each
-mission run.
-We do not handle mission termination in the $Launcher$ model.
-This is because SCJ's mission termination procedure is quite complex,
-a formal account of it is already given
-elsewhere~\cite{cavalcanti2013, luckcuck2016, zeyda2011}, the
-termination procedure has almost no effect on our compilation
-strategy, and a single mission is sufficient for our examples to test
-the compilation strategy.
-Thus, $RunNextMission$ is only executed once, whereas in a model that
-did handle mission termination it would execute in a loop that
-repeatedly performs $RunNextMission$ for each mission returned by the
-mission sequencer.
+the actions $Startup$ and $RunNextMission$ follow in sequence.
+$Startup$ defines the SCJVM startup procedure that must be performed
+once at the start of SCJVM execution, whereas $RunNextMission$ defines
+the procedure that must be performed for each mission run.
+We do not handle mission termination in our $Launcher$ model.
+This is because the SCJ mission termination procedure has almost no
+effect on our compilation strategy; a single mission is sufficient for
+our examples to evaluate the compilation strategy.
+A formal account of it is available elsewhere~\cite{cavalcanti2013,
+  luckcuck2016, zeyda2011}. 
+Thus, $RunNextMission$ is only executed once.
 \begin{circusaction}
   \circspot \lschexpract LauncherInit \rschexpract \circseq Startup \circseq RunNextMission
 \end{circusaction}
@@ -643,12 +629,12 @@ It performs a number of actions in sequence, following the startup procedure for
 \item creating the \texttt{Safelet} object and storing it in
   $safelet$, in $CreateSafelet$;
 \item calling the \texttt{immortalMemorySize()} and
-  \texttt{globalBackingStoreSize()} of the $safelet$, and checking
-  that the size of the root backing store matches those values, in
-  $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
+  \texttt{globalBackingStoreSize()} methods of the $safelet$, and
+  checking that the size of the root backing store matches those
+  values, in $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
 \item calling the the \text{initializeApplication()} method of the $safelet$, in $InitializeApplication$;
 \item calling the $safelet$'s \texttt{getSequencer()} method and
-  storing the returned value in $missionSequencer$, in GetSequencer;
+  storing the returned value in $missionSequencer$, in $GetSequencer$;
   and
 \item creating the $missionMemory$ object with its corresponding backing store, in $CreateMissionMemory$.
 \end{itemize}
@@ -658,60 +644,92 @@ It performs a number of actions in sequence, following the startup procedure for
   \t1 GetSequencer \circseq CreateMissionMemory
 \end{circusaction}
 
-The procedure for running a mission is then defined in
-$RunNextMission$, shown below.
-This begins with calling the \texttt{getNextMission()} method of
-$missionSequencer$, in the $GetNextMission$ action.
+$RunNextMission$ begins with calling the \texttt{getNextMission()}
+method of $missionSequencer$, in the action $GetNextMission$.
 The returned mission is stored in $currentMission$.
 Its \texttt{missionMemorySize()} method is then executed, and the
 backing store of $missionMemory$ is resized to match, in
 $ResizeMissionMemory$.
-Next, in $InitializeMission$, mission's \texttt{initialize()} method
-is executed, during which the schedulable objects for the mission are
-registered.
+Next, in $InitializeMission$, the mission's \texttt{initialize()}
+method is executed, during which the schedulable objects for the
+mission are registered.
 Then, in $InitialiseAndStartThreads$, the registered schedulable
 objects have their stacks and backing stores created, after which the
 threads for all the schedulable objects are started.
-Finally, in $WaitForTermination$, the $main$ thread suspends itself
-and the $Launcher$ then waits, handling special methods when necessary
-for the threads of the program.
-Since termination is not actually handled, this phase of the program
-continues indefinitely.
+Finally, in $WaitForExecution$, the $main$ thread suspends itself and
+the $Launcher$ then waits, handling special methods for the threads of
+the program when necessary.
+Since termination is not handled, this phase of the program continues
+indefinitely.
 \begin{circusaction}
   RunNextMission \circdef GetNextMission \circseq ResizeMissionMemory \circseq InitializeMission \circseq \\
-  \t1 InitialiseAndStartThreads \circseq WaitForTermination 
+  \t1 InitialiseAndStartThreads \circseq WaitForExecution
 \end{circusaction}
 
 During these actions, methods are executed using the channels
 $executeMethod$, $executeMethodRet$ and $continueExecution$, discussed
 earlier.
-The identifiers of these methods, which may be standard methods from
-the SCJ API or implementation-defined API methods required by the
+The identifiers of the methods, which may be standard methods from the
+SCJ API, or implementation-defined API methods required by the
 launcher, are represented by constants in the model.
-Although most of the methods used by the Launcher are executed simply
-by communicating on each of the channels mentioned above in turn, the
-\texttt{initialize()} method of a mission needs handling of the
-\texttt{register()} method for each schedulable object, and other
-special methods are defined at the same time.
-These special methods are offered in external choice with the
-communication on the $executeMethodRet$ channel during execution of
-the \texttt{initialize()} method.
-In the $WaitForTermination$ action the special methods are offered on
-their own without offering communication on $executeMethodRet$.
+Although most of the methods used by the $Launcher$ are executed
+simply by communicating on each of the channels mentioned above in
+turn, the \texttt{initialize()} method of a mission requires handling
+of the \texttt{register()} method for each schedulable object.
+We must also provide handling for other special methods.
+This is done in the $HandleSpecialMethodsMainLoop$ action below, which
+offers handling of the special methods while waiting for return from
+the \texttt{initialize()} method on the $executeMethodRet$ channel.
+A similar action, without the final choice accepting
+$executeMethodRet$, is used to handle special methods in
+$WaitForExecution$.
+\begin{circusaction}
+  HandleSpecialMethodsMainLoop \circdef \circval memoryEntries : ThreadID \fun \nat; \circres retVal : Word \circspot \\
+  \t1 (\Extchoice t : ThreadID \circspot \\
+  \t2 EnterMemory(t) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop(memoryEntries \oplus \{ t \mapsto memoryEntries~t + 1 \}, retVal)) \\
+  \t1 {} \extchoice {} \\
+  \t1 (\Extchoice t : ThreadID \circspot \\
+  \t2 \lcircguard memoryEntries~t > 0 \rcircguard \circguard ExitMemory(t) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop(memoryEntries \oplus \{ t \mapsto memoryEntries~t - 1 \}, retVal)) \\
+  \t1 {} \extchoice {} \\
+  \t1 ((Register \extchoice Suspend \extchoice Resume) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop(memoryEntries, retVal)) \\
+  \t1 {} \extchoice {} \\
+  \t1 (\lcircguard \forall t : ThreadID @ memoryEntries~t = 0 \rcircguard \circguard {} \\
+  \t2 executeMethodRet?thr \prefixcolon (thr = main) ?r \then continueExecution!main \then retVal := r)
+\end{circusaction}
+The complexity in the $HandleSpecialMethodsMainLoop$ action comes from
+the handling of memory-area entering methods, which execute another
+method after entering a memory-area, during which further special
+methods may be called.
+Each entry to a memory-area must be matched by a corresponding exit
+from the memory-area when this extra method execution returns.
+Thus, the entries to memory-areas are tracked in the $memoryEntries$
+map, which records how many memory-area entries have occurred on each
+thread.
+The number stored in $memoryEntries$ for a thread identifier $t$ is
+incremented after handling a memory-area entry on that thread as
+described in $EnterMemory(t)$.
+Similarly, it is decremented after handling exit from the memory-area
+in $ExitMemory(t)$, which is only offered if the value is already
+greater than zero.
+After handling memory-area entry or exit, or another special method
+(handled in the actions $Register$, $Suspend$ and $Resume$),
+$HandleSpecialMethodsMainLoop$ recurses to allow further special
+methods to be handled.
 
-The special methods for entering memory areas require extra handling,
-since another method is executed once the memory area has been
-entered.
-The $ExecuteInAreaOf$ action, shown below, is the simplest of the
-actions for handling memory area entering methods, so we use it here
-to illustrate the system for handling such methods.
-The memory areas entered are tracked separately for each thread, so
-this action takes a thread identifier parameter, $thread$, and only
-accepts channel communications on that thread.
+To illustrate how the execution of another method is performed when a
+memory-area is entered, we show the $ExecuteInAreaOf$ action below,
+which is one of the actions offered in external choice in
+$EnterMemory$.
+$ExecuteInAreaOf$ takes a thread identifier $thread$ as a parameter
+and only accepts communications from that thread, so that we can
+separate out memory-area entries for each thread.
 The identifier of a \texttt{Runnable} object, $runnable$, is received
 via the $executeInAreaOf$ channel, which is the object that indicates
-the method to be executed in the memory area. 
-Such an identifier is received for all of the memory area entering
+the method to be executed in the memory-area. 
+Such an identifier is received for all of the memory-area entering
 methods.
 In the case of $ExecuteInAreaOf$, another identifier, $object$, is
 also received and a $FindBackingStore$ action is used to communicate
@@ -721,28 +739,29 @@ $enterBackingStore$ channel.
 The class of the $runnable$ object is then determined and its
 \texttt{run()} method (represented here by the $run$ identifier) is
 executed by signalling on the $executeMethod$ channel.
+No communication on the $executeMethodRet$ channel is waited for in
+this action.
 \begin{circusaction}
   ExecuteInAreaOf \circdef \\
-  \t1 \circval thread : ThreadID \circspot \circvar bs : BackingStoreID; runnable, object : ObjectID \circspot \\
+  \t1 \circval thread : ThreadID \circspot \circvar runnable, object : ObjectID; bs : BackingStoreID \circspot \\
   \t1 executeInAreaOf?t \prefixcolon (t = thread) ?obj?r \then object, runnable := obj, r \circseq \\
   \t1 FindBackingStore(object, bs) \circseq \\
   \t1 enterBackingStore!thread!bs \then getClassIDOf!runnable?runnableClass \\
   \t1 {} \then executeMethod!thread!runnableClass!run!(\langle runnable \rangle) \then \Skip
 \end{circusaction}
 The return from the \texttt{run()} method, and the exit from the
-memory area, is specified by the $ExitMemory$ action shown below.
+memory-area, is specified by the $ExitMemory$ action below.
 This, as with the $ExecuteInAreaOf$ action, takes a $thread$
 parameter.
 A return from a method executing on that thread is accepted on the
 $executeMethodRet$ channel, and its return value is discarded as the
 \texttt{run()} method is \texttt{void}.
-The exit from the memory area is then performed using the
+The exit from the memory-area is then performed using the
 $exitBackingStore$ and $exitBackingStoreRet$ channels.
 The $Launcher$ state may then be updated to account for the exited
-memory area being cleared (due to no longer being in use by any
-thread), which is specified in the $ClearPrivateMemory$ schema and
-which we omit here since it is not the focus of this discussion.
-After the exit from the memory area has been handled, the $Launcher$
+memory-area being cleared (due to no longer being in use by any
+thread), which is specified in the $ClearPrivateMemory$ schema.
+After the exit from the memory-area has been handled, the $Launcher$
 signals that normal execution on $thread$ may continue using the
 $continueExecution$ channel.
 \begin{circusaction}
@@ -754,53 +773,26 @@ $continueExecution$ channel.
   \t1 \circfi \circseq continueExecution!thread \then \Skip
 \end{circusaction}
 
-The entries to and exits from memory areas are counted for each thread
-so that each entry is matched by one exit and $ExitMemory$ is only
-offered for threads that have entered at least one memory area through
-the memory entering actions.
-This is ensured by the definition of the
-$HandleSpecialMethodsMainLoop$ action, part of which is shown below. 
-It uses a map, $memoryEntries$, to record how many memory areas have
-been entered for each thread, incrementing it after each memory entry
-(described by $EnterMemory$, which combines the memory entering
-operations) and decrementing it after each memory exit (described by
-$ExitMemory$).
-The choice of actions is offered separately for each thread so that we
-know which thread the entry or exit is occurring on.
-The action recurses after an entry or exit so that further special
-methods can be handled.
-\begin{circusaction}
-  HandleSpecialMethodsMainLoop \circdef \circval memoryEntries : ThreadID \fun \nat; \circres retVal : Word \circspot \\
-  \t1 (\Extchoice t : ThreadID \circspot \\
-  \t2 EnterMemory(t) \circseq \\
-  \t2 HandleSpecialMethodsMainLoop(memoryEntries \oplus \{ t \mapsto memoryEntries~t + 1 \}, retVal)) \\
-  \t1 {} \extchoice {} \\
-  \t1 (\Extchoice t : ThreadID \circspot \\
-  \t2 \lcircguard memoryEntries~t > 0 \rcircguard \circguard ExitMemory(t) \circseq \\
-  \t2 HandleSpecialMethodsMainLoop(memoryEntries \oplus \{ t \mapsto memoryEntries~t - 1 \}, retVal)) \\
-  \t1 {} \extchoice {} \\
-  \t1 \cdots
-\end{circusaction}
-
-Apart from the memory area entering methods, the \texttt{register()}
+Apart from the memory-area entering methods, the \texttt{register()}
 method also needs to execute a method in the interpreter to obtain a
 thread's priority.
 Further special methods are not handled in this case, since the method
-is expected to be a simple method that does not call special methods
-and so further complicating matters is unnecessary.
+to obtain a thread's priority is expected to be a simple method that
+does not call special methods.
 
-In order to allow the special methods to be handled, the interpreter
-(or C code) must communicate with the $Launcher$ when such methods are
-encountered.
+This handling of special methods is used by the interpreter process
+(or C program, after compilation), which must communicate with the
+$Launcher$ when such methods are encountered.
 To allow for the behaviour of executing methods after entering memory
 areas (or during the \texttt{register()} method), the interpreter must
-be prepared to execute a method after signalling to the $Launcher$.
-This then gets transformed to nested method executions during the
-compilation strategy in order to preserve the communication pattern
-with the launcher.
-We describe how this communication is performed in the interpreter and
-C code in more detail in later sections.
-
+also be prepared to execute another method after signalling to the
+$Launcher$.
+This is transformed to nested method executions during the compilation
+strategy in order to preserve the communication pattern with the
+$Launcher$.
+We describe in more detail how this communication is performed in the
+interpreter in Section~\ref{cee-interpreter-subsection}, and in C
+program in Section~\ref{cee-c-program-subsection}.
 
 % \input{../../SCJ-VM/James/launcher.zed}
 
@@ -1147,7 +1139,7 @@ process representing the entire core execution environment.
 \label{cee-c-code-section}
 
 \subsection{Struct Manager}
-\label{cee-struct-manager-section}
+\label{cee-struct-manager-subsection}
 
 $StructMan_{cs}$ manages objects represented by C structs that
 incorporate the class information from $cs$, refining the process
@@ -1179,7 +1171,7 @@ SCJVM to the $ObjectStruct$ type, representing the C structs in
 memory, and provides access to the individual values in that map.
 
 \subsection{Shallow Embedding of C in \Circus{}}
-\label{cee-c-program-section}
+\label{cee-c-program-subsection}
 
 In our approach, compilation generates a C program represented by a
 \Circus{} process.
