@@ -632,7 +632,7 @@ It performs a number of actions in sequence, following the startup procedure for
   \texttt{globalBackingStoreSize()} methods of the $safelet$, and
   checking that the size of the root backing store matches those
   values, in $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
-\item calling the the \text{initializeApplication()} method of the $safelet$, in $InitializeApplication$;
+\item calling the \texttt{initializeApplication()} method of the $safelet$, in $InitializeApplication$;
 \item calling the $safelet$'s \texttt{getSequencer()} method and
   storing the returned value in $missionSequencer$, in $GetSequencer$;
   and
@@ -653,7 +653,7 @@ $ResizeMissionMemory$.
 Next, in $InitializeMission$, the mission's \texttt{initialize()}
 method is executed, during which the schedulable objects for the
 mission are registered.
-Then, in $InitialiseAndStartThreads$, the registered schedulable
+Afterwards, in $InitialiseAndStartThreads$, the registered schedulable
 objects have their stacks and backing stores created, after which the
 threads for all the schedulable objects are started.
 Finally, in $WaitForExecution$, the $main$ thread suspends itself and
@@ -674,8 +674,9 @@ SCJ API, or implementation-defined API methods required by the
 launcher, are represented by constants in the model.
 Although most of the methods used by the $Launcher$ are executed
 simply by communicating on each of the channels mentioned above in
-turn, the \texttt{initialize()} method of a mission requires handling
-of the \texttt{register()} method for each schedulable object.
+turn, as noted above, in $InitializeMission$, the
+\texttt{initialize()} method of a mission requires handling of the
+\texttt{register()} method for each schedulable object.
 We must also provide handling for other special methods.
 This is done in the $HandleSpecialMethodsMainLoop$ action below, which
 offers handling of the special methods while waiting for return from
@@ -699,15 +700,26 @@ $WaitForExecution$.
   \t1 (\lcircguard \forall t : ThreadID @ memoryEntries~t = 0 \rcircguard \circguard {} \\
   \t2 executeMethodRet?thr \prefixcolon (thr = main) ?r \then continueExecution!main \then retVal := r)
 \end{circusaction}
-The complexity in the $HandleSpecialMethodsMainLoop$ action comes from
-the handling of memory-area entering methods, which execute another
-method after entering a memory-area, during which further special
-methods may be called.
+$HandleSpecialMethodsMainLoop$ takes a value parameter,
+$memoryEntries$, which is a map recording how many times a memory area
+has been entered for each thread.
+It also take a value parameter, $retVal$, which captures the return
+value from the execution of the method on the $main$ thread.
+It offers a choice of handling a memory-area entry, handling the
+corresponding memory-area exit, handling a special method that does
+not enter memory-areas, or accepting return from the execution of the
+method on the $main$ thread (handled in the usual way using
+$executeMethodRet$ and $continueExecution$, with the return value
+stored in $retVal$).
+
+$HandleSpecialMethodsMainLoop$ handles memory-area entering
+methods, which execute another method after entering a memory-area,
+during which further special methods may be called.
 Each entry to a memory-area must be matched by a corresponding exit
 from the memory-area when this extra method execution returns.
 Thus, the entries to memory-areas are tracked in the $memoryEntries$
-map, which records how many memory-area entries have occurred on each
-thread.
+map.
+
 The number stored in $memoryEntries$ for a thread identifier $t$ is
 incremented after handling a memory-area entry on that thread as
 described in $EnterMemory(t)$.
@@ -718,11 +730,14 @@ After handling memory-area entry or exit, or another special method
 (handled in the actions $Register$, $Suspend$ and $Resume$),
 $HandleSpecialMethodsMainLoop$ recurses to allow further special
 methods to be handled.
+The return from the top-level method execution on the $main$ thread is
+only permitted once all memory areas have been exited and
+$memoryEntries$ is zero for all threads.
 
-To illustrate how the execution of another method is performed when a
-memory-area is entered, we show the $ExecuteInAreaOf$ action below,
-which is one of the actions offered in external choice in
-$EnterMemory$.
+To illustrate how the nested method execution after memory-area entry
+is performed, we show the $ExecuteInAreaOf$ action below, which is one
+of the actions offered in external choice in $EnterMemory$, along with
+actions to handle other memory-area entering operations.
 $ExecuteInAreaOf$ takes a thread identifier $thread$ as a parameter
 and only accepts communications from that thread, so that we can
 separate out memory-area entries for each thread.
@@ -736,11 +751,13 @@ also received and a $FindBackingStore$ action is used to communicate
 with the memory manager to determine its backing store.
 This backing store is then entered, via communication on the
 $enterBackingStore$ channel.
-The class of the $runnable$ object is then determined and its
+The class of the $runnable$ object is determined and its
 \texttt{run()} method (represented here by the $run$ identifier) is
 executed by signalling on the $executeMethod$ channel.
 No communication on the $executeMethodRet$ channel is waited for in
-this action.
+this action, because it is handled separately in the $ExitMemory$
+action since other special methods (including further memory entries)
+may occur inbetween.
 \begin{circusaction}
   ExecuteInAreaOf \circdef \\
   \t1 \circval thread : ThreadID \circspot \circvar runnable, object : ObjectID; bs : BackingStoreID \circspot \\
@@ -758,8 +775,8 @@ $executeMethodRet$ channel, and its return value is discarded as the
 \texttt{run()} method is \texttt{void}.
 The exit from the memory-area is then performed using the
 $exitBackingStore$ and $exitBackingStoreRet$ channels.
-The $Launcher$ state may then be updated to account for the exited
-memory-area being cleared (due to no longer being in use by any
+The $Launcher$ state may afterwards be updated to account for the
+exited memory-area being cleared (due to no longer being in use by any
 thread), which is specified in the $ClearPrivateMemory$ schema.
 After the exit from the memory-area has been handled, the $Launcher$
 signals that normal execution on $thread$ may continue using the
@@ -773,9 +790,8 @@ $continueExecution$ channel.
   \t1 \circfi \circseq continueExecution!thread \then \Skip
 \end{circusaction}
 
-Apart from the memory-area entering methods, the \texttt{register()}
-method also needs to execute a method in the interpreter to obtain a
-thread's priority.
+The \texttt{register()} method also needs to execute a method in the
+interpreter to obtain a thread's priority.
 Further special methods are not handled in this case, since the method
 to obtain a thread's priority is expected to be a simple method that
 does not call special methods.
@@ -793,6 +809,9 @@ $Launcher$.
 We describe in more detail how this communication is performed in the
 interpreter in Section~\ref{cee-interpreter-subsection}, and in C
 program in Section~\ref{cee-c-program-subsection}.
+In the next section, we describe the bytecode interpreter, which,
+along with the $Launcher$, forms the CEE before the application of the
+compilation strategy.
 
 % \input{../../SCJ-VM/James/launcher.zed}
 
