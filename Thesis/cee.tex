@@ -818,24 +818,37 @@ compilation strategy.
 \section{Bytecode Interpreter Model}
 \label{cee-interpreter-section}
 
-% This chapter begins in Section~\ref{cee-assumptions-section} with an
-% explanation of the bytecode subset used in our work.
-% Afterwards, each part of the \Circus{} model of the core execution
-% environment is presented in a separate section.
-% The object manager, along with the structure of objects, is
-% described in Section~\ref{cee-memory-section}.
-% The interpreter is described by first describing the stack frame
-% structure in Section~\ref{cee-stack-frames-section}, then the
-% interpreter itself is presented in
-% Section~\ref{cee-interpreter-section}.
-% The launcher is presented in Section~\ref{cee-launcher-section}.
-% Finally the parts are drawn together into the complete model in
-% Section~\ref{complete-cee-section}. 
-% A full version of the CEE model can be found in
-% Appendix~\ref{full-cee-model}.
+This section describes the bytecode interpreter that handles execution
+of an SCJ byecode program.
+This bytecode interpreter is composed of two processes:~the object
+manager, $ObjMan$, and the interpreter itself, $Interpreter$.
+These are composed together in parallel with the $Launcher$ to form
+the complete core execution environment, $CEE$, as shown below.
+The synchronisation sets and channel hidings, omitted here, are
+consistent with the comunnication patterns shown in
+Table~\ref{cee-channel-table}.
+The parameters of each of the components, including the classes, $cs$,
+and bytecode instructions, $bc$, which will be explained later in this
+section, become parameters of $CEE$.
+\begin{circus}
+  CEE(cs,bc,sid,initOrder) \circdef ObjMan(cs) \parallel
+  Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
+\end{circus}
+
+In Section~\ref{cee-bytecode-subset-subsection}, we first give an
+informal description of the bytecode instructions handled in our model
+and the ways in which their SCJ semantics differ from those of
+standard Java.
+Then, in Section~\ref{cee-classes-subsection}, we describe our model
+of Java class information that is used by the two components that,
+along with the $Launcher$, form the bytecode interpreter.
+The first component, the object manager, is described in
+Section~\ref{cee-object-manager-subsection} and the second component,
+the interpreter itself, is described in
+Section~\ref{cee-interpreter-subsection}.
 
 \subsection{Bytecode Subset}
-\label{cee-assumptions-subsection}
+\label{cee-bytecode-subset-subsection}
 
 Due to the complexity of the JVM and Java bytecode, we model a subset
 of Java bytecode.
@@ -873,7 +886,7 @@ objects and invocation of methods.
 
 \begin{table}
   \centering
-  \begin{tabular}{llp{8cm}}
+  \begin{tabular}{llp{8.5cm}}
     \hline
     Instruction & Parameter & Description \\
     \hline
@@ -902,13 +915,26 @@ objects and invocation of methods.
     index for the referenced object, and pushes it onto the operand
     stack.
     \\
+    \texttt{getstatic} & constant pool index &
+    Gets the value of the static field specified by the field and
+    class identifiers at the given constant pool index, and pushes it
+    onto the operand stack.
+    \\
+    \texttt{goto} & program address &
+    Unconditionally branches to the given program address.
+    \\
     \texttt{iadd} & (none) &
     Pops two integer values from the operand stack, adds them, and
-    pushes the result back onto the operand stack.
+    pushes the result onto the operand stack.
     \\
     \texttt{iconst} & integer value &
     Pushes the given integer value onto the operand stack of the
     current method.
+    \\
+    \texttt{if\_icmple} & program address &
+    Pops two integer values from the operand stack, and branches to
+    the given program address if the second value popped is less than
+    or equal to the first value.
     \\
     \texttt{ineg} & (none) &
     Pops an integer value from the operand stack, negates it, and
@@ -917,8 +943,13 @@ objects and invocation of methods.
     \texttt{invokespecial} & constant pool index &
     Gets the method and class identifier at the given constant pool
     index and invokes the specified method of the specified class,
-    popping the method's arguments, including a \texttt{this} object
+    popping the method's arguments, plus a \texttt{this} object
     reference, from the operand stack.
+    \\
+    \texttt{invokestatic} & constant pool index &
+    Gets the method and class identifier at the given constant pool
+    index and invokes the specified method of the specified class,
+    popping the method's arguments from the operand stack.
     \\
     \texttt{invokevirtual} & constant pool index &
     Gets the method and class identifier at the given constant pool
@@ -935,6 +966,11 @@ objects and invocation of methods.
     Pops an object reference and value from the operand stack and
     stores the value in the field specified by the identifier at the
     given constant pool index for the referenced object.
+    \\
+    \texttt{putstatic} & constant pool index &
+    Pops a value from the operand stack and stores the value in the
+    static field specified by the field and class identifiers at the
+    given constant pool index.
     \\
     \texttt{return} & (none) &
     Returns from a method with no return value.
@@ -1105,7 +1141,7 @@ is passed to the object manager and the interpreter.
 \input{../../SCJ-VM/James/classes.zed}
 
 \subsection{Object Manager}
-\label{cee-memory-subsection}
+\label{cee-object-manager-subsection}
 
 The SCJVM memory manager deals with memory solely in terms of sets of
 memory addresses, meaning that it the core execution environment needs
@@ -1116,8 +1152,8 @@ a separate \Circus{} process, which is described in this section.
 
 \input{../../SCJ-VM/James/memory.zed}
 
-\subsection{Stack Frames}
-\label{cee-stack-frames-subsection}
+\subsection{Interpreter}
+\label{cee-interpreter-subsection}
 
 The JVM has a stack composed of a series of stack frames, which
 contain information about the invoked methods.
@@ -1128,9 +1164,6 @@ The stack frames are used to form the frame stack used by the
 interpreter in the next section.
 
 \input{../../SCJ-VM/James/stack_frames.zed}
-
-\subsection{Interpreter}
-\label{cee-interpreter-subsection}
 
 The interpreter manages the execution of the bytecode instructions of
 methods.
