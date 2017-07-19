@@ -819,13 +819,13 @@ compilation strategy.
 \label{cee-interpreter-section}
 
 This section describes the bytecode interpreter that handles execution
-of an SCJ byecode program.
+of an SCJ bytecode program.
 This bytecode interpreter is composed of two processes:~the object
 manager, $ObjMan$, and the interpreter itself, $Interpreter$.
 These are composed together in parallel with the $Launcher$ to form
 the complete core execution environment, $CEE$, as shown below.
 The synchronisation sets and channel hidings, omitted here, are
-consistent with the comunnication patterns shown in
+consistent with the communication patterns shown in
 Table~\ref{cee-channel-table}.
 The parameters of each of the components, including the classes, $cs$,
 and bytecode instructions, $bc$, which will be explained later in this
@@ -1018,8 +1018,25 @@ It has been chosen for its frequent occurrence in object initialisation.
 Other instructions that do simple operand stack manipulation,
 including the arithmetic instructions, can be specified similarly.
 
-Instructions that create object references and pass them around are
-also included to allow the full range of object manipulations.
+We also include a few arithmetic instructions as an example of how
+integers would be handled.
+Specifically, we include the integer addition operation,
+\texttt{iadd}, as an example of a binary operation, and the integer
+negation operation, \texttt{ineg}, as an example of an unary
+operation.
+We do not include operations for floating point values since the
+operations upon them are not substantially different from those on
+integers at the level of modelling and compilation.
+The model can be easily extended to include more integer operations.
+
+Instructions that create object references (the \texttt{new} and
+\texttt{aconst\_null} instructions), pass them around (\texttt{aload},
+\texttt{astore}, \texttt{areturn}, etc.), and permit
+field accesses (\texttt{getfield} and \texttt{putfield}) are also
+included to allow the full range of object manipulations.
+We also provide instructions for \texttt{static} field accesses
+(\texttt{getstatic} and \texttt{putstatic}) since they are of use in
+sharing data between different parts of the program.
 However, arrays are not included as they require additional
 instructions and can be emulated, albeit inefficiently, with the
 instructions given here.
@@ -1029,9 +1046,27 @@ instructions, which invoke methods on objects, are included.
 The \texttt{invokevirtual} instruction looks up the method to invoke
 in the method table for the class of the object that the method is
 invoked on.
-The \texttt{invokespecial} method, on the other hand, uses the class
-identifier supplied in the method reference pointed to by the
+The \texttt{invokespecial} instruction, on the other hand, uses the
+class identifier supplied in the method reference pointed to by the
 parameter of the instruction when looking up the method.
+The \texttt{invokestatic} instruction, for invoking \texttt{static}
+methods of classes, is similar to \texttt{invokespecial}, but does not
+supply a \texttt{this} object parameter, whereas
+\texttt{invokevirtual} and \texttt{invokespecial} pop \texttt{this}
+from the stack as an extra argument.
+
+The \texttt{goto} and \texttt{if\_icmple} instructions are provided as
+examples of control flow instructions, with \texttt{goto} representing
+an unconditional branch and \texttt{if\_icmple} representing a
+conditional branch.
+Other forms of conditional branch may be implemented in a similar
+fashion to \texttt{if\_icmple}, but we do not include those in our
+subset since \texttt{if\_icmple} is sufficient to represent most
+control flow structures.
+Although \texttt{goto} could be represented as a special case of
+\texttt{if\_icmple}, we include it as a separate instruction due to
+its frequent use in conjunction with \texttt{if\_icmple} to implement
+loops.
 
 We do not handle exceptions; errors in the SCJVM are instead handled
 by simply aborting execution.
@@ -1069,21 +1104,6 @@ We would introduce a lot of duplication in the model if, for example,
 both the \texttt{areturn} and \texttt{ireturn} instructions were to be
 included.
 
-We also include a few arithmetic instructions as an example of how
-integers would be handled.
-Specifically, we include the integer addition operation,
-\texttt{iadd}, as an example of a binary operation, and the integer
-negation operation, \texttt{ineg}, as an example of an unary
-operation.
-We do not include operations for floating point values since the
-operations upon them are not substantially different from those on
-integers at the level of modelling and compilation.
-The model can be easily extended to include more integer operations.
-
-We also do not consider static methods and fields.
-That would add some complexity to our model and most of the
-considerations are covered by non-static methods and fields.
-
 Because we are considering bytecode arising from an SCJ program, some
 requirements of SCJ permit further simplifications to our bytecode
 subset.
@@ -1110,22 +1130,24 @@ only to optimise method lookup.
 In terms of concurrency considerations, we are assuming our SCJVM to
 be single processor, and so we do not need to have more than one
 interpreter.
+However, as we see later, the interpreter's threads are modelled using
+separate \Circus{} processes, although execution only occurs on one at
+a time.
 We also assume that thread switches can only occur between bytecode
 instructions in the interpreter.
-This is justified since bytecode instructions should be atomic.
-Execution occurring in other parts of the core execution environment
-can also be made atomic via disabling of interrupts.
-This is advisable since such execution often involves manipulation of
-shared state.
-
-We also do not consider the SCJ mission termination protocol since it
-is complex and is not relevant to the central focus of the model,
-which is the handling of bytecode instructions.
+This is justified since bytecode instructions should appear to be
+atomic.
+An implementation may be non-atomic as long as the externally visible
+sequence of events is the same as for the model with atomic
+instructions.
+This means that instructions requiring communication with other
+components of the SCJVM, such as \texttt{new}, which communicates with
+the memory manager, must be atomic since that they affect shared
+state.
 
 Having described our bytecode subset and the assumptions we are
-making, we now present our model of the core execution environment,
-beginning with an explanation of the class structure in the next
-section.
+making, we now proceed to describe our model of Java classes in the
+next section.
 
 \subsection{Classes}
 \label{cee-classes-subsection}
