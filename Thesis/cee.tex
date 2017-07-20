@@ -820,15 +820,16 @@ compilation strategy.
 
 This section describes the bytecode interpreter that handles execution
 of an SCJ bytecode program.
-This bytecode interpreter is composed of two processes:~the object
-manager, $ObjMan$, and the interpreter itself, $Interpreter$.
+Its model is composed of two processes:~the model of the object
+manager, $ObjMan$, and the model of the interpreter itself,
+$Interpreter$.
 These are composed together in parallel with the $Launcher$ to form
 the complete core execution environment, $CEE$, as shown below.
 The synchronisation sets and channel hidings, omitted here, are
 consistent with the communication patterns shown in
 Table~\ref{cee-channel-table}.
 The parameters of each of the components, including the classes, $cs$,
-and bytecode instructions, $bc$, which will be explained later in this
+and bytecode instructions, $bc$, which are explained later in this
 section, become parameters of $CEE$.
 \begin{circus}
   CEE(cs,bc,sid,initOrder) \circdef ObjMan(cs) \parallel
@@ -837,52 +838,28 @@ section, become parameters of $CEE$.
 
 In Section~\ref{cee-bytecode-subset-subsection}, we first give an
 informal description of the bytecode instructions handled in our model
-and the ways in which their SCJ semantics differ from those of
-standard Java.
-Then, in Section~\ref{cee-classes-subsection}, we describe our model
-of Java class information that is used by both $ObjMan$ and
-$Interpreter$.
+and the ways in which their SCJ semantics differ from that of standard
+Java.
+In Section~\ref{cee-classes-subsection}, we describe our model of Java
+class information that is used by both $ObjMan$ and $Interpreter$.
 The first component, $ObjMan$, is described in
-Section~\ref{cee-object-manager-subsection} and the second component,
-$Interpreter$, is described in
-Section~\ref{cee-interpreter-subsection}.
+Section~\ref{cee-object-manager-subsection} and the second,
+$Interpreter$, in Section~\ref{cee-interpreter-subsection}.
 
 \subsection{Bytecode Subset}
 \label{cee-bytecode-subset-subsection}
 
-Due to the complexity of the JVM and Java bytecode, we model a subset
-of Java bytecode.
-It is sufficient to express a wide variety of SCJ programs and
-illustrate how further features may be added, but small enough to
-permit effective reasoning.
+We model a subset of Java bytecode sufficient to express a wide
+variety of SCJ programs and illustrate how further features may be
+added, but small enough to permit effective reasoning.
 The subset has been chosen by considering the bytecode generated from
-a minimal SCJ program and removing instructions similar to those
+a simple SCJ program and removing instructions similar to those
 already in the subset.
 This ensures the model is not unnecessarily complicated with trivial
 or redundant instructions, so we can concentrate on the instructions
 that are most of interest in creating the compilation strategy.
-
 The bytecode instructions in our subset are described in
 Table~\ref{bytecode-subset-table}.
-Java bytecode instructions operate over a state that records
-information on all loaded classes, a stack frame, and the object data
-residing in memory.
-Various pieces of class information are required for execution of
-bytecode instructions, but a constant pool, which stores all the
-constants and names required by the class, is the main information
-used.
-The constant pool contains references to classes, methods and fields
-used by the bytecode instructions in the class, as well as constant
-values used in the code.
-The form of the constant pool is a large array.
-Indices into this array are used as parameters to instructions
-requiring information from the constant pool.
-For example, the \texttt{getfield} and \texttt{putfield} instructions
-take constant pool index parameters pointing to a reference to a field
-whose value should be obtained or set.
-Other class information used at runtime includes information on fields
-and methods belonging to the class, which is required for creation of
-objects and invocation of methods.
 
 \begin{table}
   \centering
@@ -981,19 +958,41 @@ objects and invocation of methods.
   \label{bytecode-subset-table}
 \end{table}
 
+Java bytecode instructions operate over a state that records
+information on all loaded classes, a stack frame, and the object data
+residing in memory.
+Various pieces of class information are required for execution of
+bytecode instructions, but a constant pool, which stores all the
+constants and names required by the class, is the main information
+used.
+
+The constant pool contains references to classes, methods and fields
+used by the bytecode instructions in the class, as well as constant
+values used in the code.
+The form of the constant pool is a large array.
+Indices into this array are used as parameters to instructions
+requiring information from the constant pool.
+For example, the \texttt{getfield} and \texttt{putfield} instructions
+take constant pool index parameters pointing to a reference to a field
+whose value should be obtained or set.
+Other class information used at runtime includes information on fields
+and methods belonging to the class, which is required for creation of
+objects and invocation of methods.
+
 The frame stack forms the second part of the JVM manipulated by
 bytecode instructions and consists of a series of frames that contain
 the runtime information for each invocation of a method.
 When a method is invoked, a new stack frame is created for it and
 pushed onto the frame stack, and when the method returns, the stack
 frame is popped from the stack.
+
 Each stack frame contains an operand stack, which is used to store
 values manipulated by bytecode instructions, and an array of local
 variables.
 Most bytecode instructions manipulate the operand stack in some way,
 popping arguments from it, pushing results to it or performing
-specific operations upon it (such as in the case of the \texttt{dup}
-instruction, which duplicates the value on top of the operand stack).
+specific operations upon it.
+
 The local variables are used to store the arguments of a method and
 the results of computations performed on the operand stack.
 Operations are not performed directly on the local variables, so the
@@ -1006,7 +1005,6 @@ Some bytecode instructions also manipulate objects, which in our case
 reside in backing store memory.
 Such instructions include \texttt{new}, which creates objects, and
 \texttt{getfield}, which gets the value from a field of an object.
-
 In our choice of instructions for the subset, we mainly focus on
 manipulation of objects and method invocation, since those are core
 concepts of Java bytecode and require special handling by the
@@ -1019,7 +1017,7 @@ Other instructions that do simple operand stack manipulation,
 including the arithmetic instructions, can be specified similarly.
 
 We also include a few arithmetic instructions as an example of how
-integers would be handled.
+integers are handled.
 Specifically, we include the integer addition operation,
 \texttt{iadd}, as an example of a binary operation, and the integer
 negation operation, \texttt{ineg}, as an example of an unary
@@ -1070,9 +1068,11 @@ loops.
 
 We do not handle exceptions; errors in the SCJVM are instead handled
 by simply aborting execution.
-While the exception handling mechanism of Java is quite complex, the
-correct application of formal methods should eliminate errors in the
-SCJVM.
+SCJ programs can be statically verified to prove that exceptions will
+not be thrown~\cite{kalibera2010,marriott2014}.
+Furthermore, reliance on exceptions to handle errors has been
+discouraged by an empirical study due to the potential for errors in
+exception handling~\cite{sawadpong2012}.
 The bytecode instructions that relate to throwing and catching
 exceptions are, therefore, not included in our bytecode subset.
 
@@ -1083,23 +1083,20 @@ handled.
 Any SCJ API methods that take \texttt{long} or \texttt{double}
 arguments are viewed as taking \texttt{int} or \texttt{float} instead.
 The reason for this assumption is that handling of two word values
-complicates many bytecode instructions while adding little to the
-power of the bytecode subset.
-This makes little difference at the level of the formal model and our
+makes little difference at the level of the formal model and our
 approach can be easily extended to deal with more types.
 
 Further, we do not make a distinction between the different virtual
 machine types in our bytecode instructions.
 This is justified as the bytecode instructions simply handle values as
 32-bit words, with the type information only used for typechecking
-during bytecode validation, which the code passed into the core
-execution environment can be assumed to have already passed (it may be
-done by a separate component, which can be made safe using existing
-work on bytecode validation~\cite{klein2003, stark2001, coglio2000,
-  xavier2003}). 
-Instead, we include instructions that handle values as object
-references, since many of the instructions behave the same for
-different types.
+during bytecode validation. 
+The code passed into the core execution environment is assumed to have
+already passed, which may be done by a separate
+component~\cite{klein2003, stark2001, coglio2000, xavier2003}). 
+Since many of the instructions behave the same for different types, we
+only include those instructions that handle values as object
+references.
 We would introduce a lot of duplication in the model if, for example,
 both the \texttt{areturn} and \texttt{ireturn} instructions were to be
 included.
@@ -1115,10 +1112,9 @@ It is not included in our subset as it does not allow static
 typechecking and so should not be used for SCJ.
 
 The requirement for all classes to be loaded at startup greatly
-simplifies the semantics of several instructions since dynamic class
+simplifies the semantics of several instructions, since dynamic class
 loading does not need to be considered.
-It also means that method lookup tables can be precomputed, which
-simplifies method lookup.
+It also means that method lookup tables can be precomputed.
 This means that the semantics of the \texttt{invokevirtual} and
 \texttt{invokeinterface} instructions are the same, since they both
 invoke a method on an object, using the object's class as the class
@@ -1130,9 +1126,8 @@ only to optimise method lookup.
 In terms of concurrency considerations, we are assuming our SCJVM to
 be single processor, and so we do not need to have more than one
 interpreter.
-However, as we see later, the interpreter's threads are modelled using
-separate \Circus{} processes, although execution only occurs on one at
-a time.
+As we see later, the interpreter's threads are modelled using separate
+\Circus{} processes, but execution only occurs on one at a time.
 We also assume that thread switches can only occur between bytecode
 instructions in the interpreter.
 This is justified since bytecode instructions should appear to be
