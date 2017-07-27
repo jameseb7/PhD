@@ -1147,15 +1147,249 @@ next section.
 \subsection{Classes}
 \label{cee-classes-subsection}
 
-This section discusses the representation in our model of the
-information in Java class files.
-We identify the information that is relevant to our bytecode subset
-and present a Z schema to represent the class information needed by
-the SCJVM at runtime.
-The class type is used in the definition of the class information that
-is passed to the object manager and the interpreter.
+In our model, the information for the Java classes that form the
+program is stored in a map, $cs$, that is provided as a parameter to
+$CEE$.
+The $cs$ map associates $ClassID$s with records of a schema type
+$Class$ containing the information for each class.
+The $Class$ schema is defined as the conjunction of three schemas,
+each defining a different part of the class information.
+The first part contains the constant pool and indices into the
+constant pool.
+The second part contains information on the methods in the class.
+The final part contains information on the fields in the class.
 
-\input{../../SCJ-VM/James/classes.zed}
+The first part is described by the schema $ClassConstantPool$ below.
+Its components are $constantPool$, the constant pool itself, and some
+indices into $constantPool$:~$this$, referencing the current class,
+$super$, referencing the current class' superclass, and $interfaces$,
+a set of indices referencing the interfaces implemented by the
+current class.
+\begin{schema}{ClassConstantPool}
+  constantPool : CPIndex \pfun CPEntry \\
+  this, super : CPIndex \\
+  interfaces : \finset CPIndex
+\where
+  % the null constant pool entry is not a valid constant pool entry
+  nullCPIndex \notin \dom constantPool \\
+  % this, super and interfaces must all be valid constant pool indicies (except that super may be null)
+  \{this\} \cup (\{ super\} \setminus \{nullCPIndex\}) \cup interfaces \subseteq \dom constantPool \\
+  % this, super and interfaces must point to ClassRefs
+  constantPool \limg \{this, super\} \cup interfaces \rimg \subseteq \ran ClassRef
+\end{schema}
+% \begin{schema}{Class}
+%   constantPool : CPIndex \pfun CPEntry \\
+%   this, super : CPIndex \\
+%   interfaces : \finset CPIndex \\
+%   methodEntry, methodEnd : MethodID \pfun ProgramAddress \\
+%   methodLocals, methodStackSize : MethodID \pfun \nat \\
+%   fields, staticFields : \finset FieldID
+% \where
+%   % the null constant pool entry is not a valid constant pool entry
+%   nullCPIndex \notin \dom constantPool \\
+%   % this, super and interfaces must all be valid constant pool indicies (except that super may be null)
+%   \{this\} \cup (\{ super\} \setminus \{nullCPIndex\}) \cup interfaces \subseteq \dom constantPool \\
+%   % this, super and interfaces must point to ClassRefs
+%   constantPool \limg \{this, super\} \cup interfaces \rimg \subseteq \ran ClassRef \\
+%   \dom methodEntry = \dom methodEnd = \dom methodLocals = \dom methodStackSize \\
+%   \forall m : \dom methodEntry @ methodEntry~m \leq methodEnd~m \\
+%   % a method's local variables must at least include space for its arguments
+%   \forall m : \dom methodLocals @ methodArguments~m \leq methodLocals~m
+% \end{schema}
+The entries of $constantPool$ are indexed by a type $CPIndex$.
+In the JVM, the $CPIndex$ values are positive integers, but no
+arithmetic or comparison is performed on constant pool indices in our
+model so we do not represent that fact.
+
+We distinguish one particular $CPIndex$ value, a constant
+$nullCPIndex$, which represents an invalid index into the
+$constantPool$.
+It is used as a placeholder in cases when no index is present.
+For example, the class \texttt{Object} has no superclass, so the index
+of the constant pool entry referencing its superclass is
+$nullCPIndex$.
+
+Each of the entries in the $constantPool$ is represented by a free
+type $CPEntry$, the definition of which is shown below.
+It has three constructors:~$ClassRef$, representing a reference to a
+$ClassID$, $MethodRef$, representing a reference to a method of a
+particular class by a $ClassID$ and $MethodID$, and $FieldRef$,
+representing a reference to a field of a particular class by a
+$ClassID$ and $FieldID$.
+\begin{zed}
+  CPEntry ::= \\
+  \t1 ClassRef \ldata ClassID \rdata | MethodRef \ldata
+  ClassID \cross MethodID \rdata | FieldRef \ldata ClassID \cross
+  FieldID \rdata
+\end{zed}
+Although there are other types of constant pool entry described in the
+JVM specification, we do not include them in our model since some of
+them are not relevant to our subset. 
+Examples of such entries are those containing information for the
+$invokedynamic$ instruction or containing constant values which are
+pushed onto the stack by instructions not in our subset.
+Some constant pool entries are used by other constant pool entries.
+For example, in the JVM specification, method references reference
+another constant pool entry, which in turn contains references to
+further constant pool entries with string representations of the
+method's name and type.
+In our model, we hide this complexity in the identifier types
+$ClassID$, $MethodID$ and $FieldID$, omitting the extra constant pool
+entries.
+Thus, the $CPIndex$ values will be in the domain of $constantPool$
+will not necessarily be sequential.
+
+The first invariant of $ClassConstantPool$ requires that $nullCPIndex$
+not be in the domain of $constantPool$, since $nullCPIndex$ is not a
+valid index into $constantPool$.
+The second invariant of $ClassConstantPool$ states that the indices
+$this$, $super$, and $interfaces$ must be in the domain of
+$constantPool$, unless $super$ is $nullCPIndex$ (which will be the
+case for the \texttt{Object} class).
+Finally, the third invariant requires that the $constantPool$ entries
+at $this$, $super$ and $interfaces$ are $ClassRef$s.
+
+The second part of the class information is defined by $ClassMethods$,
+shown below.
+This is separate from $ClassConstantPool$ since the methods of a class
+will not necessarily appear in its constant pool.
+Only methods called by the bytecode of a class' methods will appear in
+its constant pool.
+The components of $ClassMethods$ are maps from $MethodID$ values to
+the information about each method.
+The first two, $methodEntry$ and $methodEnd$, map to $ProgramAddress$
+values, which are indices into a separate bytecode array representing
+the start and end points of the method.
+The last two components, $methodLocals$ and $methodStackSize$, map to
+natural numbers giving the required number of local variables and
+operand stack slots for the method.
+These values are used during the compilation strategy to declare C
+variables to store the local variables and operand stack values.
+\begin{schema}{ClassMethods}
+  methodEntry, methodEnd : MethodID \pfun ProgramAddress \\
+  methodLocals, methodStackSize : MethodID \pfun \nat
+\where
+  \dom methodEntry = \dom methodEnd = \dom methodLocals = \dom methodStackSize \\
+  \forall m : \dom methodEntry @ methodEntry~m \leq methodEnd~m \\
+  % a method's local variables must at least include space for its arguments
+  \forall m : \dom methodLocals @ methodArguments~m \leq methodLocals~m
+\end{schema}
+In addition to the components of $ClassMethods$, we declare a global
+function $methodArguments$ from $MethodID$s to natural numbers, which
+gives the number of arguments that each method takes.
+This is a global function since each $MethodID$ encodes the type of
+the method, so the number of arguments for a method can always be
+determined from its identifier.
+The $methodArguments$ function is also total for this reason.
+We use $methodArguments$ in one of the invariants of $ClassMethods$,
+and also in the $Interpreter$ and compilation strategy when handling
+method calls.
+
+The first invariant of $ClassMethods$ requires that all the component
+maps have the same domain, so that all the information must be
+supplied for any method present in the class.
+The second invariant requires that the $methodEntry$ for each method
+be before its $methodEnd$.
+Finally, the third invariant requires that $methodLocals$ be large
+enough for each method to contain its $methodArguments$, since each
+argument of a method is stored in a local variable.
+
+The final part of the class information is given in the $ClassFields$
+schema below.
+It contains two sets of $FieldID$s, $fields$ and $staticFields$, which
+are the identifiers of the class' object fields and static fields
+respectively.
+The static and non-static fields need to be distinguished so that we
+know where each needs to be stored:~static variables have only one
+copy for each class, whereas non-static fields are stored separately
+for each instance of a class.
+The $fields$ and $staticFields$ sets are required to be disjoint since
+no field can be both static and non-static.
+\begin{schema}{ClassFields}
+  fields, staticFields : \finset FieldID
+\where
+  fields \cap staticFields = \emptyset
+\end{schema}
+
+The three schemas containing the different parts of the class
+information are conjoined together to form $Class$, as shown below.
+\begin{zed}
+  Class == ClassConstantPool \land ClassMethods \land ClassFields
+\end{zed}
+
+In addition to defining $Class$, we also define functions for
+extracting information from the $constantPool$ for a given $Class$, in
+order to make specifying things about them easier.
+Since the functions are just abbreviations of data access operations,
+we omit them here.
+
+We also require a way of expressing the fact that one class is a
+subclass of another.
+For this, we define some relations between classes.
+The $\directsubclass$ relation, shown below, defines what it means for
+two $Class$ schemas to represent classes in a direct subclass
+relationship.
+A $Class$, $c1$, is a direct subclass of another $Class$, $c2$, if the
+identifier at the $this$ index for $c2$ is the identifier at $super$
+for $c1$, or the identifier at one of $c1$'s $interfaces$ indices.
+This treats both the case where $c2$ is the superclass of $c1$ and the
+case where $c2$ is an interface implemented by $c1$.
+The functions $superClassID$, $thisClassID$ and $interfacesClassIDs$
+are used in this definition to extract the $ClassID$ values at
+$super$, $this$ and $interfaces$ respectively from the $constantPool$.
+\begin{axdef}
+  \_ \directsubclass \_ : Class \rel Class
+  \where
+  \forall c1, c2 : Class @ c1 \directsubclass c2 \iff {} \\
+  \t1 (c1.super \neq nullCPIndex \land superClassID~c1 = thisClassID~c2) \\
+  \t1 {} \lor thisClassID~c2 \in interfacesClassIDs~c1
+\end{axdef}
+Another relation, $subclassRel$ is defined in terms of
+$\directsubclass$ to specify when a $ClassID$ refers to a class that
+is a subclass of the class referenced by another $ClassID$.
+In order to define this, we require a mapping from $ClassID$ to
+$Class$, so $subclassRel$ is defined in terms of a function from such
+a mapping to a relation on $ClassID$.
+A technical issue prevents $subclassRel$ from being used as an infix
+relation due to this.
+
+The definition of $subclassRel$ is shown below.
+Given a mapping $cs$ from $ClassID$ to $Class$ that is consistent with
+the information at the $this$ entry in the $constantPool$,
+$subclassRel~cs$ relates two $ClassID$ if they are in the domain of
+$cs$ and their corresponding $Class$es would be related under
+$\directsubclass$.
+The $subclassRel$ is also taken as a reflexive transitive closure so
+that it represents the relationship between a $ClassID$ and any
+$ClassID$ it could be used in place of.
+\begin{axdef}
+  subclassRel : (ClassID \pfun Class) \fun (ClassID \rel ClassID)
+  \where
+  \forall cs : ClassID \pfun Class | (\forall c : \dom cs @ thisClassID~(cs~c) = c) @\\
+  \t1 (\forall c1, c2 : ClassID @ (c1, c2) \in subclassRel~cs \iff (\{c1,c2\} \subseteq \dom cs \land cs~c1 \directsubclass cs~c2)) \\
+  \t1 \land subclassRel~cs = (subclassRel~cs)^*
+\end{axdef}
+
+The $cs$ map provided as a parameter to $CEE$ is used as the parameter
+to $subclassRel$ in each of the processes that uses it.
+In order to ensure $CEE$ works correctly (in particular, that it is
+divergence-free), several restrictions are placed on $cs$.
+One of these is the requirement that $Class$ associated with each
+$ClassID$ have its $this$ reference be the same as that $ClassID$,
+which is part of the $subclassRel$ definition.
+Further restrictions include having all superclasses present in the
+map and ensuring the ranges defined by $methodEntry$ and $methodEnd$
+for each $Class$ are disjoint.
+These restrictions are also used as assumptions in the compilation
+strategy laws.
+A full formal statement of the restrictions is given in the definition
+of a $cs$ constant in Appendix~\ref{constants-appendix}, which is used
+to instantiate the $cs$ parameter of $CEE$.
+The inputs to the interpreter and compilation strategy are expected to
+be refinements of the constant in Appendix~\ref{constants-appendix}.
+
+We next describe the object manager process, $ObjMan$, which uses the
+$Class$ type and the $cs$ map.
 
 \subsection{Object Manager}
 \label{cee-object-manager-subsection}
