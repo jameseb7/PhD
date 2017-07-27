@@ -1394,14 +1394,83 @@ $Class$ type and the $cs$ map.
 \subsection{Object Manager}
 \label{cee-object-manager-subsection}
 
-The SCJVM memory manager deals with memory solely in terms of sets of
-memory addresses, meaning that it the core execution environment needs
-to manage objects itself.
-As objects are used throughout the core execution environment, in both
-the interpreter and launcher, the management of objects is handled in
-a separate \Circus{} process, which is described in this section.
+The object manager, which is represented by the process $ObjMan$,
+manages the objects of the SCJ program executed by the core execution
+environment.
+This component is necessary since the SCJVM memory manager is agnostic
+to the structure of objects, which depends on the contents of the
+classes supplied as part of an SCJ program.
+It must also track the current allocation context for each thread to
+ensure objects are allocated in the correct allocation context, since
+the SCJVM memory manager is agnostic to the existence of threads.
 
-\input{../../SCJ-VM/James/memory.zed}
+The start of the definition of $ObjMan$ is shown below.
+$ObjMan$ takes a single parameter, $cs$, which is a map from
+$ClassID$s to $Class$ records containing the class information for
+each of the classes in the program.
+This information is used in determining the structure of the objects
+for each class.
+\begin{circus}
+  \circprocess ObjMan \circdef cs : ClassID \pfun Class \circspot \circbegin
+\end{circus}
+
+Since the actual arrangement of an object in memory is an
+implementation consideration, the amount of memory required to store
+each object is implementation-defined.
+It is represented here by a global function $sizeOfObject$, shown
+below, which maps the information in each $Class$ to the amount of
+memory required for objects of the class it represents.
+\begin{axdef}
+  sizeOfObject : Class \fun \nat
+\end{axdef}
+
+The objects that $ObjMan$ operates on are described by records of the
+schema type $Object$, shown below.
+It contains a map, $fields$, that associates the $FieldID$ for each
+field of the object with the $Word$ value stored in that field.
+A copy of the $Class$ information for the object's class is also
+stored as the second component of $Object$, $class$.
+The invariant of $Object$ requires that the domain of $fields$ be the
+same as the fields given in $class$.
+\begin{schema}{Object}
+  fields : FieldID \pfun Word \\
+  class : Class
+\where
+  \dom fields = class.fields
+\end{schema}      
+
+Once the $Object$ type is defined, the state of $ObjMan$ is described
+by the schema $ObjManState$, shown below.
+Its first component is a map, $objects$, from $ObjectID$s to $Object$
+records, storing the actual object data for the program.
+Its second component, $backingStoreMap$, associates backing stores
+with the identifiers of objects stored within them.
+The third component, $backingStoreStacks$, associates to each
+$ThreadID$ a sequence of $BackingStoreID$ values representing the
+backing stores entered by the thread.
+This is required to contain at least one value for any thread in the
+domain of $backingStoreStacks$, since each thread that is ready to
+execute must have a backing store and those that are not should not be
+in the domain of $backingStoreStacks$.
+The remaining components of $ObjManState$ are a copy of the identifier
+of the root backing store, $rootBS$, and a map, $classObjectMap$
+associating each $ClassID$ with the $ObjectID$ of the object storing
+the static class fields for that class.
+\begin{schema}{ObjManState}
+  objects : ObjectID \pfun Object \\
+  backingStoreMap : BackingStoreID \pfun \finset ObjectID \\
+  backingStoreStacks : ThreadID \pfun \seq_1 BackingStoreID \\
+  rootBS : BackingStoreID \\
+  classObjectMap : ClassID \pfun ObjectID
+\where
+  backingStoreMap \partition \dom objects \\
+  \forall t : \dom backingStoreStacks @ \ran (backingStoreStacks~t) \subseteq \dom backingStoreMap \\
+  rootBS \in \dom backingStoreMap \\
+  \exists t : \dom backingStoreStacks @ rootBS \in \ran (backingStoreStacks~t) \\
+  \ran classObjectMap \subseteq \dom objects
+\end{schema}
+
+      
 
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
