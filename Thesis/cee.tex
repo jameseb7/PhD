@@ -1464,13 +1464,146 @@ the static class fields for that class.
   classObjectMap : ClassID \pfun ObjectID
 \where
   backingStoreMap \partition \dom objects \\
-  \forall t : \dom backingStoreStacks @ \ran (backingStoreStacks~t) \subseteq \dom backingStoreMap \\
+  \dom backingStoreMap = \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} \\
   rootBS \in \dom backingStoreMap \\
-  \exists t : \dom backingStoreStacks @ rootBS \in \ran (backingStoreStacks~t) \\
   \ran classObjectMap \subseteq \dom objects
 \end{schema}
+The first invariant of $ObjManState$ requires that the $ObjectID$ sets
+given by $backingStoreMap$ partition the domain of $objects$.
+The second invariant requires that the domain of $backingStoreMap$ be
+the identifiers of backing stores entered in $backingStoreStacks$,
+since a backing store that is not in use by any thread is cleared and
+so should not have any objects in it.
+The third invariant requires that $rootBS$ always be in the domain of
+$backingStoreMap$, since that represents immortal memory, which is
+never cleared.
+Combined with the second invariant, this implies that at least one
+thread must have entered the $rootBS$ at all times.
+Finally, the fourth invariant requires that, the class objects in the
+$classObjectMap$ be valid objects in the $objects$ map.
 
-      
+The $ObjManState$ is initialised as described in $ObjManInit$ below.
+This takes the identifier of the root backing store as an input,
+$rootBS?$.
+The $objects$ map is initialised to the empty set since there are
+initially no objects in existence.
+The $backingStoreMap$ initially contains only $rootBS?$, which is the
+only backing store initially in existence, associated with an empty
+set of object identifiers.
+The $backingStoreStacks$ map is initialised to contain the $main$ and
+$idle$ thread, both with $rootBS?$ as their only backing store
+entered.
+The $rootBS$ identifier is set to be the same as the $rootBS?$ input.
+The $classObjectMap$ is initially empty, since the class objects are
+created after process initialisation, since communication with the
+memory manager is required to allocate space for them.
+\begin{schema}{ObjManInit}
+  ObjManState~' \\
+  rootBS? : BackingStoreID
+\where
+  objects' = \emptyset \\
+  backingStoreMap' = \{ rootBS? \mapsto \emptyset \} \\
+  backingStoreStacks' = \{ main \mapsto \langle rootBS? \rangle, idle \mapsto \langle rootBS? \rangle \} \\
+  rootBS' = rootBS? \\
+  classObjectMap' = \emptyset
+\end{schema}
+
+The $ObjMan$ process then proceeds as described in its main action,
+shown below.
+It begins in $Init$ by communicating with the SCJVM memory manager to
+obtain the identifier of the root backing store and then initialising
+the state as described in $ObjManInit$, with the identifier returned
+from the memory manager as the $rootBS?$ input.
+The class objects for each class are then created and stored in the
+$classObjectMap$, in $MakeClassObjects$.
+Finally, in $Loop$, the process enters a loop in which it repeatedly
+offers each its services in external choice.
+\begin{circusaction}
+  \circspot Init \circseq MakeClassObjects \circseq Loop
+\end{circusaction}
+
+The creation of class objects in $MakeClassObjects$ requires some
+explanation, since the class information for each object must be
+supplied.
+Since the objects are representations of class information, their
+class should be the \texttt{Class} class from the standard Java API (a
+stripped-down version of which is present in SCJ).
+We represent the identifier of this class by a $ClassID$ constant
+$classClass$ and assume such a class must be present in $cs$.
+However, since the object stores the static fields for each class, the
+$fields$ of the $Class$ information associated with $classClass$ need
+to be changed to be the correct static fields in each case.
+This accomplished using a function $replaceClassFields$, the
+definition of which is shown below.
+\begin{axdef}
+  replaceClassFields : Class \fun \finset FieldID \fun Class
+\where
+  \forall c : Class; fs : \finset FieldID @ \\
+  \t1 \exists \Delta Class | \Xi Class \hide (fields) @ \\
+  \t2 \theta Class = c \land \\
+  \t2 fields' = fs \land \\
+  \t2 replaceClassFields~c~fs = \theta Class~'
+\end{axdef}
+It takes in a $Class$ and a set of $FieldID$s, then produces a new
+$Class$ with the components the same as the inputs, except that the
+$fields$ component is set to the input.
+This is specified in a style similar to a schema operation, with
+primed and unprimed versions of the $Class$ components introduced, and
+the input bound to $\theta Class$ while the output is bound to
+$\theta Class~'$.
+The update of $fields$ is then easily specified with an equality
+invloving $fields'$, while $\Xi Class \hide (fields)$ ensures the
+other components remain unchanged.
+
+The $replaceClassFields$ function is then used in the definition of
+the $MakeClassObjects$ action, which is shown below.
+It iterates through each $ClassID$, $cid$, in the domain of $cs$, and
+allocates an object for each one using a $MakeObject$ action that
+performs the communication with the memory manager.
+The $Class$ for the object is defined by taking the value in $cs$
+associated with $classClass$ and using $replaceClassFields$ to replace
+its $fields$ with the $staticFields$ of the $Class$ associated with
+$cid$.
+The thread in whose allocation context the class objects are allocated
+is the $main$ thread, since that is only thread that is initially
+eligible to run and its allocation context is immortal memory.
+The object identifier returned from the allocation is stored in
+$objectID$, which is stored in $classObjectMap$ associated with $cid$.
+\begin{circusaction}
+  MakeClassObjects \circdef \circvar objectID : ObjectID \circspot \\
+  \t1 \Semi cid : \dom cs \circspot \\
+  \t2 MakeObject(replaceClassFields~(cs~classClass)~(cs~cid).staticFields,main,objectID) \circseq \\
+  \t2 classObjectMap := classObjectMap \cup \{cid \mapsto objectID\}
+\end{circusaction}
+
+The $MakeObject$ action, used in $MakeClassObjects$, is defined
+separately since it is also used when creating objects other than the
+class objects.
+The definition of $MakeObject$ is shown below.
+It takes three parameters, the first two of which, $class$ and
+$thread$, are value parameters representing the class information and
+current thread identifier respectively.
+The final parameter, $objectID$, is a result parameter returning the
+identifier of the object created.
+The object is created using the \texttt{allocateMemory} service of the
+memory manager, with the allocation context being the last backing
+store entered for $thread$ in $backingStoreStacks$ and the space
+allocated determined from $class$ using $sizeOfObject$.
+If the memory manager operation is successful (as indicated by a
+report of $MMokay$), then the object is initialised as described by
+$ObjManObjectInit$, which adds it to $objects$, sets its class
+information to $class$ and initialises its fields to $null$.
+Since it is a relatively simple data operation, we omit its definition
+here.
+If the memory manager operation is not successful (for example,
+because the SCJVM is out of memory) then $ObjMan$ diverges.
+\begin{circusaction}
+  MakeObject \circdef \circval class : Class; \circval thread : ThreadID; \circres objectID : ObjectID \circspot \\
+  \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~class) \then {} \\
+  \t1  MMallocateMemoryRet?objectID \then {} \\
+  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract ObjManObjectInit \rschexpract \\
+  \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos)
+\end{circusaction}
 
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
