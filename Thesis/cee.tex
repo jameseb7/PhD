@@ -1314,68 +1314,45 @@ Appendix~\ref{full-cee-model}.
 
 We also require a way of expressing the fact that one class is a
 subclass of another.
-For this, we define some relations between classes.
-The $\directsubclass$ relation, shown below, defines what it means for
-two $Class$ schemas to represent classes in a direct subclass
-relationship.
-A $Class$, $c1$, is a direct subclass of another $Class$, $c2$, if the
-identifier at the $this$ index for $c2$ is the identifier at $super$
-for $c1$, or the identifier at one of $c1$'s $interfaces$ indices.
-This treats both the case where $c2$ is the superclass of $c1$ and the
-case where $c2$ is an interface implemented by $c1$.
-The functions $superClassID$, $thisClassID$ and $interfacesClassIDs$
-are used in this definition to extract the $ClassID$ values at
-$super$, $this$ and $interfaces$ respectively from the $constantPool$.
-\begin{axdef}
-  \_ \directsubclass \_ : Class \rel Class
-  \where
-  \forall c1, c2 : Class @ c1 \directsubclass c2 \iff {} \\
-  \t1 (c1.super \neq nullCPIndex \land superClassID~c1 = thisClassID~c2) \\
-  \t1 {} \lor thisClassID~c2 \in interfacesClassIDs~c1
-\end{axdef}
-Another relation, $subclassRel$ is defined in terms of
-$\directsubclass$ to specify when a $ClassID$ refers to a class that
-is a subclass of the class referenced by another $ClassID$.
-In order to define this, we require a mapping from $ClassID$ to
-$Class$, so $subclassRel$ is defined in terms of a function from such
-a mapping to a relation on $ClassID$.
-A technical issue prevents $subclassRel$ from being used as an infix
-relation due to this.
-
-The definition of $subclassRel$ is shown below.
-Given a mapping $cs$ from $ClassID$ to $Class$ that is consistent with
-the information at the $this$ entry in the $constantPool$,
-$subclassRel~cs$ relates two $ClassID$ if they are in the domain of
-$cs$ and their corresponding $Class$es would be related under
-$\directsubclass$.
-The $subclassRel$ is also taken as a reflexive transitive closure so
-that it represents the relationship between a $ClassID$ and any
-$ClassID$ it could be used in place of.
-\begin{axdef}
-  subclassRel : (ClassID \pfun Class) \fun (ClassID \rel ClassID)
-  \where
-  \forall cs : ClassID \pfun Class | (\forall c : \dom cs @ thisClassID~(cs~c) = c) @\\
-  \t1 (\forall c1, c2 : ClassID @ (c1, c2) \in subclassRel~cs \iff (\{c1,c2\} \subseteq \dom cs \land cs~c1 \directsubclass cs~c2)) \\
-  \t1 \land subclassRel~cs = (subclassRel~cs)^*
-\end{axdef}
+We say that a $Class$ binding, $c1$, is a direct subclass of another
+class, $c2$, written $c1 \directsubclass c2$, if the $this$ identifier
+of $c2$ is the $super$ identifier of $c1$ or one of its $interfaces$
+identifiers.
+We define a relation, $subClassRel$, between class identifiers $cid1$
+and $cid2$ in terms of the $\directsubclass$ relation.
+This requires a map from $ClassID$ to bindings of $Class$, which is
+provided as a parameter to $subclassRel$.
+Given such a map, $cs$, we define $(cid1,cid2) \in subclassRel~cs$ to
+hold if, in $cs$, $cid1$ and $cid2$ refer to $Class$ bindings such
+that $cs~cid1 \directsubclass cs~cid2$ holds.
+We expand $subclassRel$ to refer to its reflexive transitive closure
+so that it includes indirect subclass relationships and classes being
+subclasses of themselves.
+We omit the formal definitions of $\directsubclass$ and $subclassRel$
+here.
 
 The $cs$ map provided as a parameter to $CEE$ is used as the parameter
 to $subclassRel$ in each of the processes that uses it.
-In order to ensure $CEE$ works correctly (in particular, that it is
-divergence-free), several restrictions are placed on $cs$.
-One of these is the requirement that $Class$ associated with each
-$ClassID$ have its $this$ reference be the same as that $ClassID$,
-which is part of the $subclassRel$ definition.
-Further restrictions include having all superclasses present in the
-map and ensuring the ranges defined by $methodEntry$ and $methodEnd$
-for each $Class$ are disjoint.
-These restrictions are also used as assumptions in the compilation
-strategy laws.
-A full formal statement of the restrictions is given in the definition
-of a $cs$ constant in Appendix~\ref{constants-appendix}, which is used
-to instantiate the $cs$ parameter of $CEE$.
+This $cs$ map must satisfy several constraints in order for $CEE$ to
+be divergence-free, since it will abort if, for example, a class'
+superclass is missing from $cs$ when searching its inheritance
+hierarchy for a method of that class.
+Since these constraints concern the classes present in $cs$, they
+cannot be included in the invariant of $Class$.
+We instead specify the constraints on a $cs$ constant defined in
+Appendix~\ref{constants-appendix}, which is used to instantiate the
+$cs$ parameter of $CEE$.
 The inputs to the interpreter and compilation strategy are expected to
-be refinements of the constant in Appendix~\ref{constants-appendix}.
+be instantiations of this constant.
+The constraints on $cs$ include the requirements that $Class$
+associated with each $ClassID$ have its $this$ reference be the same
+as that $ClassID$, that all superclasses of a given class must be
+present in that class, and that the ranges defined by $methodEntry$
+and $methodEnd$ for each $Class$ are disjoint.
+Additional constraints on the $bc$, $sid$ and $initOrder$ parameters
+to $CEE$ are also required to ensure complete divergence freedom.
+These are supplied as constraints on the corresponding constants in
+Appendix~\ref{constants-appendix}.
 
 We next describe the object manager process, $ObjMan$, which uses the
 $Class$ type and the $cs$ map.
