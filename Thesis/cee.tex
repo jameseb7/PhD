@@ -1147,24 +1147,22 @@ next section.
 \subsection{Classes}
 \label{cee-classes-subsection}
 
-In our model, the information for the Java classes that form the
-program is stored in a map, $cs$, that is provided as a parameter to
-$CEE$.
+In our model, information about the Java classes that form the program
+is recorded in a map, $cs$, that is provided as a parameter to $CEE$.
 The $cs$ map associates $ClassID$s with records of a schema type
-$Class$ containing the information for each class.
-The $Class$ schema is defined as the conjunction of three schemas,
-each defining a different part of the class information.
-The first part contains the constant pool and indices into the
-constant pool.
-The second part contains information on the methods in the class.
-The final part contains information on the fields in the class.
+$Class$ defined as the conjunction of three schemas.
+The first schema, $ClassConstantPool$ contains components that
+represent the constant pool and indices into the constant pool.
+The second schema, $ClassMethods$, represents information on the
+methods in the class.
+The final schema, $ClassFields$, is our model for information on the
+fields in the class.
 
-The first part is described by the schema $ClassConstantPool$ below.
-Its components are $constantPool$, the constant pool itself, and some
-indices into $constantPool$:~$this$, referencing the current class,
-$super$, referencing the current class' superclass, and $interfaces$,
-a set of indices referencing the interfaces implemented by the
-current class.
+The components of $ClassConstantPool$ are $constantPool$, the constant
+pool itself, and some indices into $constantPool$:~$this$, referencing
+the current class, $super$, referencing the current class' superclass,
+and $interfaces$, a set of indices referencing the interfaces
+implemented by the current class.
 \begin{schema}{ClassConstantPool}
   constantPool : CPIndex \pfun CPEntry \\
   this, super : CPIndex \\
@@ -1196,10 +1194,11 @@ current class.
 %   % a method's local variables must at least include space for its arguments
 %   \forall m : \dom methodLocals @ methodArguments~m \leq methodLocals~m
 % \end{schema}
-The entries of $constantPool$ are indexed by a type $CPIndex$.
+The entries of $constantPool$ are indexed by a elements of a type
+$CPIndex$.
 In the JVM, the $CPIndex$ values are positive integers, but no
 arithmetic or comparison is performed on constant pool indices in our
-model so we do not represent that fact.
+model, so we do not represent that fact.
 
 We distinguish one particular $CPIndex$ value, a constant
 $nullCPIndex$, which represents an invalid index into the
@@ -1209,8 +1208,8 @@ For example, the class \texttt{Object} has no superclass, so the index
 of the constant pool entry referencing its superclass is
 $nullCPIndex$.
 
-Each of the entries in the $constantPool$ is represented by a free
-type $CPEntry$, the definition of which is shown below.
+Each of the entries in the $constantPool$ is represented by an element
+of a free type $CPEntry$, the definition of which is shown below.
 It has three constructors:~$ClassRef$, representing a reference to a
 $ClassID$, $MethodRef$, representing a reference to a method of a
 particular class by a $ClassID$ and $MethodID$, and $FieldRef$,
@@ -1225,9 +1224,6 @@ $ClassID$ and $FieldID$.
 Although there are other types of constant pool entry described in the
 JVM specification, we do not include them in our model since some of
 them are not relevant to our subset. 
-Examples of such entries are those containing information for the
-$invokedynamic$ instruction or containing constant values which are
-pushed onto the stack by instructions not in our subset.
 Some constant pool entries are used by other constant pool entries.
 For example, in the JVM specification, method references reference
 another constant pool entry, which in turn contains references to
@@ -1236,27 +1232,18 @@ method's name and type.
 In our model, we hide this complexity in the identifier types
 $ClassID$, $MethodID$ and $FieldID$, omitting the extra constant pool
 entries.
-Thus, the $CPIndex$ values will be in the domain of $constantPool$
-will not necessarily be sequential.
 
-The first invariant of $ClassConstantPool$ requires that $nullCPIndex$
-not be in the domain of $constantPool$, since $nullCPIndex$ is not a
-valid index into $constantPool$.
-The second invariant of $ClassConstantPool$ states that the indices
-$this$, $super$, and $interfaces$ must be in the domain of
-$constantPool$, unless $super$ is $nullCPIndex$ (which will be the
-case for the \texttt{Object} class).
-Finally, the third invariant requires that the $constantPool$ entries
+The first conjunct of the invariant of $ClassConstantPool$ requires
+that $nullCPIndex$ not be in the domain of $constantPool$, since
+$nullCPIndex$ is not a valid index into $constantPool$.
+The second conjunct states that the indices $this$, $super$, and
+$interfaces$ must be in the domain of $constantPool$, unless $super$
+is $nullCPIndex$ (which is the case for the \texttt{Object} class).
+Finally, the third conjunct requires that the $constantPool$ entries
 at $this$, $super$ and $interfaces$ are $ClassRef$s.
 
-The second part of the class information is defined by $ClassMethods$,
-shown below.
-This is separate from $ClassConstantPool$ since the methods of a class
-will not necessarily appear in its constant pool.
-Only methods called by the bytecode of a class' methods will appear in
-its constant pool.
-The components of $ClassMethods$ are maps from $MethodID$ values to
-the information about each method.
+The components of $ClassMethods$, shown below, are maps from
+$MethodID$ values to information about each method.
 The first two, $methodEntry$ and $methodEnd$, map to $ProgramAddress$
 values, which are indices into a separate bytecode array representing
 the start and end points of the method.
@@ -1281,21 +1268,21 @@ This is a global function since each $MethodID$ encodes the type of
 the method, so the number of arguments for a method can always be
 determined from its identifier.
 The $methodArguments$ function is also total for this reason.
-We use $methodArguments$ in one of the invariants of $ClassMethods$,
-and also in the $Interpreter$ and compilation strategy when handling
-method calls.
+We use $methodArguments$ in the invariant of $ClassMethods$, and also
+in the $Interpreter$ and compilation strategy when handling method
+calls.
 
-The first invariant of $ClassMethods$ requires that all the component
-maps have the same domain, so that all the information must be
-supplied for any method present in the class.
-The second invariant requires that the $methodEntry$ for each method
-be before its $methodEnd$.
-Finally, the third invariant requires that $methodLocals$ be large
+The first conjunct of the invariant of $ClassMethods$ requires that
+all the component maps have the same domain, so that all the
+information must be supplied for any method present in the class.
+The second conjunct requires that the $methodEntry$ for each method be
+before its $methodEnd$.
+Finally, the third conjunct requires that $methodLocals$ be large
 enough for each method to contain its $methodArguments$, since each
 argument of a method is stored in a local variable.
 
-The final part of the class information is given in the $ClassFields$
-schema below.
+The final components of our model for class information are given in
+the $ClassFields$ schema below.
 It contains two sets of $FieldID$s, $fields$ and $staticFields$, which
 are the identifiers of the class' object fields and static fields
 respectively.
@@ -1322,6 +1309,8 @@ extracting information from the $constantPool$ for a given $Class$, in
 order to make specifying things about them easier.
 Since the functions are just abbreviations of data access operations,
 we omit them here.
+We recall that the definitions omitted here are given in
+Appendix~\ref{full-cee-model}.
 
 We also require a way of expressing the fact that one class is a
 subclass of another.
