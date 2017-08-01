@@ -1318,8 +1318,9 @@ We say that a $Class$ binding, $c1$, is a direct subclass of another
 class, $c2$, written $c1 \directsubclass c2$, if the $this$ identifier
 of $c2$ is the $super$ identifier of $c1$ or one of its $interfaces$
 identifiers.
-We define a relation, $subClassRel$, between class identifiers $cid1$
-and $cid2$ in terms of the $\directsubclass$ relation.
+
+We also define a relation, $subClassRel$, between class identifiers
+$cid1$ and $cid2$ in terms of the $\directsubclass$ relation.
 This requires a map from $ClassID$ to bindings of $Class$, which is
 provided as a parameter to $subclassRel$.
 Given such a map, $cs$, we define $(cid1,cid2) \in subclassRel~cs$ to
@@ -1349,10 +1350,10 @@ associated with each $ClassID$ have its $this$ reference be the same
 as that $ClassID$, that all superclasses of a given class must be
 present in that class, and that the ranges defined by $methodEntry$
 and $methodEnd$ for each $Class$ are disjoint.
-Additional constraints on the $bc$, $sid$ and $initOrder$ parameters
-to $CEE$ are also required to ensure complete divergence freedom.
-These are supplied as constraints on the corresponding constants in
-Appendix~\ref{constants-appendix}.
+% Additional constraints on the $bc$, $sid$ and $initOrder$ parameters
+% to $CEE$ are also required to ensure complete divergence freedom.
+% These are supplied as constraints on the corresponding constants in
+% Appendix~\ref{constants-appendix}.
 
 We next describe the object manager process, $ObjMan$, which uses the
 $Class$ type and the $cs$ map.
