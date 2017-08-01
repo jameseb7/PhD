@@ -1526,14 +1526,19 @@ The $replaceClassFields$ function is then used in the definition of
 the $MakeClassObjects$ action, which is shown below.
 It iterates through each $ClassID$, $cid$, in the domain of $cs$, and
 allocates an object for each one using a $MakeObject$ action that
-performs the communication with the memory manager.
-The $Class$ for the object is defined by taking the value in $cs$
-associated with $classClass$ and using $replaceClassFields$ to replace
-its $fields$ with the $staticFields$ of the $Class$ associated with
-$cid$.
-The thread in whose allocation context the class objects are allocated
-is the $main$ thread, since that is only thread that is initially
-eligible to run and its allocation context is immortal memory.
+performs the communication with the memory manager, which we discuss
+below, after the definition of $MakeClassObjects$.
+The first parameter to $MakeObject$ is the $Class$ information for the
+object, which is defined by taking the value in $cs$ associated with
+$classClass$ and using $replaceClassFields$ to replace its $fields$
+with the $staticFields$ of the $Class$ associated with $cid$.
+The second parameter is the thread in whose allocation context the
+object is to be allocated, which in this case is the $main$ thread,
+since that is only thread that is initially eligible to run.
+Since the $main$ thread's allocation context is initially immortal
+memory, the class objects are allocated in immortal memory, ensuring
+that the static fields are available throughout the program's
+execution.
 The object identifier returned from the allocation is stored in
 $objectID$, which is stored in $classObjectMap$ associated with $cid$.
 \begin{circusaction}
@@ -1547,9 +1552,9 @@ The $MakeObject$ action, used in $MakeClassObjects$, is defined
 separately since it is also used when creating objects other than the
 class objects.
 The definition of $MakeObject$ is shown below.
-It takes three parameters, the first two of which, $class$ and
-$thread$, are value parameters representing the class information and
-current thread identifier respectively.
+Its first two parameters are value parameters $class$, representing
+the class information for the object, and $thread$, representing
+current thread identifier.
 The final parameter, $objectID$, is a result parameter returning the
 identifier of the object created.
 The object is created using the \texttt{allocateMemory} service of the
@@ -1571,6 +1576,57 @@ because the SCJVM is out of memory) then $ObjMan$ diverges.
   \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract ObjManObjectInit \rschexpract \\
   \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos)
 \end{circusaction}
+
+After $ObjMan$ is initialised and the class objects have been created,
+$ObjMan$ enters offers services to the other components of the $CEE$,
+in the $Loop$ action shown below.
+The services offered by $Loop$ include $NewObject$, which offers the
+service of creating an object as described in $MakeObject$.
+The $GetField$ and $PutField$ actions allow for obtaining and setting
+the value of an object's field.
+Similarly, $GetStatic$ and $PutStatic$ allow for obtaining and setting
+the value of a class' static fields, appling the same data operations
+as $GetField$ and $PutField$ to the object in $classObjectMap$.
+$GetClassIDOf$ offers the service of obtaining the $ClassID$ for the
+class of an object, by extracting the $this$ identifier from the
+$Class$ information for the object.
+Management of allocation contexts is provided by the remaining
+services.
+The first is $EnterBackingStore$, which enters a backing store for a
+given thread by pushing it onto the stack in $backingStoreStacks$ for
+that thread, and adding it to $backingStoreMap$ if it is not already
+in its domain.
+The second is the corresponding operation $ExitBackingStores$ for
+exiting the current allocation context of a given thread, which means
+popping it from the thread's stack in $backingStoreStacks$, and
+clearing and removing the backing store from $backingStoreMap$ if no
+threads are still using it.
+The $AddThreadMemory$ and $RemoveThreadMemory$ services allow for
+adding a thread to $backingStoreStacks$ when it starts executing and
+removing it when it finishes executing.
+Finally, the $GetCurrentAC$ action offers the service of obtaining the
+current allocation context for a given thread, which is the backing
+store on top of its stack in $backingStoreStacks$.
+\begin{circusaction}
+  Loop \circdef (NewObject \extchoice GetField \extchoice PutField \extchoice GetStatic \extchoice PutStatic \extchoice GetClassIDOf \\
+  \t1 {} \extchoice EnterBackingStore \extchoice ExitBackingStore \extchoice AddThreadMemory \\
+  \t1 {} \extchoice RemoveThreadMemory \extchoice GetCurrentAC)
+  \circseq Loop
+\end{circusaction}
+
+The compilation strategy refines the structure of objects.
+This means that the field access operations ($GetField$, $PutField$,
+$GetStatic$ and $PutStatic$) and the object allocation operations
+($MakeObject$) are affected compilation strategy.
+$GetClassIDOf$ is also affected since an object's class identifier is
+stored as part of its structure.
+The management of allocation contexts is
+unaffected by the compilation strategy, but is required for managing
+allocation of objects, so that they can be allocated in the correct
+backing store.
+
+
+      
 
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
