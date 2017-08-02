@@ -1645,28 +1645,58 @@ instructions themselves.
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
 
-The JVM has a stack composed of a series of stack frames, which
-contain information about the invoked methods.
-The representation of stack frames is described in this section as
-stack frames are, like classes, a large data type of interest as a
-significant part of the JVM state.
-The stack frames are used to form the frame stack used by the
-interpreter in the next section.
+The $Interpreter$ process is the final component of $CEE$, which
+handles the execution of bytecode instructions.
+The bytecode instructions it handles are those in the subset described
+in Section~\ref{cee-bytecode-subset-subsection}, which in our model
+are represented by the free type $Bytecode$, shown below.
+$Bytecode$ has a constructor for each bytecode instruction, with any
+parameter to the instruction represented as a parameter of the
+constructor.
+\begin{zed}
+  Bytecode ::= aconst\_null | dup | areturn | return | iadd | ineg \\
+  \t1 | new \ldata CPIndex \rdata | iconst \ldata \nat \rdata | aload \ldata \nat \rdata | astore \ldata \nat \rdata \\
+  \t1 | getfield \ldata CPIndex \rdata | putfield \ldata CPIndex \rdata | getstatic \ldata CPIndex \rdata | putstatic \ldata CPIndex \rdata \\
+  \t1 | invokespecial \ldata CPIndex \rdata | invokevirtual \ldata CPIndex \rdata | invokestatic \ldata CPIndex \rdata \\
+  \t1 | if\_icmple \ldata ProgramAddress \rdata | goto \ldata ProgramAddress \rdata
+\end{zed}
+The bytecode instructions are arranged in a map, $bc$, from
+$ProgramAddress$ values (which are modeled by natural numbers) to
+$Bytecode$ values.
+As with the $cs$ map discussed in
+Section~\ref{cee-classes-subsection}, the $bc$ map must fulfil several
+constraints.
+These constraints include ensuring that the flow of execution remains
+within the instructions in $bc$, and that the $ProgramAddress$ ranges
+for all the methods in $cs$ are included in the domain of $bc$.
+The constraints are included as constraints on a $bc$ constant, which
+is included in Appendix~\ref{constants-appendix} along with $cs$, and
+should be instantiated by the inputs to the interpreter and
+compilation strategy.
 
-\input{../../SCJ-VM/James/stack_frames.zed}
-
-The interpreter manages the execution of the bytecode instructions of
-methods.
-This includes handling the frame stack and program counter, as well as
-processing the bytecode instructions themselves according to their
-semantics.
-The interpreter must also handle thread switches, maintaining an
-interpreter state for each thread, since thread switches may occur
-between bytecode instructions.
-
-\input{../../SCJ-VM/James/interpreter_thread.zed}
-
-\input{../../SCJ-VM/James/interpreter.zed}
+The $bc$ and $cs$ values are passed as parameters to the $Interpreter$
+process, as can be seen from its definition shown below.
+The overall structure of the $Interpreter$ process is a parallel
+composition of $Thr$ processes representing the individual interpreter
+threads, with one process for each $ThreadID$ except for the $idle$
+$ThreadID$.
+The $bc$ and $cs$ parameters are passed to each $Thr$ process, along
+with the $ThreadID$ for the thread that the instance of $Thr$
+represents.
+\begin{circus}
+  \circprocess Interpreter \circdef \\
+  \t1 bc : ProgramAddress \pfun Bytecode; cs : ClassID \pfun Class \circspot \\
+  \t1 \Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, t)
+\end{circus}
+Each $Thr$ process synchronises on a channel set $ThrChans(t)$, which
+contains the events $CEEswitchThread.t.t2$ and $CEEswitchThread.t2.t$
+for all threads $t2$.
+This ensures thread switches can be handled since the two threads
+involved in the thread switch (the thread switched from and the thread
+switched to) synchronise on the thread switch request.
+We have chosen to model the interpreter threads in this way since they
+are conceptually running in parallel, each with their own state, and
+we do not mandate a specific thread switch mechanism.
 
 \subsection{Complete Core Execution Environment Model}
 \label{complete-cee-subsection}
