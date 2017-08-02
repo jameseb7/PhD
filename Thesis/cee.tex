@@ -1519,7 +1519,7 @@ primed and unprimed versions of the $Class$ components introduced, and
 the input bound to $\theta Class$ while the output is bound to
 $\theta Class~'$.
 The update of $fields$ is then easily specified with an equality
-invloving $fields'$, while $\Xi Class \hide (fields)$ ensures the
+involving $fields'$, while $\Xi Class \hide (fields)$ ensures the
 other components remain unchanged.
 
 The $replaceClassFields$ function is then used in the definition of
@@ -1585,7 +1585,7 @@ service of creating an object as described in $MakeObject$.
 The $GetField$ and $PutField$ actions allow for obtaining and setting
 the value of an object's field.
 Similarly, $GetStatic$ and $PutStatic$ allow for obtaining and setting
-the value of a class' static fields, appling the same data operations
+the value of a class' static fields, applying the same data operations
 as $GetField$ and $PutField$ to the object in $classObjectMap$.
 $GetClassIDOf$ offers the service of obtaining the $ClassID$ for the
 class of an object, by extracting the $this$ identifier from the
@@ -1625,8 +1625,22 @@ unaffected by the compilation strategy, but is required for managing
 allocation of objects, so that they can be allocated in the correct
 backing store.
 
+We omit the definitions of the individual actions in $Loop$ here. 
+The field access operations are simple data operations on the $fields$
+component of an $Object$ binding in the $objects$ map.
+$NewObject$ just exposes the $MakeObject$ action on the $newObject$
+and $newObjectRet$ channels, and the $GetClassIDOf$ is simply
+extracting the $this$ identifier from the $Class$ information of an
+$object$.
+The actions that relate to management of the allocation context are
+omitted since they are of little relevance to the compilation
+strategy.
+The full model of the object manager can be found in
+Appendix~\ref{object-manager-appendix}.
 
-      
+Next, we discuss the $Interpreter$ process, which is the final
+component of $CEE$ and handles the execution of the bytecode
+instructions themselves.
 
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
