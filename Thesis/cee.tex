@@ -1367,9 +1367,10 @@ environment.
 This component is necessary since the SCJVM memory manager is agnostic
 to the structure of objects, which depends on the contents of the
 classes supplied as part of an SCJ program.
-It must also track the current allocation context for each thread to
-ensure objects are allocated in the correct allocation context, since
-the SCJVM memory manager is agnostic to the existence of threads.
+Besides managing the creation and manipulation of objects, the object
+manager tracks the current allocation context for each thread to
+ensure objects are allocated in the correct memory area, since the
+SCJVM memory manager is also agnostic to the existence of threads.
 
 The start of the definition of $ObjMan$ is shown below.
 $ObjMan$ takes a single parameter, $cs$, which is a map from
@@ -1393,10 +1394,10 @@ memory required for objects of the class it represents.
 
 The objects that $ObjMan$ operates on are described by records of the
 schema type $Object$, shown below.
-It contains a map, $fields$, that associates the $FieldID$ for each
-field of the object with the $Word$ value stored in that field.
+It contains a map, $fields$, which associates the $FieldID$ for each
+field of the object with a $Word$ value stored in that field.
 A copy of the $Class$ information for the object's class is also
-stored as the second component of $Object$, $class$.
+stored as the second component, $class$.
 The invariant of $Object$ requires that the domain of $fields$ be the
 same as the fields given in $class$.
 \begin{schema}{Object}
@@ -1406,8 +1407,8 @@ same as the fields given in $class$.
   \dom fields = class.fields
 \end{schema}      
 
-Once the $Object$ type is defined, the state of $ObjMan$ is described
-by the schema $ObjManState$, shown below.
+The state of $ObjMan$ is described by the schema $ObjManState$, shown
+below.
 Its first component is a map, $objects$, from $ObjectID$s to $Object$
 records, storing the actual object data for the program.
 Its second component, $backingStoreMap$, associates backing stores
@@ -1415,10 +1416,9 @@ with the identifiers of objects stored within them.
 The third component, $backingStoreStacks$, associates to each
 $ThreadID$ a sequence of $BackingStoreID$ values representing the
 backing stores entered by the thread.
-This is required to contain at least one value for any thread in the
-domain of $backingStoreStacks$, since each thread that is ready to
-execute must have a backing store and those that are not should not be
-in the domain of $backingStoreStacks$.
+This is required to contain at least one value, since each thread that
+is ready to execute must have a backing store and those that are not
+should not be in the domain of $backingStoreStacks$.
 The remaining components of $ObjManState$ are a copy of the identifier
 of the root backing store, $rootBS$, and a map, $classObjectMap$
 associating each $ClassID$ with the $ObjectID$ of the object storing
@@ -1435,24 +1435,26 @@ the static class fields for that class.
   rootBS \in \dom backingStoreMap \\
   \ran classObjectMap \subseteq \dom objects
 \end{schema}
-The first invariant of $ObjManState$ requires that the $ObjectID$ sets
-given by $backingStoreMap$ partition the domain of $objects$.
-The second invariant requires that the domain of $backingStoreMap$ be
+The first conjunct of the invariant of $ObjManState$ requires that the
+$ObjectID$ sets given by $backingStoreMap$ partition the domain of
+$objects$, so that every object is allocated in exactly one backing
+store.
+The second conjunct requires that the domain of $backingStoreMap$ be
 the identifiers of backing stores entered in $backingStoreStacks$,
 since a backing store that is not in use by any thread is cleared and
 so should not have any objects in it.
-The third invariant requires that $rootBS$ always be in the domain of
+The third conjunct requires that $rootBS$ always be in the domain of
 $backingStoreMap$, since that represents immortal memory, which is
 never cleared.
-Combined with the second invariant, this implies that at least one
+Combined with the second conjunct, this implies that at least one
 thread must have entered the $rootBS$ at all times.
-Finally, the fourth invariant requires that, the class objects in the
+Finally, the fourth conjunct requires that, the class objects in the
 $classObjectMap$ be valid objects in the $objects$ map.
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
-This takes the identifier of the root backing store as an input,
-$rootBS?$.
-The $objects$ map is initialised to the empty set since there are
+This operation takes the identifier of the root backing store as an
+input, $rootBS?$.
+The $objects$ map is initialised to the empty set, since there are
 initially no objects in existence.
 The $backingStoreMap$ initially contains only $rootBS?$, which is the
 only backing store initially in existence, associated with an empty
@@ -1462,7 +1464,7 @@ $idle$ thread, both with $rootBS?$ as their only backing store
 entered.
 The $rootBS$ identifier is set to be the same as the $rootBS?$ input.
 The $classObjectMap$ is initially empty, since the class objects are
-created after process initialisation, since communication with the
+created after process initialisation, because communication with the
 memory manager is required to allocate space for them.
 \begin{schema}{ObjManInit}
   ObjManState~' \\
@@ -1479,62 +1481,42 @@ The $ObjMan$ process then proceeds as described in its main action,
 shown below.
 It begins in $Init$ by communicating with the SCJVM memory manager to
 obtain the identifier of the root backing store and then initialising
-the state as described in $ObjManInit$, with the identifier returned
-from the memory manager as the $rootBS?$ input.
+the state as described in $ObjManInit$.
 The class objects for each class are then created and stored in the
 $classObjectMap$, in $MakeClassObjects$.
-Finally, in $Loop$, the process enters a loop in which it repeatedly
-offers each its services in external choice.
+Finally, in $Loop$, the process repeatedly offers each of its services
+in external choice.
 \begin{circusaction}
   \circspot Init \circseq MakeClassObjects \circseq Loop
 \end{circusaction}
 
-The creation of class objects in $MakeClassObjects$ requires some
-explanation, since the class information for each object must be
-supplied.
+For the creation of class objects in $MakeClassObjects$ the class
+information for each object must be supplied.
 Since the objects are representations of class information, their
 class should be the \texttt{Class} class from the standard Java API (a
 stripped-down version of which is present in SCJ).
 We represent the identifier of this class by a $ClassID$ constant
-$classClass$ and assume such a class must be present in $cs$.
+$classClass$.
 However, since the object stores the static fields for each class, the
 $fields$ of the $Class$ information associated with $classClass$ need
 to be changed to be the correct static fields in each case.
-This accomplished using a function $replaceClassFields$, the
-definition of which is shown below.
-\begin{axdef}
-  replaceClassFields : Class \fun \finset FieldID \fun Class
-\where
-  \forall c : Class; fs : \finset FieldID @ \\
-  \t1 \exists \Delta Class | \Xi Class \hide (fields) @ \\
-  \t2 \theta Class = c \land \\
-  \t2 fields' = fs \land \\
-  \t2 replaceClassFields~c~fs = \theta Class~'
-\end{axdef}
-It takes in a $Class$ and a set of $FieldID$s, then produces a new
-$Class$ with the components the same as the inputs, except that the
-$fields$ component is set to the input.
-This is specified in a style similar to a schema operation, with
-primed and unprimed versions of the $Class$ components introduced, and
-the input bound to $\theta Class$ while the output is bound to
-$\theta Class~'$.
-The update of $fields$ is then easily specified with an equality
-involving $fields'$, while $\Xi Class \hide (fields)$ ensures the
-other components remain unchanged.
+This is accomplished using a function $replaceClassFields$, which
+takes a $Class$ and a set of $FieldID$s, and produces a new $Class$
+with the components the same as the input $Class$, except that the
+$fields$ component is set to the input $FieldID$s.
 
-The $replaceClassFields$ function is then used in the definition of
-the $MakeClassObjects$ action, which is shown below.
+The $replaceClassFields$ function is used in the definition of the
+$MakeClassObjects$ action, which is shown below.
 It iterates through each $ClassID$, $cid$, in the domain of $cs$, and
 allocates an object for each one using a $MakeObject$ action that
-performs the communication with the memory manager, which we discuss
-below, after the definition of $MakeClassObjects$.
+performs the communication with the memory manager.
 The first parameter to $MakeObject$ is the $Class$ information for the
 object, which is defined by taking the value in $cs$ associated with
 $classClass$ and using $replaceClassFields$ to replace its $fields$
 with the $staticFields$ of the $Class$ associated with $cid$.
-The second parameter is the thread in whose allocation context the
-object is to be allocated, which in this case is the $main$ thread,
-since that is only thread that is initially eligible to run.
+The second parameter is the thread in whose context the object is to
+be allocated, which in this case is the $main$ thread, since that is
+only thread that is initially eligible to run.
 Since the $main$ thread's allocation context is initially immortal
 memory, the class objects are allocated in immortal memory, ensuring
 that the static fields are available throughout the program's
@@ -1549,11 +1531,10 @@ $objectID$, which is stored in $classObjectMap$ associated with $cid$.
 \end{circusaction}
 
 The $MakeObject$ action, used in $MakeClassObjects$, is defined
-separately since it is also used when creating objects other than the
-class objects.
-The definition of $MakeObject$ is shown below.
+separately below since it is also used when creating objects other
+than the class objects.
 Its first two parameters are value parameters $class$, representing
-the class information for the object, and $thread$, representing
+the class information for the object, and $thread$, recording the
 current thread identifier.
 The final parameter, $objectID$, is a result parameter returning the
 identifier of the object created.
@@ -1578,18 +1559,19 @@ because the SCJVM is out of memory) then $ObjMan$ diverges.
 \end{circusaction}
 
 After $ObjMan$ is initialised and the class objects have been created,
-$ObjMan$ enters offers services to the other components of the $CEE$,
-in the $Loop$ action shown below.
-The services offered by $Loop$ include $NewObject$, which offers the
-service of creating an object as described in $MakeObject$.
+$ObjMan$ offers services to the other components of the $CEE$, in the
+$Loop$ action shown below.
+The services offered by $Loop$ include $NewObject$, which creates an
+object as described in $MakeObject$.
 The $GetField$ and $PutField$ actions allow for obtaining and setting
 the value of an object's field.
 Similarly, $GetStatic$ and $PutStatic$ allow for obtaining and setting
 the value of a class' static fields, applying the same data operations
 as $GetField$ and $PutField$ to the object in $classObjectMap$.
-$GetClassIDOf$ offers the service of obtaining the $ClassID$ for the
-class of an object, by extracting the $this$ identifier from the
-$Class$ information for the object.
+$GetClassIDOf$ obtains the $ClassID$ for the class of an object, by
+extracting the $this$ identifier from the $Class$ information for the
+object.
+
 Management of allocation contexts is provided by the remaining
 services.
 The first is $EnterBackingStore$, which enters a backing store for a
@@ -1602,11 +1584,11 @@ popping it from the thread's stack in $backingStoreStacks$, and
 clearing and removing the backing store from $backingStoreMap$ if no
 threads are still using it.
 The $AddThreadMemory$ and $RemoveThreadMemory$ services allow for
-adding a thread to $backingStoreStacks$ when it starts executing and
+adding a thread to $backingStoreStacks$ when it starts executing, and
 removing it when it finishes executing.
-Finally, the $GetCurrentAC$ action offers the service of obtaining the
-current allocation context for a given thread, which is the backing
-store on top of its stack in $backingStoreStacks$.
+Finally, the $GetCurrentAC$ action obtains the current allocation
+context for a given thread, which is the backing store on top of its
+stack in $backingStoreStacks$.
 \begin{circusaction}
   Loop \circdef (NewObject \extchoice GetField \extchoice PutField \extchoice GetStatic \extchoice PutStatic \extchoice GetClassIDOf \\
   \t1 {} \extchoice EnterBackingStore \extchoice ExitBackingStore \extchoice AddThreadMemory \\
@@ -1617,21 +1599,19 @@ store on top of its stack in $backingStoreStacks$.
 The compilation strategy refines the structure of objects.
 This means that the field access operations ($GetField$, $PutField$,
 $GetStatic$ and $PutStatic$) and the object allocation operations
-($MakeObject$) are affected compilation strategy.
+($MakeObject$) are affected by the compilation strategy.
 $GetClassIDOf$ is also affected since an object's class identifier is
 stored as part of its structure.
-The management of allocation contexts is
-unaffected by the compilation strategy, but is required for managing
-allocation of objects, so that they can be allocated in the correct
-backing store.
+The management of allocation contexts is unaffected by the compilation
+strategy, but is required for managing allocation of objects, so that
+they can be allocated in the correct backing store.
 
 We omit the definitions of the individual actions in $Loop$ here. 
 The field access operations are simple data operations on the $fields$
 component of an $Object$ binding in the $objects$ map.
 $NewObject$ just exposes the $MakeObject$ action on the $newObject$
-and $newObjectRet$ channels, and the $GetClassIDOf$ is simply
-extracting the $this$ identifier from the $Class$ information of an
-$object$.
+and $newObjectRet$ channels, and the $GetClassIDOf$ simply extracts
+the $this$ identifier from the $Class$ information of an $object$.
 The actions that relate to management of the allocation context are
 omitted since they are of little relevance to the compilation
 strategy.
