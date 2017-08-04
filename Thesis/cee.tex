@@ -1334,26 +1334,10 @@ here.
 
 The $cs$ map provided as a parameter to $CEE$ is used as the parameter
 to $subclassRel$ in each of the processes that uses it.
-This $cs$ map must satisfy several constraints in order for $CEE$ to
-be divergence-free, since it will abort if, for example, a class'
-superclass is missing from $cs$ when searching its inheritance
-hierarchy for a method of that class.
-Since these constraints concern the classes present in $cs$, they
-cannot be included in the invariant of $Class$.
-We instead specify the constraints on a $cs$ constant defined in
-Appendix~\ref{constants-appendix}, which is used to instantiate the
-$cs$ parameter of $CEE$.
-The inputs to the interpreter and compilation strategy are expected to
-be instantiations of this constant.
-The constraints on $cs$ include the requirements that $Class$
-associated with each $ClassID$ have its $this$ reference be the same
-as that $ClassID$, that all superclasses of a given class must be
-present in that class, and that the ranges defined by $methodEntry$
-and $methodEnd$ for each $Class$ are disjoint.
-% Additional constraints on the $bc$, $sid$ and $initOrder$ parameters
-% to $CEE$ are also required to ensure complete divergence freedom.
-% These are supplied as constraints on the corresponding constants in
-% Appendix~\ref{constants-appendix}.
+In order for the CEE to execute the program, this $cs$ parameter must
+represent a valid SCJ program, with all the necessary classes present.
+If this holds, then $subclassRel$ represents the usual notion of when
+a object of a Java class is assignable to a variable of a given class.
 
 We next describe the object manager process, $ObjMan$, which uses the
 $Class$ type and the $cs$ map.
