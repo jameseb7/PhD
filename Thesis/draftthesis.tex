@@ -60,18 +60,26 @@
 \declaretheorem[
 name=Theorem,
 numberwithin=section,
-refname={theorem, theorems},
+refname={Theorem, Theorems},
 Refname={Theorem, Theorems}
 ]{thm}
 \declaretheorem[
 name=Lemma,
 numberlike=thm,
-refname={lemma, lemmas},
+refname={Lemma, Lemmas},
 Refname={Lemma, Lemmas}
 ]{lem}
+
+\declaretheoremstyle[
+style=plain,
+notebraces={[}{]}
+]{rule}
+
 \declaretheorem[
 name=Rule,
-refname={rule,rules},
+style=rule,
+numbered=no,
+refname={Rule,Rules},
 Refname={Rule,Rules}
 ]{crule}
 
@@ -92,8 +100,21 @@ refname={definition,definitions},
 Refname={Definition,Definitions}, numberlike=thm, style=idefinition
 ]{defn}
 
+\declaretheoremstyle[
+style=definition,
+notebraces={[}{]}
+]{proof}
+
+\declaretheorem[
+name=Proof,
+style=proof,
+numbered=no,
+prefoothook={\qedsymbol\relax}
+]{crproof}
+
 \renewcommand{\circblockbegin}{\left(\begin{array}{l}}
 \renewcommand{\circblockend}{\end{array}\right)}
+
 
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath
@@ -234,6 +255,10 @@ Refname={Definition,Definitions}, numberlike=thm, style=idefinition
 
 %TC:ignore
 \input{../../SCJ-VM/James/memorymanager_proofs.zed}
-%TC:endignore
+% TC:endignore
+
+\chapter{Compilation Rules Proofs}
+
+\input{compilationrules_proofs.tex}
 
 \end{document}
