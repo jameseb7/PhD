@@ -1627,19 +1627,9 @@ constructor.
 The bytecode instructions are arranged in a map, $bc$, from
 $ProgramAddress$ values (which are modeled by natural numbers) to
 $Bytecode$ values.
-As with the $cs$ map discussed in
-Section~\ref{cee-classes-subsection}, the $bc$ map must fulfil several
-constraints.
-These constraints include ensuring that the flow of execution remains
-within the instructions in $bc$, and that the $ProgramAddress$ ranges
-for all the methods in $cs$ are included in the domain of $bc$.
-The constraints are included as constraints on a $bc$ constant, which
-is included in Appendix~\ref{constants-appendix} along with $cs$, and
-should be instantiated by the inputs to the interpreter and
-compilation strategy.
-
-The $bc$ and $cs$ values are passed as parameters to the $Interpreter$
-process, as can be seen from its definition shown below.
+The $bc$ map and the $cs$ map described in
+Section~\ref{cee-classes-subsection} are passed as parameters to the
+$Interpreter$ process, as can be seen from its definition shown below.
 The overall structure of the $Interpreter$ process is a parallel
 composition of $Thr$ processes representing the individual interpreter
 threads, with one process for each $ThreadID$ except for the $idle$
@@ -1662,14 +1652,589 @@ We have chosen to model the interpreter threads in this way since they
 are conceptually running in parallel, each with their own state, and
 we do not mandate a specific thread switch mechanism.
 
-\subsection{Complete Core Execution Environment Model}
-\label{complete-cee-subsection}
+The start definition of the $Thr$ process is shown below.
+This accepts the $bc$ and $cs$ parameters from $Interpreter$, plus the
+$ThreadID$ of the thread $Thr$ represents, $thread$.
+\begin{circus}
+  \circprocess Thr \circdef \\
+  \t1 bc : ProgramAddress \pfun Bytecode; cs : ClassID \pfun Class; thread : ThreadID \circspot \\
+  \t1 \circbegin
+\end{circus}
 
-We now combine the four \Circus{} processes representing the different
-components of the core execution environment into a single \Circus{}
-process representing the entire core execution environment.
+The state of $Thr$ contains the stack for the thread, which consists
+of a series of stack frames, one for each method on the call stack.
+The contents of each stack frame are specified by the schema
+$StackFrame$.
+Its first component, $localVariables$, is a sequence of $Word$ values
+representing the local variable array for the method.
+Its second component, $operandStack$ represents the data stack upon
+which each bytecode instruction operates.
+The third component, $storedPC$, is used for storing the program
+counter value as a return address when another method is invoked.
+The fourth component, $frameClass$, is a copy of the $Class$
+information for the class of the stack frame's method, so that the
+constant pool for the class is available to the operations of $Thr$.
+The fifth component, $stackSize$, stores the maximum size of the
+$operandStack$ for the thread.
+The final component of $StackFrame$, $baseFrame$ is a boolean value
+indicating whether or not the frame was created in response to an
+external request, so that it forms the base of a substack of frames.
+This is used when determining whether to send a return value to the
+$executeMethodRet$ channel or push it onto the previous method's
+$operandStack$.
+The invariant of $StackFrame$ just requires the $operandStack$ to not
+be larger than $stackSize$.
+\begin{schema}{StackFrame}
+	localVariables : \seq Word \\
+	operandStack : \seq Word \\
+	storedPC : ProgramAddress \\
+	frameClass : Class \\
+	stackSize : \nat \\
+	baseFrame : \boolean
+\where
+	\# operandStack \leq stackSize
+\end{schema}
 
-\input{../../SCJ-VM/James/complete_cee.zed}
+The state of $Thr$ is given by the schema $InterpreterState$, shown
+below.
+Its first component, $frameStackID$, is the identifier of the stack
+that serves as the frame stack for the thread. 
+It is of a type $Stack$, which may be $Uninitialised$ with no value,
+or $Initialised$ with a $StackID$ value for the stack.
+The second component, $frameStack$, represents the stack itself, which
+is a sequence of $StackFrame$ bindings, with one for each method
+entered.
+The third component, $pc$, is the program counter value for the
+thread.
+Finally, the fourth component, $currentClass$, is a copy of the class
+information for the current method, so that it can be easily
+referenced in the body of $Thr$.
+\begin{schema}{InterpreterState}
+  frameStackID : Stack \\
+  frameStack : \seq StackFrame \\
+  pc : ProgramAddress \\
+  currentClass : Class
+\where
+  frameStackID = Uninitialised \implies frameStack = \emptyset \\
+  % definition of currentClass (only important if the frame stack is nonempty)
+  frameStack \neq \emptyset \implies currentClass = (last~frameStack).frameClass \\
+  frameStack \neq \emptyset \implies (head~frameStack).baseFrame = \true \\
+  % need to ensure pc is consistent with currentClass
+  \exists m : MethodID | m \in \dom currentClass.methodEntry @ \\
+  \t1 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m
+\end{schema}
+The first conjunct of the invariant of $InterpreterState$ requires
+that there be no $StackFrames$ on the $frameStack$ when $frameStackID$
+is $Uninitialised$.
+The second conjunct defines $currentClass$ as the same as the
+$frameClass$ of the last $StackFrame$ on the $frameStack$.
+This is only required when $frameStack$ is nonempty, since
+$currentClass$ is unused when $frameStack$ is empty.
+The third conjunct states that, if the $frameStack$ is nonempty, the
+first $StackFrame$ must have $baseFrame$ set to $\true$, since it is
+always the start of a substack of frames.
+Finally, the fourth conjunct states that $pc$ must be in the
+$ProgramAddress$ range for a method of $currentClass$, to ensure the
+bytecodes are associated with the correct class information.
+
+The state is initialised as described in the schema $InterpreterInit$
+below.
+The initialisation simply sets $frameStackID$ to $Unintialised$ and
+the $frameStack$ to empty.
+The other state components take arbitrary values and are initialised
+when the first $StackFrame$ is created, since they are unused until
+then.
+\begin{schema}{InterpreterInit}
+	InterpreterState~'
+\where
+	frameStackID' = Uninitialised \\
+	frameStack' = \langle\rangle
+\end{schema}
+
+The main action of $Thr$ is shown below. 
+It consists of initialisation as described in $InterpreterInit$,
+followed by a choice of two different actions, $MainThread$ and
+$NotStarted$, depending on whether the thread represented by the $Thr$
+process is the $main$ thread or not.
+$MainThread$ and $NotStarted$ make use of the same actions for
+executing bytecode instructions, but they occur in different orders.
+The control flow of the $Thr$ process is shown in
+Figure~\ref{interpreter-flow-figure}.
+\begin{circusaction}
+  \circspot \lschexpract InterpreterInit \rschexpract \circseq {}
+  \circblockbegin
+    \lcircguard thread = main \rcircguard \circguard MainThread \\
+    {} \extchoice {} \\
+    \lcircguard thread \neq main \rcircguard \circguard NotStarted
+  \circblockend
+\end{circusaction}
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \node at (9cm,0) (width) {};
+    \node at (0,1.5cm) (height) {};
+
+    \path (0,0) --
+    node[pos=0.00] (Initxpos) {}
+    node[pos=0.25] (Interpreterxpos) {}
+    node[pos=0.55] (Executexpos) {}
+    node[pos=0.8] (ExecuteAndPollxpos) {}
+    (width);
+
+    \path (0,0) --
+    node[pos=0] (threadypos) {}
+    node[pos=0.5] (Initypos) {}
+    node[pos=1] (mainypos) {}
+    node[pos=2] (mainBlockedypos) {}
+    (height);
+
+    \path (Initxpos |- Initypos) node (Init) {$Init$} ++(-1cm,0cm) node (start) {};
+    \node at (Interpreterxpos |- mainypos) (IMn) {$MainThread$};
+    \node at (Executexpos |- mainypos) (MRn) {$Running$};
+    \node at (Interpreterxpos |- mainBlockedypos) (MBl) {$Blocked$};
+    \node at (ExecuteAndPollxpos |- mainypos) (MB2) {$Blocked$};
+    \node at (Interpreterxpos |- threadypos) (NSt) {$NotStarted$};
+    \node at (Executexpos |- threadypos) (TBl) {$Blocked$};
+    \node at (ExecuteAndPollxpos |- threadypos) (TRn) {$Running$};
+
+    \draw[-latex] (start) to (Init);
+    \draw[-latex] (Init) to[out=90,in=180,looseness=0.5] (IMn);
+    \draw[-latex] (Init) to[out=270,in=180,looseness=0.5] (NSt);
+    \draw[-latex] (IMn) to[bend left,looseness=0.7] (MRn);
+    \draw[-latex] (MRn) to[bend left,looseness=0.7] (IMn);
+    \draw[-latex] (MRn) to[bend left,looseness=0.7] (MB2);
+    \draw[-latex] (MB2) to[bend left,looseness=0.7] (MRn);
+    \draw[-latex] (IMn) to[bend left,looseness=1.0] (MBl);
+    \draw[-latex] (MBl) to[bend left,looseness=1.0] (IMn);
+    \draw[-latex] (NSt) to (TBl);
+    \draw[-latex] (TBl) to[bend left,looseness=0.7] (TRn);
+    \draw[-latex] (TRn) to[bend left,looseness=0.7] (TBl);
+    \draw[-latex] (TRn) to[bend left,looseness=0.7] (NSt);
+    \draw[-latex] (TRn) to[loop below] (TRn);
+    \draw[-latex] (MRn) to[loop above] (MRn);
+  \end{tikzpicture}
+  \caption{The overall control flow of $Thr$}
+  \label{interpreter-flow-figure}
+\end{figure}
+
+
+The $MainThread$ action, which describes the behaviour of the $main$
+thread's process, is shown below.
+It begins by accepting a $StackID$ from the $Launcher$ on the
+$initMainThread$, which is used to initialise the $frameStackID$ state
+component.
+It then offers a choice of executing a method on the $main$ thread in
+response to a request from the $Launcher$, or switching to another
+thread.
+A request to start execution of a method is handled in the
+$StartIntepreter$ action, which creates the $StackFrame$ for the
+method.
+The process then behaves as the $Running$ action, executing bytecode
+instructions until the method has finished, after which the
+$MainThread$ action recurses to offer the choice of method execution
+and thread switch again.
+If an instruction to switch to another thread from the scheduler is
+received on the $CEEswitchThread$ channel, then it is only accepted if
+the thread switched from is the $thread$ represented by the process.
+If it is accepted, then the process behaves as $Blocked$, waiting for
+a request to switch back to the thread, after which it recurses back
+to offer the choice of behaviours again.
+\begin{circusaction}
+  MainThread \circdef initMainThread?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
+  \t1 \circblockbegin
+  StartInterpreter \circseq Running \circseq X \\
+  {} \extchoice {} \\
+  CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
+  \circblockend
+\end{circusaction}
+
+The $StartIntepreter$ used by $MainThread$ is also handling special
+methods that execute nested methods.
+Its definition is shown below.
+It accepts communication on the $executeMethod$ channel, requiring the
+$ThreadID$ communicated to be the same as that of the current thread,
+$thread$, and storing the other values communicated as $classID$,
+$methodID$ and $methodArgs$.
+A data operation $ResolveMethod$ is then used to determine the
+appropriate class information for the method, since the method may
+actually be defined in a superclass of the provided $classID$.
+$ResolveMethod$ follows the method resolution rules of the JVM
+specification, first checking if the class corresponding to $classID$
+defines the method, then checking if one of its superclasses defines
+the method, and finally looking for the method definition among its
+superinterfaces.
+The $Class$ information resulting from this is stored in $class$ and
+used to create a new $StackFrame$ on the $frameStack$ in
+$InterpreterNewStackFrame$.
+The $baseFrame$ value for this stack frame is set to $\true$, since it
+was created in reponse to an external request.
+\begin{circusaction}
+  StartInterpreter \circdef \\
+  \t1  \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+  \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+  \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrame \rschexpract
+\end{circusaction}
+
+For threads that are not the $main$ thread, their behaviour is
+described by the $NotStarted$ action shown below.
+It accepts a request to start the $thread$ represented by the process
+from the scheduler on the $CEEstartThread$ channel.
+The backing store identifier, $bsid$, of the thread's backing store is
+then passed to $ObjMan$ via the $addThreadMemory$ channel and the
+$stack$ identifier is used to initialise $frameStackID$.
+The remaining information is stored in $classID$, $methodID$ and
+$methodArgs$, and the $Class$ information is determined and a new
+$StackFrame$ is created, similarly to $StartInterpreter$. 
+The process then behaves as the $Blocked$ action, waiting for an
+instruction to switch to that thread, after which it behaves as the
+$Running$ action, executing bytecode instructions.
+When the execution of the thread's method has finished, the scheduler
+is signalled on the $CEEremoveThread$ channel to indicated that the
+thread has finished.
+This then causes the scheduler to switch to a different thread, so a
+thread switch away from $thread$ is accepted on the $CEEswitchThread$
+channel.
+After that, the action recurses to allow the thread to be restarted.
+\begin{circusaction}
+  NotStarted \circdef \\
+  \t1 \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+  \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \then {} \\
+  \t1 addThreadMemory!thread!bsid \then {} \\
+  \t1 frameStackID, classID, methodID, methodArgs := Initialised~stack, cid, mid, args \circseq \\
+  \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrame \rschexpract \circseq \\
+  \t1 Blocked \circseq Running \circseq CEEremoveThread!thread \then {} \\
+  \t1 CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
+\end{circusaction}
+
+The $Blocked$ and $Running$ actions form the behaviour of threads
+after they have been started.
+The $Blocked$ action simply waits for a signal on the
+$CEEswitchThread$ channel to switch to $thread$, after which it
+terminates to allow execution in a different action to continue.
+\begin{circusaction}
+  Blocked \circdef CEEswitchThread?from?to \prefixcolon (to = thread) \then \Skip
+\end{circusaction}
+
+The $Running$ action, shown below, executes the bytecode instructions
+of a program. 
+It has the form of a loop that repeatedly executes until $frameStack$
+is empty.
+Within the loop, it handles the bytecode instruction at the current
+$pc$ value in $HandleInstruction$ and then it polls for thread
+switches in $Poll$.
+\begin{circusaction}
+  Running \circdef \\
+  \t1 \circif frameStack = \emptyset \circthen \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen HandleInstruction \circseq Poll \circseq Running \\
+  \t1 \circfi
+\end{circusaction}
+The behaviour of polling for thread switches in $Poll$ is required in
+order to permit thread switches inbetween bytecode instructions.
+Note that implementations of the model that allow thread switches at
+other points would be valid if they retain the same sequence of
+externally visible events, meaning only instructions involving
+communication with other parts of the model need be atomic.
+$Poll$ simply offers communication from the scheduler on the
+$CEEswitchThread$ and $CEEproceed$ channels, switching to $Blocked$
+upon receiving a signal on $CEEswitchThread$ and terminating on
+receiving a signal on $CEEproceed$.
+Since its contents are not directly used in the compilation strategy,
+we omit the definition of $Poll$ here.
+
+The $HandleInstruction$ action, shown in part below, offers a choice
+of actions for handling the bytecode instructions in our subset.
+There is one action for each of the bytecode instructions, with the
+action's name formed from the bytecode mnemonic prefixed with $Handle$
+(e.g.\ $HandleAload$ for the \texttt{aload} instruction).
+These actions provide the semantics for the instructions and, as such
+are heavily used in the compilation strategy.
+\begin{circusaction}
+	HandleInstruction \circdef \\
+	\t1 HandleAconst\_null \extchoice HandleDup \extchoice HandleAload \extchoice HandleAstore \extchoice HandleIadd \extchoice {} \cdots
+\end{circusaction}
+
+Many of these actions for handling bytecode instructions have a
+similar form. 
+The simplest of these consist of a guard requiring the $bc$ value at
+the current $pc$ to be a particular bytecode instruction, followed by
+a data operation specified by a Z schema updating $InterpreterState$.
+This can be seen in the definition of $HandleAconst\_null$ below,
+which uses the $InterpreterAconst\_null$ schema.
+\begin{circusaction}
+  HandleAconst\_null \circdef \lcircguard bc~pc = aconst\_null \rcircguard \circguard \lschexpract InterpreterAconst\_null \rschexpract
+\end{circusaction}
+The \Circus{} actions and Z schemas for each bytecode instruction are
+listed in Table~\ref{bytecode-model-table}.
+We omit the definitions of the Z schemas in our description here.
+Their contents are in line with the state updates for the bytecode
+instructions presented in Table~\ref{bytecode-subset-table}.
+The $HandleDup$, $HandleIadd$ and $HandleIneg$ actions also follow the
+simple form above.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{llp{5cm}}
+    \hline
+    Bytecode instruction & \Circus{} action & Z schema \\
+    \hline
+    \texttt{aconst\_null} & $HandleAconst\_null$ & $InterpreterAconst\_null$ \\
+    \texttt{aload} & $HandleAload$ & $InterpreterAload$ \\
+    \texttt{areturn} & $HandleAreturn$ & $InterpreterAreturn$ \\
+    \texttt{astore} & $HandleAstore$ & $InterpreterAstore$ \\
+    \texttt{dup} & $HandleDup$ & $InterpreterDup$ \\
+    \texttt{getfield} & $HandleGetfield$  & $InterpreterPush$ \\
+    \texttt{getstatic} & $HandleGetstatic$ & $InterpreterPush$ \\
+    \texttt{goto} & $HandleGoto$ & $InterpreterGoto$ \\
+    \texttt{iadd} & $HandleIadd$ & $InterpreterIadd$ \\
+    \texttt{iconst} & $HandleIconst$ & $InterpreterPush$ \\
+    \texttt{if\_icmple} & $HandleIf\_icmple$ & $InterpreterIf\_icmple$ \\
+    \texttt{ineg} & $HandleIneg$ & $InterpreterIneg$ \\
+    \texttt{invokespecial} & $HandleInvokespecial$ & $InterpreterStackFrameInvoke$, $InterpreterNewStackFrame$ \\
+    \texttt{invokestatic} & $HandleInvokestatic$ & $InterpreterStackFrameInvoke$, $InterpreterNewStackFrame$ \\
+    \texttt{invokevirtual} & $HandleInvokevirtual$ & $InterpreterStackFrameInvoke$, $InterpreterNewStackFrame$ \\
+    \texttt{new} & $HandleNew$ & $InterpreterPush$ \\
+    \texttt{putfield} & $HandlePutfield$ & $InterpreterPop2$ \\
+    \texttt{putstatic} & $HandlePutstatic$ & $InterpreterPop$ \\
+    \texttt{return} & $HandleReturn$ & $InterpreterReturn$ \\
+    \hline
+  \end{tabular}
+  \caption{The relationship between the bytecode instructions in our
+    subset and the \Circus{} actions and Z schemas defining them}
+  \label{bytecode-model-table}
+\end{table}
+
+Some instructions have parameters that must be extracted so that they
+can be passed to the data operation for the instruction.
+This can be seen in the $HandleAload$ action, shown below, in which
+the inverse of the $aload$ constructor is used to extract its
+parameter into a $variableIndex$ variable that is used by the
+$IntepreterAload$ schema.
+\begin{circusaction}
+  HandleAload \circdef  \lcircguard bc~pc \in \ran aload \rcircguard \circguard \\
+  \t1 \circvar variableIndex : \nat \circspot variableIndex := (aload\inv)~(bc~pc) \circseq \lschexpract InterpreterAload \rschexpract
+\end{circusaction}
+The $HandleAstore$, $HandleGoto$, $HandleIconst$ and
+$HandleIf\_icmple$ actions all follow a similar form, extracting the
+parameter of the bytecode instruction into a separate variable.
+
+The actions to handle the return instructions (\texttt{areturn} and
+\texttt{return}) require additional communication to pass the return
+value to the $Launcher$ when returning from a method that was started
+by the $Launcher$.
+This is performed by an additional action, $CheckLauncherReturn$, that
+is called after return from the schema action.
+This can be seen in the definition of $HandleAreturn$ below, where
+$CheckLauncherReturn$ is passed the two output values from the
+$InterpreterAreturn$ function.
+The first output, $returnValue$, holds the return value for the
+returning method, while the second, $fromBaseFrame$, is a boolean
+value indicating if the $StackFrame$ for the method had its
+$baseFrame$ value set to $\true$.
+\begin{circusaction}
+  HandleAreturn \circdef \circvar returnValue : Word; fromBaseFrame : \boolean \circspot \\
+  \t1 \lcircguard bc~pc = areturn \rcircguard \circguard \lschexpract InterpreterAreturn \rschexpract \circseq \\
+  \t1 CheckLauncherReturn(returnValue, fromBaseFrame)
+\end{circusaction}
+The form of the $HandleReturn$ action is similar, but since
+$InterpreterReturn$ does not output a return value, $returnValue$
+takes an arbitrary value.
+
+Within the $CheckLauncherReturn$ action, the definition of which is
+shown below, the boolean value $fromBaseFrame$, passed as a parameter
+to the action, is used to determine whether the return value should be
+communicated to the $Launcher$.
+If $fromBaseFrame$ is set to $\true$, then that indicates the return
+is from a frame created by an external request, which normally
+indicates that the return value needs to be passed to the launcher.
+The exception to this is if the return is from the first frame of a
+$thread$ other than $main$, which is created in response to a
+$CEEstartThread$ signal from the scheduler and so does not require a
+return value to be sent to the launcher.
+Thus, the condition checked is that $fromBaseFrame$ is $\true$, and
+either $frameStack$ is empty or the current $thread$ is $main$.
+If that is true then $returnValue$ is sent to the $Launcher$ on the
+$executeMethodRet$ channel and a signal is awaited on the
+$continueExecution$ channel before continuing.
+If the condition is not true then the action terminates without
+communicating with the $Launcher$.
+\begin{circusaction}
+  CheckLauncherReturn \circdef \circval returnValue : Word; \circval fromBaseFrame : \boolean \circspot \\
+  \t1 \circif fromBaseFrame = \true \land (frameStack \neq \emptyset \lor thread = main) \circthen \\
+  \t2 executeMethodRet!thread!returnValue \then continueExecution?t \prefixcolon (t = thread) \then \Skip \\
+  \t1 {} \circelse fromBaseFrame = \false \lor (frameStack = \emptyset \land thread \neq main) \circthen \Skip \\
+  \t1 \circfi
+\end{circusaction}
+
+For the instructions that create objects and access their fields
+(\texttt{new}, \texttt{getfield}, \texttt{putfield},
+\texttt{getstatic} and \texttt{putstatic}), communication with
+$ObjMan$ is used to handle them.
+This can be seen in the definition of $HandleGetfield$, shown below,
+where the object identifier, $oid$, is popped from the $operandStack$
+of the current $StackFrame$ using the data operation $IntepreterPop$,
+and the field identifier is extracted from the parameter to the
+bytecode instruction.
+Note that $pc$ is hidden from the $InterpreterPop$ since this action
+uses two data operations promoted from $StackFrame$ operations and
+only one of them need update $pc$. 
+This information is passed to $ObjMan$ via the $getField$ channel,
+which then handles the operation.
+The field's value is returned via the $getFieldRet$ channel and pushed
+onto the $operandStack$ of the current $StackFrame$ by the data
+operation $InterpreterPush$.
+\begin{circusaction}
+  HandleGetfield \circdef \lcircguard bc~pc \in \ran getfield \land (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \rcircguard \circguard \\
+  \t1 \circvar oid : ObjectID \circspot \lschexpract InterpreterPop[oid!/value!] \hide (pc, pc') \rschexpract \circseq \\
+  \t1 getField!oid!(fieldOf~currentClass~((getfield\inv)~(bc~pc))) \\
+  \t1 {} \then getFieldRet?value \then \lschexpract InterpreterPush \rschexpract
+\end{circusaction}
+The $HandleNew$, $HandlePutfield$, $HandleGetstatic$ and
+$HandlePutstatic$ actions are similar, getting information from the
+$operandStack$ using $InterpreterPop$, communicating with $ObjMan$ to
+handle the instruction, and using $InterpreterPush$ to push returned
+information onto the $operandStack$.
+
+Finally, the method invocation instructions (\texttt{invokespecial},
+\texttt{invokestatic} and \texttt{invokevirtual}), require more
+complex handling due to the fact that certain methods require special
+handling by the virtual machine.
+Since the different method invocation instructions differ only in how
+the class for the method is determined and whether a \texttt{this}
+object identifier is passed among the method's arguments, the
+invocation of the method after this has been determined is handled by
+a common $Invoke$ action.
+This can be seen in the definition of the $HandleInvokespecial$
+action, shown below.
+The method identifier, $mid$ is extracted from the instruction's
+parameter, and the data operation $InterpreterStackFrameInvoke$ is
+used to store the return $pc$ address and pop the arguments of the
+method, stored in $poppedArgs$.
+The number of arguments popped, $argsToPop?$, is the $methodArguments$
+value for $mid$, plus one for the \texttt{this} identifier passed to
+the method (which is not included in the arguments encoded in the
+method identifier).
+The class identifier is then extracted from the instruction's
+parameter and passed into $Invoke$ along with $mid$ and $poppedArgs$.
+\begin{circusaction}
+  HandleInvokespecial \circdef \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
+  \t1 \lcircguard bc~pc \in \ran invokespecial \land ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \rcircguard \circguard \\
+  \t1 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
+  \t1 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+  \t1 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs)
+\end{circusaction}
+The $HandleInvokestatic$ and $HandleInvokevirtual$ actions are
+similar, except $argsToPop?$ does not include the extra \texttt{this}
+argument in $HandleInvokeStatic$, and $HandleInvokevirtual$ obtains
+the class identifier from the \texttt{this} object identifier via the
+$getClassIDOf$ channel rather than from the instruction's parameter.
+
+The $Invoke$ action, shown in part below, has the form of an external
+choice over actions for each of the special methods supported by the
+SCJVM, plus an $InvokeOther$ action for handling non-special methods
+implemented in bytecode.
+The name of the action for each special method is formed from the name
+of the special method prefixed with $Invoke$ (e.g. 
+$InvokeResumeThread$ for the \texttt{resumeThread()} method).
+The parameters passed to the $Invoke$ action, which are the class
+identifier, $classID$, the method identifier, $method$, and the
+method argument list, $args$, are passed on to each of the actions in
+the external choice.
+\begin{circusaction}
+  Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word \circspot \\
+  \t1 InvokeResumeThread(classID, method, args) \extchoice InvokeSuspend(classID, method) \extchoice \cdots \\
+  \t1 {} \extchoice InvokeOther(classID, method, args)
+\end{circusaction}
+
+Within the special method actions, there is a guard ensuring the
+action is taken when the class and method identifiers are those for
+the method.
+The method is then handled by communication on the appropriate
+channels.
+This can be seen in the $InvokeResumeThread$ action, shown below.
+The class identifier parameter, $classID$, is required to refer to a
+subclass of some class $resumeThreadClass$, while the method
+identifier, $method$, must be $resumeThreadID$.
+The class and method identifiers used in the special method actions
+are a mixture of identifiers from the SCJ API and
+implementation-defined identifiers provided to expose SCJVM services
+to bytecode programs.
+The argument to the method, stored as the first element of the
+$methodArgs$ parameter, is converted to a $ThreadID$ and passed to the
+$Launcher$ via the $resumeThread$ channel.
+A return signal is then awaited on the $resumeThreadRet$ channel
+before continuing.
+\begin{circusaction}
+  InvokeResumeThread \circdef \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \lcircguard (classID,resumeThreadClass) \in subclassRel~cs \land method = resumeThreadID \rcircguard \circguard {} \\
+  \t1 resumeThread!(WordToThreadID~(methodArgs~1)) \then resumeThreadRet \then \Skip
+\end{circusaction}
+
+Some of the special methods start new methods as part of their
+execution, which requires additional handling.
+An example of such a method is the \texttt{enterPrivateMemory()}
+method of the \texttt{ManagedMemory} class from the SCJ API, which
+executes the \texttt{run()} method of a \texttt{Runnable} object after
+entering a private memory area.
+This is handled in the action $InvokeEnterPrivateMemory$, shown below.
+It begins in a similar way to $InvokeResumeThread$, with a guard on
+the $classID$ and $method$ passed into the action.
+The method is then handled by communicating with the $Launcher$ on the
+$enterPrivateMemory$ channel, passing the arguments from $methodArgs$.
+The execution of the nested method is then handled as in
+$StartInterpreter$, waiting for the request to execute the nested
+method on the $executeMethod$ channel and creating a new $StackFrame$
+for it.
+\begin{circusaction}
+  InvokeEnterPrivateMemory \circdef \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \lcircguard (classID,managedMemoryClass) \in subclassRel~cs \land method = enterPrivateMemoryID \rcircguard \circguard {} \\
+  \t2 enterPrivateMemory!thread!(methodArgs~1)!(methodArgs~2) \then StartInterpreter
+\end{circusaction}
+
+In addition to the special methods handled in the $Launcher$, we also
+supply \texttt{read()} and \texttt{write()} methods for reading from
+and writing to some standard input and output device. 
+These methods are handled using the \texttt{input} and \texttt{output}
+channels that communicate the values from and to the environment of
+the SCJVM.
+This can be seen in the $InvokeRead$ action below, which accepts the
+input on the $input$ channel and pushes it onto the stack as the
+return value for the method.
+\begin{circusaction}
+  InvokeRead \circdef \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \lcircguard (classID,readClass) \in subclassRel~cs \land method = readID \rcircguard \circguard {} \\
+  \t2 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
+\end{circusaction}
+The $InvokeWrite$ action is similar, writing the method argument to
+the $output$ channel.
+
+The $InvokeOther$ action, shown in part below, describes the handling
+of non-special methods.
+It begins with a guard that is the negation of the guards for the
+invocation actions for the special methods.
+The actions starts execution of the method in the interpreter by
+finding its $Class$ information with $ResolveMethod$ and creating a
+new $StackFrame$ with $IntepreterNewStackFrame$.
+The $baseFrame$ value is set to $\false$ here, since the stack frame
+is created due to execution of a bytecode instruction in the
+interpreter, rather than in response to an external request.
+\begin{circusaction}
+  InvokeOther \circdef \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \lcircguard ((classID,resumeThreadClass) \notin subclassRel~cs \lor methodID \neq resumeThreadID) \\
+  \t2 {} \land \cdots \\
+  \t2 {} \land ((classID, writeClass) \notin subclassRel~cs \lor methodID \neq writeID) \rcircguard \circguard {} \\
+  \t1 \circvar class : Class \circspot \\
+  \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \false @ InterpreterNewStackFrame \rschexpract
+\end{circusaction}
+
+This concludes our description of the handling of bytecode
+instructions, and of our description of the CEE before the application
+of the compilation strategy.
+In the next section we describe the model of the C code that is used
+for the output of the compilation strategy.
 
 \section{C Code Model}
 \label{cee-c-code-section}
