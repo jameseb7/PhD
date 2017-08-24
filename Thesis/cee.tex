@@ -1420,9 +1420,9 @@ the static class fields for that class.
   \ran classObjectMap \subseteq \dom objects
 \end{schema}
 The first conjunct of the invariant of $ObjManState$ requires that the
-$ObjectID$ sets given by $backingStoreMap$ partition the domain of
-$objects$, so that every object is allocated in exactly one backing
-store.
+domain of $objects$ is partitioned by the $ObjectID$ sets given by
+$backingStoreMap$, so that every object is allocated in exactly one
+backing store.
 The second conjunct requires that the domain of $backingStoreMap$ be
 the identifiers of backing stores entered in $backingStoreStacks$,
 since a backing store that is not in use by any thread is cleared and
@@ -1432,8 +1432,8 @@ $backingStoreMap$, since that represents immortal memory, which is
 never cleared.
 Combined with the second conjunct, this implies that at least one
 thread must have entered the $rootBS$ at all times.
-Finally, the fourth conjunct requires that, the class objects in the
-$classObjectMap$ be valid objects in the $objects$ map.
+Finally, the fourth conjunct requires that the class objects in the
+$classObjectMap$ be in the $objects$ map.
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
 This operation takes the identifier of the root backing store as an
@@ -1627,9 +1627,10 @@ constructor.
 The bytecode instructions are arranged in a map, $bc$, from
 $ProgramAddress$ values (which are modeled by natural numbers) to
 $Bytecode$ values.
-The $bc$ map and the $cs$ map described in
-Section~\ref{cee-classes-subsection} are passed as parameters to the
-$Interpreter$ process, as can be seen from its definition shown below.
+The $bc$ map is passed as a parameter to the $Interpreter$ process,
+along with the $cs$ map described in
+Section~\ref{cee-classes-subsection}, as can be seen from its
+definition shown below.
 The overall structure of the $Interpreter$ process is a parallel
 composition of $Thr$ processes representing the individual interpreter
 threads, with one process for each $ThreadID$ except for the $idle$
@@ -1643,8 +1644,8 @@ represents.
   \t1 \Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, t)
 \end{circus}
 Each $Thr$ process synchronises on a channel set $ThrChans(t)$, which
-contains the events $CEEswitchThread.t.t2$ and $CEEswitchThread.t2.t$
-for all threads $t2$.
+contains the $CEEswitchThread.t.t2$ and $CEEswitchThread.t2.t$ events
+for all threads identifiers $t2$.
 This ensures thread switches can be handled since the two threads
 involved in the thread switch (the thread switched from and the thread
 switched to) synchronise on the thread switch request.
@@ -1695,8 +1696,7 @@ be larger than $stackSize$.
 	\# operandStack \leq stackSize
 \end{schema}
 
-The state of $Thr$ is given by the schema $InterpreterState$, shown
-below.
+The state of $Thr$ is given by the schema $InterpreterState$, below.
 Its first component, $frameStackID$, is the identifier of the stack
 that serves as the frame stack for the thread. 
 It is of a type $Stack$, which may be $Uninitialised$ with no value,
