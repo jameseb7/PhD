@@ -2220,6 +2220,37 @@ for the output of the compilation strategy.
 \section{C Code Model}
 \label{cee-c-code-section}
 
+As mentioned previously, the CEE after compilation to C has a similar
+structure to the CEE before compilation, but the object manager is
+replaced with a struct manager and the intepreter is replaced with the
+C program.
+The struct manager is represented by a process $StructMan_{cs}$, and
+the C program by a process $CProg_{bc,cs}$.
+These are place in parallel composition with the $Launcher$ process
+described in Section~\ref{cee-launcher-section} to form a $CCEE_{bc,cs}$
+process representing the CEE for a C program, as shown below.
+\begin{circus}
+  CEE_{bc,cs}(sid, initOrder) \circdef StructMan_{cs} \parallel CProg_{bc,cs} \parallel Launcher(sid, initOrder)
+\end{circus}
+The subscripts here indicate that the processes depend on the $bc$ and
+$cs$ constants used as inputs to the compilation strategy. 
+However, $bc$ and $cs$ are not true parameters of the processes and so
+are not referenced within the processes.
+Note that the $sid$ and $initOrder$ parameters to $Launcher$ remain as
+parameters here since $Launcher$ is not transformed during the
+compilation strategy.
+
+The channels used for communication between these processes are the
+same as those in Table~\ref{cee-channel-table}, except that the
+$getField$, $getFieldRet$ and $putField$ channels are replaced with
+$getObject$, $getObjectRet$ and $putObject$ channels.
+The new channels are discussed in more detail in the
+Section~\ref{cee-struct-manager-subsection}, which describes the
+struct manager.
+After that, in Section~\ref{cee-c-program-subsection}, the
+$CProg_{bc,cs}$ process is described and the shallow embedding of C it
+uses is discussed.
+
 \subsection{Struct Manager}
 \label{cee-struct-manager-subsection}
 
