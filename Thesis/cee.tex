@@ -1403,26 +1403,36 @@ backing stores entered by the thread.
 This is required to contain at least one value, since each thread that
 is ready to execute must have a backing store and those that are not
 should not be in the domain of $backingStoreStacks$.
-The remaining components of $ObjManState$ are a copy of the identifier
-of the root backing store, $rootBS$, and a map, $classObjectMap$
-associating each $ClassID$ with the $ObjectID$ of the object storing
-the static class fields for that class.
+$ObjManState$ also stores $rootBS$, a copy of the root backing store
+identifier.
+The final components of $ObjManState$ are used to store the static
+fields of classes.
+The $staticClassFieldsID$ component is of a type
+$StaticFieldsStructID$, and may be either $Uninitialised$ or
+$Initialised$ with an $ObjectID$ representing the space allocated for
+the static class fields.
+The values of the fields themselves are stored in the
+$staticClassFields$ map.
 \begin{schema}{ObjManState}
   objects : ObjectID \pfun Object \\
   backingStoreMap : BackingStoreID \pfun \finset ObjectID \\
   backingStoreStacks : ThreadID \pfun \seq_1 BackingStoreID \\
   rootBS : BackingStoreID \\
-  classObjectMap : ClassID \pfun ObjectID
+  staticClassFieldsID : StaticFieldsStructID \\
+  staticClassFields : (ClassID \cross FieldID) \pfun Word
 \where
-  backingStoreMap \partition \dom objects \\
-  \dom backingStoreMap = \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} \\
+  backingStoreMap \partition \dom objects \cup toSet~staticClassFieldsID \\
+  \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} = \dom backingStoreMap \\
   rootBS \in \dom backingStoreMap \\
-  \ran classObjectMap \subseteq \dom objects
+  staticClassFieldsID = Uninitialised \implies staticClassFields = \{\} \\
+  toSet~staticClassFieldsID \subseteq backingStoreMap~rootBS
 \end{schema}
-The first conjunct of the invariant of $ObjManState$ requires that the
-domain of $objects$ is partitioned by the $ObjectID$ sets given by
-$backingStoreMap$, so that every object is allocated in exactly one
-backing store.
+The first conjunct of the invariant requires that the domain of
+$objects$, plus $staticClassFieldsID$ if it is $Initialised$, is
+partitioned by the $ObjectID$ sets given by $backingStoreMap$, so that
+every object is allocated in exactly one backing store.
+This uses a helper function $toSet$ to convert $staticClassFieldsID$
+to a set of $ObjectID$s.
 The second conjunct requires that the domain of $backingStoreMap$ be
 the identifiers of backing stores entered in $backingStoreStacks$,
 since a backing store that is not in use by any thread is cleared and
@@ -1432,8 +1442,10 @@ $backingStoreMap$, since that represents immortal memory, which is
 never cleared.
 Combined with the second conjunct, this implies that at least one
 thread must have entered the $rootBS$ at all times.
-Finally, the fourth conjunct requires that the class objects in the
-$classObjectMap$ be in the $objects$ map.
+The fourth conjunct ensures that $staticClassFields$ will not contain
+any fields until $staticClassFieldsID$ is $Initialised$.
+Finally, the fifth conjunct requires that $staticClassFieldsID$, if it
+exists, must be in the root backing store.
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
 This operation takes the identifier of the root backing store as an
@@ -1447,18 +1459,18 @@ The $backingStoreStacks$ map is initialised to contain the $main$ and
 $idle$ thread, both with $rootBS?$ as their only backing store
 entered.
 The $rootBS$ identifier is set to be the same as the $rootBS?$ input.
-The $classObjectMap$ is initially empty, since the class objects are
-created after process initialisation, because communication with the
-memory manager is required to allocate space for them.
+The $staticClassFieldsID$ is set to $Uninitialised$, with
+$staticClassFields$ empty.
 \begin{schema}{ObjManInit}
-  ObjManState~' \\
-  rootBS? : BackingStoreID
+	ObjManState~' \\
+	rootBS? : BackingStoreID
 \where
-  objects' = \emptyset \\
-  backingStoreMap' = \{ rootBS? \mapsto \emptyset \} \\
-  backingStoreStacks' = \{ main \mapsto \langle rootBS? \rangle, idle \mapsto \langle rootBS? \rangle \} \\
-  rootBS' = rootBS? \\
-  classObjectMap' = \emptyset
+	objects' = \emptyset \\
+	backingStoreMap' = \{ rootBS? \mapsto \emptyset \} \\
+	backingStoreStacks' = \{ main \mapsto \langle rootBS? \rangle, idle \mapsto \langle rootBS? \rangle \} \\
+	rootBS' = rootBS? \\
+	staticClassFieldsID = Uninitialised \\
+	staticClassFields = \{\}
 \end{schema}
 
 The $ObjMan$ process then proceeds as described in its main action,
@@ -1466,87 +1478,113 @@ shown below.
 It begins in $Init$ by communicating with the SCJVM memory manager to
 obtain the identifier of the root backing store and then initialising
 the state as described in $ObjManInit$.
-The class objects for each class are then created and stored in the
-$classObjectMap$, in $MakeClassObjects$.
+The space for static fields is then allocated in
+$AllocateStaticFields$.
 Finally, in $Loop$, the process repeatedly offers each of its services
 in external choice.
 \begin{circusaction}
-  \circspot Init \circseq MakeClassObjects \circseq Loop
+  \circspot Init \circseq AllocateStaticFields \circseq Loop
 \end{circusaction}
 
-For the creation of class objects in $MakeClassObjects$ the class
-information for each object must be supplied.
-Since the objects are representations of class information, their
-class should be the \texttt{Class} class from the standard Java API (a
-stripped-down version of which is present in SCJ).
-We represent the identifier of this class by a $ClassID$ constant
-$classClass$.
-However, since the object stores the static fields for each class, the
-$fields$ of the $Class$ information associated with $classClass$ need
-to be changed to be the correct static fields in each case.
-This is accomplished using a function $replaceClassFields$, which
-takes a $Class$ and a set of $FieldID$s, and produces a new $Class$
-with the components the same as the input $Class$, except that the
-$fields$ component is set to the input $FieldID$s.
-
-The $replaceClassFields$ function is used in the definition of the
-$MakeClassObjects$ action, which is shown below.
-It iterates through each $ClassID$, $cid$, in the domain of $cs$, and
-allocates an object for each one using a $MakeObject$ action that
-performs the communication with the memory manager.
-The first parameter to $MakeObject$ is the $Class$ information for the
-object, which is defined by taking the value in $cs$ associated with
-$classClass$ and using $replaceClassFields$ to replace its $fields$
-with the $staticFields$ of the $Class$ associated with $cid$.
-The second parameter is the thread in whose context the object is to
-be allocated, which in this case is the $main$ thread, since that is
-only thread that is initially eligible to run.
-Since the $main$ thread's allocation context is initially immortal
-memory, the class objects are allocated in immortal memory, ensuring
-that the static fields are available throughout the program's
-execution.
-The object identifier returned from the allocation is stored in
-$objectID$, which is stored in $classObjectMap$ associated with $cid$.
+The space for static fields is allocated as described in
+$AllocateStaticFields$ below.
+The static field identifiers for all the classes are collected in a
+set $staticFields$, with the class identifier for each field attached.
+Space for the static fields is then allocated by communicating with
+the memory manager.
+The static fields are allocated in the backing store for the $main$
+thread, and the size required is computed from the $staticFields$ set
+via a function $staticFieldsSize$.
+If the report received from the memory manager indicates the
+allocation was successful, then the staticFields are initialised in
+$InitStaticFields$.
+This just initialises $staticClassFieldsID$ with the $objectID$
+returned from the memory manager and sets $staticClassFields$ to map
+from each element of $staticFields$ to the $null$ word.
+If the memory manager's report indicates that an error has occured
+then the action aborts.
 \begin{circusaction}
-  MakeClassObjects \circdef \circvar objectID : ObjectID \circspot \\
-  \t1 \Semi cid : \dom cs \circspot \\
-  \t2 MakeObject(replaceClassFields~(cs~classClass)~(cs~cid).staticFields,main,objectID) \circseq \\
-  \t2 classObjectMap := classObjectMap \cup \{cid \mapsto objectID\}
+  AllocateStaticFields \circdef \circvar staticFields : \finset (ClassID \cross FieldID) \circspot \\
+  \t1 staticFields := \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \} \circseq \\
+  \t1 MMallocateMemory!(last~(backingStoreStacks~main))!(staticFieldsSize~staticFields) \then {} \\
+  \t1 MMallocateMemoryRet?objectID \then {} \\
+  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract InitStaticFields \rschexpract \\
+  \t2 {} \extchoice MMreport?r \prefixcolon (r = MMokay) \then \Chaos)
 \end{circusaction}
 
-The $MakeObject$ action, used in $MakeClassObjects$, is defined
-separately below since it is also used when creating objects other
-than the class objects.
-Its first two parameters are value parameters $class$, representing
-the class information for the object, and $thread$, recording the
-current thread identifier.
-The final parameter, $objectID$, is a result parameter returning the
-identifier of the object created.
-The object is created using the \texttt{allocateMemory} service of the
-memory manager, with the allocation context being the last backing
-store entered for $thread$ in $backingStoreStacks$ and the space
-allocated determined from $class$ using $sizeOfObject$.
-If the memory manager operation is successful (as indicated by a
-report of $MMokay$), then the object is initialised as described by
-$ObjManObjectInit$, which adds it to $objects$, sets its class
-information to $class$ and initialises its fields to $null$.
-Since it is a relatively simple data operation, we omit its definition
-here.
-If the memory manager operation is not successful (for example,
-because the SCJVM is out of memory) then $ObjMan$ diverges.
-\begin{circusaction}
-  MakeObject \circdef \circval class : Class; \circval thread : ThreadID; \circres objectID : ObjectID \circspot \\
-  \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~class) \then {} \\
-  \t1  MMallocateMemoryRet?objectID \then {} \\
-  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract ObjManObjectInit \rschexpract \\
-  \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos)
-\end{circusaction}
+% For the creation of class objects in $MakeClassObjects$ the class
+% information for each object must be supplied.
+% Since the objects are representations of class information, their
+% class should be the \texttt{Class} class from the standard Java API (a
+% stripped-down version of which is present in SCJ).
+% We represent the identifier of this class by a $ClassID$ constant
+% $classClass$.
+% However, since the object stores the static fields for each class, the
+% $fields$ of the $Class$ information associated with $classClass$ need
+% to be changed to be the correct static fields in each case.
+% This is accomplished using a function $replaceClassFields$, which
+% takes a $Class$ and a set of $FieldID$s, and produces a new $Class$
+% with the components the same as the input $Class$, except that the
+% $fields$ component is set to the input $FieldID$s.
 
-After $ObjMan$ is initialised and the class objects have been created,
-$ObjMan$ offers services to the other components of the $CEE$, in the
-$Loop$ action shown below.
+% The $replaceClassFields$ function is used in the definition of the
+% $MakeClassObjects$ action, which is shown below.
+% It iterates through each $ClassID$, $cid$, in the domain of $cs$, and
+% allocates an object for each one using a $MakeObject$ action that
+% performs the communication with the memory manager.
+% The first parameter to $MakeObject$ is the $Class$ information for the
+% object, which is defined by taking the value in $cs$ associated with
+% $classClass$ and using $replaceClassFields$ to replace its $fields$
+% with the $staticFields$ of the $Class$ associated with $cid$.
+% The second parameter is the thread in whose context the object is to
+% be allocated, which in this case is the $main$ thread, since that is
+% only thread that is initially eligible to run.
+% Since the $main$ thread's allocation context is initially immortal
+% memory, the class objects are allocated in immortal memory, ensuring
+% that the static fields are available throughout the program's
+% execution.
+% The object identifier returned from the allocation is stored in
+% $objectID$, which is stored in $classObjectMap$ associated with $cid$.
+% \begin{circusaction}
+%   MakeClassObjects \circdef \circvar objectID : ObjectID \circspot \\
+%   \t1 \Semi cid : \dom cs \circspot \\
+%   \t2 MakeObject(replaceClassFields~(cs~classClass)~(cs~cid).staticFields,main,objectID) \circseq \\
+%   \t2 classObjectMap := classObjectMap \cup \{cid \mapsto objectID\}
+% \end{circusaction}
+
+% The $MakeObject$ action, used in $MakeClassObjects$, is defined
+% separately below since it is also used when creating objects other
+% than the class objects.
+% Its first two parameters are value parameters $class$, representing
+% the class information for the object, and $thread$, recording the
+% current thread identifier.
+% The final parameter, $objectID$, is a result parameter returning the
+% identifier of the object created.
+% The object is created using the \texttt{allocateMemory} service of the
+% memory manager, with the allocation context being the last backing
+% store entered for $thread$ in $backingStoreStacks$ and the space
+% allocated determined from $class$ using $sizeOfObject$.
+% If the memory manager operation is successful (as indicated by a
+% report of $MMokay$), then the object is initialised as described by
+% $ObjManObjectInit$, which adds it to $objects$, sets its class
+% information to $class$ and initialises its fields to $null$.
+% Since it is a relatively simple data operation, we omit its definition
+% here.
+% If the memory manager operation is not successful (for example,
+% because the SCJVM is out of memory) then $ObjMan$ diverges.
+% \begin{circusaction}
+%   MakeObject \circdef \circval class : Class; \circval thread : ThreadID; \circres objectID : ObjectID \circspot \\
+%   \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~class) \then {} \\
+%   \t1  MMallocateMemoryRet?objectID \then {} \\
+%   \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract ObjManObjectInit \rschexpract \\
+%   \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos)
+% \end{circusaction}
+
+After $ObjMan$ is initialised and the space for the static fields has
+been created, $ObjMan$ offers services to the other components of the
+$CEE$, in the $Loop$ action shown below.
 The services offered by $Loop$ include $NewObject$, which creates an
-object as described in $MakeObject$.
+object of a given class.
 The $GetField$ and $PutField$ actions allow for obtaining and setting
 the value of an object's field.
 Similarly, $GetStatic$ and $PutStatic$ allow for obtaining and setting
@@ -1581,21 +1619,44 @@ stack in $backingStoreStacks$.
 \end{circusaction}
 
 The compilation strategy refines the structure of objects.
-This means that the field access operations ($GetField$, $PutField$,
-$GetStatic$ and $PutStatic$) and the object allocation operations
-($MakeObject$) are affected by the compilation strategy.
+This means that the field access operations ($GetField$, $PutField$)
+and the object allocation operations ($NewObject$) are affected by the
+compilation strategy.
 $GetClassIDOf$ is also affected since an object's class identifier is
 stored as part of its structure.
+We also refine the static fields data structure, requiring the
+operations upon it ($AllocateStaticFields$, $GetStatic$, $PutStatic$)
+to be changed.
 The management of allocation contexts is unaffected by the compilation
 strategy, but is required for managing allocation of objects, so that
 they can be allocated in the correct backing store.
 
-We omit the definitions of the individual actions in $Loop$ here. 
-The field access operations are simple data operations on the $fields$
-component of an $Object$ binding in the $objects$ map.
-$NewObject$ just exposes the $MakeObject$ action on the $newObject$
-and $newObjectRet$ channels, and the $GetClassIDOf$ simply extracts
-the $this$ identifier from the $Class$ information of an $object$.
+The definition of the $NewObject$ action is shown below.
+It allocates space for an object by communicating with the memory
+manager in much the same way as $AllocateStaticFields$, except that
+the thread and class identifiers for the object are communicated via
+the $newObject$ channel, and the size required for the object is
+obtained from the class information via a $sizeOfObject$ function.
+After a successful allocation, the object is added to the $objects$
+map with its fields initialised to $null$, in $ObjManObjectInit$, and
+the object's identifier is returned via $newObjectRet$.
+\begin{circusaction}
+  NewObject \circdef \circvar objectID : ObjectID \circspot \\
+  \t1 newObject?thread?classID \then {} \\
+  \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~(cs~classID)) \then {} \\
+  \t1  MMallocateMemoryRet?objectID \then {} \\
+  \t2 ((MMreport?r \prefixcolon (r = MMokay) \then \lschexpract \exists class? == cs~classID @ ObjManObjectInit \rschexpract \circseq \\
+  \t3 newObjectRet!objectID \then \Skip) \\
+  \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) 
+\end{circusaction}
+
+We omit the definitions of the other actions of $Loop$ here. 
+The object field access operations are simple data operations on the
+$fields$ component of an $Object$ binding in the $objects$ map.
+Static field access operations are similarly simple operations on
+$staticClassFields$. 
+$GetClassIDOf$ simply extracts the $this$ identifier from the $Class$
+information of an $object$.
 The actions that relate to management of the allocation context are
 omitted since they are of little relevance to the compilation
 strategy.
@@ -2259,29 +2320,185 @@ incorporate the class information from $cs$, refining the process
 $ObjMan$, which handles abstract objects.
 $StructMan_{cs}$ has Z schemas representing struct types for objects
 of each class.
-%
-% \begin{zed}
-%   InputHandlerObj == [classid : ClassID; input, buffer : ObjectID]
-% \end{zed}
-%
-These schemas contain the identifier $classid$ of the object's class, so
-that polymorphic method calls can be made by choice over the object's
-class. 
-There are also components for each of the fields of the
-object.
+For each class identifier ${<}classID_1{>}, \dots, {<}classID_n{>}$,
+we define a schema ${<}classID_k{>}Obj$ for $k \in \{1,\dots,n\}$,
+representing the objects of that class. 
+They begin with a $classID$ component containing the class identifier
+of the object, so that polymorphic method calls can be made by choice
+over the object's class.
+There is then a component for each of the fields
+${<}fieldID_1{>}, \dots, {<}fieldID_{m_k}{>}$ of the class, with each
+component having the type $Word$.
+\begin{schema}{{<}classID_k{>}Obj}
+  classID : ClassID \\
+  {{<}fieldID_{k,1}{>}} : Word \\
+  \t1 \vdots \\
+  {{<}fieldID_{k,m_k}{>}} : Word
+\end{schema}
 
 The schema types for each type of object are combined into a single
 free type $ObjectStruct$.
-% \begin{zed}
-%   ObjectStruct ::= \dots | InputHandlerCon \ldata InputHandlerObj \rdata \dots
-% \end{zed}
-% We also define functions for casting between objects of different
-% classes and for obtaining the class identifier of any object. 
-% This matches the casting of object pointers in the C code that the
-% icecap HVM generates.
-$StructMan_{cs}$ contains a map from memory addresses managed by the
-SCJVM to the $ObjectStruct$ type, representing the C structs in
-memory, and provides access to the individual values in that map.
+The constructor for each ${<}classID_k{>}$ is called
+${<}classID_k{>}Con$, with a single parameter of type
+${<}classID_k{>}Obj$.
+\begin{zed}
+  ObjectStruct ::= {<}classID_1{>}Con \ldata {<}classID_1{>}Obj \rdata | \dots | {<}classID_n{>}Con \ldata {<}classID_n{>}Obj \rdata
+\end{zed}
+
+For each object type, we define a natural number constant
+$sizeof{<}classID_k{>}Obj$ that represents the result of applying C's
+\texttt{sizeof} operator to the struct represented by the
+corresponding ${<}classID_k{>}Obj$ type.
+We also define a function $classIDOf$ for obtaining the value of the
+common $classID$ field from an $ObjectStruct$ value.
+Additionally, we define a $cast{<}classID_k{>}$ function for each
+${<}classID_k{>}$, which maps an $ObjectStruct$ value to a
+${<}classID_k{>}Obj$ value.
+This works not only for values in the range of the
+${<}classID_k{>}Con$ constructor, but also for any class that is a
+subclass of ${<}classID_k{>}$, with the common fields copied across.
+Thus, $cast{<}classID_k{>}$ represents casting of C structs, where a
+struct can be truncated by casting to a struct whose fields are a
+prefix of it.
+Finally, we also define a function
+$update{<}classID_k{>}\_{<}fieldID{>}_i$ for each class identifier
+${<}classID_k{>}$ and field identifier ${<}fieldID_i{>}$, which takes
+an $ObjectStruct$ and updates the specified field with a given value.
+This represents a combined cast and update.
+
+Channels $getObject$, $getObjectRet$, and $putObject$, the definitions
+of which are shown below, are used to pass $ObjectStruct$ values to
+and from $StructMan_{cs}$.
+\begin{circus}
+  \circchannel getObject : ObjectID \\
+  \circchannel getObjectRet : ObjectStruct \\
+  \circchannel putObject : ObjectID \cross  ObjectStruct
+\end{circus}
+
+For the static class fields, the static fields from each class
+${<}classID_1{>}, \dots, {<}classID_n{>}$ are collected together in a
+schema $StaticFields$, as shown below.
+\begin{schema}{StaticFields}
+  {<}classID_1{>}\_{<}staticfieldID_{1,1}{>} : Word \\
+  \t1 \vdots \\
+  {<}classID_1{>}\_{<}staticfieldID_{1,\ell_1}{>} : Word \\
+  \t1 \vdots \\
+  {<}classID_n{>}\_{<}staticfieldID_{n,1}{>} : Word \\
+  \t1 \vdots \\
+  {<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} : Word
+\end{schema}
+We define a natural number constant $sizeofStaticFields$ giving the
+amount of space required for the struct represented by $StaticFields$.
+
+The $StaticFields$ type is communicated using the $getStaticFields$
+and $putStaticFields$ channels, the definitions of which are shown
+below.
+\begin{circus}
+  \circchannel getStaticFields : StaticFields \\
+  \circchannel putStaticFields : StaticFields
+\end{circus}
+
+The state of $StructMan_{cs}$ is given by the schema $StructManState$,
+shown below.
+This is similar to $ObjManState$, but the $objects$ map relates object
+identifiers to $ObjectStruct$ values, and $staticClassFields$ is a map
+from $ObjectID$ to the $StaticFields$ type.
+We omit the invariant as it is similar to the invariant of
+$ObjManState$.
+\begin{schema}{StructManState}
+  objects : ObjectID \pfun ObjectStruct \\
+  backingStoreMap : BackingStoreID \pfun \finset ObjectID \\
+  backingStoreStacks : ThreadID \pfun \seq_1 BackingStoreID \\
+  rootBS : BackingStoreID \\
+  staticClassFieldsID : StaticFieldsStructID \\
+  staticClassFields : ObjectID \pfun StaticFields
+\where
+  \dots
+\end{schema}
+
+Within the $StructMan_{cs}$ process, the structure is much the same as
+for the $ObjMan$ process, with the state initialised in the same way.
+However, $AllocateStaticFields$ is changed to handle the
+$StaticFields$ type.
+The definition of $AllocateStaticFields$ in $StructMan_{cs}$ is as
+shown below.
+It is similar to the $ObjMan$ definition of $AllocateStaticFields$,
+but it does not collect the required field identifiers since that is
+already implicitly done in the definition of $StaticFields$.
+The required size for the allocated space is now $sizeofStaticFields$.
+The initialisation of the static fields, in $InitStaticFields$ is much
+the same, but now specialised to refer to $StaticFields$, setting all
+its components to $null$.
+\begin{circusaction}
+  AllocateStaticFields \circdef \\
+  \t1 MMallocateMemory!(last~(backingStoreStacks~main))!(sizeofStaticFields) \then {} \\
+  \t1 MMallocateMemoryRet?objectID \then {} \\
+  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract InitStaticFields \rschexpract \\
+  \t2 {} \extchoice MMreport?r \prefixcolon (r = MMokay) \then \Chaos)
+\end{circusaction}
+
+Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
+are replaced with new actions $GetObject$, $PutObject$, $GetStaticFields$ and
+$PutStaticFields$.
+These are fairly simple, with $GetObject$ and $PutObject$ retrieving
+and storing $ObjectStruct$ values in the $objects$ map.
+These are presented exposed on the $getObject$ and $getObjectRet$
+channels for $GetObject$, and the $putObject$ channel for $PutObject$. 
+Similarly, $GetStaticFields$ and $PutStaticFields$ retrieve and store
+the $StaticFields$ value associated with $staticClassFieldsID$ from
+the $staticClassFields$ map.
+These are performed on the $getStaticFields$ and $putStaticFields$
+channels respectively.
+We omit the definitions of these actions here; their definitions are
+given in Appendix~\ref{struct-manager-appendix}, which shows the
+general form of the $StructMan_{cs}$ process.
+
+The $NewObject$ action is different in $StructMan_{cs}$ to that in
+$ObjMan$. 
+It uses the same channels ($newObject$ and $newObjectRet$), but must
+create the correct $ObjectStruct$ value for the provided class.
+It has the form shown below.
+The $thread$ and $classID$ identifiers are received from the
+$newObject$ channel, and a choice is then made over the $classID$,
+matching it against each class identifier supported by
+$StructMan_{cs}$.
+If $classID$ matches a class identifier ${<}classID_k{>}$, then space
+for the object is allocated via communication with the memory manager,
+as in $AllocateStaticFields$, then the object is stored in $objects$
+and initialised.
+The allocation is performed in a separate action, $AllocateObject$, as
+it is similar for each class.
+The size of the object is given by the $sizeof{<}classID_k{>}$
+identifier for ${<}classID_k{>}$, and the returned object identifier
+is stored in $objectID$.
+The storing and initialisation of the object is then done in a schema
+action $StructMan{<}classID_k{>}ObjInit$, which sets all the object's
+fields to $null$ and puts it in $objects$, stored within
+${<}classID_k{>}Con$. 
+Finally, $objectID$ is returned via the $newObjectRet$ channel.
+\begin{circusaction}
+  NewObject \circdef \circvar objectID : ObjectID \circspot \\
+  \t1 newObject?thread?classID \then \\
+  \t1 \circif classID = {{<}classID_1{>}} \circthen {} \\
+  \t2 AllocateObject(thread, sizeof{<}classID_1{>}, objectID) \circseq \lschexpract StructMan{<}classID_1{>}ObjInit \rschexpract \\
+  \t1 {} \circelse classID = {{<}classID_2{>}} \circthen {} \\
+  \t2 AllocateObject(thread, sizeof{<}classID_2{>}, objectID) \circseq \lschexpract StructMan{<}classID_2{>}ObjInit \rschexpract \\
+  \t2 \vdots \\
+  \t1 {} \circelse classID = {{<}classID_n{>}} \circthen {} \\
+  \t2 AllocateObject(thread, sizeof{<}classID_n{>}, objectID) \circseq \lschexpract StructMan{<}classID_n{>}ObjInit \rschexpract \\
+  \t1 \circfi \circseq newObjectRet!objectID \then \Skip \\
+\end{circusaction}
+
+Finally, $GetClassIDOf$ is changed to extract the class identifier
+from an $ObjectStruct$ value using the $classIDOf$ function.
+This is not used in the C code, which, as we will see in the next
+section, uses $classIDOf$ directly, but is supplied for use by the
+$Launcher$, which is unchanged by the strategy.
+We omit the definition of $GetClassIDOf$ here.
+
+In the next section we describe the structure of the C code of the
+program and our shallow embedding of C in \Circus{}, which makes use
+of some of the types and channels discussed in this section.
 
 \subsection{Shallow Embedding of C in \Circus{}}
 \label{cee-c-program-subsection}
