@@ -1348,13 +1348,13 @@ $Class$ type and the $cs$ map.
 The object manager, which is represented by the process $ObjMan$,
 manages the objects of the SCJ program executed by the core execution
 environment.
-This component is necessary since the SCJVM memory manager is agnostic
-to the structure of objects, which depends on the contents of the
-classes supplied as part of an SCJ program.
+This component is necessary because the SCJVM memory manager is
+agnostic to the structure of objects, which depends on the contents of
+the classes supplied as part of an SCJ program.
 Besides managing the creation and manipulation of objects, the object
-manager tracks the current allocation context for each thread to
-ensure objects are allocated in the correct memory area, since the
-SCJVM memory manager is also agnostic to the existence of threads.
+manager tracks the current allocation context for each thread.
+It ensures objects are allocated in the correct area, since the SCJVM
+memory manager is also agnostic to the existence of threads.
 
 The start of the definition of $ObjMan$ is shown below.
 $ObjMan$ takes a single parameter, $cs$, which is a map from
@@ -1369,7 +1369,7 @@ for each class.
 Since the actual arrangement of an object in memory is an
 implementation consideration, the amount of memory required to store
 each object is implementation-defined.
-It is represented here by a global function $sizeOfObject$, shown
+It is represented here by a global function $sizeOfObject$, declared
 below, which maps the information in each $Class$ to the amount of
 memory required for objects of the class it represents.
 \begin{axdef}
@@ -1377,11 +1377,11 @@ memory required for objects of the class it represents.
 \end{axdef}
 
 The objects that $ObjMan$ operates on are described by records of the
-schema type $Object$, shown below.
+schema type $Object$ shown below.
 It contains a map, $fields$, which associates the $FieldID$ for each
-field of the object with a $Word$ value stored in that field.
+field of an object with a $Word$ value stored in that field.
 A copy of the $Class$ information for the object's class is also
-stored as the second component, $class$.
+recorded in $class$.
 The invariant of $Object$ requires that the domain of $fields$ be the
 same as the fields given in $class$.
 \begin{schema}{Object}
@@ -1401,13 +1401,13 @@ The third component, $backingStoreStacks$, associates to each
 $ThreadID$ a sequence of $BackingStoreID$ values representing the
 backing stores entered by the thread.
 This is required to contain at least one value, since each thread that
-is ready to execute must have a backing store and those that are not
+is ready to execute must have a backing store, and those that are not
 should not be in the domain of $backingStoreStacks$.
 $ObjManState$ also stores $rootBS$, a copy of the root backing store
 identifier.
 The final components of $ObjManState$ are used to store the static
 fields of classes.
-The $staticClassFieldsID$ component is of a type
+The $staticClassFieldsID$ component is of a free type
 $StaticFieldsStructID$, and may be either $Uninitialised$ or
 $Initialised$ with an $ObjectID$ representing the space allocated for
 the static class fields.
@@ -1431,21 +1431,21 @@ The first conjunct of the invariant requires that the domain of
 $objects$, plus $staticClassFieldsID$ if it is $Initialised$, is
 partitioned by the $ObjectID$ sets given by $backingStoreMap$, so that
 every object is allocated in exactly one backing store.
-This uses a helper function $toSet$ to convert $staticClassFieldsID$
-to a set of $ObjectID$s.
+This uses a function $toSet$ to convert $staticClassFieldsID$ to a set
+of $ObjectID$s.
 The second conjunct requires that the domain of $backingStoreMap$ be
-the identifiers of backing stores entered in $backingStoreStacks$,
-since a backing store that is not in use by any thread is cleared and
-so should not have any objects in it.
+the identifiers of backing stores in $backingStoreStacks$, since a
+backing store that is not in use is cleared and so should not have any
+objects in it.
 The third conjunct requires that $rootBS$ always be in the domain of
 $backingStoreMap$, since that represents immortal memory, which is
 never cleared.
 Combined with the second conjunct, this implies that at least one
 thread must have entered the $rootBS$ at all times.
-The fourth conjunct ensures that $staticClassFields$ will not contain
+The fourth conjunct ensures that $staticClassFields$ does not contain
 any fields until $staticClassFieldsID$ is $Initialised$.
-Finally, the fifth conjunct requires that $staticClassFieldsID$, if it
-exists, must be in the root backing store.
+Finally, the fifth conjunct requires that $staticClassFieldsID$ must
+be in the root backing store.
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
 This operation takes the identifier of the root backing store as an
@@ -1479,38 +1479,39 @@ It begins in $Init$ by communicating with the SCJVM memory manager to
 obtain the identifier of the root backing store and then initialising
 the state as described in $ObjManInit$.
 The space for static fields is then allocated in
-$AllocateStaticFields$.
+$AllocateStaticFields$, initialising $staticClassFieldsID$ and
+populating $staticClassFields$ with each field mapped to $null$.
 Finally, in $Loop$, the process repeatedly offers each of its services
 in external choice.
 \begin{circusaction}
   \circspot Init \circseq AllocateStaticFields \circseq Loop
 \end{circusaction}
 
-The space for static fields is allocated as described in
-$AllocateStaticFields$ below.
-The static field identifiers for all the classes are collected in a
-set $staticFields$, with the class identifier for each field attached.
-Space for the static fields is then allocated by communicating with
-the memory manager.
-The static fields are allocated in the backing store for the $main$
-thread, and the size required is computed from the $staticFields$ set
-via a function $staticFieldsSize$.
-If the report received from the memory manager indicates the
-allocation was successful, then the staticFields are initialised in
-$InitStaticFields$.
-This just initialises $staticClassFieldsID$ with the $objectID$
-returned from the memory manager and sets $staticClassFields$ to map
-from each element of $staticFields$ to the $null$ word.
-If the memory manager's report indicates that an error has occured
-then the action aborts.
-\begin{circusaction}
-  AllocateStaticFields \circdef \circvar staticFields : \finset (ClassID \cross FieldID) \circspot \\
-  \t1 staticFields := \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \} \circseq \\
-  \t1 MMallocateMemory!(last~(backingStoreStacks~main))!(staticFieldsSize~staticFields) \then {} \\
-  \t1 MMallocateMemoryRet?objectID \then {} \\
-  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract InitStaticFields \rschexpract \\
-  \t2 {} \extchoice MMreport?r \prefixcolon (r = MMokay) \then \Chaos)
-\end{circusaction}
+% The space for static fields is allocated as described in
+% $AllocateStaticFields$ below.
+% The static field identifiers for all the classes are collected in a
+% set $staticFields$, with the class identifier for each field attached.
+% Space for the static fields is then allocated by communicating with
+% the memory manager.
+% The static fields are allocated in the backing store for the $main$
+% thread, and the size required is computed from the $staticFields$ set
+% via a function $staticFieldsSize$.
+% If the report received from the memory manager indicates the
+% allocation was successful, then the staticFields are initialised in
+% $InitStaticFields$.
+% This just initialises $staticClassFieldsID$ with the $objectID$
+% returned from the memory manager and sets $staticClassFields$ to map
+% from each element of $staticFields$ to the $null$ word.
+% If the memory manager's report indicates that an error has occured
+% then the action aborts.
+% \begin{circusaction}
+%   AllocateStaticFields \circdef \circvar staticFields : \finset (ClassID \cross FieldID) \circspot \\
+%   \t1 staticFields := \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \} \circseq \\
+%   \t1 MMallocateMemory!(last~(backingStoreStacks~main))!(staticFieldsSize~staticFields) \then {} \\
+%   \t1 MMallocateMemoryRet?objectID \then {} \\
+%   \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract InitStaticFields \rschexpract \\
+%   \t2 {} \extchoice MMreport?r \prefixcolon (r = MMokay) \then \Chaos)
+% \end{circusaction}
 
 % For the creation of class objects in $MakeClassObjects$ the class
 % information for each object must be supplied.
@@ -1618,18 +1619,17 @@ stack in $backingStoreStacks$.
   \circseq Loop
 \end{circusaction}
 
-The compilation strategy refines the structure of objects.
-This means that the field access operations ($GetField$, $PutField$)
-and the object allocation operations ($NewObject$) are affected by the
-compilation strategy.
+The compilation refines the structure of objects.
+This means that field access operations ($GetField$, $PutField$) and
+object allocation ($NewObject$) are affected.
 $GetClassIDOf$ is also affected since an object's class identifier is
 stored as part of its structure.
 We also refine the static fields data structure, requiring the
 operations upon it ($AllocateStaticFields$, $GetStatic$, $PutStatic$)
 to be changed.
-The management of allocation contexts is unaffected by the compilation
-strategy, but is required for managing allocation of objects, so that
-they can be allocated in the correct backing store.
+The management of allocation contexts is unaffected by the
+compilation, but is required for managing allocation of objects, so
+that they can be allocated in the correct backing store.
 
 The definition of the $NewObject$ action is shown below.
 It allocates space for an object by communicating with the memory
@@ -1651,15 +1651,6 @@ the object's identifier is returned via $newObjectRet$.
 \end{circusaction}
 
 We omit the definitions of the other actions of $Loop$ here. 
-The object field access operations are simple data operations on the
-$fields$ component of an $Object$ binding in the $objects$ map.
-Static field access operations are similarly simple operations on
-$staticClassFields$. 
-$GetClassIDOf$ simply extracts the $this$ identifier from the $Class$
-information of an $object$.
-The actions that relate to management of the allocation context are
-omitted since they are of little relevance to the compilation
-strategy.
 The full model of the object manager can be found in
 Appendix~\ref{object-manager-appendix}.
 
