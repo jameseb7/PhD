@@ -2278,9 +2278,10 @@ replaced with a struct manager and the intepreter is replaced with the
 C program.
 The struct manager is represented by a process $StructMan_{cs}$, and
 the C program by a process $CProg_{bc,cs}$.
-These are place in parallel composition with the $Launcher$ process
-described in Section~\ref{cee-launcher-section} to form a $CCEE_{bc,cs}$
-process representing the CEE for a C program, as shown below.
+These are placed in parallel composition with the $Launcher$ process
+described in Section~\ref{cee-launcher-section} to form a
+$CCEE_{bc,cs}$ process representing the CEE for a C program, as shown
+below.
 \begin{circus}
   CEE_{bc,cs}(sid, initOrder) \circdef StructMan_{cs} \parallel CProg_{bc,cs} \parallel Launcher(sid, initOrder)
 \end{circus}
@@ -2288,20 +2289,19 @@ The subscripts here indicate that the processes depend on the $bc$ and
 $cs$ constants used as inputs to the compilation strategy. 
 However, $bc$ and $cs$ are not true parameters of the processes and so
 are not referenced within the processes.
-Note that the $sid$ and $initOrder$ parameters to $Launcher$ remain as
-parameters here since $Launcher$ is not transformed during the
+We note that the $sid$ and $initOrder$ parameters to $Launcher$ remain
+as parameters here, since $Launcher$ is not transformed during the
 compilation strategy.
 
 The channels used for communication between these processes are the
 same as those in Table~\ref{cee-channel-table}, except that the
 $getField$, $getFieldRet$ and $putField$ channels are replaced with
 $getObject$, $getObjectRet$ and $putObject$ channels.
-The new channels are discussed in more detail in the
+The new channels are discussed in
 Section~\ref{cee-struct-manager-subsection}, which describes the
 struct manager.
 After that, in Section~\ref{cee-c-program-subsection}, the
-$CProg_{bc,cs}$ process is described and the shallow embedding of C it
-uses is discussed.
+$CProg_{bc,cs}$ process is described.
 
 \subsection{Struct Manager}
 \label{cee-struct-manager-subsection}
@@ -2352,19 +2352,10 @@ Thus, $cast{<}classID_k{>}$ represents casting of C structs, where a
 struct can be truncated by casting to a struct whose fields are a
 prefix of it.
 Finally, we also define a function
-$update{<}classID_k{>}\_{<}fieldID{>}_i$ for each class identifier
+$update{<}classID_k{>}\_{<}fieldID{>}_i$ for each class
 ${<}classID_k{>}$ and field identifier ${<}fieldID_i{>}$, which takes
-an $ObjectStruct$ and updates the specified field with a given value.
-This represents a combined cast and update.
-
-Channels $getObject$, $getObjectRet$, and $putObject$, the definitions
-of which are shown below, are used to pass $ObjectStruct$ values to
-and from $StructMan_{cs}$.
-\begin{circus}
-  \circchannel getObject : ObjectID \\
-  \circchannel getObjectRet : ObjectStruct \\
-  \circchannel putObject : ObjectID \cross  ObjectStruct
-\end{circus}
+an $ObjectStruct$ and updates the field with a given value.
+This is a combined cast and update.
 
 For the static class fields, the static fields from each class
 ${<}classID_1{>}, \dots, {<}classID_n{>}$ are collected together in a
@@ -2378,37 +2369,21 @@ schema $StaticFields$, as shown below.
   \t1 \vdots \\
   {<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} : Word
 \end{schema}
-We define a natural number constant $sizeofStaticFields$ giving the
-amount of space required for the struct represented by $StaticFields$.
+We define a constant $sizeofStaticFields$ giving the space required
+for the struct represented by $StaticFields$.
 
+Channels $getObject$, $getObjectRet$, and $putObject$ are used to pass
+$ObjectStruct$ values to and from $StructMan_{cs}$.
 The $StaticFields$ type is communicated using the $getStaticFields$
-and $putStaticFields$ channels, the definitions of which are shown
-below.
-\begin{circus}
-  \circchannel getStaticFields : StaticFields \\
-  \circchannel putStaticFields : StaticFields
-\end{circus}
+and $putStaticFields$ channels.
 
-The state of $StructMan_{cs}$ is given by the schema $StructManState$,
-shown below.
-This is similar to $ObjManState$, but the $objects$ map relates object
+The state of $StructMan_{cs}$ is given by the schema $StructManState$.
+It is similar to $ObjManState$, but the $objects$ map relates object
 identifiers to $ObjectStruct$ values, and $staticClassFields$ is a map
 from $ObjectID$ to the $StaticFields$ type.
-We omit the invariant as it is similar to the invariant of
-$ObjManState$.
-\begin{schema}{StructManState}
-  objects : ObjectID \pfun ObjectStruct \\
-  backingStoreMap : BackingStoreID \pfun \finset ObjectID \\
-  backingStoreStacks : ThreadID \pfun \seq_1 BackingStoreID \\
-  rootBS : BackingStoreID \\
-  staticClassFieldsID : StaticFieldsStructID \\
-  staticClassFields : ObjectID \pfun StaticFields
-\where
-  \dots
-\end{schema}
 
-Within the $StructMan_{cs}$ process, the structure is much the same as
-for the $ObjMan$ process, with the state initialised in the same way.
+The structure of the $StructMan_{cs}$ process is much the same as for
+the $ObjMan$ process, with the state initialised in the same way.
 However, $AllocateStaticFields$ is changed to handle the
 $StaticFields$ type.
 The definition of $AllocateStaticFields$ in $StructMan_{cs}$ is as
@@ -2429,12 +2404,12 @@ its components to $null$.
 \end{circusaction}
 
 Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
-are replaced with new actions $GetObject$, $PutObject$, $GetStaticFields$ and
-$PutStaticFields$.
+are replaced with new actions $GetObject$, $PutObject$,
+$GetStaticFields$ and $PutStaticFields$.
 These are fairly simple, with $GetObject$ and $PutObject$ retrieving
 and storing $ObjectStruct$ values in the $objects$ map.
-These are presented exposed on the $getObject$ and $getObjectRet$
-channels for $GetObject$, and the $putObject$ channel for $PutObject$. 
+These are exposed on the $getObject$ and $getObjectRet$ channels for
+$GetObject$, and the $putObject$ channel for $PutObject$. 
 Similarly, $GetStaticFields$ and $PutStaticFields$ retrieve and store
 the $StaticFields$ value associated with $staticClassFieldsID$ from
 the $staticClassFields$ map.
@@ -2450,9 +2425,9 @@ It uses the same channels ($newObject$ and $newObjectRet$), but must
 create the correct $ObjectStruct$ value for the provided class.
 It has the form shown below.
 The $thread$ and $classID$ identifiers are received from the
-$newObject$ channel, and a choice is then made over the $classID$,
-matching it against each class identifier supported by
-$StructMan_{cs}$.
+$newObject$ channel, like in $ObjMan$.
+A choice is then made over the $classID$, matching it against each
+class identifier supported by $StructMan_{cs}$.
 If $classID$ matches a class identifier ${<}classID_k{>}$, then space
 for the object is allocated via communication with the memory manager,
 as in $AllocateStaticFields$, then the object is stored in $objects$
@@ -2466,7 +2441,10 @@ The storing and initialisation of the object is then done in a schema
 action $StructMan{<}classID_k{>}ObjInit$, which sets all the object's
 fields to $null$ and puts it in $objects$, stored within
 ${<}classID_k{>}Con$. 
-Finally, $objectID$ is returned via the $newObjectRet$ channel.
+Finally, $objectID$ is returned via the $newObjectRet$ channel, as in
+$ObjMan$.
+The possibility of divergence if the memory manager reports an error
+is handled in $AllocateObject$.
 \begin{circusaction}
   NewObject \circdef \circvar objectID : ObjectID \circspot \\
   \t1 newObject?thread?classID \then \\
