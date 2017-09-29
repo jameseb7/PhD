@@ -828,23 +828,84 @@ the complete core execution environment, $CEE$, as shown below.
 The synchronisation sets and channel hidings, omitted here, are
 consistent with the communication patterns shown in
 Table~\ref{cee-channel-table}.
-The parameters of each of the components, including the classes, $cs$,
-and bytecode instructions, $bc$, which are explained later in this
-section, become parameters of $CEE$.
+% The parameters of each of the components, including the classes, $cs$,
+% and bytecode instructions, $bc$, which are explained later in this
+% section, become parameters of $CEE$.
 \begin{circus}
   CEE(cs,bc,sid,initOrder) \circdef ObjMan(cs) \parallel
   Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
 \end{circus}
+$CEE$ is parametrised by values that characterise a particular
+program:~$bc$, recording the bytecode instructions, $cs$, recording
+information about the classes in the program, $sid$, recording the
+identifier of the \texttt{Safelet} class, and $initOrder$, a sequence
+of class identifiers indicating in which order the classes should be
+initialised.
+These parameters are passed to the components that use them.
+The $sid$ and $initOrder$ parameters have been explained in
+Section~\ref{cee-launcher-section}. 
+We describe the $cs$ and $bc$ later in this section where the
+processes that use them are described.
 
-In Section~\ref{cee-bytecode-subset-subsection}, we first give an
+$ObjMan$ manages the cooperation between the SCJ program and the SCJVM
+memory manager.
+This includes the representation of objects, since the SCJVM memory
+manager is agnostic as to the structure of objects and objects are
+shared between threads of the program.
+$ObjMan$ also tracks the current memory area for each thread so that
+objects can be allocated in the correct memory area.
+
+$Interpreter$ and $Launcher$ define the control flow and semantics of
+the SCJ program.
+The interpreter is for a representative subset of Java bytecode that
+covers stack manipulation, arithmetic, local variable manipulation,
+field manipulation, object creation, method invocation and return, and
+branching. 
+This covers the main concepts of Java bytecode.
+We do not include instructions for different types as that would add
+duplication to the model while yielding no additional verification
+power. 
+We also do not include exception handling as SCJ programs can be
+statically verified to prove that exceptions are not
+thrown~\cite{kalibera2010,marriott2014}. 
+Furthermore, reliance on exceptions to handle errors has been
+discouraged by an empirical study due to the potential for errors in
+exception handling~\cite{sawadpong2012}. 
+Errors caused in the SCJVM by an incorrect input program are
+represented by abortion.
+
+Within $Interpreter$, there is one process for each thread identifier
+in the set of possible thread identifiers, with the exception of the
+$idle$ thread, which performs no execution.
+Each of these processes represents an interpreter for a separate
+thread, with thread switches coordinated by communication between
+threads.
+They begin with state initialisation, followed by a choice of separate
+behaviours for the $main$ thread and all other threads.
+The $main$ thread offers a choice of executing a method in response to
+a signal from the $Launcher$ or switching to another thread.
+The other threads wait for a signal from the scheduler instructing
+them to start execution, after which they wait for the scheduler to
+indicate they have been switched to and proceed to execute a method.
+
+The execution of a method is performed in the same way for all
+threads, repeatedly handling individual bytecode instructions until
+all methods on the call stack have been returned from.
+Inbetween bytecode instructions, the scheduler is polled to check for
+thread switches.
+After method execution has finished, the $Launcher$ and the scheduler
+are signalled as appropriate, and the thread's process returns to the
+start of its behaviour.
+
+Next, in Section~\ref{cee-bytecode-subset-subsection}, we give an
 informal description of the bytecode instructions handled in our model
 and the ways in which their SCJ semantics differ from that of standard
 Java.
 In Section~\ref{cee-classes-subsection}, we describe our model of Java
 class information that is used by both $ObjMan$ and $Interpreter$.
-The first component, $ObjMan$, is described in
-Section~\ref{cee-object-manager-subsection} and the second,
-$Interpreter$, in Section~\ref{cee-interpreter-subsection}.
+The $ObjMan$ component is then described in
+Section~\ref{cee-object-manager-subsection} and $Interpreter$ is
+described in Section~\ref{cee-interpreter-subsection}.
 
 \subsection{Bytecode Subset}
 \label{cee-bytecode-subset-subsection}
@@ -2303,172 +2364,6 @@ struct manager.
 After that, in Section~\ref{cee-c-program-subsection}, the
 $CProg_{bc,cs}$ process is described.
 
-\subsection{Struct Manager}
-\label{cee-struct-manager-subsection}
-
-$StructMan_{cs}$ manages objects represented by C structs that
-incorporate the class information from $cs$, refining the process
-$ObjMan$, which handles abstract objects.
-$StructMan_{cs}$ has Z schemas representing struct types for objects
-of each class.
-For each class identifier ${<}classID_1{>}, \dots, {<}classID_n{>}$,
-we define a schema ${<}classID_k{>}Obj$ for $k \in \{1,\dots,n\}$,
-representing the objects of that class. 
-They begin with a $classID$ component containing the class identifier
-of the object, so that polymorphic method calls can be made by choice
-over the object's class.
-There is then a component for each of the fields
-${<}fieldID_1{>}, \dots, {<}fieldID_{m_k}{>}$ of the class, with each
-component having the type $Word$.
-\begin{schema}{{<}classID_k{>}Obj}
-  classID : ClassID \\
-  {{<}fieldID_{k,1}{>}} : Word \\
-  \t1 \vdots \\
-  {{<}fieldID_{k,m_k}{>}} : Word
-\end{schema}
-
-The schema types for each type of object are combined into a single
-free type $ObjectStruct$.
-The constructor for each ${<}classID_k{>}$ is called
-${<}classID_k{>}Con$, with a single parameter of type
-${<}classID_k{>}Obj$.
-\begin{zed}
-  ObjectStruct ::= {<}classID_1{>}Con \ldata {<}classID_1{>}Obj \rdata | \dots | {<}classID_n{>}Con \ldata {<}classID_n{>}Obj \rdata
-\end{zed}
-
-For each object type, we define a natural number constant
-$sizeof{<}classID_k{>}Obj$ that represents the result of applying C's
-\texttt{sizeof} operator to the struct represented by the
-corresponding ${<}classID_k{>}Obj$ type.
-We also define a function $classIDOf$ for obtaining the value of the
-common $classID$ field from an $ObjectStruct$ value.
-Additionally, we define a $cast{<}classID_k{>}$ function for each
-${<}classID_k{>}$, which maps an $ObjectStruct$ value to a
-${<}classID_k{>}Obj$ value.
-This works not only for values in the range of the
-${<}classID_k{>}Con$ constructor, but also for any class that is a
-subclass of ${<}classID_k{>}$, with the common fields copied across.
-Thus, $cast{<}classID_k{>}$ represents casting of C structs, where a
-struct can be truncated by casting to a struct whose fields are a
-prefix of it.
-Finally, we also define a function
-$update{<}classID_k{>}\_{<}fieldID{>}_i$ for each class
-${<}classID_k{>}$ and field identifier ${<}fieldID_i{>}$, which takes
-an $ObjectStruct$ and updates the field with a given value.
-This is a combined cast and update.
-
-For the static class fields, the static fields from each class
-${<}classID_1{>}, \dots, {<}classID_n{>}$ are collected together in a
-schema $StaticFields$, as shown below.
-\begin{schema}{StaticFields}
-  {<}classID_1{>}\_{<}staticfieldID_{1,1}{>} : Word \\
-  \t1 \vdots \\
-  {<}classID_1{>}\_{<}staticfieldID_{1,\ell_1}{>} : Word \\
-  \t1 \vdots \\
-  {<}classID_n{>}\_{<}staticfieldID_{n,1}{>} : Word \\
-  \t1 \vdots \\
-  {<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} : Word
-\end{schema}
-We define a constant $sizeofStaticFields$ giving the space required
-for the struct represented by $StaticFields$.
-
-Channels $getObject$, $getObjectRet$, and $putObject$ are used to pass
-$ObjectStruct$ values to and from $StructMan_{cs}$.
-The $StaticFields$ type is communicated using the $getStaticFields$
-and $putStaticFields$ channels.
-
-The state of $StructMan_{cs}$ is given by the schema $StructManState$.
-It is similar to $ObjManState$, but the $objects$ map relates object
-identifiers to $ObjectStruct$ values, and $staticClassFields$ is a map
-from $ObjectID$ to the $StaticFields$ type.
-
-The structure of the $StructMan_{cs}$ process is much the same as for
-the $ObjMan$ process, with the state initialised in the same way.
-However, $AllocateStaticFields$ is changed to handle the
-$StaticFields$ type.
-The definition of $AllocateStaticFields$ in $StructMan_{cs}$ is as
-shown below.
-It is similar to the $ObjMan$ definition of $AllocateStaticFields$,
-but it does not collect the required field identifiers since that is
-already implicitly done in the definition of $StaticFields$.
-The required size for the allocated space is now $sizeofStaticFields$.
-The initialisation of the static fields, in $InitStaticFields$ is much
-the same, but now specialised to refer to $StaticFields$, setting all
-its components to $null$.
-\begin{circusaction}
-  AllocateStaticFields \circdef \\
-  \t1 MMallocateMemory!(last~(backingStoreStacks~main))!(sizeofStaticFields) \then {} \\
-  \t1 MMallocateMemoryRet?objectID \then {} \\
-  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract InitStaticFields \rschexpract \\
-  \t2 {} \extchoice MMreport?r \prefixcolon (r = MMokay) \then \Chaos)
-\end{circusaction}
-
-Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
-are replaced with new actions $GetObject$, $PutObject$,
-$GetStaticFields$ and $PutStaticFields$.
-These are fairly simple, with $GetObject$ and $PutObject$ retrieving
-and storing $ObjectStruct$ values in the $objects$ map.
-These are exposed on the $getObject$ and $getObjectRet$ channels for
-$GetObject$, and the $putObject$ channel for $PutObject$. 
-Similarly, $GetStaticFields$ and $PutStaticFields$ retrieve and store
-the $StaticFields$ value associated with $staticClassFieldsID$ from
-the $staticClassFields$ map.
-These are performed on the $getStaticFields$ and $putStaticFields$
-channels respectively.
-We omit the definitions of these actions here; their definitions are
-given in Appendix~\ref{struct-manager-appendix}, which shows the
-general form of the $StructMan_{cs}$ process.
-
-The $NewObject$ action is different in $StructMan_{cs}$ to that in
-$ObjMan$. 
-It uses the same channels ($newObject$ and $newObjectRet$), but must
-create the correct $ObjectStruct$ value for the provided class.
-It has the form shown below.
-The $thread$ and $classID$ identifiers are received from the
-$newObject$ channel, like in $ObjMan$.
-A choice is then made over the $classID$, matching it against each
-class identifier supported by $StructMan_{cs}$.
-If $classID$ matches a class identifier ${<}classID_k{>}$, then space
-for the object is allocated via communication with the memory manager,
-as in $AllocateStaticFields$, then the object is stored in $objects$
-and initialised.
-The allocation is performed in a separate action, $AllocateObject$, as
-it is similar for each class.
-The size of the object is given by the $sizeof{<}classID_k{>}$
-identifier for ${<}classID_k{>}$, and the returned object identifier
-is stored in $objectID$.
-The storing and initialisation of the object is then done in a schema
-action $StructMan{<}classID_k{>}ObjInit$, which sets all the object's
-fields to $null$ and puts it in $objects$, stored within
-${<}classID_k{>}Con$. 
-Finally, $objectID$ is returned via the $newObjectRet$ channel, as in
-$ObjMan$.
-The possibility of divergence if the memory manager reports an error
-is handled in $AllocateObject$.
-\begin{circusaction}
-  NewObject \circdef \circvar objectID : ObjectID \circspot \\
-  \t1 newObject?thread?classID \then \\
-  \t1 \circif classID = {{<}classID_1{>}} \circthen {} \\
-  \t2 AllocateObject(thread, sizeof{<}classID_1{>}, objectID) \circseq \lschexpract StructMan{<}classID_1{>}ObjInit \rschexpract \\
-  \t1 {} \circelse classID = {{<}classID_2{>}} \circthen {} \\
-  \t2 AllocateObject(thread, sizeof{<}classID_2{>}, objectID) \circseq \lschexpract StructMan{<}classID_2{>}ObjInit \rschexpract \\
-  \t2 \vdots \\
-  \t1 {} \circelse classID = {{<}classID_n{>}} \circthen {} \\
-  \t2 AllocateObject(thread, sizeof{<}classID_n{>}, objectID) \circseq \lschexpract StructMan{<}classID_n{>}ObjInit \rschexpract \\
-  \t1 \circfi \circseq newObjectRet!objectID \then \Skip \\
-\end{circusaction}
-
-Finally, $GetClassIDOf$ is changed to extract the class identifier
-from an $ObjectStruct$ value using the $classIDOf$ function.
-This is not used in the C code, which, as we will see in the next
-section, uses $classIDOf$ directly, but is supplied for use by the
-$Launcher$, which is unchanged by the strategy.
-We omit the definition of $GetClassIDOf$ here.
-
-In the next section we describe the structure of the C code of the
-program and our shallow embedding of C in \Circus{}, which makes use
-of some of the types and channels discussed in this section.
-
 \subsection{Shallow Embedding of C in \Circus{}}
 \label{cee-c-program-subsection}
 
@@ -2487,16 +2382,13 @@ The $CThr_{bc,cs}$ process has a similar structure to the $Thr$
 process presented in Section~\ref{cee-interpreter-subsection}.
 However, the $pc$ and $frameStack$ components are eliminated from the
 state during compilation.
-Thus, the state of $CThr_{bc,cs}$, shown in $CThrState$ below, just
-contains $stackID$, which has the same type as $frameStackID$ in
+Thus, the state of $CThr_{bc,cs}$ just contains a single component,
+$stackID$, which has the same type as $frameStackID$ in
 $InterpreterState$ and so may be $Uninitialised$ or $Initialised$ with
 a $StackID$ for the C thread's stack.
 Since there is no explicit stack in C, we only need to ensure there is
 a stack identifier in $stackID$ so space for the thread's stack has
 been allocated and the $stackID$ is not manipulated beyond that.
-\begin{schema}{CThrState}
-  stackID : Stack
-\end{schema}
 The $stackID$ is initially set to $Uninitialised$.
 
 The $Running$ action and creation of stack frames are also replaced
@@ -2571,9 +2463,10 @@ of \Circus{}.
 The representation of these constructs is summarised in
 Table~\ref{embedding-table}.
 
-\begin{table}[t]
+\begin{table}[p]
 \centering
 {\scriptsize
+\lstset{language=C,keywordstyle=\sffamily\bfseries,basicstyle=\ttfamily}
 \setlength{\zedindent}{0pt}
 \setlength{\zedleftsep}{2mm}
 \setlength{\zedtab}{1em}
@@ -2581,11 +2474,11 @@ Table~\ref{embedding-table}.
 \setlength{\belowdisplayskip}{0mm}
 \setlength{\abovedisplayshortskip}{0mm}
 \setlength{\belowdisplayshortskip}{0mm}
-\renewcommand{\arraystretch}{0.5}
+\renewcommand{\arraystretch}{0.3}
 \rowcolors{2}{white}{lightgray}
 \begin{tabular}{p{3cm}p{5cm}p{4cm}}
 \hline
-Construct & C code & \Circus{} equivalent \\
+\vspace{0.01cm} Construct \vspace{0.1cm} & \vspace{0.01cm} C code \vspace{0.1cm} & \vspace{0.01cm} \Circus{} equivalent \vspace{0.1cm} \\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright \hfill \newline Function definition &
 \begin{lstlisting}
@@ -2757,11 +2650,38 @@ do {...} while (b);
   \t1 \circif b \circthen X \\
   \t1 {} \circelse \lnot b \circthen \Skip \\
   \t1 \circfi
-\]}\\
+\]}\\  
+%\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\raggedright \hfill \newline Field read &
+\begin{lstlisting}
+y = ((X *) x)->f;
+\end{lstlisting}
+&
+{
+\def\arraystretch{1.1}
+\[
+  getObject!x \then {} \\
+  \t1 getObjectRet?struct \then {} \\
+  \t1 y := (castX~struct).f
+  \]}\\  
+%\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\raggedright \hfill \newline Field write &
+\begin{lstlisting}
+((X *) x)->f = y;
+\end{lstlisting}
+&
+{
+\def\arraystretch{1.1}
+\[
+  getObject!x \then {} \\
+  \t1 getObjectRet?struct \then {} \\
+  \t1 putObject!(updateX\_f~struct~y) \\
+  \t1 {} \then \Skip
+  \]}\\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{tabular}}
 \caption{The \Circus{} representations of C constructs in our shallow
-  embedding}
+  embedding {foo}}
 \label{embedding-table}
 \end{table}
 
@@ -2808,6 +2728,189 @@ for our work.
 Restricting ourselves to variables at the start of functions ensures
 the code or strategy generates is compatible with older versions of C.
 
+Finally, we represent accesses to structs representing objects using
+communication with the struct manager.
+Getting the value of a field is performed by obtaining the struct
+value representing the object using the $getObject$ and
+$getObjectRet$ channels.
+This value is then converted to the correct schema type for the class
+of the object, and the appropriate field of that schema binding is
+then accessed to read the value and store it into a variable.
+This represents dereferencing a pointer to a C struct, with a cast to
+a struct type that possibly has fewer fields in order to handle
+polymorphism.
+
+For writes to a field, the struct is obtained using the $getObject$
+and $getObjectRet$, and then the field is updated using an update
+function applied to the struct, which is then stored back in the
+struct manager via the $putObject$ channel.
+This represents casting and dereferencing a pointer to the struct,
+then updating a field of the struct.
+
+Accesses to static fields are performed similarly, obtaining the
+static fields struct via the $getStaticFields$ channel, and setting it
+via the $putStaticFields$ channel.
+The struct types and the functions for manipulating them are described
+in more detail in the next section, where we discuss the struct
+manager, $StructMan_{cs}$.
+
+\subsection{Struct Manager}
+\label{cee-struct-manager-subsection}
+
+$StructMan_{cs}$ manages objects represented by C structs that
+incorporate the class information from $cs$, refining the process
+$ObjMan$, which handles abstract objects.
+$StructMan_{cs}$ has Z schemas representing struct types for objects
+of each class.
+For each class identifier ${<}classID_1{>}, \dots, {<}classID_n{>}$,
+we define a schema ${<}classID_k{>}Obj$ for $k \in \{1,\dots,n\}$,
+representing the objects of that class. 
+They begin with a $classID$ component containing the class identifier
+of the object, so that polymorphic method calls can be made by choice
+over the object's class.
+There is then a component for each of the fields
+${<}fieldID_1{>}, \dots, {<}fieldID_{m_k}{>}$ of the class, with each
+component having the type $Word$.
+\begin{schema}{{<}classID_k{>}Obj}
+  classID : ClassID \\
+  {{<}fieldID_{k,1}{>}} : Word \\
+  \t1 \vdots \\
+  {{<}fieldID_{k,m_k}{>}} : Word
+\end{schema}
+
+The schema types for each type of object are combined into a single
+free type $ObjectStruct$.
+The constructor for each ${<}classID_k{>}$ is called
+${<}classID_k{>}Con$, with a single parameter of type
+${<}classID_k{>}Obj$.
+\begin{zed}
+  ObjectStruct ::= {<}classID_1{>}Con \ldata {<}classID_1{>}Obj \rdata | \dots | {<}classID_n{>}Con \ldata {<}classID_n{>}Obj \rdata
+\end{zed}
+
+For each object type, we define a natural number constant
+$sizeof{<}classID_k{>}Obj$ that represents the result of applying C's
+\texttt{sizeof} operator to the struct represented by the
+corresponding ${<}classID_k{>}Obj$ type.
+We also define a function $classIDOf$ for obtaining the value of the
+common $classID$ field from an $ObjectStruct$ value.
+Additionally, we define a $cast{<}classID_k{>}$ function for each
+${<}classID_k{>}$, which maps an $ObjectStruct$ value to a
+${<}classID_k{>}Obj$ value.
+This works not only for values in the range of the
+${<}classID_k{>}Con$ constructor, but also for any class that is a
+subclass of ${<}classID_k{>}$, with the common fields copied across.
+Thus, $cast{<}classID_k{>}$ represents casting of C structs, where a
+struct can be truncated by casting to a struct whose fields are a
+prefix of it.
+Finally, we also define a function
+$update{<}classID_k{>}\_{<}fieldID{>}_i$ for each class
+${<}classID_k{>}$ and field identifier ${<}fieldID_i{>}$, which takes
+an $ObjectStruct$ and updates the field with a given value.
+This is a combined cast and update.
+
+For the static class fields, the static fields from each class
+${<}classID_1{>}, \dots, {<}classID_n{>}$ are collected together in a
+schema $StaticFields$, as shown below.
+\begin{schema}{StaticFields}
+  {<}classID_1{>}\_{<}staticfieldID_{1,1}{>} : Word \\
+  \t1 \vdots \\
+  {<}classID_1{>}\_{<}staticfieldID_{1,\ell_1}{>} : Word \\
+  \t1 \vdots \\
+  {<}classID_n{>}\_{<}staticfieldID_{n,1}{>} : Word \\
+  \t1 \vdots \\
+  {<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} : Word
+\end{schema}
+We define a constant $sizeofStaticFields$ giving the space required
+for the struct represented by $StaticFields$.
+
+Channels $getObject$, $getObjectRet$, and $putObject$ are used to pass
+$ObjectStruct$ values to and from $StructMan_{cs}$.
+The $StaticFields$ type is communicated using the $getStaticFields$
+and $putStaticFields$ channels.
+
+The state of $StructMan_{cs}$ is given by the schema $StructManState$.
+It is similar to $ObjManState$, but the $objects$ map relates object
+identifiers to $ObjectStruct$ values, and $staticClassFields$ is a map
+from $ObjectID$ to the $StaticFields$ type.
+
+The structure of the $StructMan_{cs}$ process is much the same as for
+the $ObjMan$ process, with the state initialised in the same way.
+However, $AllocateStaticFields$ is changed to handle the
+$StaticFields$ type.
+It is similar to the $ObjMan$ definition of $AllocateStaticFields$,
+but it does not collect the required field identifiers since that is
+already implicitly done in the definition of $StaticFields$.
+The required size for the allocated space is now $sizeofStaticFields$.
+The initialisation of the static fields, in $InitStaticFields$ is much
+the same, but now specialised to refer to $StaticFields$, setting all
+its components to $null$.
+
+Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
+are replaced with new actions $GetObject$, $PutObject$,
+$GetStaticFields$ and $PutStaticFields$.
+These are fairly simple, with $GetObject$ and $PutObject$ retrieving
+and storing $ObjectStruct$ values in the $objects$ map.
+These are exposed on the $getObject$ and $getObjectRet$ channels for
+$GetObject$, and the $putObject$ channel for $PutObject$. 
+Similarly, $GetStaticFields$ and $PutStaticFields$ retrieve and store
+the $StaticFields$ value associated with $staticClassFieldsID$ from
+the $staticClassFields$ map.
+These are performed on the $getStaticFields$ and $putStaticFields$
+channels respectively.
+We omit the definitions of these actions here; their definitions are
+given in Appendix~\ref{struct-manager-appendix}, which shows the
+general form of the $StructMan_{cs}$ process.
+
+The $NewObject$ action is different in $StructMan_{cs}$ to that in
+$ObjMan$. 
+It uses the same channels ($newObject$ and $newObjectRet$), but must
+create the correct $ObjectStruct$ value for the provided class.
+It has the form shown below.
+The $thread$ and $classID$ identifiers are received from the
+$newObject$ channel, like in $ObjMan$.
+A choice is then made over the $classID$, matching it against each
+class identifier supported by $StructMan_{cs}$.
+If $classID$ matches a class identifier ${<}classID_k{>}$, then space
+for the object is allocated via communication with the memory manager,
+as in $AllocateStaticFields$, then the object is stored in $objects$
+and initialised.
+The allocation is performed in a separate action, $AllocateObject$, as
+it is similar for each class.
+The size of the object is given by the $sizeof{<}classID_k{>}$
+identifier for ${<}classID_k{>}$, and the returned object identifier
+is stored in $objectID$.
+The storing and initialisation of the object is then done in a schema
+action $StructMan{<}classID_k{>}ObjInit$, which sets all the object's
+fields to $null$ and puts it in $objects$, stored within
+${<}classID_k{>}Con$. 
+Finally, $objectID$ is returned via the $newObjectRet$ channel, as in
+$ObjMan$.
+The possibility of divergence if the memory manager reports an error
+is handled in $AllocateObject$.
+\begin{circusaction}
+  NewObject \circdef \circvar objectID : ObjectID \circspot \\
+  \t1 newObject?thread?classID \then \\
+  \t1 \circif classID = {{<}classID_1{>}} \circthen {} \\
+  \t2 AllocateObject(thread, sizeof{<}classID_1{>}, objectID) \circseq \lschexpract StructMan{<}classID_1{>}ObjInit \rschexpract \\
+  \t1 {} \circelse classID = {{<}classID_2{>}} \circthen {} \\
+  \t2 AllocateObject(thread, sizeof{<}classID_2{>}, objectID) \circseq \lschexpract StructMan{<}classID_2{>}ObjInit \rschexpract \\
+  \t2 \vdots \\
+  \t1 {} \circelse classID = {{<}classID_n{>}} \circthen {} \\
+  \t2 AllocateObject(thread, sizeof{<}classID_n{>}, objectID) \circseq \lschexpract StructMan{<}classID_n{>}ObjInit \rschexpract \\
+  \t1 \circfi \circseq newObjectRet!objectID \then \Skip \\
+\end{circusaction}
+
+Finally, $GetClassIDOf$ is changed to extract the class identifier
+from an $ObjectStruct$ value using the $classIDOf$ function.
+This is not used in the C code, which, as we will see in the next
+section, uses $classIDOf$ directly, but is supplied for use by the
+$Launcher$, which is unchanged by the strategy.
+We omit the definition of $GetClassIDOf$ here.
+
+This concludes our explanation of the model for the C code emitted
+from the compilation strategy. 
+In the next section we discuss how the models of the core execution
+environment before and after compilation can be validated as correct.
 
 \section{Final Considerations}
 \label{cee-final-considerations-section}
