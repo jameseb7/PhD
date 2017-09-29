@@ -981,13 +981,13 @@ Table~\ref{bytecode-subset-table}.
     \texttt{invokespecial} & constant pool index &
     Gets the method and class identifier at the given constant pool
     index and invokes the specified method of the specified class,
-    popping the method's arguments, plus a \texttt{this} object
+    popping the method's arguments, including a \texttt{this} object
     reference, from the operand stack.
     \\
     \texttt{invokestatic} & constant pool index &
     Gets the method and class identifier at the given constant pool
-    index and invokes the specified method of the specified class,
-    popping the method's arguments from the operand stack.
+    index and invokes the specified static method of the specified
+    class, popping the method's arguments from the operand stack.
     \\
     \texttt{invokevirtual} & constant pool index &
     Gets the method and class identifier at the given constant pool
@@ -1308,19 +1308,25 @@ $MethodID$ values to information about each method.
 The first two, $methodEntry$ and $methodEnd$, map to $ProgramAddress$
 values, which are indices into a separate bytecode array representing
 the start and end points of the method.
-The last two components, $methodLocals$ and $methodStackSize$, map to
+The next two components, $methodLocals$ and $methodStackSize$, map to
 natural numbers giving the required number of local variables and
 operand stack slots for the method.
 These values are used during the compilation strategy to declare C
 variables to store the local variables and operand stack values.
+The final component, $staticMethods$, is a set of $MethodID$ values
+for the static methods of the class.
+The methods not in the $staticMethods$ are considered to be non-static
+methods and must take an additional \texttt{this} argument.
 \begin{schema}{ClassMethods}
   methodEntry, methodEnd : MethodID \pfun ProgramAddress \\
-  methodLocals, methodStackSize : MethodID \pfun \nat
+  methodLocals, methodStackSize : MethodID \pfun \nat \\
+  staticMethods : \finset MethodID
 \where
   \dom methodEntry = \dom methodEnd = \dom methodLocals = \dom methodStackSize \\
+  staticMethods \subseteq \dom methodEntry \\
   \forall m : \dom methodEntry @ methodEntry~m \leq methodEnd~m \\
   % a method's local variables must at least include space for its arguments
-  \forall m : \dom methodLocals @ methodArguments~m \leq methodLocals~m
+  \t1 \land methodArguments~m + (\IF m \in staticMethods \THEN 0 \ELSE 1) \leq methodLocals~m 
 \end{schema}
 In addition to the components of $ClassMethods$, we declare a global
 function $methodArguments$ from $MethodID$s to natural numbers, which
@@ -1336,11 +1342,13 @@ calls.
 The first conjunct of the invariant of $ClassMethods$ requires that
 all the component maps have the same domain, so that all the
 information must be supplied for any method present in the class.
-The second conjunct requires that the $methodEntry$ for each method be
-before its $methodEnd$.
-Finally, the third conjunct requires that $methodLocals$ be large
-enough for each method to contain its $methodArguments$, since each
-argument of a method is stored in a local variable.
+The second conjunct requires that every $MethodID$ in $staticMethods$
+be within the domains of these maps.
+Finally, the third conjunct requires that, for each method, its
+$methodEntry$ is before its $methodEnd$, and that its $methodLocals$
+is large enough to contain its $methodArguments$, plus an extra
+\texttt{this} argument for non-static methods, since each argument of
+a method is stored in a local variable.
 
 The final components of our model for class information are given in
 the $ClassFields$ schema below.
@@ -2208,13 +2216,15 @@ The number of arguments popped, $argsToPop?$, is the $methodArguments$
 value for $mid$, plus one for the \texttt{this} identifier passed to
 the method.
 The class identifier is then extracted from the instruction's
-parameter and passed into $Invoke$ along with $mid$ and $poppedArgs$.
+parameter and passed into $Invoke$ along with $mid$, $poppedArgs$, and
+a boolean value indicating that the method invocation is not from the
+\texttt{invokestatic} instruction.
 \begin{circusaction}
   HandleInvokespecial \circdef \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
   \t1 \lcircguard bc~pc \in \ran invokespecial \land ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \rcircguard \circguard \\
   \t1 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
   \t1 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t1 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs)
+  \t1 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false)
 \end{circusaction}
 The $HandleInvokestatic$ and $HandleInvokevirtual$ actions are
 similar, except that $argsToPop?$ does not include the extra
@@ -2231,13 +2241,15 @@ The name of the action for each special method is formed from the name
 of the special method prefixed with $Invoke$ (e.g. 
 $InvokeResumeThread$ for the \texttt{resumeThread()} method).
 The parameters passed to the $Invoke$ action, which are the class
-identifier, $classID$, the method identifier, $method$, and the
-method argument list, $args$, are passed on to each of the actions in
-the external choice.
+identifier, $classID$, the method identifier, $method$, the method
+argument list, $args$, and a boolean value, $static$, indicating if
+the invocation is intended to be of a static method, are passed on to
+each of the actions in the external choice.
 \begin{circusaction}
-  Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word \circspot \\
-  \t1 InvokeResumeThread(classID, method, args) \extchoice InvokeSuspend(classID, method) \extchoice \cdots \\
-  \t1 {} \extchoice InvokeOther(classID, method, args)
+  Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word; \circval static : \boolean \circspot \\
+  \t1 InvokeResumeThread(classID, method, args, static) \\
+  \t1 {} \extchoice InvokeSuspend(classID, method, static) \extchoice \cdots \\
+  \t1 {} \extchoice InvokeOther(classID, method, args, static)
 \end{circusaction}
 
 Within the special method actions, there is a guard ensuring the
@@ -2254,6 +2266,12 @@ The class and method identifiers used in the special method actions
 are a mixture of identifiers from the SCJ API and
 implementation-defined identifiers provided to expose SCJVM services
 to bytecode programs.
+The action checks if the $static$ parameter has the correct value for
+the method ($\true$ if the method is static, $\false$ otherwise), and
+diverges if it is incorrect (since that indicates an erroneous input
+program).
+In this case, the method is static as it is exposing an SCJVM service
+that isn't attached to an object instance.
 The argument to the method, stored as the first element of the
 $methodArgs$ parameter, is converted to a $ThreadID$ and passed to the
 $Launcher$ via the $resumeThread$ channel.
@@ -2261,9 +2279,12 @@ A return signal is then awaited on the $resumeThreadRet$ channel
 before continuing.
 \begin{circusaction}
   InvokeResumeThread \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
   \t1 \lcircguard (classID,resumeThreadClass) \in subclassRel~cs \land method = resumeThreadID \rcircguard \circguard {} \\
-  \t1 resumeThread!(WordToThreadID~(methodArgs~1)) \then resumeThreadRet \then \Skip
+  \t1 \circif static = \true \circthen {} \\
+  \t2 resumeThread!(WordToThreadID~(methodArgs~1)) \then resumeThreadRet \then \Skip \\
+  \t1 {} \circelse static = \false \circthen \Chaos \\
+  \t1 \circfi
 \end{circusaction}
 
 Some of the special methods start other methods as part of their
@@ -2273,7 +2294,8 @@ executes the \texttt{run()} method of a \texttt{Runnable} object after
 entering a private memory area.
 This is handled in the action $InvokeEnterPrivateMemory$, shown below.
 It begins in a similar way to $InvokeResumeThread$, with a guard on
-the $classID$ and $method$ passed into the action.
+the $classID$ and $method$ passed into the action, and a check of the
+$static$ parameter.
 The method is then handled by communicating with the $Launcher$ on the
 $enterPrivateMemory$ channel, passing the arguments from $methodArgs$.
 The execution of the nested method is then handled as in
@@ -2282,9 +2304,12 @@ method on the $executeMethod$ channel and creating a new $StackFrame$
 for it.
 \begin{circusaction}
   InvokeEnterPrivateMemory \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
   \t1 \lcircguard (classID,managedMemoryClass) \in subclassRel~cs \land method = enterPrivateMemoryID \rcircguard \circguard {} \\
-  \t2 enterPrivateMemory!thread!(methodArgs~1)!(methodArgs~2) \then StartInterpreter
+  \t1 \circif static = \true \circthen {} \\
+  \t2 enterPrivateMemory!thread!(methodArgs~1)!(methodArgs~2) \then StartInterpreter \\
+  \t1 {} \circelse static = \false \circthen \Chaos \\
+  \t1 \circfi
 \end{circusaction}
 
 In addition to the special methods handled in the $Launcher$, we also
@@ -2298,9 +2323,12 @@ which accepts the input on the $input$ channel and pushes it onto the
 stack as the return value for the method.
 \begin{circusaction}
   InvokeRead \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
   \t1 \lcircguard (classID,readClass) \in subclassRel~cs \land method = readID \rcircguard \circguard {} \\
-  \t2 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
+  \t1 \circif static = \true \circthen {} \\
+  \t2 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract \\
+  \t1 {} \circelse static = \false \circthen \Chaos
+  \t1 \circfi
 \end{circusaction}
 The $InvokeWrite$ action is similar, writing the method argument to
 the $output$ channel.
@@ -2309,19 +2337,25 @@ The $InvokeOther$ action, shown in part below, describes the handling
 of non-special methods.
 It begins with a guard that is the conjunction of the negation of the
 guards for the invocation actions for the special methods.
-The actions starts execution of the method in the interpreter by
-finding its $Class$ information with $ResolveMethod$ and creating a
-new $StackFrame$ with $IntepreterNewStackFrame$.
+The actions starts execution of the method in the interpreter by first
+finding its $Class$ information with $ResolveMethod$.
+The $staticMethods$ set in the class information is then checked for
+consistency with the $static$ parameter, diverging if it is not.
+A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
 The $baseFrame$ value is set to $\false$ here, since the stack frame
 is created due to execution of a bytecode instruction in the
 interpreter, rather than in response to an external request.
 \begin{circusaction}
-  InvokeOther \circdef \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+  InvokeOther \circdef \\
+  \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
   \t1 \lcircguard ((classID,resumeThreadClass) \notin subclassRel~cs \lor methodID \neq resumeThreadID) \\
   \t2 {} \land \cdots \\
   \t2 {} \land ((classID, writeClass) \notin subclassRel~cs \lor methodID \neq writeID) \rcircguard \circguard {} \\
-  \t1 \circvar class : Class \circspot \\
-  \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \false @ InterpreterNewStackFrame \rschexpract
+  \t1 \circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
+  \t1 \circif static = \true \iff methodID \in class.staticMethods \circthen {} \\
+  \t2 \lschexpract \exists baseFrame? == \false @ InterpreterNewStackFrame \rschexpract \\
+  \t1 {} \circelse \lnot (static = \true \iff methodID \in class.staticMethods) \circthen \Chaos \\
+  \t1 \circfi
 \end{circusaction}
 
 This concludes our description of the handling of bytecode
