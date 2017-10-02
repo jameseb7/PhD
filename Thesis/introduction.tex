@@ -244,15 +244,33 @@ diagram approach, but it does have the advantage that the
 specification of the compilation strategy is correct by construction
 as the rewrite rules that comprise it have all been proved.
 
+We adopt the algebraic approach in our work, since it does not require
+the additional function that is required in the commuting-diagram
+approach because the source and target languages are defined in terms
+of the same specification language.
+The algebraic approach also permits a modular approach to proof and
+allows for the compiler to be easily implemented by application of the
+refinement rules using a term rewriting system.
+This means we can more easily evaluate the compilation strategy.
+
 \subsection{Formal Model and Proofs}
 
-In order to ensure that the specification is precise and to facilitate
-proofs of its correctness, it must have a model written in some formal
-specification language.
-We will focus on using the \Circus{} specification
-language~\cite{oliveira2009}, as it has been used in some of the
-previous work on formalising SCJ~\cite{cavalcanti2011,
-  cavalcanti2013}.
+As we are following the algebraic approach, we require a specification
+language in which to define the source and target languages.
+The use of a formal specification language for our specification of an
+SCJVM allows us to ensure that the specification is precise and to
+facilitate proofs of its correctness.
+This is beneficial for both the parts of the SCJVM that are involved
+in the compilation and the parts are not.
+
+We have chosen \Circus{} as the specification
+language~\cite{oliveira2009} as it contains a wide variety of
+constructs that allow for specification of both data and behaviour,
+with a inbuilt notion of refinement, which we require for specifying
+the compilation strategy.
+\Circus{} has also been used for previous work on the specification of
+SCJ programs~\cite{cavalcanti2011, cavalcanti2013}.
+
 It is important that the correctness of the formal models and
 compilation strategy can be shown via mathematical proof, which
 requires the specification language to have a well-defined semantics.
