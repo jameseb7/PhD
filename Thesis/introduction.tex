@@ -188,7 +188,17 @@ to that actually produced by icecap.
 Our results can be used to aid the development and verification of an
 SCJ virtual machine in several different ways.
 The informal specification provides a reference for the requirements
-of an SCJ virtual machine
+of an SCJ virtual machine, while the formal model can be used to prove
+correctness of an implementation.
+The formal model could also be used to create a
+correct-by-construction virtual machine via refinement steps.
+Similarly, the specification of the compilation strategy can be used
+to translate SCJ bytecode to equivalent C code, which may be used to
+add compilation facilities to an SCJVM.
+The proofs give further assurance of the correctness of the model and
+compilation strategy.
+Additionally, the mechanisation can better facilitate the use of the
+other components of the work.
 
 
 \subsection{SCJ Virtual Machine Specification}
