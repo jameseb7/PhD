@@ -4,8 +4,10 @@
 This chapter begins by explaining the motivation for the work
 described in this dissertation.
 Afterwards, the objectives of the work, which come from the
-motivation, are described and, finally, the structure of the remainder
-of this dissertation is described.
+motivation, are described and then the approach taken in the work is
+discussed. 
+Finally, the structure of the remainder of this dissertation is
+described.
 
 \section{Motivation}
 
@@ -309,6 +311,100 @@ bytecode to native code.
 With our results, SCJVM developers will be able to create provably
 correct ahead-of-time compiling SCJVM implementations and check the
 correctness of those implementations.
+
+\section{Approach}
+
+As mentioned above, we follow the algebraic approach to verifying
+compilation, refining our model of Java bytecode to a representation
+of C code.
+The standard algebraic approach, developed by
+Sampaio~\cite{sampaio1993, sampaio1997}, follows the form shown in
+Figure~\ref{algebraic-approach-figure}.
+The source program is defined by a shallow embedding in the
+specification language and this is then refined to a model of the
+target machine in the specification language that contains the target
+code for the program.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \draw (0cm,0.7cm) rectangle (10cm,3.5cm);
+    \draw (5cm,3.2cm) node[align=center] {\scriptsize Specification Language};
+
+    \draw (2cm,2cm)   circle[radius=1.2cm]               node[align=center] {\scriptsize Source\\\scriptsize Program};
+    \draw (8cm,2cm)   circle[radius=1.2cm] ++(0cm,0.6cm) node[align=center] {\scriptsize Target\\\scriptsize Machine};
+    \draw (8cm,1.5cm) circle[radius=0.6]                 node[align=center] {\scriptsize Target\\\scriptsize Code};
+
+    \path (3.2cm,2cm) edge[-latex]
+    node[align=center, above] {\Large $\sqsubseteq$}
+    node[align=center, below] {\scriptsize Refinement\\\scriptsize Strategy\\\scriptsize (Compilation)}
+    (6.8cm,2cm);
+  \end{tikzpicture}
+  \caption{Standard algebraic approach}
+  \label{algebraic-approach-figure}
+\end{figure}
+
+The standard algebraic approach is normally applied to compile from a
+high-level language to a low-level language executable in a target
+machine.
+Here, we adapt the approach to deal with a low-level source language,
+Java bytecode.
+While Java bytecode has some high-level features, particularly its
+notion of objects, we view it as low-level since it is unstructured,
+with control flow managed using a program counter.
+
+Our approach can be viewed as the usual approach applied in reverse,
+starting with an interpreter containing the bytecode source program,
+and proving that it is refined by an embedding of the C code, as shown
+in Figure~\ref{our-approach-figure}.
+The core services of an SCJVM, such as scheduling and memory
+management, must be available for both the source and target codes.
+
+For a low-level language, a deep embedding is the
+natural method for representing its semantics, since it is defined in
+terms of how it is processed by a (virtual) machine.
+For the C code we must choose whether to use a shallow embedding,
+representing C constructs by corresponding \Circus{} constructs, or a
+deep embedding, creating a \Circus{} model that interprets the C
+code.
+
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \draw (0cm,0.4cm) rectangle (10cm,3.8cm);
+    \draw (5cm,3.5cm) node[align=center] {\scriptsize Specification Language (\Circus{})};
+
+    \draw (2cm,2.5cm)   circle[radius=1.2cm] ++(0cm,0.6cm) node[align=center] {\scriptsize Core\\\scriptsize Execution\\\scriptsize Environment};
+    \draw (2cm,1.95cm)     circle[radius=0.6cm]               node[align=center] {\scriptsize Bytecode};
+    \draw (8cm,2.5cm)   circle[radius=1.2cm]               node[align=center] {\scriptsize C Code};
+
+    \draw (1cm,0.5cm) rectangle (3cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
+    \draw (7cm,0.5cm) rectangle (9cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
+
+    \path (3.2cm,2.5cm) edge[-latex]
+    node[align=center, above] {\Large $\sqsubseteq$}
+    node[align=center, below] {\scriptsize Refinement\\\scriptsize Strategy\\\scriptsize (Compilation)}
+    (6.8cm,2.5cm);
+
+    % \draw[-latex] (3cm,0.9cm) -- (7cm,0.9cm);
+  \end{tikzpicture}
+  \caption{Our algebraic approach}
+  \label{our-approach-figure}
+\end{figure}
+
+We use a shallow embedding, since it allows existing algebraic laws
+for \Circus{} to be used directly for manipulation of the C code
+and proof of the compilation rules.
+A deep embedding would require representing the syntax of C separately
+in \Circus{} and rules for transforming the C code would have to be
+proved.
+
+The shallow embedding approach is much easier to extend or adapt. 
+If a larger subset of bytecodes needs to be considered or the target C
+code needs to be modified, in the worst case, we need more or
+different \Circus{} compilation rules. 
+There will be no need to extend the \Circus{} model defining the C
+semantics. 
 
 \section{Document Structure}
 
