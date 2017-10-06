@@ -2392,11 +2392,10 @@ The channels used for communication between these processes are the
 same as those in Table~\ref{cee-channel-table}, except that the
 $getField$, $getFieldRet$ and $putField$ channels are replaced with
 $getObject$, $getObjectRet$ and $putObject$ channels.
-The new channels are discussed in
-Section~\ref{cee-struct-manager-subsection}, which describes the
-struct manager.
-After that, in Section~\ref{cee-c-program-subsection}, the
-$CProg_{bc,cs}$ process is described.
+We describe the $CProg_{bc,cs}$ process in
+Section~\ref{cee-c-program-subsection}.
+After that, in Section~\ref{cee-struct-manager-subsection},
+$StructMan_{cs}$ is described.
 
 \subsection{Shallow Embedding of C in \Circus{}}
 \label{cee-c-program-subsection}
@@ -2412,26 +2411,27 @@ as shown in the definiton of $CProg_{bc,cs}$ below.
   \circprocess CProg_{bc,cs} \circdef \Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot CThr_{bc,cs}(t)
 \end{circus}
 
-The $CThr_{bc,cs}$ process has a similar structure to the $Thr$
-process presented in Section~\ref{cee-interpreter-subsection}.
+$CThr_{bc,cs}$ has a similar structure to the $Thr$ process in
+Section~\ref{cee-interpreter-subsection}.
 However, the $pc$ and $frameStack$ components are eliminated from the
 state during compilation.
-Thus, the state of $CThr_{bc,cs}$ just contains a single component,
-$stackID$, which has the same type as $frameStackID$ in
-$InterpreterState$ and so may be $Uninitialised$ or $Initialised$ with
-a $StackID$ for the C thread's stack.
+The state of $CThr_{bc,cs}$ contains a single component, $stackID$,
+which has the same type as $frameStackID$ in $InterpreterState$ and so
+may be $Uninitialised$ or $Initialised$ with a $StackID$ for the C
+thread's stack.
 Since there is no explicit stack in C, we only need to ensure there is
 a stack identifier in $stackID$ so space for the thread's stack has
-been allocated and the $stackID$ is not manipulated beyond that.
+been allocated.
 The $stackID$ is initially set to $Uninitialised$.
 
-The $Running$ action and creation of stack frames are also replaced
-with an $ExecuteMethod$ action that executes the C function
-corresponding to a given method identifier.
+The $Running$ action and creation of stack frames (in $MainThread$ and
+$NotStarted$) are replaced with an $ExecuteMethod$ action that
+executes the C function corresponding to a given method identifier.
 The main action of $CThr_{bc,cs}$ thus has the same structure as that
 of $Interpreter$, with a choice of $MainThread$ for the $main$ thread
-and $NotStarted$ for non-$main$ threads.
-However, $MainThread$ now has the structure shown below.
+and $NotStarted$ for non-$main$ threads (see
+Figure~\ref{interpreter-flow-figure}).
+However, $MainThread$ is now as shown below.
 This is similar to the definition of $MainThread$ in $Thr$, but the
 information received from the $executeMethod$ channel is passed into
 the $ExecuteMethod$ action to select the correct C function to
@@ -2450,15 +2450,13 @@ $executeMethodRet$ channel.
   \circseq X \circblockend
 \end{circusaction}
 
-Similarly, the $NotStarted$ action in $CThr_{bc,cs}$ has the form
-shown below, with $ExecuteMethod$ after $Blocked$, replacing
-$Running$.
-The return value, $retVal$, is discarded here since the methods that
-are executed a the top level on the non-$main$ threads should not
-return a value so $retVal$ will be arbitrary.
-The thread's removal is also handled by $CEEremoveThread$ so no
-communication on $executeMethodRet$ follows the end of the method's
-execution.
+Similarly, the $NotStarted$ action in $CThr_{bc,cs}$ is shown below,
+with $ExecuteMethod$ after $Blocked$, replacing $Running$.
+The return value, $retVal$, is discarded since the methods that are
+executed at the top level on the non-$main$ threads should not return
+a value.
+The thread's removal is handled by $CEEremoveThread$, so no
+communication on $executeMethodRet$ follows the method's execution.
 \begin{circusaction}
   NotStarted \circdef \\
   \t1 \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
@@ -2510,7 +2508,7 @@ Table~\ref{embedding-table}.
 \setlength{\belowdisplayshortskip}{0mm}
 \renewcommand{\arraystretch}{0.3}
 \rowcolors{2}{white}{lightgray}
-\begin{tabular}{p{3cm}p{5cm}p{4cm}}
+\begin{tabular}{p{3cm}p{4.8cm}p{4.2cm}}
 \hline
 \vspace{0.01cm} Construct \vspace{0.1cm} & \vspace{0.01cm} C code \vspace{0.1cm} & \vspace{0.01cm} \Circus{} equivalent \vspace{0.1cm} \\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2715,18 +2713,18 @@ y = ((X *) x)->f;
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{tabular}}
 \caption{The \Circus{} representations of C constructs in our shallow
-  embedding {foo}}
+  embedding}
 \label{embedding-table}
 \end{table}
 
-The constructs we allow within a C function are conditionals, while
-loops, assignment statements, and function calls.
+The constructs we allow are conditionals, while loops, assignment
+statements, and function calls.
 These are comparable with those allowed in MISRA-C~\cite{MISRA} and
 present in the code generated by icecap.
 Conditionals in C correspond to \Circus{} alternation blocks, similar
 to those in Dikstra's guarded command language~\cite{dijkstra1975}.
-We handle loops in C using recursion in \Circus{}, with alternation
-used to handle loop conditions.
+We handle loops using recursion, with alternation used to handle loop
+conditions.
 
 As each function in the C code is a \Circus{} action, function calls
 are represented as references to those actions.
@@ -2741,10 +2739,8 @@ parameter of the \Circus{} action, usually named $retVal$, with an
 assignment to that parameter at the end of the action representing
 return statements.
 We assume there is a single return statement at the end of the
-function, so the return can simply be represented by the termination
-of the action if there is no return value.
-It is not necessary to cater for return statements in the middle of a
-function as we have control over the structure of the functions.
+function, so the return can be represented by the termination of the
+action.
 We follow guidelines for safety-critical uses of C variants, such as
 MISRA-C~\cite{MISRA}, and use a single return statement at the end of
 a function.
@@ -2752,15 +2748,14 @@ A function with both a return value and arguments has its value
 parameters (representing the arguments) followed by the result
 parameter (representing the return value).
 
-Local variables of the function are represented using \Circus{}
-variable blocks.
-These are placed near the start of the action, after the parameter
-declarations.
+Local variables are represented using \Circus{} variable blocks.
+These are placed after the parameter declarations.
 While \Circus{} variable blocks could also be used to represent
 variables declared in the middle of functions, that is not necessary
 for our work.
 Restricting ourselves to variables at the start of functions ensures
-the code or strategy generates is compatible with older versions of C.
+the code our strategy generates is compatible with older versions of
+C.
 
 Finally, we represent accesses to structs representing objects using
 communication with the struct manager.
@@ -2775,9 +2770,9 @@ a struct type that possibly has fewer fields in order to handle
 polymorphism.
 
 For writes to a field, the struct is obtained using the $getObject$
-and $getObjectRet$, and then the field is updated using an update
-function applied to the struct, which is then stored back in the
-struct manager via the $putObject$ channel.
+and $getObjectRet$, and then the field is updated using a function.
+The result is stored back in the struct manager via the $putObject$
+channel.
 This represents casting and dereferencing a pointer to the struct,
 then updating a field of the struct.
 
@@ -2785,15 +2780,14 @@ Accesses to static fields are performed similarly, obtaining the
 static fields struct via the $getStaticFields$ channel, and setting it
 via the $putStaticFields$ channel.
 The struct types and the functions for manipulating them are described
-in more detail in the next section, where we discuss the struct
-manager, $StructMan_{cs}$.
+in the next section, where we discuss the struct manager,
+$StructMan_{cs}$.
 
 \subsection{Struct Manager}
 \label{cee-struct-manager-subsection}
 
 $StructMan_{cs}$ manages objects represented by C structs that
-incorporate the class information from $cs$, refining the process
-$ObjMan$, which handles abstract objects.
+incorporate the class information from $cs$.
 $StructMan_{cs}$ has Z schemas representing struct types for objects
 of each class.
 For each class identifier ${<}classID_1{>}, \dots, {<}classID_n{>}$,
@@ -2803,8 +2797,7 @@ They begin with a $classID$ component containing the class identifier
 of the object, so that polymorphic method calls can be made by choice
 over the object's class.
 There is then a component for each of the fields
-${<}fieldID_1{>}, \dots, {<}fieldID_{m_k}{>}$ of the class, with each
-component having the type $Word$.
+${<}fieldID_1{>}, \dots, {<}fieldID_{m_k}{>}$, each of type $Word$.
 \begin{schema}{{<}classID_k{>}Obj}
   classID : ClassID \\
   {{<}fieldID_{k,1}{>}} : Word \\
@@ -2842,9 +2835,9 @@ ${<}classID_k{>}$ and field identifier ${<}fieldID_i{>}$, which takes
 an $ObjectStruct$ and updates the field with a given value.
 This is a combined cast and update.
 
-For the static class fields, the static fields from each class
-${<}classID_1{>}, \dots, {<}classID_n{>}$ are collected together in a
-schema $StaticFields$, as shown below.
+The static fields ${<}staticfieldID_{i,j}{>}$ from each class
+${<}classID_i{>}$ are collected together in a schema $StaticFields$,
+as shown below.
 \begin{schema}{StaticFields}
   {<}classID_1{>}\_{<}staticfieldID_{1,1}{>} : Word \\
   \t1 \vdots \\
@@ -2854,30 +2847,25 @@ schema $StaticFields$, as shown below.
   \t1 \vdots \\
   {<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} : Word
 \end{schema}
-We define a constant $sizeofStaticFields$ giving the space required
+We define a constant $sizeofStaticFields$ giving the space needed
 for the struct represented by $StaticFields$.
 
-Channels $getObject$, $getObjectRet$, and $putObject$ are used to pass
+Channels $getObject$, $getObjectRet$, and $putObject$ pass
 $ObjectStruct$ values to and from $StructMan_{cs}$.
-The $StaticFields$ type is communicated using the $getStaticFields$
-and $putStaticFields$ channels.
+The $StaticFields$ type is communicated using $getStaticFields$ and
+$putStaticFields$ channels.
 
 The state of $StructMan_{cs}$ is given by the schema $StructManState$.
-It is similar to $ObjManState$, but the $objects$ map relates object
-identifiers to $ObjectStruct$ values, and $staticClassFields$ is a map
-from $ObjectID$ to the $StaticFields$ type.
+It is similar to $ObjManState$ defined in
+Section~\ref{cee-object-manager-subsection}, but the $objects$ map
+relates object identifiers to $ObjectStruct$ values, and
+$staticClassFields$ is a map from $ObjectID$ to the $StaticFields$
+type.
 
 The structure of the $StructMan_{cs}$ process is much the same as for
 the $ObjMan$ process, with the state initialised in the same way.
 However, $AllocateStaticFields$ is changed to handle the
 $StaticFields$ type.
-It is similar to the $ObjMan$ definition of $AllocateStaticFields$,
-but it does not collect the required field identifiers since that is
-already implicitly done in the definition of $StaticFields$.
-The required size for the allocated space is now $sizeofStaticFields$.
-The initialisation of the static fields, in $InitStaticFields$ is much
-the same, but now specialised to refer to $StaticFields$, setting all
-its components to $null$.
 
 Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
 are replaced with new actions $GetObject$, $PutObject$,
@@ -2897,28 +2885,27 @@ general form of the $StructMan_{cs}$ process.
 
 The $NewObject$ action is different in $StructMan_{cs}$ to that in
 $ObjMan$. 
-It uses the same channels ($newObject$ and $newObjectRet$), but must
-create the correct $ObjectStruct$ value for the provided class.
+It uses the same channels ($newObject$ and $newObjectRet$), but
+creates an $ObjectStruct$ value for the provided class.
 It has the form shown below.
-The $thread$ and $classID$ identifiers are received from the
-$newObject$ channel, like in $ObjMan$.
+The $thread$ and $classID$ identifiers are received through
+$newObject$ like in $ObjMan$.
 A choice is then made over the $classID$, matching it against each
-class identifier supported by $StructMan_{cs}$.
-If $classID$ matches a class identifier ${<}classID_k{>}$, then space
-for the object is allocated via communication with the memory manager,
-as in $AllocateStaticFields$, then the object is stored in $objects$
-and initialised.
+identifier supported by $StructMan_{cs}$.
+If $classID$ matches an identifier ${<}classID_k{>}$, then space for
+the object is allocated via communication with the memory manager, as
+in $AllocateStaticFields$, and finally the object is stored in
+$objects$ and initialised.
 The allocation is performed in a separate action, $AllocateObject$, as
 it is similar for each class.
 The size of the object is given by the $sizeof{<}classID_k{>}$
 identifier for ${<}classID_k{>}$, and the returned object identifier
 is stored in $objectID$.
-The storing and initialisation of the object is then done in a schema
+The storing and initialisation of the object is defined by a schema
 action $StructMan{<}classID_k{>}ObjInit$, which sets all the object's
 fields to $null$ and puts it in $objects$, stored within
 ${<}classID_k{>}Con$. 
-Finally, $objectID$ is returned via the $newObjectRet$ channel, as in
-$ObjMan$.
+Finally, $objectID$ is returned via $newObjectRet$, as in $ObjMan$.
 The possibility of divergence if the memory manager reports an error
 is handled in $AllocateObject$.
 \begin{circusaction}
@@ -2936,15 +2923,13 @@ is handled in $AllocateObject$.
 
 Finally, $GetClassIDOf$ is changed to extract the class identifier
 from an $ObjectStruct$ value using the $classIDOf$ function.
-This is not used in the C code, which, as we will see in the next
-section, uses $classIDOf$ directly, but is supplied for use by the
-$Launcher$, which is unchanged by the strategy.
-We omit the definition of $GetClassIDOf$ here.
+This is not used in the C code, which, as we see in the next section,
+uses $classIDOf$ directly, but is supplied for use by the $Launcher$,
+which is unchanged by the strategy.
 
-This concludes our explanation of the model for the C code emitted
-from the compilation strategy. 
+This concludes our explanation of the model for the C code. 
 In the next section we discuss how the models of the core execution
-environment before and after compilation can be validated as correct.
+environment before and after compilation can be validated.
 
 \section{Final Considerations}
 \label{cee-final-considerations-section}
