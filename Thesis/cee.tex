@@ -2934,46 +2934,43 @@ environment before and after compilation can be validated.
 \section{Validation}
 \label{cee-validation-section}
 
-It is important that our model of an SCJVM provides an accurate
-representation of the semantics of an SCJVM.
+It is important that our model provides an accurate representation of
+the semantics of an SCJVM.
 In creating this model we have carefully read the SCJ specification
-and the JVM specification, trying to extract the requirements for an
-SCJVM from them.
-During this process, we have had contact with a member of the expert
-group developing the SCJ specification, who has been able to clarify
-several points about SCJ.
-This has resulted in several changes to the SCJ specification as we
-have developed our model.
-We discuss some examples of these here.
+and the JVM specification, to extract the requirements for an SCJVM.
+During this process, we have had contact with the expert group
+developing the SCJ specification, who has been able to clarify several
+points about SCJ.
+This has resulted in several changes to the SCJ specification.
+This is the first piece of evidence that our model not only reflects
+the SCJ standard, but in some cases the standard has been changed to
+reflect our model. 
+We list below the aspects of the SCJ standard that have been
+influenced by our work. 
 
-While developing our model of how interrupts work, we were unsure how
-interrupts should be represented.
 Though interrupts logically behave as small high-priority threads, it
 was not made clear in the SCJ specification what the current
 schedulable object should be during an interrupt.
 It has now been clarified that it is an error to request the current
 schedulable object while in an interrupt.
 
-We encountered several questions about how memory management should
-work while developing the $Launcher$ model, as it was not clear what
-backing stores should be created during mission setup and what their
-sizes should be.
-This caused the SCJ expert group to do some careful thinking about how
-the memory model from RTSJ, upon which SCJ is built, interacts with
-the SCJ mission model.
+It was not clear what backing stores should be created during mission
+setup and what their sizes should be.
+This caused the SCJ expert group to review how the memory model from
+RTSJ, upon which SCJ is built, interacts with the SCJ mission model.
 The parameters to the classes that form part of SCJ's mission model
 have now been clarified in the SCJ specification to indicate the
 amount of backing store space each requires.
 
 We also found that it was not clear in the SCJ specification that the
 instance class implementing \texttt{Safelet} requires initialisation,
-although the JVM specification state that every object must be
+although the JVM specification states that every object must be
 initialised.
-This has now been clarified in the SCJ specification.
-It also produced discussion about how command-line arguments are
-passed to an SCJ program, resulting in a \texttt{String[]} argument
-being added to the \texttt{initializeApplication()} method of
-\texttt{Safelet}.
+This has now been clarified in the SCJ specification, and led to
+discussion about how command-line arguments are passed to an SCJ
+program. 
+As a result, a \texttt{String[]} argument has been added to the
+\texttt{initializeApplication()} method of \texttt{Safelet}.
 We have not included this in our model as it is not yet in a publicly
 available version of the SCJ specification and none of our examples
 require command line parameters.
@@ -2982,19 +2979,19 @@ In addition to the checking of our model against informal
 requirements, the model has been written using Community Z Tools
 (CZT)~\cite{malik2005}, which provides parsing and typechecking for
 \Circus{}~\cite{malik2011}.
-We have also performed some proofs on some of the Z parts of our model
-using Z/EVES~\cite{saaltink1997}.
+We have also performed some proofs on the Z parts of our model using
+Z/EVES~\cite{saaltink1997}.
 These proofs are domain check proofs and precondition proofs.
 They ensure that an implementation of the model is possible and give
 further assurance that the model is sensible.
 
-The compilation strategy also provides further validation of our
-model, since we can check if the expected C code is produced by our
-strategy.
-There will be no refinement between the C code and the interpreter
-model if one of them is incorrect.
+The compilation strategy presented in the next chapter also provides
+further validation of our model, since we can check if the expected C
+code is produced by our strategy.
+There can be no proof of refinement between the C code and the
+interpreter model if one of them is incorrect.
 The examples of SCJ programs discussed in
-Chapter~\ref{evaluation-chapter} also validate our model since we can
+Chapter~\ref{evaluation-chapter} also validate our model since we
 check that they perform correctly in the intepreter model and their
 corresponding C code performs the same when evaluated.
 
