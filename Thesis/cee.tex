@@ -2975,6 +2975,21 @@ We have not included this in our model as it is not yet in a publicly
 available version of the SCJ specification and none of our examples
 require command line parameters.
 
+Some of our consultations with the SCJ expert group provided
+clarification that we used to shape our model but did not result in
+changes to the SCJ specification.
+An example of such a clarification is concerning what happens when an
+alarm with a past time is set on the system real-time clock:~it is an
+error although this is not made clear in the SCJ specification, since
+the response to it is implementation-defined.
+It is also not made clear whether the service of suspending a thread
+is available at SCJ level 1, but the implementation of an SCJ API
+class may make use of it though it is not made available to the
+application.
+We also checked with the SCJ expert group to ensure the pattern of
+communication between the scheduler and CEE is in line with the
+requirements of SCJ.
+
 In addition to the checking of our model against informal
 requirements, the model has been written using Community Z Tools
 (CZT)~\cite{malik2005}, which provides parsing and typechecking for
