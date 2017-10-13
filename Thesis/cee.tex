@@ -19,7 +19,9 @@ We describe both of these in this chapter
 and~\ref{cee-c-code-section}) while the compilation strategy for
 transforming between them is described in the next chapter.
 We begin with an overview of the CEE's structure in the next section.
-We conclude with some final considerations in
+After the presentation of our model, we discuss how it may be
+validated in Section~\ref{cee-validation-section} and then conclude
+with some final considerations in
 Section~\ref{cee-final-considerations-section}.
 
 \section{Overview}
@@ -3007,7 +3009,7 @@ There can be no proof of refinement between the C code and the
 interpreter model if one of them is incorrect.
 The examples of SCJ programs discussed in
 Chapter~\ref{evaluation-chapter} also validate our model since we
-check that they perform correctly in the intepreter model and their
+check that they perform correctly in the interpreter model and their
 corresponding C code performs the same when evaluated.
 
 Due to all these reasons, we can have confidence that our SCJVM model
@@ -3022,7 +3024,7 @@ of additional points of interest concerning the model.
 In this chapter we have presented our model of the core execution
 environment (CEE) of an SCJVM and specified the subset of Java
 bytecode covered in our model.
-Our bytecode subset consists of 14 instructions, which focus on method
+Our bytecode subset consists of 19 instructions, which focus on method
 invocation and the manipulation of objects, since those are core
 concepts of Java.
 We have omitted instructions for exception handling, since that would
@@ -3042,12 +3044,12 @@ The third and final component is the interpreter, which manages the
 SCJ mission model and coordinates execution.
 
 One interesting point about our model is the handling of special
-methods in the interpreter and launcher.
+methods in the $Interpreter$ and $Launcher$.
 This is necessary for several reasons: to allow methods running in the
 interpreter to access the SCJVM services defined in the previous
 chapter, to allow mission setup methods to interact with the launcher,
-and to permit entering of memory areas by interaction with the CEE
-memory component.
+and to permit entering of memory areas via interaction with the CEE
+object manager.
 The handling of special methods works by having the interpreter check
 upon invocation of a method whether it requires special handling.
 If it does require special handling, it is passed to the launcher to
@@ -3055,16 +3057,46 @@ be handled.
 The launcher then performs the required handling of the method,
 communicating with the SCJVM services and the memory as required.
 
-This model forms the first part of our compilation strategy, which is
-the specification of the source language.
-That is mostly included in the interpreter section as the semantics of
-the bytecode instructions, though handling of special methods passed
-to the launcher and the representation of classes and objects must
-also be considered in the compilation strategy.
-There are also other possible uses for the model presented in this
+After the compilation strategy has been applied, these special method
+calls become communications with the $Launcher$, representing calls to
+C functions in the SCJVM infrastructure.
+A similar system could be applied to handle native method calls,
+though we view that as future work since it is not a central part of
+the considerations for an SCJVM.
+Native methods would be represented via a shallow embedding in
+\Circus{}, in the same way as the output of the compilation, but would
+be present before compilation with special handling given to calls to
+them in the interpreter.
+
+The real-time requirements on SCJ scheduling also impose
+predictability, so that the bytecode instructions processed by the
+interpreter must appear to be atomic.
+This is specified in our model by only permitting thread switches
+inbetween bytecode instructions.
+This atomicity requirement is preserved throughout our compilation
+strategy, and the behaviour of polling for thread switches remains
+inbetween the C code corresponding to each bytecode instruction.
+
+However, an implementation is only required to have the same sequence
+of externally visible events as our C code model.
+This means that the thread switches will appear the same in a
+non-atomic implementation for most bytecode instructions.
+The bytecode instructions which have effects visible outside the
+$Interpreter$, which are the \texttt{new} instruction, the field
+access instructions, and instructions that invoke the special methods
+mentioned above, interact with shared memory and so do have an
+atomicity requirement.
+We can only verify an implementation that ensures such operations are
+not interrupted, usually by employing synchronisation.
+This is, of course, the case for icecap.
+
+The main purpose of this model is as a specification of the source and
+target languages for the compilation strategy presented in the next
 chapter.
-Since it is a model of an interpreting SCJVM, it could be used as a
-specification for an implementation of an interpreting SCJVM.
+However, there are also other possible uses for the model presented in
+this chapter.
+The model of an SCJVM before the compilation strategy could be used as
+a specification for an implementation of an interpreting SCJVM.
 Such an SCJVM could also incorporate the compilation strategy to
 provide a choice between interpreted and complied code, as in the
 icecap HVM.
@@ -3072,3 +3104,9 @@ Additionally, since error handling in our model is done via aborting
 execution, an identification of the conditions required for the model
 to be divergence-free would produce requirements that can be used for
 bytecode verification.
+
+Also, since the C code model only uses core features of C and is
+compatible with MISRA C, it can be compiled by most C compilers.
+So, existing work on verification of C compilers, such as that of
+CompCert~\cite{leroy2009a,leroy2009b}, can be used to ensure correct
+execution of the SCJ program.
