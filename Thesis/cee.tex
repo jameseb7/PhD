@@ -2984,6 +2984,14 @@ An example of such a clarification is concerning what happens when an
 alarm with a past time is set on the system real-time clock:~it is an
 error although this is not made clear in the SCJ specification, since
 the response to it is implementation-defined.
+We also discussed what should happen when a release of an event
+handler starts while a previous release is still running.
+It was established that a new release should start after the end of
+the existing release but that comes from information in RTSJ and so
+did not result in changes to the SCJ specification.
+Since we determined that this should be handled as part of the SCJ API
+implementation, it is not reflected in our model, which provides
+lower-level scheduling services that are used by the SCJ API.
 It is also not made clear whether the service of suspending a thread
 is available at SCJ level 1, but the implementation of an SCJ API
 class may make use of it though it is not made available to the
