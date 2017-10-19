@@ -2380,7 +2380,8 @@ described in Section~\ref{cee-launcher-section} to form a
 $CCEE_{bc,cs}$ process representing the CEE for a C program, as shown
 below.
 \begin{circus}
-  CEE_{bc,cs}(sid, initOrder) \circdef StructMan_{cs} \parallel CProg_{bc,cs} \parallel Launcher(sid, initOrder)
+  CCEE_{bc,cs}(sid, initOrder) \circdef StructMan_{cs} \parallel
+  CProg_{bc,cs} \parallel Launcher(sid, initOrder)
 \end{circus}
 The subscripts here indicate that the processes depend on the $bc$ and
 $cs$ constants used as inputs to the compilation strategy. 
