@@ -2977,29 +2977,30 @@ We have not included this in our model as it is not yet in a publicly
 available version of the SCJ specification and none of our examples
 require command line parameters.
 
-Some of our consultations with the SCJ expert group provided
+Some of our consultations with the SCJ expert group have provided
 clarification that we used to shape our model but did not result in
 changes to the SCJ specification.
 An example of such a clarification is concerning what happens when an
 alarm with a past time is set on the system real-time clock:~it is an
 error although this is not made clear in the SCJ specification, since
 the response to it is implementation-defined.
-We also discussed what should happen when a release of an event
+We have also discussed what should happen when a release of an event
 handler starts while a previous release is still running.
 It was established that a new release should start after the end of
-the existing release but that comes from information in RTSJ and so
+the existing release, but that comes from information in RTSJ and so
 did not result in changes to the SCJ specification.
-Since we determined that this should be handled as part of the SCJ API
-implementation, it is not reflected in our model, which provides
-lower-level scheduling services that are used by the SCJ API.
+Since we have determined that this should be handled as part of the
+SCJ API implementation, it is not reflected in our model, which
+provides lower-level scheduling services that are used by the SCJ API.
 It is also not made clear whether the service of suspending a thread
 is available at SCJ level 1, but the implementation of an SCJ API
 class may make use of it though it is not made available to the
 application.
-We also checked with the SCJ expert group to ensure the pattern of
-communication between the scheduler and CEE is in line with the
+We have also checked with the SCJ expert group to ensure the pattern
+of communication between the scheduler and CEE is in line with the
 requirements of SCJ.
 
+%TODO: check this later when we know how far we have got with the proofs
 In addition to the checking of our model against informal
 requirements, the model has been written using Community Z Tools
 (CZT)~\cite{malik2005}, which provides parsing and typechecking for
@@ -3010,9 +3011,9 @@ These proofs are domain check proofs and precondition proofs.
 They ensure that an implementation of the model is possible and give
 further assurance that the model is sensible.
 
-The compilation strategy presented in the next chapter also provides
-further validation of our model, since we can check if the expected C
-code is produced by our strategy.
+Finally, the compilation strategy presented in the next chapter
+provides further validation of our model, since we can check if the
+expected C code is produced by our strategy.
 There can be no proof of refinement between the C code and the
 interpreter model if one of them is incorrect.
 The examples of SCJ programs discussed in
@@ -3029,12 +3030,10 @@ of additional points of interest concerning the model.
 \section{Final Considerations}
 \label{cee-final-considerations-section}
 
-In this chapter we have presented our model of the core execution
-environment (CEE) of an SCJVM and specified the subset of Java
-bytecode covered in our model.
-Our bytecode subset consists of 19 instructions, which focus on method
-invocation and the manipulation of objects, since those are core
-concepts of Java.
+In this chapter we have presented our model of the CEE of an SCJVM and
+specified the subset of Java bytecode covered in our model.
+Our bytecode subset focusses on method invocation and the manipulation
+of objects, since those are core concepts of Java.
 We have omitted instructions for exception handling, since that would
 complicate the model while adding little power.
 Our subset is sufficiently small to permit reasoning, but large enough
@@ -3042,14 +3041,15 @@ to express a variety of SCJ programs.
 
 Our CEE model is divided in three components, with a \Circus{} process
 representing each component.
-The first component is the memory, which manages objects and the
-entering of backing stores, since the memory manager discussed in the
-previous chapter has no knowledge of the structure of objects.
-The second component of the CEE model is the interpreter, which
+The first component is the object manager, $ObjMan$, which manages
+objects and the entering of backing stores, since the memory manager
+discussed in the previous chapter has no knowledge of the structure of
+objects.
+The second component of the CEE model is the $Interpreter$, which
 describes the semantics of each of the bytecode instructions in our
 subset and provides for executing methods.
-The third and final component is the interpreter, which manages the
-SCJ mission model and coordinates execution.
+The third and final component is the $Launcher$, which manages the SCJ
+mission model and coordinates execution.
 
 One interesting point about our model is the handling of special
 methods in the $Interpreter$ and $Launcher$.
@@ -3060,20 +3060,19 @@ and to permit entering of memory areas via interaction with the CEE
 object manager.
 The handling of special methods works by having the interpreter check
 upon invocation of a method whether it requires special handling.
-If it does require special handling, it is passed to the launcher to
-be handled.
-The launcher then performs the required handling of the method,
-communicating with the SCJVM services and the memory as required.
+If it does, the invocation is passed to the launcher to be handled.
+The launcher then communicates with the SCJVM services and the object
+manager as required.
 
 After the compilation strategy has been applied, these special method
 calls become communications with the $Launcher$, representing calls to
 C functions in the SCJVM infrastructure.
-A similar system could be applied to handle native method calls,
-though we view that as future work since it is not a central part of
-the considerations for an SCJVM.
-Native methods would be represented via a shallow embedding in
-\Circus{}, in the same way as the output of the compilation, but would
-be present before compilation with special handling given to calls to
+A similar approach could be used to handle native method calls, though
+we view that as future work since it is not a central part of the
+considerations for an SCJVM.
+Native methods can be represented via a shallow embedding in
+\Circus{}, in the same way as the output of the compilation, but
+before compilation special handling can be carried out via calls to
 them in the interpreter.
 
 The real-time requirements on SCJ scheduling also impose
@@ -3085,36 +3084,39 @@ This atomicity requirement is preserved throughout our compilation
 strategy, and the behaviour of polling for thread switches remains
 inbetween the C code corresponding to each bytecode instruction.
 
-However, an implementation is only required to have the same sequence
-of externally visible events as our C code model.
-This means that the thread switches will appear the same in a
-non-atomic implementation for most bytecode instructions.
+However, a correct implementation is required only to have the same
+sequence of externally visible events as our C code model.
+Many of the bytecode instructions only affect the state of the current
+thread, and so a thread switch in the middle of such an instruction
+would appear to an external observer the same as a thread switch just
+before or after them.
 The bytecode instructions which have effects visible outside the
 $Interpreter$, which are the \texttt{new} instruction, the field
 access instructions, and instructions that invoke the special methods
-mentioned above, interact with shared memory and so do have an
-atomicity requirement.
-We can only verify an implementation that ensures such operations are
-not interrupted, usually by employing synchronisation.
+mentioned above, interact with shared memory.
+Thread switches must not occur in the middle of these instrcutions to
+avoid leaving shared memory in an erroneous state.
+Only an implementation that ensures such operations are not
+interrupted, usually by employing synchronisation, is a correct
+implementation of our model.
 This is, of course, the case for icecap.
 
-The main purpose of this model is as a specification of the source and
-target languages for the compilation strategy presented in the next
-chapter.
-However, there are also other possible uses for the model presented in
-this chapter.
-The model of an SCJVM before the compilation strategy could be used as
-a specification for an implementation of an interpreting SCJVM.
-Such an SCJVM could also incorporate the compilation strategy to
-provide a choice between interpreted and complied code, as in the
-icecap HVM.
+The main purpose of the model presented in this chapter is as a
+specification of the source and target languages for the compilation
+strategy presented in the next chapter.
+However, there are also other possible uses for it.
+For example, it can be used as a specification for an implementation
+of an interpreting SCJVM.
+Such an SCJVM could incorporate the compilation strategy to provide a
+choice between interpreted and complied code, as in the icecap HVM.
 Additionally, since error handling in our model is done via aborting
 execution, an identification of the conditions required for the model
-to be divergence-free would produce requirements that can be used for
+to be divergence-free produces requirements that can be used for
 bytecode verification.
 
-Also, since the C code model only uses core features of C and is
-compatible with MISRA C, it can be compiled by most C compilers.
-So, existing work on verification of C compilers, such as that of
-CompCert~\cite{leroy2009a,leroy2009b}, can be used to ensure correct
-execution of the SCJ program.
+%TODO: put in final considerations for compilation strategy
+% Since the C code model only uses core features of C and is compatible
+% with MISRA C, it can be compiled by most C compilers.
+% So, existing work on verification of C compilers, such as that of
+% CompCert~\cite{leroy2009a,leroy2009b}, can be used to ensure correct
+% execution of the SCJ program.
