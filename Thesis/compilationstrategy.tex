@@ -1,51 +1,25 @@
 \chapter{Compilation Strategy}
 \label{strategy-chapter}
 
-Our compilation strategy refines the $CEE(bc,cs,sid)$ process defined
-in Section~\ref{model-section} to obtain a process that includes a
-representation of C code as described in
-Section~\ref{embedding-section}. 
+Our compilation strategy refines the $CEE(bc,cs,sid, initOrder)$
+process defined in Section~\ref{cee-interpreter-section} to obtain the
+$CCEE_{bc,cs}(sid, initOrder)$ process described in
+Section~\ref{cee-c-code-section}.
 The overall theorem for the strategy is as follows.
 \begin{thm}[Compilation Strategy]\label{main-theorem}
   Given $bc$, $cs$ and $sid$, there are processes $StructMan_{cs}$ and
   $CProg_{bc,cs}$ such that,
   \begin{circus}
-    CEE(bc,cs,sid) \circrefines StructMan_{cs} \parallel
-    CProg_{bc,cs} \parallel Launcher(sid).
+    CEE(bc,cs,sid,initOrder) \circrefines StructMan_{cs} \parallel
+    CProg_{bc,cs} \parallel Launcher(sid, initOrder).
   \end{circus}
 \end{thm}
 $StructMan_{cs}$ manages objects represented by C structs that
 incorporate the class information from $cs$, refining the process
 $ObjMan$, which handles abstract objects.
-$StructMan_{cs}$ has Z schemas representing struct types for objects
-of each class.
-%
-% \begin{zed}
-%   InputHandlerObj == [classid : ClassID; input, buffer : ObjectID]
-% \end{zed}
-%
-These schemas contain the identifier $classid$ of the object's class, so
-that polymorphic method calls can be made by choice over the object's
-class. 
-There are also components for each of the fields of the
-object.
-
-The schema types for each type of object are combined into a single
-free type $ObjectStruct$.
-% \begin{zed}
-%   ObjectStruct ::= \dots | InputHandlerCon \ldata InputHandlerObj \rdata \dots
-% \end{zed}
-% We also define functions for casting between objects of different
-% classes and for obtaining the class identifier of any object. 
-% This matches the casting of object pointers in the C code that the
-% icecap HVM generates.
-$StructMan_{cs}$ contains a map from memory addresses managed by the
-SCJVM to the $ObjectStruct$ type, representing the C structs in
-memory, and provides access to the individual values in that map.
-
 $CProg_{bc,cs}$ refines the $Interpreter$, with the $Thr$ processes
-refined into the $CThr_{bc,cs}$ processes described in the previous
-section.
+refined into the $CThr_{bc,cs}$ processes described in
+Section~\ref{cee-c-program-subsection}.
 This means that the threads from SCJ are mapped onto threads in C,
 since we do not dictate a particular thread switch mechanism in either
 the source or target models.
