@@ -403,7 +403,32 @@ If a larger subset of bytecodes needs to be considered or the target C
 code needs to be modified, in the worst case, we need more or
 different \Circus{} compilation rules. 
 There will be no need to extend the \Circus{} model defining the C
-semantics. 
+semantics.
+
+As with previous applications of the algebraic approach, we divide our
+strategy into individual stages.
+However, since we are transforming from a low-level language to a
+high-level language, we eliminate a different part of the low-level
+machine state in each stage, rather than introducing it as in the
+previous applications of the approach.
+
+In the first stage, the program counter is eliminated, and the control
+flow constructs of C are introduced to represent the control flow
+instead.
+The second stage then eliminates the Java frame stack from the state,
+introducing C variables to store the information that was stored on
+the stack.
+The third and final stage of the strategy then replaces the
+unstructured representation of memory used in the virtual machine with
+a representation of C structs.
+
+Within each stage of the strategy, we specify a strategy for applying
+compilation rules.
+These compilation rules are algebraic laws, which we prove
+individually.
+Thus, we ensure each step of our compilation strategy is a correct
+transformation, as well as showing that the strategy as a whole
+performs the desired transformation.
 
 \section{Document Structure}
 
