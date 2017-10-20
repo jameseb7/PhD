@@ -1,9 +1,31 @@
 \chapter{Compilation Strategy}
 \label{strategy-chapter}
 
+In this chapter we describe our compilation strategy for refining SCJ
+bytecode to C code.
+We begin in Section~\ref{compilation-overview-section} with an
+overview of our compilation strategy.
+Then, in Section~\ref{compilation-preconditions-sections} we describe
+the requirements on the source program for the compilation strategy to
+be applied.
+Afterwards, we describe each stage of the strategy in a separate
+section.
+The first stage, which we call \emph{Elimination of Program Counter},
+is described in Section~\ref{elimination-of-program-counter-section}.
+The second stage, called \emph{Elimination of Frame Stack}, is
+described in Section~\ref{elimination-of-frame-stack-section}.
+Finally, the third stage of the strategy, which is called \emph{Data
+  Refinement of Objects}, is described in
+Section~\ref{data-refinement-of-objects-section}.
+We then conclude with some final considerations in
+Section~\ref{compilation-final-considerations-section}.
+
+\section{Overview}
+\label{compilation-overview-section}
+
 Our compilation strategy refines the $CEE(bc,cs,sid, initOrder)$
 process defined in Section~\ref{cee-interpreter-section} to obtain the
-$CCEE_{bc,cs}(sid, initOrder)$ process described in
+$CCEE_{bc,cs}(sid, initOrder)$ process in
 Section~\ref{cee-c-code-section}.
 The overall theorem for the strategy is as follows.
 \begin{thm}[Compilation Strategy]\label{main-theorem}
@@ -24,43 +46,40 @@ This means that the threads from SCJ are mapped onto threads in C,
 since we do not dictate a particular thread switch mechanism in either
 the source or target models.
 
-The compilation strategy is split into three stages, described in the
-following section.
+The compilation strategy is split into three stages.
 Each stage has a theorem describing it, for which the strategy acts as
 a proof.
 The proof of Theorem~\ref{main-theorem} is obtained by an application
 of the theorems for each stage.
-
-\section{Overview}
-
 Each stage of the compilation strategy handles a different part of the
 $Interpreter$ state:~the $pc$, the $frameStack$, and objects.
 They operate over each of the $Thr$ processes, managed by the SCJVM
 services.
 
-The first stage introduces the control constructs of the C code.
+The first stage, \emph{Elimination of Program Counter}, introduces the
+control constructs of the C code.
 This removes the use of $pc$ to determine the control flow of the
 program.
-The choice over $pc$ values is then replaced with a choice over method
+The choice over $pc$ values is replaced with a choice over method
 identifiers pointing to sequences of operations representing method
 bodies.
 
-In the second stage, the information contained on the $frameStack$,
-which is the local variable array and operand stack for each method,
-is introduced in the C code.
+In the second stage, \emph{Elimination of Frame Stack}, the
+information contained on the $frameStack$, which is the local variable
+array and operand stack for each method, is introduced in the C code.
 This is done by introducing variables and parameters to represent each
 method's local variables and operand stack slots.
 A data refinement is then used to transform each operation over the
 $frameStack$ to operate on the new variables.
 The $frameStack$ is then eliminated from the state.
 
-In the final stage, the class information from $cs$ is used to create
-a representation of C structs.
+In the final stage, \emph{Data Refinement of Objects}, the class
+information from $cs$ is used to create a representation of C structs.
 This means that $ObjMan$, which has a very abstract representation of
 objects, is transformed into $StructMan$.
-The process for each thread is then made to access the structs for the
-objects in a more concrete way that represents the way struct fields
-are accessed in C code.
+The process for each thread is then changed to access the structs for
+the objects in a more concrete way that represents the way struct
+fields are accessed in C code.
 
 % This yields final method actions of a form similar to that of the
 % example shown below, which is taken from the \texttt{InputHandler}
@@ -92,15 +111,6 @@ are accessed in C code.
 % $getObject$ channel and the function $castInputHandler$ is used to map
 % the $ObjectStruct$ returned from the communication to a type
 % representing an object of \texttt{InputHandler}.
-
-We describe each of these stages in a separate section.
-The first stage, which we call \emph{Elimination of Program Counter},
-is described in Section~\ref{elimination-of-program-counter-section}.
-The second stage, called \emph{Elimination of Frame Stack}, is
-described in Section~\ref{elimination-of-frame-stack-section}.
-Finally, third of the strategy, which is called \emph{Data Refinement
-  of Objects}, is described in
-Section~\ref{data-refinement-of-objects-section}.
 
 \section{Elimination of Program Counter}
 \label{elimination-of-program-counter-section}
