@@ -5,7 +5,7 @@ In this chapter we describe our compilation strategy for refining SCJ
 bytecode to C code.
 We begin in Section~\ref{compilation-overview-section} with an
 overview of our compilation strategy.
-Then, in Section~\ref{compilation-preconditions-sections} we describe
+Then, in Section~\ref{compilation-preconditions-section} we describe
 the requirements on the source program for the compilation strategy to
 be applied.
 Afterwards, we describe each stage of the strategy in a separate
@@ -2247,395 +2247,395 @@ part of the strategy.
   \label{example-simplified-control-flow-graph-figure}
 \end{figure}
 
-A method's control flow graph must be well-structured in order to
-properly introduce the control flow structures in this section.
-We define a rooted directed graph below. The definition is standard,
-but we include it here to introduce the terminology for the subsequent
-definition of what we mean by a structured control flow graph.
-\begin{defn}[Rooted Directed Graph] A \emph{rooted directed graph},
-$G$, is a triple $(V,E,r)$, where
-  \begin{itemize}
-  \item $V$ is a set of \emph{nodes},
-  \item $E$ is a set of ordered pairs of nodes in $V$, called
-\emph{edges}, and
-  \item $r$ is a node in $V$, called the \emph{root} of the graph.
-  \end{itemize} The first component of an edge is its \emph{source}
-and the second component is its \emph{target}. We say that an edge
-goes from its source to its target. The source of an edge going to a
-given node is said to be a \emph{predecessor} of that node; similarly,
-the target of an edge from a given node is a \emph{successor} of that
-node. For every node $n \in V$, the pair $(r,n)$ must be in the
-reflexive transitive closure of $E$, that is, there must be a path of
-edges from the root to any node in the graph.
+% A method's control flow graph must be well-structured in order to
+% properly introduce the control flow structures in this section.
+% We define a rooted directed graph below. The definition is standard,
+% but we include it here to introduce the terminology for the subsequent
+% definition of what we mean by a structured control flow graph.
+% \begin{defn}[Rooted Directed Graph] A \emph{rooted directed graph},
+% $G$, is a triple $(V,E,r)$, where
+%   \begin{itemize}
+%   \item $V$ is a set of \emph{nodes},
+%   \item $E$ is a set of ordered pairs of nodes in $V$, called
+% \emph{edges}, and
+%   \item $r$ is a node in $V$, called the \emph{root} of the graph.
+%   \end{itemize} The first component of an edge is its \emph{source}
+% and the second component is its \emph{target}. We say that an edge
+% goes from its source to its target. The source of an edge going to a
+% given node is said to be a \emph{predecessor} of that node; similarly,
+% the target of an edge from a given node is a \emph{successor} of that
+% node. For every node $n \in V$, the pair $(r,n)$ must be in the
+% reflexive transitive closure of $E$, that is, there must be a path of
+% edges from the root to any node in the graph.
   
-  In diagrams we represent the nodes as points or as the names of the
-nodes, the edges as arrows, and the root node as a node with an arrow
-pointing to it that does not come from another node. For a graph $G$,
-we refer to the set $T(G) = \{ n \in V | \forall m \in V.\; (n,m)
-\notin E\}$ of nodes with no edges coming from them as the set of
-\emph{end nodes} of the graph.
-\end{defn}
-Having defined a rooted directed graph, we now define what we mean by
-a structured control flow graph as a specific type of rooted directed
-graph.
-This definition we use for a structured program is based on Dijkstra's
-notion of program structure found in~\cite{dijkstra1972}.
-In that definition, there are a set of known program structures that
-are permitted, and these structures may contain further occurrences of
-the same structures (e.g.\ a conditional in which each branch is also
-a conditional).
-In order to formalise this, we first define what it means to replace a
-node with a graph.
-\begin{defn}[Node Replacement]
-  Given two rooted directed graphs $G$ and $H$, we say $G'$ is the
-  graph formed by \emph{replacing} a node $n$ of $G$ with $H$ if one
-  of the following cases holds:
-  \begin{itemize}
-  \item $n$ has no predecessors in $G$, $H$ has only one end node, and
-    \begin{itemize}
-    \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ except those going to or from
-      $n$,
-    \item $G'$ contains edges from the end node of $H$ to the
-      successors of $n$ in $G$, and
-    \item the root node of $H$ is the root node of $G'$;
-    \end{itemize}
-  \item $n$ has no successors in $G$, and
-    \begin{itemize}
-    \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ except those going to or from
-      $n$,
-    \item $G'$ contains edges from the predecessors $n$ in $G$ to the
-      root node of $H$, and
-    \item the root node of $G$ is the root node of $G'$;
-    \end{itemize}
-  \item $H$ has a single end node and
-    \begin{itemize}
-    \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ and the edges of $H$ except
-      those going to or from $n$,
-    \item $G'$ contains edges from the predecessors of $n$ in $G$ to
-      the root node of $H$,
-    \item $G'$ contains edges from the end node of $H$ to the
-      successors of $n$ in $G$, and
-    \item the root node of $G$ is the root node of $G'$;
-    \end{itemize}
-  \item $n$ has a single successor in $G$, $H$ has a single end
-    node, and
-    \begin{itemize}
-    \item $G'$ contains all the nodes of $H$ and $G$, except $n$ and
-      the end node of $H$,
-    \item $G'$ contains the edges of $G$ except those going to or from
-      $n$,
-    \item $G'$ contains edges from the predecessors of the end node of
-      $H$ to the successor of $n$ in $G$
-    \item $G'$ contains edges from the predecessors of $n$ in $G$ to
-      the root node of $H$, and
-    \item the root node of $G$ is the root node of $G'$.
-    \end{itemize}
-  \end{itemize}
-\end{defn}
-Each of the different cases of node replacement represents a different
-way of placing a graph inside another graph.
-We show an example of each of these cases in
-Figure~\ref{node-replacement-example-figures}.
-The example used is that of an \texttt{if}-\texttt{else} conditional,
-introduced later in Figure~\ref{if-else-figure}, with one of its nodes
-replaced with another \texttt{if}-\texttt{else} conditional whose
-nodes are shown in white.
+%   In diagrams we represent the nodes as points or as the names of the
+% nodes, the edges as arrows, and the root node as a node with an arrow
+% pointing to it that does not come from another node. For a graph $G$,
+% we refer to the set $T(G) = \{ n \in V | \forall m \in V.\; (n,m)
+% \notin E\}$ of nodes with no edges coming from them as the set of
+% \emph{end nodes} of the graph.
+% \end{defn}
+% Having defined a rooted directed graph, we now define what we mean by
+% a structured control flow graph as a specific type of rooted directed
+% graph.
+% This definition we use for a structured program is based on Dijkstra's
+% notion of program structure found in~\cite{dijkstra1972}.
+% In that definition, there are a set of known program structures that
+% are permitted, and these structures may contain further occurrences of
+% the same structures (e.g.\ a conditional in which each branch is also
+% a conditional).
+% In order to formalise this, we first define what it means to replace a
+% node with a graph.
+% \begin{defn}[Node Replacement]
+%   Given two rooted directed graphs $G$ and $H$, we say $G'$ is the
+%   graph formed by \emph{replacing} a node $n$ of $G$ with $H$ if one
+%   of the following cases holds:
+%   \begin{itemize}
+%   \item $n$ has no predecessors in $G$, $H$ has only one end node, and
+%     \begin{itemize}
+%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
+%     \item $G'$ contains the edges of $G$ except those going to or from
+%       $n$,
+%     \item $G'$ contains edges from the end node of $H$ to the
+%       successors of $n$ in $G$, and
+%     \item the root node of $H$ is the root node of $G'$;
+%     \end{itemize}
+%   \item $n$ has no successors in $G$, and
+%     \begin{itemize}
+%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
+%     \item $G'$ contains the edges of $G$ except those going to or from
+%       $n$,
+%     \item $G'$ contains edges from the predecessors $n$ in $G$ to the
+%       root node of $H$, and
+%     \item the root node of $G$ is the root node of $G'$;
+%     \end{itemize}
+%   \item $H$ has a single end node and
+%     \begin{itemize}
+%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
+%     \item $G'$ contains the edges of $G$ and the edges of $H$ except
+%       those going to or from $n$,
+%     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
+%       the root node of $H$,
+%     \item $G'$ contains edges from the end node of $H$ to the
+%       successors of $n$ in $G$, and
+%     \item the root node of $G$ is the root node of $G'$;
+%     \end{itemize}
+%   \item $n$ has a single successor in $G$, $H$ has a single end
+%     node, and
+%     \begin{itemize}
+%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$ and
+%       the end node of $H$,
+%     \item $G'$ contains the edges of $G$ except those going to or from
+%       $n$,
+%     \item $G'$ contains edges from the predecessors of the end node of
+%       $H$ to the successor of $n$ in $G$
+%     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
+%       the root node of $H$, and
+%     \item the root node of $G$ is the root node of $G'$.
+%     \end{itemize}
+%   \end{itemize}
+% \end{defn}
+% Each of the different cases of node replacement represents a different
+% way of placing a graph inside another graph.
+% We show an example of each of these cases in
+% Figure~\ref{node-replacement-example-figures}.
+% The example used is that of an \texttt{if}-\texttt{else} conditional,
+% introduced later in Figure~\ref{if-else-figure}, with one of its nodes
+% replaced with another \texttt{if}-\texttt{else} conditional whose
+% nodes are shown in white.
 
-The first case (Figure~\ref{root-replacement-figure}) is that of
-placing a graph at the start of another graph, i.e.\ replacing the
-root node of a graph that does not have a loop to its root node.
-The second case (Figure~\ref{end-replacement-figure}) is that of
-replacing one of the end nodes of a graph.
-The third case (Figure~\ref{internal-replacement-figure}) is that of
-replacing an internal node of the graph. 
-There must be a single end node in this case in order to have a source
-for the outgoing edges of the replaced node.
-At the end of one of the branches of a conditional, the end node of
-the replacing graph may be unified with the node at the end of the
-conditional.
-This represents such cases as loops and conditionals occurring at the
-end of a branch of a conditional, with no instructions following them
-inside the conditional, and is handled by the fourth case of node
-replacement, shown in Figure~\ref{branch-end-replacement-figure}.
-\begin{figure}
-  \begin{subfigure}{0.24\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \node at (0,2) (start) {};
-        \node at ( 0, 1)  (A) {$\circ$};
-        \node at (-1, 0)  (B) {$\circ$};
-        \node at ( 1, 0)  (C) {$\circ$};
-        \node at ( 0,-1)  (D) {$\circ$};
-        \node at (-1,-2)  (E) {$\bullet$};
-        \node at ( 1,-2)  (F) {$\bullet$};
-        \node at ( 0,-3)  (G) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-        \draw[-latex] (B) -- (D);
-        \draw[-latex] (C) -- (D);
-        \draw[-latex] (D) -- (E);
-        \draw[-latex] (D) -- (F);
-        \draw[-latex] (E) -- (G);
-        \draw[-latex] (F) -- (G);
-      \end{tikzpicture}
-    \caption{\centering root node\newline replacement}
-    \label{root-replacement-figure}
-  \end{center}
-  \end{subfigure}
-  \begin{subfigure}{0.24\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \node at (0,2) (start) {};
-        \node at ( 0, 1)  (A) {$\bullet$};
-        \node at (-1, 0)  (B) {$\bullet$};
-        \node at ( 1, 0)  (C) {$\bullet$};
-        \node at ( 0,-1)  (D) {$\circ$};
-        \node at (-1,-2)  (E) {$\circ$};
-        \node at ( 1,-2)  (F) {$\circ$};
-        \node at ( 0,-3)  (G) {$\circ$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-        \draw[-latex] (B) -- (D);
-        \draw[-latex] (C) -- (D);
-        \draw[-latex] (D) -- (E);
-        \draw[-latex] (D) -- (F);
-        \draw[-latex] (E) -- (G);
-        \draw[-latex] (F) -- (G);
-      \end{tikzpicture}
-    \caption{\centering end node\newline replacement}
-    \label{end-replacement-figure}
-    \end{center}
-  \end{subfigure}
-  \begin{subfigure}{0.24\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \node at (0,3) (start) {};
-        \node at ( 0, 2)  (A) {$\bullet$};
-        \node at (-1, 1)  (B) {$\circ$};
-        \node at ( 1, 0)  (C) {$\bullet$};
-        \node at (-2, 0)  (D) {$\circ$};
-        \node at ( 0, 0)  (E) {$\circ$};
-        \node at (-1,-1)  (F) {$\circ$};
-        \node at ( 0,-2)  (G) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-        \draw[-latex] (B) -- (D);
-        \draw[-latex] (B) -- (E);
-        \draw[-latex] (D) -- (F);
-        \draw[-latex] (E) -- (F);
-        \draw[-latex] (F) -- (G);
-        \draw[-latex] (C) -- (G);
-      \end{tikzpicture}
-      \caption{\centering internal node\newline replacement}
-      \label{internal-replacement-figure}
-    \end{center}
-  \end{subfigure}
-  \begin{subfigure}{0.24\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \node at (0,3) (start) {};
-        \node at ( 0, 2)  (A) {$\bullet$};
-        \node at (-1, 1)  (B) {$\circ$};
-        \node at ( 1, 0)  (C) {$\bullet$};
-        \node at (-2, 0)  (D) {$\circ$};
-        \node at ( 0, 0)  (E) {$\circ$};
-        \node at ( 0,-2)  (F) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-        \draw[-latex] (B) -- (D);
-        \draw[-latex] (B) -- (E);
-        \draw[-latex] (D) -- (F);
-        \draw[-latex] (E) -- (F);
-        \draw[-latex] (C) -- (F);
-      \end{tikzpicture}
-    \caption{\centering branch end\newline replacement}
-    \label{branch-end-replacement-figure}
-  \end{center}
-  \end{subfigure}
-  \caption{Examples of the different cases of node replacement}
-  \label{node-replacement-example-figures}
-\end{figure}
+% The first case (Figure~\ref{root-replacement-figure}) is that of
+% placing a graph at the start of another graph, i.e.\ replacing the
+% root node of a graph that does not have a loop to its root node.
+% The second case (Figure~\ref{end-replacement-figure}) is that of
+% replacing one of the end nodes of a graph.
+% The third case (Figure~\ref{internal-replacement-figure}) is that of
+% replacing an internal node of the graph. 
+% There must be a single end node in this case in order to have a source
+% for the outgoing edges of the replaced node.
+% At the end of one of the branches of a conditional, the end node of
+% the replacing graph may be unified with the node at the end of the
+% conditional.
+% This represents such cases as loops and conditionals occurring at the
+% end of a branch of a conditional, with no instructions following them
+% inside the conditional, and is handled by the fourth case of node
+% replacement, shown in Figure~\ref{branch-end-replacement-figure}.
+% \begin{figure}
+%   \begin{subfigure}{0.24\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \node at (0,2) (start) {};
+%         \node at ( 0, 1)  (A) {$\circ$};
+%         \node at (-1, 0)  (B) {$\circ$};
+%         \node at ( 1, 0)  (C) {$\circ$};
+%         \node at ( 0,-1)  (D) {$\circ$};
+%         \node at (-1,-2)  (E) {$\bullet$};
+%         \node at ( 1,-2)  (F) {$\bullet$};
+%         \node at ( 0,-3)  (G) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%         \draw[-latex] (B) -- (D);
+%         \draw[-latex] (C) -- (D);
+%         \draw[-latex] (D) -- (E);
+%         \draw[-latex] (D) -- (F);
+%         \draw[-latex] (E) -- (G);
+%         \draw[-latex] (F) -- (G);
+%       \end{tikzpicture}
+%     \caption{\centering root node\newline replacement}
+%     \label{root-replacement-figure}
+%   \end{center}
+%   \end{subfigure}
+%   \begin{subfigure}{0.24\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \node at (0,2) (start) {};
+%         \node at ( 0, 1)  (A) {$\bullet$};
+%         \node at (-1, 0)  (B) {$\bullet$};
+%         \node at ( 1, 0)  (C) {$\bullet$};
+%         \node at ( 0,-1)  (D) {$\circ$};
+%         \node at (-1,-2)  (E) {$\circ$};
+%         \node at ( 1,-2)  (F) {$\circ$};
+%         \node at ( 0,-3)  (G) {$\circ$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%         \draw[-latex] (B) -- (D);
+%         \draw[-latex] (C) -- (D);
+%         \draw[-latex] (D) -- (E);
+%         \draw[-latex] (D) -- (F);
+%         \draw[-latex] (E) -- (G);
+%         \draw[-latex] (F) -- (G);
+%       \end{tikzpicture}
+%     \caption{\centering end node\newline replacement}
+%     \label{end-replacement-figure}
+%     \end{center}
+%   \end{subfigure}
+%   \begin{subfigure}{0.24\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \node at (0,3) (start) {};
+%         \node at ( 0, 2)  (A) {$\bullet$};
+%         \node at (-1, 1)  (B) {$\circ$};
+%         \node at ( 1, 0)  (C) {$\bullet$};
+%         \node at (-2, 0)  (D) {$\circ$};
+%         \node at ( 0, 0)  (E) {$\circ$};
+%         \node at (-1,-1)  (F) {$\circ$};
+%         \node at ( 0,-2)  (G) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%         \draw[-latex] (B) -- (D);
+%         \draw[-latex] (B) -- (E);
+%         \draw[-latex] (D) -- (F);
+%         \draw[-latex] (E) -- (F);
+%         \draw[-latex] (F) -- (G);
+%         \draw[-latex] (C) -- (G);
+%       \end{tikzpicture}
+%       \caption{\centering internal node\newline replacement}
+%       \label{internal-replacement-figure}
+%     \end{center}
+%   \end{subfigure}
+%   \begin{subfigure}{0.24\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \node at (0,3) (start) {};
+%         \node at ( 0, 2)  (A) {$\bullet$};
+%         \node at (-1, 1)  (B) {$\circ$};
+%         \node at ( 1, 0)  (C) {$\bullet$};
+%         \node at (-2, 0)  (D) {$\circ$};
+%         \node at ( 0, 0)  (E) {$\circ$};
+%         \node at ( 0,-2)  (F) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%         \draw[-latex] (B) -- (D);
+%         \draw[-latex] (B) -- (E);
+%         \draw[-latex] (D) -- (F);
+%         \draw[-latex] (E) -- (F);
+%         \draw[-latex] (C) -- (F);
+%       \end{tikzpicture}
+%     \caption{\centering branch end\newline replacement}
+%     \label{branch-end-replacement-figure}
+%   \end{center}
+%   \end{subfigure}
+%   \caption{Examples of the different cases of node replacement}
+%   \label{node-replacement-example-figures}
+% \end{figure}
 
-With node replacement defined, we can now define what we mean by a
-structure control flow graph in terms of node replacement and the structured graphs shown in Figure~\ref{structured-cfg-figures}
+% With node replacement defined, we can now define what we mean by a
+% structure control flow graph in terms of node replacement and the structured graphs shown in Figure~\ref{structured-cfg-figures}
 
-\begin{defn}[Structured Control Flow Graph]
-  If $G$ is a rooted directed graph, we say $G$ is a \emph{structured
-    control flow graph} if $G$ is the trivial graph (the graph with a
-  single node, which is also the root, and no edges) or if $G$ can be
-  created by starting with the trivial graph and performing a finite
-  number of node replacements to replace nodes with graphs of the
-  forms shown in Figure~\ref{structured-cfg-figures}.
-\end{defn}
+% \begin{defn}[Structured Control Flow Graph]
+%   If $G$ is a rooted directed graph, we say $G$ is a \emph{structured
+%     control flow graph} if $G$ is the trivial graph (the graph with a
+%   single node, which is also the root, and no edges) or if $G$ can be
+%   created by starting with the trivial graph and performing a finite
+%   number of node replacements to replace nodes with graphs of the
+%   forms shown in Figure~\ref{structured-cfg-figures}.
+% \end{defn}
 
-% In particular, we target the requirements imposed by
-% MISRA-C~\cite{misra2012}.
-% This means that we do not allow \texttt{goto}s in the final C code and
-% that loops must have a simple structure, with no use of
-% \texttt{continue} and a single exit point.
-% A single return per method is also a requirement of MISRA-C, but in a
-% control flow graph there is no way to distinguish between a
-% conditional return in the middle of a method and a conditional at the
-% end of a method of which both branches are returns.
-% Thus we treat all occurrences of returns in the middle of functions in
-% the second way, which can then be treated as a single return at the
-% end of the function in the translation to C code by extracting the
-% returns from each branch.
+% % In particular, we target the requirements imposed by
+% % MISRA-C~\cite{misra2012}.
+% % This means that we do not allow \texttt{goto}s in the final C code and
+% % that loops must have a simple structure, with no use of
+% % \texttt{continue} and a single exit point.
+% % A single return per method is also a requirement of MISRA-C, but in a
+% % control flow graph there is no way to distinguish between a
+% % conditional return in the middle of a method and a conditional at the
+% % end of a method of which both branches are returns.
+% % Thus we treat all occurrences of returns in the middle of functions in
+% % the second way, which can then be treated as a single return at the
+% % end of the function in the translation to C code by extracting the
+% % returns from each branch.
 
-\begin{figure}
-  \begin{subfigure}{0.26\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-0.5,-1) rectangle (0.5,2);
-        \node at (0,1.7) (start) {};
-        \node at (0,1)  (A) {$\bullet$};
-        \node at (0,-1) (B) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-      \end{tikzpicture}
-    \end{center}
-    \caption{sequential composition}
-    \label{sequence-figure}
-  \end{subfigure}
-  \begin{subfigure}{0.23\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-1,-1) rectangle (0,2);
-        \node at (0,1.7) (start) {};
-        \node at (0,1)  (A) {$\bullet$};
-        \node at (-1,0) (B) {$\bullet$};
-        \node at (0,-1) (C) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-        \draw[-latex] (B) -- (C);
-      \end{tikzpicture}
-    \end{center}
-    \caption{\texttt{if} conditional}
-    \label{if-figure}
-  \end{subfigure}
-  \begin{subfigure}{0.23\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-1,-1) rectangle (1,2);
-        \node at (0,1.7) (start) {};
-        \node at (0,1)  (A) {$\bullet$};
-        \node at (1,0)  (B) {$\bullet$};
-        \node at (-1,0) (C) {$\bullet$};
-        \node at (0,-1) (D) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-        \draw[-latex] (B) -- (D);
-        \draw[-latex] (C) -- (D);
-      \end{tikzpicture}
-    \end{center}
-    \caption{\texttt{if}-\texttt{else} conditional}
-    \label{if-else-figure}
-  \end{subfigure}
-  \begin{subfigure}{0.23\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-1,0) rectangle (1,3);
-        \node at (0,1.7) (start) {};
-        \node at (0,1)  (A) {$\bullet$};
-        \node at (1,0)  (B) {$\bullet$};
-        \node at (-1,0) (C) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) -- (B);
-        \draw[-latex] (A) -- (C);
-      \end{tikzpicture}
-    \end{center}
-    \caption{divergent conditional}
-    \label{divergent-figure}
-  \end{subfigure} 
-  \\
-  \begin{subfigure}{0.33\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-1,-1) rectangle (1,2);
-        \node at (0,1.7) (start) {};
-        \node at (0,1) (A) {$\bullet$};
-        \node at (0,-1) (B) {$\bullet$};
-        \node at (1,-1) (C) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) to (B);
-        \draw[-latex] (A) to (C);
-        \draw[-latex] (B) to[in=200,out=150] (A);
-      \end{tikzpicture}
-    \end{center}
-    \caption{\texttt{while} loop}
-    \label{while-figure}
-  \end{subfigure}
-  \begin{subfigure}{0.33\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-1,0) rectangle (1,3);
-        \node at (0,1.7) (start) {};
-        \node at (0,1)  (A) {$\bullet$};
-        \node at (1,0)  (B) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) to (B);
-        \draw[-latex] (A) to[out=235,in=180,looseness=10] (A);
-      \end{tikzpicture}
-    \end{center}
-    \caption{\texttt{do}-\texttt{while} loop}
-    \label{do-while-figure}
-  \end{subfigure}
-  \begin{subfigure}{0.33\textwidth}
-    \begin{center}
-      \begin{tikzpicture}
-        \useasboundingbox (-1,0) rectangle (1,3);
-        \node at (0,1.7) (start) {};
-        \node at (0,1)  (A) {$\bullet$};
-        \draw[-latex] (start) -- (A);
-        \draw[-latex] (A) to[out=270,in=180,looseness=10] (A);
-      \end{tikzpicture}
-    \end{center}
-    \caption{infinite loop}
-    \label{infinite-loop-figure}
-  \end{subfigure}
-  \caption{Control flow graphs of program structures}
-  \label{structured-cfg-figures}
-\end{figure}
+% \begin{figure}
+%   \begin{subfigure}{0.26\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-0.5,-1) rectangle (0.5,2);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1)  (A) {$\bullet$};
+%         \node at (0,-1) (B) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{sequential composition}
+%     \label{sequence-figure}
+%   \end{subfigure}
+%   \begin{subfigure}{0.23\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-1,-1) rectangle (0,2);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1)  (A) {$\bullet$};
+%         \node at (-1,0) (B) {$\bullet$};
+%         \node at (0,-1) (C) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%         \draw[-latex] (B) -- (C);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{\texttt{if} conditional}
+%     \label{if-figure}
+%   \end{subfigure}
+%   \begin{subfigure}{0.23\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-1,-1) rectangle (1,2);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1)  (A) {$\bullet$};
+%         \node at (1,0)  (B) {$\bullet$};
+%         \node at (-1,0) (C) {$\bullet$};
+%         \node at (0,-1) (D) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%         \draw[-latex] (B) -- (D);
+%         \draw[-latex] (C) -- (D);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{\texttt{if}-\texttt{else} conditional}
+%     \label{if-else-figure}
+%   \end{subfigure}
+%   \begin{subfigure}{0.23\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-1,0) rectangle (1,3);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1)  (A) {$\bullet$};
+%         \node at (1,0)  (B) {$\bullet$};
+%         \node at (-1,0) (C) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) -- (B);
+%         \draw[-latex] (A) -- (C);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{divergent conditional}
+%     \label{divergent-figure}
+%   \end{subfigure} 
+%   \\
+%   \begin{subfigure}{0.33\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-1,-1) rectangle (1,2);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1) (A) {$\bullet$};
+%         \node at (0,-1) (B) {$\bullet$};
+%         \node at (1,-1) (C) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) to (B);
+%         \draw[-latex] (A) to (C);
+%         \draw[-latex] (B) to[in=200,out=150] (A);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{\texttt{while} loop}
+%     \label{while-figure}
+%   \end{subfigure}
+%   \begin{subfigure}{0.33\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-1,0) rectangle (1,3);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1)  (A) {$\bullet$};
+%         \node at (1,0)  (B) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) to (B);
+%         \draw[-latex] (A) to[out=235,in=180,looseness=10] (A);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{\texttt{do}-\texttt{while} loop}
+%     \label{do-while-figure}
+%   \end{subfigure}
+%   \begin{subfigure}{0.33\textwidth}
+%     \begin{center}
+%       \begin{tikzpicture}
+%         \useasboundingbox (-1,0) rectangle (1,3);
+%         \node at (0,1.7) (start) {};
+%         \node at (0,1)  (A) {$\bullet$};
+%         \draw[-latex] (start) -- (A);
+%         \draw[-latex] (A) to[out=270,in=180,looseness=10] (A);
+%       \end{tikzpicture}
+%     \end{center}
+%     \caption{infinite loop}
+%     \label{infinite-loop-figure}
+%   \end{subfigure}
+%   \caption{Control flow graphs of program structures}
+%   \label{structured-cfg-figures}
+% \end{figure}
 
-The first structure (Figure~\ref{sequence-figure}) is that of simple
-sequential composition, with an edge going from the root node to a
-single end node.
-The next three structures
-(Figure~\ref{if-figure}--\subref{divergent-figure}) are conditional
-structures:~Figure~\ref{if-figure} shows an \texttt{if} statement with
-no \texttt{else} clause, Figure~\ref{if-else-figure} shows an
-\texttt{if} statement with an \texttt{else} clause, and
-Figure~\ref{divergent-figure} shows a conditional in which both
-branches end with a (infinite) loop or a return so that there is
-nothing following the conditional, we refer to such conditionals as
-divergent conditionals since the branches do not come back together.
-The remaining three structures
-(Figure~\ref{while-figure}--\subref{infinite-loop-figure}) are all
-loop structures:~Figure~\ref{while-figure} shows a loop in which the
-loop condition is checked at the beginning (a \texttt{while} loop),
-Figure~\ref{do-while-figure} show a loop in which the loop condition
-is checked at the end (a \texttt{do}-\texttt{while} loop), and
-Figure~\ref{infinite-loop-figure} shows a loop which loops
-unconditionally, forming an infinite loop.
+% The first structure (Figure~\ref{sequence-figure}) is that of simple
+% sequential composition, with an edge going from the root node to a
+% single end node.
+% The next three structures
+% (Figure~\ref{if-figure}--\subref{divergent-figure}) are conditional
+% structures:~Figure~\ref{if-figure} shows an \texttt{if} statement with
+% no \texttt{else} clause, Figure~\ref{if-else-figure} shows an
+% \texttt{if} statement with an \texttt{else} clause, and
+% Figure~\ref{divergent-figure} shows a conditional in which both
+% branches end with a (infinite) loop or a return so that there is
+% nothing following the conditional, we refer to such conditionals as
+% divergent conditionals since the branches do not come back together.
+% The remaining three structures
+% (Figure~\ref{while-figure}--\subref{infinite-loop-figure}) are all
+% loop structures:~Figure~\ref{while-figure} shows a loop in which the
+% loop condition is checked at the beginning (a \texttt{while} loop),
+% Figure~\ref{do-while-figure} show a loop in which the loop condition
+% is checked at the end (a \texttt{do}-\texttt{while} loop), and
+% Figure~\ref{infinite-loop-figure} shows a loop which loops
+% unconditionally, forming an infinite loop.
 
-From this definition it is clear that the control flow graph of our
-example, shown in
-Figure~\ref{example-simplified-control-flow-graph-figure}, is a
-structured control flow graph.
-It may be obtained from the trivial graph by replacing the node with a
-sequential composition, replacing the end node of the sequential
-composition with a \texttt{while} loop, and then replacing the node
-inside the \texttt{while} loop with an \texttt{if}-\texttt{else}
-conditional.
+% From this definition it is clear that the control flow graph of our
+% example, shown in
+% Figure~\ref{example-simplified-control-flow-graph-figure}, is a
+% structured control flow graph.
+% It may be obtained from the trivial graph by replacing the node with a
+% sequential composition, replacing the end node of the sequential
+% composition with a \texttt{while} loop, and then replacing the node
+% inside the \texttt{while} loop with an \texttt{if}-\texttt{else}
+% conditional.
 
 In the strategy we check that the control flow graph is structured
 when we construct it in this section, and abort the strategy if it
@@ -3557,3 +3557,5 @@ $Thr$ process.
 \section{Data Refinement of Objects}
 \label{data-refinement-of-objects-section}
 
+\section{Final Considerations}
+\label{compilation-final-considerations-section}
