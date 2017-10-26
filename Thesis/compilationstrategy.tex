@@ -526,7 +526,7 @@ This covers each of the four cases shown above.
       $n$,
     \item $G'$ contains edges from the end node of $H$ to the
       successors of $n$ in $G$, and
-    \item the root node of $H$ is the root node of $G'$;
+    \item the root node of $G'$ is the root node of $H$;
     \end{itemize}
   \item $n$ has no successors in $G$, and
     \begin{itemize}
@@ -535,7 +535,8 @@ This covers each of the four cases shown above.
       $n$,
     \item $G'$ contains edges from the predecessors $n$ in $G$ to the
       root node of $H$, and
-    \item the root node of $G$ is the root node of $G'$;
+    \item the root node of $G'$ is the root node of $G$, or, if $n$ is
+      the root node of $G$, the root node of $H$;
     \end{itemize}
   \item $H$ has a single end node and
     \begin{itemize}
@@ -546,7 +547,8 @@ This covers each of the four cases shown above.
       the root node of $H$,
     \item $G'$ contains edges from the end node of $H$ to the
       successors of $n$ in $G$, and
-    \item the root node of $G$ is the root node of $G'$;
+    \item the root node of $G'$ is the root node of $G$, or, if $n$ is
+      the root node of $G$, the root node of $H$;
     \end{itemize}
   \item $n$ has a single successor in $G$, $H$ has a single end
     node, and
@@ -559,7 +561,8 @@ This covers each of the four cases shown above.
       $H$ to the successor of $n$ in $G$
     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
       the root node of $H$, and
-    \item the root node of $G$ is the root node of $G'$.
+    \item the root node of $G'$ is the root node of $G$, or, if $n$ is
+      the root node of $G$, the root node of $H$.
     \end{itemize}
   \end{itemize}
 \end{defn}
