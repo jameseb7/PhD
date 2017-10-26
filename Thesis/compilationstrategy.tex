@@ -583,6 +583,16 @@ structured graphs shown in Figure~\ref{structured-cfg-figures}
 Before applying the strategy, it must be ensured that the control flow
 graph for each method is well-structured according to this definition.
 
+Finally, we require that no method in the program recurses, either
+directly or indirectly.
+This is because recursion is not recommended in safety-critical
+applications because of the potential for unpredictable failure due to
+stack overflow, and it is not allowed in MISRA-C for that reason.
+Imposing this requirement allows us to handle methods individually
+when introducing their control flow, without considering circular
+dependencies between them.
+
+
 We now proceed to describe each of the stages of the strategy in
 detail, beginning with the \emph{Elimination of Program Counter} stage
 in the next section.
@@ -1672,13 +1682,6 @@ conditional and method resolution repeated until every method has been
 separated out in this way.
 This will always terminate, since we do not allow recursion so there
 will be no loops in dependencies between methods.
-
-% We do not allow recursion to ensure this terminates, since this
-% requires all the methods called by a given method to be resolved
-% before the method itself can be resolved.
-% This is a sensible restriction since recursion is not normally allowed
-% in safety-critical applications because of the potential for
-% unpredictable failure due to stack overflow.
 
 The $Running$ action of our example at the end of the loop, when all
 loops and conditionals have been introduced, all the methods have been
