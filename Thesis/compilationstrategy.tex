@@ -587,10 +587,10 @@ in the next section.
 \section{Elimination of Program Counter}
 \label{elimination-of-program-counter-section}
 
-This stage eliminates $pc$ from the state of each
-thread's process, $Thr(bc,cs,t)$, introducing the control flow constructs of C in the
-process. 
-It may be summarised by the following theorem.
+The first stage eliminates $pc$ from the state of each thread's
+process, $Thr(bc,cs,t)$, introducing the control flow constructs of C
+in the process. 
+It is summarised by the following theorem.
 %
 \begin{thm}[Elimination of Program Counter]\label{thread-splitting-thm}
   \begin{circus}
@@ -620,15 +620,15 @@ Since there are finitely many bytecode instructions in a method, a
 loop or return must eventually be reached.
 Failure to do so would lead to an instruction beyond the end of the
 method, which is forbidden by the structural restrictions on Java
-bytecode~\cite{lindholm2014}. 
-We assume bytecode input to our strategy will have undergone bytecode
-verification so this cannot happen.
+bytecode that are checked during bytecode verification. 
+% We assume bytecode input to our strategy will have undergone bytecode
+% verification so this cannot happen.
 
 When a method is complete, it can be defined by a separate \Circus{}
 action.
-When the code for all the methods has been split in this way, the
-choice of bytecode instruction using the program counter value can be
-removed and replaced with a choice over method identifiers.
+When the code for all the methods has been separated out in this way,
+the choice of bytecode instruction using the program counter value can
+be removed and replaced with a choice over method identifiers.
 Thus dependency on the program counter can be completely removed,
 allowing it to be eliminated from the state of $Thr$.
 
@@ -639,10 +639,13 @@ It begins at line~\ref{algorithm-expand-bytecode} by expanding the
 \Circus{} definitions of the bytecode instructions from the $bc$ map
 into the $Running$ action, pulling out the program counter updates so
 that they can be more easily manipulated by the strategy.
-In line~\ref{algorithm-introduce-forward-sequence}, instructions that
-are forward \texttt{goto}s or are simply followed by execution of the
-bytecode at the next $pc$ value are sequenced with the instructions
-following them.
+In line~\ref{algorithm-introduce-forward-sequence}, simple sequential
+compositions, that is, those that do not involve handling loops or
+conditionals, are introduced.
+% instructions that
+% are followed by the execution of a bytecode instruction that is not
+% part of the start or end of a conditional or loop are sequenced with
+% the instructions following them.
 After that, for each method, its loops and conditionals are introduced
 in line~\ref{algorithm-introduce-loops-and-conditionals}. 
 Afterwards, any complete methods are separated out, in
@@ -732,6 +735,7 @@ shown in Figure~\ref{example-code-figure}.
   \label{example-code-figure}
 \end{figure}
 \begin{figure}[p]
+  \begin{minipage}{\linewidth}
   \scriptsize
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
@@ -779,6 +783,7 @@ shown in Figure~\ref{example-code-figure}.
       \t2 handleAsyncEvent \mapsto 3, \\
       \t2 APEHinit \mapsto 5, \\
       \t1 \}, \\
+      \t1 staticMethods == \{ f \} \\
       \t1 fields == \{\}, \\
       \t1 staticFields == \{\} \\
       \rblot
@@ -849,9 +854,10 @@ shown in Figure~\ref{example-code-figure}.
         \t1 50 \mapsto areturn, \\
         \t1 {} \cdots {} \\
         \}
-      \end{axdef}
-      \vspace{0.1cm}
+    \end{axdef}
+    \vspace{0.1cm}
   \end{vwcol}
+  \end{minipage}
   \caption{The \Circus{} code corresponding to our example program}
   \label{example-model-figure}
 \end{figure}%
@@ -1105,24 +1111,25 @@ sequential composition is introduced for instructions that do not
 affect the sequential flow of the program.
 Such instructions are identified by considering the control flow graph
 of the program and locating nodes with a single outgoing edge going to
-target node exactly one incoming edge.
+target node with exactly one incoming edge.
 The introduction of sequential composition is performed by unrolling
 the loop in $Running$ to introduce the control flow following each of
 these instructions.
 This causes the instruction to be sequentially composed with the next
-instruction, with $Poll$ in between to allow for thread switches
+instruction, with $Poll$ inbetween to allow for thread switches
 between instructions.
 This is performed exhaustively to get the code in the form shown in
 Figure~\ref{forward-sequence-introduction-example-figure}, where the
 choice over $pc$ has sequences of instructions collected together at
 the point where they start, up to the point at which a more complex
 control flow (such as a method call, conditional or a loop) occurs.
-The introduction of sequential composition is described in more detail in
-Section~\ref{introduce-forward-sequence-subsection}, where we define
-the \Call{IntroduceSequentialComposition}{} procedure.
+The introduction of sequential composition is described in more detail
+in Section~\ref{introduce-forward-sequence-subsection}, where we
+define the \Call{IntroduceSequentialComposition}{} procedure.
 
-Handling the remaining constructs requires consideration of dependency
-between methods to ensure method calls can be resolved correctly.
+Handling the remaining constructs requires consideration of
+dependencies between methods to ensure method calls can be resolved
+correctly.
 We say a method call is \emph{resolved} when the method invocation
 bytecode has been placed in sequential composition with a call to a
 \Circus{} action containing the body of the method being invoked,
@@ -1496,7 +1503,7 @@ An example of this is the occurrence of $HandleInvokestaticEPC(46)$ in
 the sequence of actions at $pc = 21$.
 As can be seen from Figure~\ref{example-model-figure}, the constant
 pool index $46$ corresponds to the method identifier for the method
-\texttt{f()} of the \texttt{TPK}.
+\texttt{f()} of \texttt{TPK}.
 The sequence of instructions corresponding to this method is in an
 action $TPK\_F$, created in the previous step, on
 line~\ref{algorithm-separate-complete-methods}.
@@ -1606,7 +1613,7 @@ procedures.
     % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
     \t2 {} \cdots {} \\
-    \t2 {} \circelse pc = 43 \circthen F \\
+    \t2 {} \circelse pc = 43 \circthen TPK\_F \\
     \t2 {} \cdots {} \\
     \t2 \circfi \circseq Poll \circseq Running \\
     \t1 \circfi
@@ -1657,16 +1664,18 @@ As mentioned previously, these steps are then repeated, in the loop
 beginning at line~\ref{algorithm-method-loop} to introduce the loops
 and conditionals in methods that would otherwise have unresolved
 method calls in the middle of loops and conditionals.
-Afterwards, those methods can be separated out and this loop, conditional and
-method resolution repeated until every method has been separated out
-in this way.
+Afterwards, those methods can be separated out and this loop,
+conditional and method resolution repeated until every method has been
+separated out in this way.
+This will always terminate, since we do not allow recursion so there
+will be no loops in dependencies between methods.
 
-We do not allow recursion to ensure this terminates, since this
-requires all the methods called by a given method to be resolved
-before the method itself can be resolved.
-This is a sensible restriction since recursion is not normally allowed
-in safety-critical applications because of the potential for
-unpredictable failure due to stack overflow.
+% We do not allow recursion to ensure this terminates, since this
+% requires all the methods called by a given method to be resolved
+% before the method itself can be resolved.
+% This is a sensible restriction since recursion is not normally allowed
+% in safety-critical applications because of the potential for
+% unpredictable failure due to stack overflow.
 
 The $Running$ action of our example at the end of the loop, when all
 loops and conditionals have been introduced, all the methods have been
