@@ -5,9 +5,9 @@ In this chapter we describe our compilation strategy for refining SCJ
 bytecode to C code.
 We begin in Section~\ref{compilation-overview-section} with an
 overview of our compilation strategy.
-Then, in Section~\ref{compilation-preconditions-section} we describe
-the requirements on the source program for the compilation strategy to
-be applied.
+Then, in Section~\ref{compilation-assumptions-section} we describe the
+requirements on the source program for the compilation strategy to be
+applied.
 Afterwards, we describe each stage of the strategy in a separate
 section.
 The first stage, which we call \emph{Elimination of Program Counter},
@@ -27,7 +27,8 @@ Our compilation strategy refines the $CEE(bc,cs,sid, initOrder)$
 process defined in Section~\ref{cee-interpreter-section} to obtain the
 $CCEE_{bc,cs}(sid, initOrder)$ process in
 Section~\ref{cee-c-code-section}.
-The overall theorem for the strategy is as follows.
+The overall theorem for the strategy, and, therefore, the main result
+presented in this chapter, is as follows.
 \begin{thm}[Compilation Strategy]\label{main-theorem}
   Given $bc$, $cs$ and $sid$, there are processes $StructMan_{cs}$ and
   $CProg_{bc,cs}$ such that,
@@ -49,8 +50,9 @@ the source or target models.
 The compilation strategy is split into three stages.
 Each stage has a theorem describing it, for which the strategy acts as
 a proof.
-The proof of Theorem~\ref{main-theorem} is obtained by an application
-of the theorems for each stage.
+The proof of Theorem~\ref{main-theorem}, presented in
+Section~\ref{main-theorem-proof-section}, is obtained by an
+application of the theorems for each stage.
 Each stage of the compilation strategy handles a different part of the
 $Interpreter$ state:~the $pc$, the $frameStack$, and objects.
 They operate over each of the $Thr$ processes, managed by the SCJVM
@@ -112,18 +114,18 @@ fields are accessed in C code.
 % the $ObjectStruct$ returned from the communication to a type
 % representing an object of \texttt{InputHandler}.
 
-\section{Preconditions}
-\label{compilation-preconditions-section}
+\section{Assumptions about source bytecode}
+\label{compilation-assumptions-section}
 
-In order for our strategy to be applied to an SCJ program it must meet
-some basic requirements that ensure it is well-formed.
+For our strategy to be successfully applied to bytecodes corresponding
+to an SCJ program, it must meet some basic requirements that ensure it
+is well-formed.
 Firstly, the program must pass JVM bytecode verification.
 This means it must be type-correct and that execution remains inside
-the array of bytecode instructions for the current method.
-This can be checked before execution of the program and, since there
-has already been much work on formal verification of bytecode
-verifiers~\cite{coglio2000,klein2003,xavier2003}, we do not
-consider it in detail here.
+the array of bytecode instructions for each method.
+This can be checked before execution of the program and there has
+already been much work on formal verification of bytecode
+verifiers~\cite{coglio2000,klein2003,xavier2003}.
 
 Secondly, since SCJ does not allow dynamic class loading, all required
 classes and methods must be present before execution of the program.
@@ -131,9 +133,9 @@ This means that the $cs$ map provided as input to the CEE must contain
 all the classes referenced by any other class in $cs$.
 All the bytecode instructions required for these classes must also be
 present in the $bc$ map.
-Our CEE model will diverge if any of these requirements is not met, so
-these requirements will hold for any SCJ program that executes
-correctly in our SCJVM interpreter.
+Our CEE model diverges if any of these requirements is not met, so
+these requirements hold for any SCJ program that executes correctly in
+our SCJVM interpreter.
 
 Thirdly, due to the nature of the applications that SCJ is aimed at,
 it is important that they have a structure that is readable and
@@ -142,8 +144,8 @@ MISRA-C includes such a restriction on structure and, since we are
 generating C code for a safety-critical application, we aim to produce
 code that is compatible with MISRA-C.
 This means that the SCJ bytecode program used as input to the strategy
-must also have a control with a structure compatible with the
-requirements of MISRA-C.
+must also have a control structure compatible with the requirements of
+MISRA-C.
 
 \begin{figure}
   \begin{subfigure}{0.26\textwidth}
@@ -262,9 +264,9 @@ requirements of MISRA-C.
   \label{structured-cfg-figures}
 \end{figure}
 
-Due to the considerations discussed above, we require the control flow
-graph of each method in the input program to have a structure based on
-Dijkstra's notion of program structure found in~\cite{dijkstra1972}.
+Precisely, we require the control flow graph of each method in the
+input program to have a structure based on Dijkstra's notion of
+program structure found in~\cite{dijkstra1972}.
 In our definition of a structured program, the control flow graph must
 be composed of the structures shown in
 Figure~\ref{structured-cfg-figures}. 
@@ -273,31 +275,31 @@ sequential composition, with an edge going from the root node to a
 single end node.
 The next three structures
 (Figure~\ref{if-figure}--\subref{divergent-figure}) are conditional
-structures:~Figure~\ref{if-figure} shows an \texttt{if} statement with
-no \texttt{else} clause, Figure~\ref{if-else-figure} shows an
-\texttt{if} statement with an \texttt{else} clause, and
+structures. 
+Figure~\ref{if-figure} shows an \texttt{if} statement with no
+\texttt{else} clause. 
+Figure~\ref{if-else-figure} shows an \texttt{if} statement with an
+\texttt{else} clause. 
 Figure~\ref{divergent-figure} shows a conditional in which both
 branches end with a (infinite) loop or a return so that there is
-nothing following the conditional, we refer to such conditionals as
+nothing following the conditional; we refer to such conditionals as
 divergent conditionals since the branches do not come back together.
 The remaining three structures
 (Figure~\ref{while-figure}--\subref{infinite-loop-figure}) are all
-loop structures:~Figure~\ref{while-figure} shows a loop in which the
-loop condition is checked at the beginning (a \texttt{while} loop),
+loops.
+Figure~\ref{while-figure} shows a loop in which the loop condition is
+checked at the beginning (a \texttt{while} loop).
 Figure~\ref{do-while-figure} show a loop in which the loop condition
-is checked at the end (a \texttt{do}-\texttt{while} loop), and
-Figure~\ref{infinite-loop-figure} shows a loop which loops
-unconditionally, forming an infinite loop.
+is checked at the end (a \texttt{do}-\texttt{while} loop).
+Figure~\ref{infinite-loop-figure} shows an infinite loop.
 
-For precision and since it is used in the proof of the theorem for the
-\emph{Elimination of Program Counter} stage, we provide a formal
-definition of what it means for a control flow graph to be structured. 
-This definition is based on that given in~\cite{bento2017}, which
-provides an algorithm for recognising structured graphs.
+We provide below a formal definition of what it means for a control
+flow graph to be structured. 
+This definition is based on that in~\cite{bento2017}, which provides
+an algorithm for recognising structured graphs.
 We first define a rooted directed graph below. 
 The definition is standard, but we include it here to introduce the
-terminology for the subsequent definition of what we mean by a
-structured control flow graph.
+terminology for the subsequent definition.
 \begin{defn}[Rooted Directed Graph] A \emph{rooted directed graph},
 $G$, is a triple $(V,E,r)$, where
   \begin{itemize}
@@ -324,11 +326,10 @@ Additionally, we refer to the source of an edge going to a given node
 as a \emph{predecessor} of that node; similarly, the target of an edge
 from a given node is a \emph{successor} of that node.
 
-Having defined a rooted directed graph, we now define what it means to
-replace a node in a graph by another graph.
-We use this concept of node replacement to construct more complex
-structured graphs from those shown in
-Figure~\ref{structured-cfg-figures}.
+We now define what it means to replace a node in a graph by another
+graph.
+We use this concept to construct more complex structured graphs from
+those shown in Figure~\ref{structured-cfg-figures}.
 Node replacement may occur in four different ways, depending on which
 node is being replaced in a graph.
 We illustrate the different cases of node replacement using the
@@ -391,17 +392,16 @@ connected to $a$ by the same edges as in $H$.
 
 The third case (Figure~\ref{internal-replacement-figure}) is that of
 replacing an internal node of the graph.
-In our example node $2$ of graph $G$ is replaced with graph $H$.
+In our example, node $2$ of graph $G$ is replaced with graph $H$.
 There is an edge from the predecessor of node $2$, which is node $1$
-in this case to the root node of $H$ (node $a$).
+in this case, to the root node of $H$ (node $a$).
 There is another edge from the end node of $H$ (node $c$), which is
-required to be unique in this case, to the successor of node $3$,
-which is node $4$ in this case.
+required to be unique, to the successor of node $3$, which is node $4$
+in this case.
 
 The final case, an example of which is shown in
-Figure~\ref{branch-end-replacement-figure} represents cases where
-control flow constructs occur at the end of one branch of a
-conditional.
+Figure~\ref{branch-end-replacement-figure}, is where control flow
+constructs occur at the end of one branch of a conditional.
 In our example, node $2$ of graph $G$ is replaced with graph $H$, as
 in the previous case, but the end node of $H$ (node $c$) is identified
 with the successor of node $2$ (node $4$), and so it is not included
@@ -416,7 +416,7 @@ Figure~\ref{branch-end-replacement-figure}.
   \begin{subfigure}{0.24\textwidth}
     \begin{center}
       \begin{tikzpicture}
-        \useasboundingbox (-2,-2.5) rectangle (2,2);
+        \useasboundingbox (-1.5,-2.5) rectangle (1.5,2);
         \node at (0,2) (start) {};
         \node at ( 0, 1)  (A) {$a$};
         \node at (-1, 0)  (B) {$b$};
@@ -440,7 +440,7 @@ Figure~\ref{branch-end-replacement-figure}.
   \begin{subfigure}{0.24\textwidth}
     \begin{center}
       \begin{tikzpicture}
-        \useasboundingbox (-2,-2.5) rectangle (2,2);
+        \useasboundingbox (-1.5,-2.5) rectangle (1.5,2);
         \node at (0,2) (start) {};
         \node at ( 0, 1)  (A) {$1$};
         \node at (-1, 0)  (B) {$2$};
@@ -464,7 +464,7 @@ Figure~\ref{branch-end-replacement-figure}.
   \begin{subfigure}{0.24\textwidth}
     \begin{center}
       \begin{tikzpicture}
-        \useasboundingbox (-2,-2.5) rectangle (2,2);
+        \useasboundingbox (-1.5,-2.5) rectangle (1.5,2);
         \node at (0,2) (start) {};
         \node at ( 0, 1)    (A) {$1$};
         \node at (-1, 0)    (B) {$a$};
@@ -488,7 +488,7 @@ Figure~\ref{branch-end-replacement-figure}.
   \begin{subfigure}{0.24\textwidth}
     \begin{center}
       \begin{tikzpicture}
-        \useasboundingbox (-2,-2.5) rectangle (2,2);
+        \useasboundingbox (-1.5,-2.5) rectangle (1.5,2);
         \node at (0,2) (start) {};
         \node at ( 0, 1)    (A) {$1$};
         \node at (-1,-0.5)  (B) {$a$};
@@ -564,8 +564,8 @@ This covers each of the four cases shown above.
   \end{itemize}
 \end{defn}
 
-With node replacement defined, we can now define what we mean by a
-structure control flow graph in terms of node replacement and the
+With node replacement defined, we can now finally define what we mean
+by a structure control flow graph in terms of node replacement and the
 structured graphs shown in Figure~\ref{structured-cfg-figures}
 
 \begin{defn}[Structured Control Flow Graph]
