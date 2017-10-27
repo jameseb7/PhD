@@ -2070,7 +2070,7 @@ $InterpreterState$.
 This is illustrated in the definition of $HandleAconst\_null$ below,
 which uses the $InterpreterAconst\_null$ schema.
 \begin{circusaction}
-  HandleAconst\_null \circdef \lcircguard bc~pc = aconst\_null \rcircguard \circguard \lschexpract InterpreterAconst\_null \rschexpract
+  HandleAconst\_null \circdef \lcircguard pc \in\dom bc \land bc~pc = aconst\_null \rcircguard \circguard \lschexpract InterpreterAconst\_null \rschexpract
 \end{circusaction}
 The \Circus{} actions and Z schemas for each bytecode instruction are
 listed in Table~\ref{bytecode-model-table}.
@@ -2119,7 +2119,7 @@ below, in which the inverse of the $aload$ constructor is used to
 extract its parameter into a $variableIndex$ variable that is used by
 the $IntepreterAload$ schema.
 \begin{circusaction}
-  HandleAload \circdef  \lcircguard bc~pc \in \ran aload \rcircguard \circguard \\
+  HandleAload \circdef  \lcircguard pc \in\dom bc \land bc~pc \in \ran aload \rcircguard \circguard \\
   \t1 \circvar variableIndex : \nat \circspot variableIndex := (aload\inv)~(bc~pc) \circseq \lschexpract InterpreterAload \rschexpract
 \end{circusaction}
 The $HandleAstore$, $HandleGoto$, $HandleIconst$ and
@@ -2141,7 +2141,7 @@ value indicating if the $StackFrame$ for the method had its
 $baseFrame$ value set to $\true$.
 \begin{circusaction}
   HandleAreturn \circdef \circvar returnValue : Word; fromBaseFrame : \boolean \circspot \\
-  \t1 \lcircguard bc~pc = areturn \rcircguard \circguard \lschexpract InterpreterAreturn \rschexpract \circseq \\
+  \t1 \lcircguard pc \in\dom bc \land bc~pc = areturn \rcircguard \circguard \lschexpract InterpreterAreturn \rschexpract \circseq \\
   \t1 CheckLauncherReturn(returnValue, fromBaseFrame)
 \end{circusaction}
 The form of the $HandleReturn$ action is similar, but since
@@ -2189,7 +2189,7 @@ The field's value is returned via the $getFieldRet$ channel and pushed
 onto the $operandStack$ of the current $StackFrame$ by the data
 operation $InterpreterPush$.
 \begin{circusaction}
-  HandleGetfield \circdef \lcircguard bc~pc \in \ran getfield \land (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \rcircguard \circguard \\
+  HandleGetfield \circdef \lcircguard pc \in\dom bc \land bc~pc \in \ran getfield \land (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \rcircguard \circguard \\
   \t1 \circvar oid : ObjectID \circspot \lschexpract InterpreterPop[oid!/value!] \hide (pc, pc') \rschexpract \circseq \\
   \t1 getField!oid!(fieldOf~currentClass~((getfield\inv)~(bc~pc))) \\
   \t1 {} \then getFieldRet?value \then \lschexpract InterpreterPush \rschexpract
@@ -2223,7 +2223,7 @@ a boolean value indicating that the method invocation is not from the
 \texttt{invokestatic} instruction.
 \begin{circusaction}
   HandleInvokespecial \circdef \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
-  \t1 \lcircguard bc~pc \in \ran invokespecial \land ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \rcircguard \circguard \\
+  \t1 \lcircguard pc \in\dom bc \land bc~pc \in \ran invokespecial \land ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \rcircguard \circguard \\
   \t1 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
   \t1 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
   \t1 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false)

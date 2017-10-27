@@ -1757,7 +1757,7 @@ Table~\ref{handle-action-table}.
   \begin{circus}
     HandleInstruction_{bc} \circrefines_A
     \begin{array}{l}
-      \circif {} \circelse_i pc = i \then handleAction(bc~i) \circfi
+      \circif {} \circelse_{i\in\dom bc} pc = i \then handleAction(bc~i) \circfi
     \end{array}
   \end{circus}
   where $handleAction$ is a syntactic function defined by
