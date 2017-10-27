@@ -1272,7 +1272,7 @@ section.
     \t2 {} \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
     \t3 pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq \\
     \t3 pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq \\
-    \t3 HandleInvokespecialEPC(8) \circseq Poll \circseq AperiodicEventHandler\_APEHInit \circseq \\
+    \t3 HandleInvokespecialEPC(8) \circseq Poll \circseq AperiodicEventHandler\_APEHinit \circseq \\
     \t3 Poll \circseq HandleReturnEPC \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 1 \circthen HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq \\
@@ -1390,7 +1390,7 @@ section.
     % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
     \t2 {} \cdots {} \\
-    \t2 {} \circelse pc = 43 \circthen TPK\_F \\
+    \t2 {} \circelse pc = 43 \circthen TPK\_f \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 44 \circthen HandleAloadEPC(0) \circseq pc := 45 \\
     % \t2 {} \circelse pc = 45 \circthen HandleIaddEPC \circseq pc := 46 \\
@@ -1403,7 +1403,7 @@ section.
     \t1 \circfi
   \end{circus}
   \begin{circus}
-    TPK\_F \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 45 \circseq \\
+    TPK\_f \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 45 \circseq \\
     \t1 Poll \circseq HandleIaddEPC \circseq pc := 46 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 47 \circseq \\
     \t1 Poll \circseq HandleIaddEPC \circseq pc := 48 \circseq Poll \circseq HandleIconstEPC(5) \circseq pc := 49 \circseq \\
     \t1 Poll \circseq HandleIaddEPC \circseq pc := 50 \circseq Poll \circseq HandleAreturnEPC
@@ -1453,141 +1453,56 @@ procedures.
 
 \begin{figure}[p!]
   \setlength{\zedindent}{0cm}
-  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedtab}{0.5cm}
   \setlength{\zedleftsep}{0.1cm}
   \begin{circus}
     Running \circdef \\
     \t1 \circif frameStack = \emptyset \circthen \Skip \\
     \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-    \t2 {} \circif pc = 0 \circthen TPK\_APEHInit \\
+    \t2 {} \circif pc = 0 \circthen TPK\_APEHinit \\
     \t2 {} \cdots {} \\
-    \t2 {} \circelse pc = 7 \circthen TPK\_HandleAsyncEvent \\
-    % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \circseq Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq \\
-    % \t3 Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq \\
-    % \t3 pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq \\
-    % \t3 HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq \\
-    % \t3 pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \circseq Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
-    % \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \circseq Poll \circseq OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
-    % \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \circseq Poll \circseq OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 17 \circthen HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq \\
-    % \t3 pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    % \t3 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 18 \circthen HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \circseq Poll \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
-    % \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 30 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 31 \circthen pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 33 \circthen HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 34 \circthen HandleInvokevirtualEPC(50) \circseq Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 36 \circthen HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
-    % \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+    \t2 {} \circelse pc = 7 \circthen TPK\_handleAsyncEvent \\
     \t2 {} \cdots {} \\
-    \t2 {} \circelse pc = 43 \circthen TPK\_F \\
+    \t2 {} \circelse pc = 43 \circthen TPK\_f \\
     \t2 {} \cdots {} \\
     \t2 \circfi \circseq Poll \circseq Running \\
     \t1 \circfi
   \end{circus}
   \vspace{-1cm}
   \begin{circus}
-    TPK\_APEHInit \circdef HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq \\
-    \t3 Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq \\
-    \t3 Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \circseq \\
-    \t3 Poll \circseq AperiodicEventHandler\_APEHInit \circseq Poll \circseq HandleReturnEPC \\
+    TPK\_APEHinit \circdef HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq \\
+    \t1 Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq \\
+    \t1 Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \circseq \\
+    \t1 Poll \circseq AperiodicEventHandler\_APEHinit \circseq Poll \circseq HandleReturnEPC \\
   \end{circus}
   \vspace{-1.5cm}
   \begin{circus}
-    TPK\_HandleAsyncEvent \circdef HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq \\
-    \t1 {} \cdots {} \\
-    % \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
-    % \t3 Poll \circseq ConsoleConnection\_CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
-    % \t3 OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq \\
-    % \t3 HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
-    % \t3 OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq \\
-    % \t3 HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq \\
-    \t1 Poll \circseq pc := 39 \circseq Poll \circseq \circmu Y \circspot \\
-    \t2 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq \\
-    \t2 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    \t2 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \circseq Poll \circseq \\
-    \t2 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
-    \t3 {} \cdots {} \\
-    \t3 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
-    \t3 InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \circseq Poll \circseq \\
-    \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \\
-    \t4 HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
-    \t4 Poll \circseq ConsoleOutput\_Write \\
-    \t3 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \\
-    \t4  HandleIconstEPC(0) \circseq pc := 30 \circseq  Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
-    \t4 Poll \circseq ConsoleOutput\_Write \\
-    \t3 \circfi \circseq pc := 35 \circseq Poll \circseq  HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \\
-    \t3 HandleIconstEPC(1) \circseq pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq \\
-    \t3 Poll \circseq HandleAstoreEPC(4) \circseq pc := 39 \circseq Poll \circseq Y \\
-    \t3 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
-    \t2 \circfi \\
+    TPK\_handleAsyncEvent \circdef HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
+    \t1 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
+    \t1 ConsoleConnection\_CCinit \circseq Poll \circseq HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq \\
+    \t1 HandleAloadEPC(1) \circseq pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_openInputStream \circseq Poll \circseq  HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq \\
+    \t1 HandleAloadEPC(1) \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq \\
+    \t1 HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq \\
+    \t1 Poll \circseq\circmu Y \circspot HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq \\
+    \t1 pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t1 \circif value1 \leq value2 \circthen pc := 21 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
+    \t2 HandleInvokevirtualEPC(40) \circseq Poll \circseq InputStream\_Read \circseq Poll \circseq \\
+    \t2 HandleInvokestaticEPC(46) \circseq Poll \circseq TPK\_f  \circseq Poll \circseq \\
+    \t2 HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq Poll \circseq \\
+    \t2 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t2 \circif value1 \leq value2 \circthen pc := 32 \circseq HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \\
+    \t3 HandleAloadEPC(5) \circseq pc := 34 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq \\
+    \t3 OutputStream\_write \\
+    \t2 {} \circelse value1 > value2 \circthen pc := 28 \circseq HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \\
+    \t3 HandleIconstEPC(0) \circseq pc := 30 \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
+    \t3 OutputStream\_write \\
+    \t2 \circfi \circseq pc := 35 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq HandleIconstEPC(1) \circseq \\
+    \t2 pc := 37 \circseq Poll \circseq HandleIaddEPC \circseq pc := 38 \circseq Poll \circseq HandleAstoreEPC(4) \circseq \\
+    \t2 pc := 39 \circseq Poll \circseq Y \\
+    \t1 {} \circelse value1 > value2 \circthen \Skip \\
+    \t1 \circfi \circseq pc := 42 \circseq Poll \circseq HandleReturnEPC
   \end{circus}
   \caption{The $Running$ action after all the methods are separated}
   \label{final-method-separation-example-figure}
@@ -1617,74 +1532,67 @@ $pc$ values now redundant.
   \setlength{\zedleftsep}{0.1cm}
   \begin{circusaction}
     ExecuteMethod \circdef \circval cid : ClassID; mid : MethodID \circspot \\
-    \t1 \circif (cid, mid) = (TPKClassID, APEHInit) \circthen TPK\_APEHInit \\
-    \t1 {} \circelse (cid, mid) = (TPKClassID, handleAsyncEvent) \circthen TPK\_HandleAsyncEvent \\
-    \t1 {} \circelse (cid, mid) = (TPKClassID, f) \circthen TPK\_F \\
+    \t1 \circif (cid, mid) = (TPKClassID, APEHinit) \circthen TPK\_APEHinit \\
+    \t1 {} \circelse (cid, mid) = (TPKClassID, handleAsyncEvent) \circthen TPK\_handleAsyncEvent \\
+    \t1 {} \circelse (cid, mid) = (TPKClassID, f) \circthen TPK\_f \\
     \t1 {} \cdots {} \\
     \t1 \circfi
   \end{circusaction}
   \begin{circusaction}
-    MainThread \circdef \\
-    \t1 \circblockbegin
-    \circvar cid : ClassID; method : MethodID; methodArgs : \seq Word \circspot \\
-    interpreter?c?m?a \then cid, method, methodArgs := c, m, a \circseq  \\
-    \lschexpract \exists class? == cs~cid; baseFrame? == \true @ InterpreterNewStackFrame \rschexpract \circseq \\
-    ExecuteMethod(cid, method) \circseq MainThread \\
-    \circblockend \\
-    \t1 {} \extchoice {} \\
-    \t1 CEEswitchThread?from?to \prefixcolon (from = main) \then Blocked \circseq MainThread
+    MainThread \circdef initMainThread?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
+    \t1 \circblockbegin \circblockbegin
+    \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+    executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+    \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
+    \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrameEPC \rschexpract \circseq \\
+    ExecuteMethod(classID, methodID) \circseq X \circblockend \\
+    {} \extchoice {} \\
+    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
+    \circblockend
   \end{circusaction}
   \begin{circusaction}
-    NotStarted \circdef \circvar cid : ClassID; method : MethodID; methodArgs : \seq Word \circspot \\
-    \t1 CEEstartThread?toStart?bsid?c?m?a \prefixcolon (toStart = thread) \then {} \\
-    \t2 cid, method, methodArgs := c, m, a \circseq \\
-    \t1 \lschexpract \exists class? == cs~cid; baseFrame? == \true @ InterpreterNewStackFrame \rschexpract \circseq \\
-    \t1 Blocked \circseq ExecuteMethod(cid, method) \circseq CEEremoveThread!thread \then NotStarted
+    NotStarted \circdef \\
+    \t1 \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+    \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \then {} \\
+    \t1 addThreadMemory!thread!bsid \then {} \\
+    \t1 frameStackID, classID, methodID, methodArgs := Initialised~stack, cid, mid, args \circseq \\
+    \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrameEPC \rschexpract \circseq \\
+    \t1 Blocked \circseq ExecuteMethod(classID, methodID) \circseq CEEremoveThread!thread \then {} \\
+    \t1 CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
   \end{circusaction}
-  \caption{The $ExecuteMethod$, $NotStarted$, and $MainThread$ actions after main action refinement}
+  \caption{The $ExecuteMethod$, $MainThread$, and $NotStarted$ actions
+    after main action refinement}
   \label{refine-main-actions-example-figure}
 \end{figure}
 
-\begin{figure}[p!]
+\begin{figure}
   \begin{circus}
-    HandleAsyncEvent \circdef HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq \\
-    \t1 Poll \circseq HandleAconst\_nullEPC \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq \\
-    \t1 Poll \circseq CCInit \circseq Poll \circseq HandleAstoreEPC(1) \circseq Poll \circseq \\
+    TPK\_handleAsyncEvent \circdef HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq Poll \circseq \\
+    \t1 HandleAconst\_nullEPC \circseq Poll \circseq HandleInvokespecialEPC(29) \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_CCinit \circseq Poll \circseq HandleAstoreEPC(1) \circseq Poll \circseq \\
     \t1 HandleAloadEPC(1) \circseq Poll \circseq HandleInvokevirtualEPC(32) \circseq Poll \circseq \\
-    \t1 OpenInputStream \circseq Poll \circseq HandleAstoreEPC(2) \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_openInputStream \circseq Poll \circseq  HandleAstoreEPC(2) \circseq Poll \circseq \\
     \t1 HandleAloadEPC(1) \circseq Poll \circseq HandleInvokevirtualEPC(36) \circseq Poll \circseq \\
-    \t1 OpenOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq Poll \circseq \\
-    \t1 HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq \\
-    \t1 Poll \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq \\
-    \t1 HandleIconstEPC(10) \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
-    \t1 InterpreterPop2 \circseq Poll \circseq \circmu Y \circspot \\
-    \t1 \circif value1 \leq value2 \circthen HandleAloadEPC(2) \circseq Poll \circseq \\
-    \t2 HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq \\
-    \t2 HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq \\
-    \t2 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
-    \t2 HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
-    \t2 InterpreterPop2 \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq Poll \circseq \\
+    \t1 HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq \\
+    \t1 Poll \circseq\circmu Y \circspot HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq \\
+    \t1 Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t1 \circif value1 \leq value2 \circseq Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
+    \t2 HandleInvokevirtualEPC(40) \circseq Poll \circseq InputStream\_Read \circseq Poll \circseq \\
+    \t2 HandleInvokestaticEPC(46) \circseq Poll \circseq TPK\_f  \circseq Poll \circseq \\
+    \t2 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq Poll \circseq \\
+    \t2 HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
     \t2 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq \\
-    \t3 HandleAloadEPC(5) \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
-    \t3 Poll \circseq Write \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq \\
-    \t3 HandleIconstEPC(1) \circseq Poll \circseq HandleIaddEPC \circseq Poll \circseq \\
-    \t3 HandleAstoreEPC(4) \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq \\
-    \t3 HandleIconstEPC(10) \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
-    \t3 InterpreterPop2 \circseq Poll \circseq \\
-    \t3 \circif value1 \leq value2 \circthen Y \\
-    \t3 {} \circelse value1 > value2 \circthen HandleReturnEPC \\
-    \t3 \circfi \\
+    \t3 HandleAloadEPC(5) \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq Poll \circseq \\
+    \t3 OutputStream\_write \\
     \t2 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq \\
     \t3 HandleIconstEPC(0) \circseq Poll \circseq HandleInvokevirtualEPC(50) \circseq \\
-    \t3 Poll \circseq Write \circseq Poll \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq \\
-    \t3 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
-    \t3 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq Poll \circseq \\
-    \t3 \circif value1 \leq value2 \circthen Y \\
-    \t3 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
-    \t3 \circfi \\
-    \t2 \circfi \\
-    \t1 {} \circelse value1 > value2 \circthen  HandleReturnEPC \\
-    \t1 \circfi \\
+    \t3 OutputStream\_write \\
+    \t2 \circfi \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(1) \circseq \\
+    \t2 Poll \circseq HandleIaddEPC \circseq Poll \circseq HandleAstoreEPC(4) \circseq \\
+    \t2 Poll \circseq Y \\
+    \t1 {} \circelse value1 > value2 \circthen \Skip \\
+    \t1 \circfi \circseq Poll \circseq HandleReturnEPC
   \end{circus}
   \caption{The $HandleAsyncEvent$ action after $pc$ has been eliminated from the state}
   \label{pc-elimination-HandleAsyncEvent-example-figure}
