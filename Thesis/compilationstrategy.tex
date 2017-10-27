@@ -602,7 +602,7 @@ in the next section.
 
 The first stage eliminates $pc$ from the state of each thread's
 process, $Thr(bc,cs,t)$, introducing the control flow constructs of C
-in the process. 
+as a result. 
 It is summarised by the following theorem.
 %
 \begin{thm}[Elimination of Program Counter]\label{thread-splitting-thm}
@@ -611,9 +611,8 @@ It is summarised by the following theorem.
   \end{circus}%
 \end{thm}
 %
-In this stage we act mainly upon the $Running$ action of $Thr$; its
-loop is unrolled to introduce the control flow that follows each
-bytecode instruction.
+We act mainly upon the $Running$ action of $Thr$; its loop is unrolled
+to introduce the control flow that follows each bytecode instruction.
 The aim is to get each method's bytecode instructions into a form in
 which the control flow, but not the data operations, are described
 using C constructs and, moreover, each path of execution (including
@@ -645,13 +644,13 @@ be removed and replaced with a choice over method identifiers.
 Thus dependency on the program counter can be completely removed,
 allowing it to be eliminated from the state of $Thr$.
 
-The overall strategy for transforming $Thr$ in this stage and
-achieving this elimination is described by
+The detailed description of the strategy for transforming $Thr$ in
+this stage and achieving this elimination is provided by
 Algorithm~\ref{epc-algorithm}.
 It begins at line~\ref{algorithm-expand-bytecode} by expanding the
 \Circus{} definitions of the bytecode instructions from the $bc$ map
 into the $Running$ action, pulling out the program counter updates so
-that they can be more easily manipulated by the strategy.
+that they can be more easily manipulated.
 In line~\ref{algorithm-introduce-forward-sequence}, simple sequential
 compositions, that is, those that do not involve handling loops or
 conditionals, are introduced.
@@ -694,56 +693,52 @@ line~\ref{algorithm-remove-pc-from-state} of the algorithm.
 
 Each of the procedures used in Algorithm~\ref{epc-algorithm} is
 defined in a separate section in the sequel.
-Beforehand, we give a more detailed overview of the strategy.
+Beforehand, we give a more detailed overview of the strategy using an
+example.
 
-\subsection{Overview}
+\subsection{Running Example}
 \label{overview-subsection}
 
-We explain the strategy with an example, the Java code for which is
-shown in Figure~\ref{example-code-figure}.
+We explain the strategy in detail with an example, the Java code for
+which is shown in Figure~\ref{example-code-figure}.
 \begin{figure}[t!]
-  \begin{lstlisting}[language=Java,basicstyle=\ttfamily\footnotesize]
-    import java.io.InputStream;
-    import java.io.OutputStream;
-    import javax.realtime.AperiodicParameters;
-    import javax.realtime.ConfigurationParameters;
-    import javax.realtime.PriorityParameters;
-    import javax.safetycritical.AperiodicEventHandler;
-    import javax.safetycritical.StorageParameters;
-    import javax.safetycritical.io.ConsoleConnection;
-    
-    public class TPK extends AperiodicEventHandler {
+  \begin{center}
+  \begin{minipage}{10cm}
+  \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,keywordstyle=\bf\footnotesize,language=Java,numbers=left,numberstyle=\tiny,stepnumber=1, numbersep=5pt,escapeinside={(*@}{@*)}]
+public class TPK extends AperiodicEventHandler {
+
+  public TPK(PriorityParameters priority,
+             AperiodicParameters release,
+             StorageParameters storage,
+             ConfigurationParameters config) {
+    super(priority, release, storage, config);
+  }
       
-      public TPK(PriorityParameters priority,
-                 AperiodicParameters release,
-                 StorageParameters storage,
-                 ConfigurationParameters config) {
-        super(priority, release, storage, config);
-      }
-      
-      public void handleAsyncEvent() {
-        ConsoleConnection console = new ConsoleConnection(null);
+  public void handleAsyncEvent() {
+    ConsoleConnection console = new ConsoleConnection(null); (*@\label{example-ConsoleConnection-line}@*)
         
-        InputStream input = console.openInputStream();
-        OutputStream output = console.openOutputStream();
+    InputStream input = console.openInputStream(); (*@\label{example-InputStream-line}@*)
+    OutputStream output = console.openOutputStream(); (*@\label{example-OutputStream-line}@*)
         
-        for(int i = 0; i <= 10; i = i + 1) {
-          int y = f(input.read());
+    for(int i = 0; i <= 10; i = i + 1) { (*@\label{example-for-loop-line}@*)
+      int y = f(input.read());
           
-          if (y > 400) {
-            output.write(0);
-          } else {
-            output.write(y);
-          }
-        }
+      if (y > 400) {
+        output.write(0);
+      } else {
+        output.write(y);
       }
-      
-      public static int f(int x){
-        return x + x + x + 5;
-      }
-      
     }
-  \end{lstlisting}
+  }
+      
+  public static int f(int x){
+    return x + x + x + 5;
+  }
+      
+}
+\end{lstlisting}
+\end{minipage}
+\end{center}
   \caption{Our example program}
   \label{example-code-figure}
 \end{figure}
@@ -879,12 +874,12 @@ shown in Figure~\ref{example-code-figure}.
 \end{figure}%
 Our example is based on the Trabb Pardo-Knuth
 algorithm~\cite{knuth1980}, used for comparison of programming
-languages, since it includes a variety of programming language
-constructs that provide a good test of the strategy.
+languages, since it includes a variety of programming constructs that
+provide a good test of the strategy.
 We have simplified the algorithm by removing the reading into an
 array, since our bytecode subset does not include array operations.
-Attempting to add arrays makes the example much longer, while not
-giving any interesting insight into our compilation strategy.
+Adding arrays makes the example much longer, while not giving any
+interesting insight into our compilation strategy.
 
 We have also written the example as an SCJ program, with the algorithm
 as the body of an aperiodic event handler, \texttt{TPK}, one or more
@@ -892,15 +887,17 @@ instances of which can be registered as part of a mission and released
 during mission execution.
 As already mentioned, each release of the handler causes its
 \texttt{handleAsyncEvent()} method to be executed.
-This method creates an instance of a \texttt{ConsoleConnection}, which
-is the only standard input/output connection required by SCJ.
+This method creates an instance of a \texttt{ConsoleConnection}
+(line~\ref{example-ConsoleConnection-line}), which is the only
+standard input/output connection required by SCJ.
 Instances of \texttt{InputStream} and \texttt{OutputStream} are then
-obtained from the \texttt{ConsoleConnection}.
+obtained from the \texttt{ConsoleConnection} (lines~\ref{example-InputStream-line} and~\ref{example-OutputStream-line}).
 
 After the input and output streams have been obtained, we enter a for
-loop in which an integer is read from the \texttt{InputStream}, a
-static method \texttt{f()} is applied to it, and the result is output
-if it is less than 400, otherwise 0 is output.
+loop (line~\ref{example-for-loop-line}) in which an integer is read from the
+\texttt{InputStream}, a static method \texttt{f()} is applied to it,
+and the result is output if it is less than 400, otherwise 0 is
+output.
 The method \texttt{f()} takes an integer as input, multiplies it by 3
 and adds 5 to it.
 
@@ -908,19 +905,17 @@ The \texttt{TPK} class is part of a larger program that includes many
 other classes, including a \texttt{Safelet}, a
 \texttt{MissionSequencer}, a \texttt{Mission}, and the classes that
 make up the SCJ API.
-Considering these classes in our example would make the example much
-larger and more complex, while not introducing any more interesting
-aspects for the strategy to consider.
-We, therefore, omit a presentation of these classes, though it should be
-noted that they are part of the complete example.
-
-Throughout the strategy we assume the extra classes have gone through
-similar processing to that we illustrate for the $TPK$ class.
-This adds little complexity to the strategy since the bytecode
-instructions the strategy acts upon are placed in a contiguous array
-that is acted upon consistently for all classes, and the current class
-of a given bytecode instruction can always be determined from its
-address in the array.
+% Considering these classes in our example would make the example much
+% larger and more complex, while not introducing any more interesting
+% aspects for the strategy to consider.
+We omit a presentation of these classes, though it should be noted
+that they are part of the complete example.
+They need to go through similar refinement to that we illustrate for
+the $TPK$ class.
+This adds little complexity to the strategy since the bytecode array
+is acted upon consistently for all classes, and the current class of a
+given bytecode instruction can always be determined from its address
+in the array.
 
 The Java code must be run through a Java compiler to generate the
 corresponding bytecode, which then defines the $bc$ and $cs$ constants
@@ -1001,21 +996,19 @@ Figure~\ref{bytecode-expansion-example-figure}.
   \caption{The $Running$ action after bytecode expansion}
   \label{bytecode-expansion-example-figure}
 \end{figure}
-This step expands the bytecode instruction definitions, by copying
-$HandleInstruction$ into $Running$, and converting it to a choice of
-actions based on the value of the program counter, mirroring the
-contents of the $bc$ map for each value.
+This step copies $HandleInstruction$ into $Running$, and converts it
+to a choice of actions based on the value of the program counter,
+mirroring the contents of the $bc$ map for each value.
 
 The actions that make up $HandleInstruction$ are also replaced with
-actions that incorporate instruction parameters from the $bc$ map and
-have $pc$ updates separated from stack updates so they can be more
-easily operated on in this stage of the strategy.
+actions that incorporate instruction parameters from the $bc$ map, and
+have $pc$ updates separated from stack updates.
 This can be seen in Figure~\ref{bytecode-expansion-example-figure},
-where, in the $pc = 0$ case, $aload~0$ has been converted to
-$HandleAloadEPC(0) \circseq pc := 1$, with the parameter, $0$, to the
-bytecode instruction becoming a parameter of the new instruction
-handling action $HandleAloadEPC$, and the update to $pc$ placed after
-the data operation.
+where, for instance, in the $pc = 0$ case, $aload~0$ has been
+converted to $HandleAloadEPC(0) \circseq pc := 1$, with the parameter,
+$0$, to the bytecode instruction becoming a parameter of the new
+instruction handling action $HandleAloadEPC$, and the update to $pc$
+placed after the data operation.
 
 The reason for making parameters of the bytecode instructions into
 parameters of the handling actions is to remove the need to reference
@@ -1122,12 +1115,13 @@ Section~\ref{expand-bytecode-subsection}, where we define the
   \label{forward-sequence-introduction-example-figure}
 \end{figure}
 
-On line~\ref{algorithm-introduce-forward-sequence} of the algorithm,
-sequential composition is introduced for instructions that do not
-affect the sequential flow of the program.
+On line~\ref{algorithm-introduce-forward-sequence} of the
+Algorithm~\ref{epc-algorithm}, sequential composition is introduced
+for instructions that do not affect the sequential flow of the
+program.
 Such instructions are identified by considering the control flow graph
 of the program and locating nodes with a single outgoing edge going to
-target node with exactly one incoming edge.
+a target node with exactly one incoming edge.
 The introduction of sequential composition is performed by unrolling
 the loop in $Running$ to introduce the control flow following each of
 these instructions.
@@ -1157,13 +1151,18 @@ sequence of instructions it occurs in.
 Since we have the bytecode instructions of all the methods needed, we
 can always resolve the call of a complete method, provided that method
 has already been split into its own \Circus{} action.
-To ensure the method that a method call depends on is complete, we
-first perform loop and conditional introduction upon it.
+To ensure a called method is complete, we first perform loop and
+conditional introduction upon the method.
 Since introducing loops and conditionals requires unbroken sequences
 of instructions that form the bodies of loops and branches of
 conditionals, introduction of loops and conditionals can only be
 performed on methods that have no unresolved method calls.
-For this reason, we perform method call resolution and loop and
+In our example, \texttt{handleAsyncEvent()} is the only method that
+needs loops and conditionals introducing but, since it also contains
+method calls that break up the body of a loop, we must wait until its
+method calls have been resolved before introducing loops and
+conditionals.
+For this reason, we perform method call resolution, and loop and
 conditional introduction repeatedly until all method calls are
 resolved and the resulting complete methods have all been separated
 out.
@@ -1185,11 +1184,6 @@ As loops and conditionals are introduced, nodes in the control flow
 graph are merged until the graph consists of a single node, which is
 the starting point of the method, containing the complete method body.
 
-In our example, \texttt{handleAsyncEvent()} is the only method that
-needs loops and conditionals introducing but, since it also contains
-method calls that break up the body of a loop, we must wait until its
-method calls have been resolved before introducing loops and
-conditionals.
 The result of introducing loops and conditionals after method calls
 have been resolved in \texttt{handleAsyncEvent()} is shown in
 Figure~\ref{loop-and-conditional-introduction-example-figure}.
@@ -1252,7 +1246,7 @@ After loops and conditionals have been introduced, methods that are
 then complete can be copied into separate actions.
 This occurs in line~\ref{algorithm-separate-complete-methods} of this
 algorithm.
-This is done with a simple application of the copy rule, replacing the
+It is done with a simple application of the copy rule, replacing the
 actions at the entry points of the split methods with references to
 newly created method actions.
 This can be seen in
@@ -1358,7 +1352,7 @@ section.
     % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
     \t3 HandleInvokevirtualEPC(40) \circseq Poll \circseq ConsoleInput\_Read \circseq Poll \circseq \\
-    \t3 HandleInvokestaticEPC(46) \circseq Poll \circseq TPK\_F \circseq Poll \circseq HandleAstoreEPC(5) \circseq \\
+    \t3 HandleInvokestaticEPC(46) \circseq Poll \circseq TPK\_f \circseq Poll \circseq HandleAstoreEPC(5) \circseq \\
     \t3 pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq \\
     \t3 pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
     \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
@@ -1412,9 +1406,10 @@ section.
   \label{method-call-resolution-example-figure}
 \end{figure}
 
-Calls to those methods can then be resolved, sequencing the method
-invocation instruction with a call to the \Circus{} action representing its body and the
-instructions following the method call. 
+Calls to methods with separate actions can then be resolved,
+sequencing the method invocation instruction with a call to the
+\Circus{} action representing its body and the instructions following
+the method call. 
 This occurs on line~\ref{algorithm-resolve-method-calls} of the
 algorithm, and can be seen in
 Figure~\ref{method-call-resolution-example-figure}, which shows our
@@ -1423,7 +1418,7 @@ example after method call resolution has been applied.
 The target of each method call can be determined from the parameter to
 the method invocation instruction.
 This parameter is an index into the constant pool of the current class
-that points to a method reference for the method being called.
+that points to a reference to the method being called.
 The correct current class for each bytecode instruction is always
 known, since the information on the method entries and ends is
 contained in the class information, and there is a one-to-one mapping
@@ -1432,7 +1427,7 @@ After the target of the method call has been determined, the
 invocation instruction can be sequenced with a call to the
 corresponding \Circus{} action.
 
-An example of this is the occurrence of $HandleInvokestaticEPC(46)$ in
+An example of a resolved method call is $HandleInvokestaticEPC(46)$ in
 the sequence of actions at $pc = 21$.
 As can be seen from Figure~\ref{example-model-figure}, the constant
 pool index $46$ corresponds to the method identifier for the method
@@ -1440,9 +1435,10 @@ pool index $46$ corresponds to the method identifier for the method
 The sequence of instructions corresponding to this method is in an
 action $TPK\_F$, created in the previous step, on
 line~\ref{algorithm-separate-complete-methods}.
-This action is sequenced with the invocation instruction, with the
-$Poll$ action inbetween (to allow thread switches before the first
-instruction of the called method).
+The invocation instruction $HandleInvokestaticEPC(46)$ is sequenced
+with the method action $TPK\_F$, with the $Poll$ action inbetween (to
+allow thread switches before the first instruction of the called
+method).
 The instructions following the method call are then sequenced after
 it, with another $Poll$ action (to allow thread switches following the
 return instruction).
@@ -1509,18 +1505,20 @@ procedures.
 \end{figure}
 
 As mentioned previously, these steps are then repeated, in the loop
-beginning at line~\ref{algorithm-method-loop} to introduce the loops
-and conditionals in methods that would otherwise have unresolved
-method calls in the middle of loops and conditionals.
+beginning at line~\ref{algorithm-method-loop} of
+Algorithm~\ref{epc-algorithm} to introduce the loops and conditionals
+in methods that have unresolved method calls in the middle of loops
+and conditionals.
 Afterwards, those methods can be separated out and this loop,
 conditional and method resolution repeated until every method has been
 separated out in this way.
 This will always terminate, since we do not allow recursion so there
-will be no loops in dependencies between methods.
+in dependencies between methods.
 
-The $Running$ action of our example at the end of the loop, when all
-loops and conditionals have been introduced, all the methods have been
-separated out, and all method calls have been resolved, is shown in
+The $Running$ action of our example at the end of the loop
+in~\ref{epc-algorithm}, when all loops and conditionals have been
+introduced, all the methods have been separated out, and all method
+calls have been resolved, is shown in
 Figure~\ref{final-method-separation-example-figure}.
 At this point, the choice over the $pc$ value maps entry points of
 methods onto the actions representing those methods, with the other
@@ -1600,11 +1598,11 @@ $pc$ values now redundant.
 
 The next step is then to eliminate these redundant paths and remove
 the dependency on $pc$ to select the method action.
-This occurs at line~\ref{algorithm-refine-main-actions} of the
-algorithm, in which the $NotStarted$ and $MainThread$ actions are
-refined to replace the $Running$ action with an $ExecuteMethod$ action
-that contains a choice of method action based on the method and class
-identifier of the method.
+This occurs at line~\ref{algorithm-refine-main-actions} of
+Algorithm~\ref{epc-algorithm}, in which the $NotStarted$ and
+$MainThread$ actions are refined to replace the $Running$ action with
+an $ExecuteMethod$ action that contains a choice of method action
+based on the method and class identifier of the method.
 This can be seen in Figure~\ref{refine-main-actions-example-figure},
 which shows the $ExecuteMethod$ action corresponding to our example,
 and the refined $NotStarted$ and $MainThread$ actions that reference
@@ -1619,15 +1617,15 @@ The $pc$ state component can then be removed in a simple data
 refinement that also removes all the assignments to $pc$, resulting in
 the $HandleAsyncEvent$ action shown in
 Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}.
-
-The remaining instruction handling actions then only affect the stack,
-the removal of which is the concern of the next stage of the
-compilation strategy.
 The data refinement to remove $pc$ is applied at the end of the
 algorithm, on line~\ref{algorithm-remove-pc-from-state}, and is
 described in more detail in
 Section~\ref{remove-pc-from-state-subsection}, where we define the
 \Call{RemovePCFromState}{} procedure.
+
+The remaining instruction handling actions then only affect the stack,
+the removal of which is the concern of the next stage of the
+compilation strategy.
 
 We now proceed to describe each of the steps of program counter
 elimination in more detail.
