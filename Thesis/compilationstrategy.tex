@@ -1790,7 +1790,8 @@ control flow that corresponds to each $pc$ update can be introduced.
 The simplest control flow to introduce is that of instructions where
 execution continues at the next program counter value.
 These control flows are introduced as shown in
-Algorithm~\ref{introduce-forward-sequence-algorithm}.
+Algorithm~\ref{introduce-forward-sequence-algorithm}, which defines
+the \Call{IntroduceSequentialComposition}{} procedure.
 The algorithm consists of constructing a control flow graph for each
 method in the program, as specified on
 line~\ref{algorithm-make-control-flow-graph}.
