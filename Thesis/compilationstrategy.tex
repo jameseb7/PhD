@@ -941,12 +941,12 @@ Figure~\ref{bytecode-expansion-example-figure}.
     \t2 {} \circelse pc = 2 \circthen HandleAloadEPC(2) \circseq pc := 3 \\
     \t2 {} \circelse pc = 3 \circthen HandleAloadEPC(3) \circseq pc := 4 \\
     \t2 {} \circelse pc = 4 \circthen HandleAloadEPC(4) \circseq pc := 5 \\
-    \t2 {} \circelse pc = 5 \circthen HandleInvokespecialEPC(8) \\
+    \t2 {} \circelse pc = 5 \circthen \{pc = 5\} \circseq HandleInvokespecialEPC(8) \\
     \t2 {} \circelse pc = 6 \circthen HandleReturnEPC \\
     \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \\
     \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \\
     \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \\
-    \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \\
+    \t2 {} \circelse pc = 10 \circthen \{pc = 10\} \circseq HandleInvokespecialEPC(29) \\
     \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \\
     % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \\
     % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \\
@@ -1032,7 +1032,7 @@ Section~\ref{expand-bytecode-subsection}, where we define the
     \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
     \t2 \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
     \t3 pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(4) \circseq \\
-    \t3 pc := 5 \circseq Poll \circseq HandleInvokespecialEPC(8) \\
+    \t3 pc := 5 \circseq Poll \circseq \{pc = 5\} \circseq HandleInvokespecialEPC(8) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 1 \circthen HandleAloadEPC(1) \circseq pc := 2 \\
     % \t2 {} \circelse pc = 2 \circthen HandleAloadEPC(2) \circseq pc := 3 \\
@@ -1041,18 +1041,18 @@ Section~\ref{expand-bytecode-subsection}, where we define the
     % \t2 {} \circelse pc = 5 \circthen HandleInvokespecialEPC(8) \\
     \t2 {} \circelse pc = 6 \circthen HandleReturnEPC \\
     \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
-    \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq HandleInvokespecialEPC(29) \\
+    \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq \{pc = 10\} \circseq HandleInvokespecialEPC(29) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \\
     % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \\
     % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \\
     \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
-    \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \\
+    \t3 pc := 13 \circseq Poll \circseq \{pc = 13\} \circseq HandleInvokevirtualEPC(32) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \\
     % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \\
     \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
-    \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \\
+    \t3 pc := 16 \circseq Poll \circseq \{pc = 16\} \circseq HandleInvokevirtualEPC(36) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \\
     % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \\
@@ -1642,67 +1642,69 @@ This is achieved using the procedure shown in
 Algorithm~\ref{expand-bytecode-algorithm}.
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \Procedure{ExpandBytecode}{}
-    \State \Call{IntroduceChoiceOverPC}{} \label{algorithm-introduce-choice-over-pc}
-    \For{$pc \gets \dom bc$}
-    \State \Call{CollapseHandleInstruction}{} \label{algorithm-collapse-handle-instruction}
-    \State \Call{ExpandHandleAction}{} \label{algorithm-expand-handle-action}
+    \State \ApplyFor{Rule [\nameref{pc-expansion-rule}]}{$bc$}
+    \label{algorithm-introduce-choice-over-pc}
+    \For{$i \gets \dom bc$}
+    \State \ApplyFor{Rule [\nameref{HandleInstruction-refinement-rule}]}{$bc$, $i$}
+    \label{algorithm-collapse-handle-instruction}
     \EndFor
-    \EndProcedure
   \end{algorithmic}
-  \caption{Expand Bytecode}
+  \caption{ExpandBytecode}
   \label{expand-bytecode-algorithm}
 \end{algorithm}
 This begins on line~\ref{algorithm-introduce-choice-over-pc} by
-introducing a choice over all the possible values of $pc$ associated
-with the $HandleInstruction$ action in $Running$, replacing
-$HandleInstruction$ with a choice of the form shown below.
-\begin{circus}
-  \circif pc = 0 \circthen HandleInstruction \\
-  {} \circelse pc = 1 \circthen HandleInstruction \\
-  {} \circelse pc = 2 \circthen HandleInstruction \\
-  {} \cdots {} \\
-  \circfi
-\end{circus}
-After that, we operate on the occurrence of $HandleInstruction$ at
-each $pc$ value, replacing it with its definition, which is a choice
-between actions to handle each type of instruction (e.g.\ $HandleDup$,
-$HandleAload$ etc.).
-For brevity, we refer to these handling actions that define
-$HandleInstruction$ as $Handle^*$ actions.
-Since the value of $bc$ at a given $pc$ value is known, we can
-determine which of the $Handle^*$ actions is chosen for each
-occurrence of $HandleInstruction$.
-The occurrences of $HandleInstruction$ are therefore collapsed to the
-appropriate $Handle^*$ actions on line~\ref{algorithm-collapse-handle-instruction}.
-This produces the following choice for our example.
-\begin{circus}
-  \circif pc = 0 \circthen HandleAload \\
-  {} \circelse pc = 1 \circthen HandleAload \\
-  {} \circelse pc = 2 \circthen HandleAload \\
-  {} \cdots {} \\
-  {} \circelse pc = 7 \circthen HandleNew \\
-  {} \circelse pc = 8 \circthen HandleDup \\
-  {} \circelse pc = 9 \circthen HandleAconst\_null \\
-  {} \cdots {} \\
-  \circfi
-\end{circus}
-The $Handle^*$ actions are then replaced with new actions.
-Those new actions are not guarded on the value of $bc$ at the
-current $pc$ value, since the choice those guards mediate has already
-been collapsed.
-The parameters of the bytecode instructions are also transferred to
-become parameters of the new actions.
-Finally, the updates to $pc$ contained in the $Handle^*$ actions are
-extracted in the form of assignments to $pc$.
-
-This final transformation is not carried out in the case of the method
-invocation and return instructions, where the $pc$ updates are closely
-connected to the operations on the stack and require special handling.
-The new actions' names are formed by appending $EPC$ to the names of
-the $Handle^*$ actions.
-The overall mapping from bytecode instructions to the new actions is
-shown in Table~\ref{handle-action-table}.
+applying Rule [\nameref{pc-expansion-rule}], shown below.
+It introduces a choice over all the possible values of $pc$ in the
+domain of $bc$ at the $HandleInstruction$ action in $Running$.
+This works because $HandleInstruction$ behaves as $\Chaos$ when $pc$
+is outside the domain of $bc$.
+In this rule we write $HandleInstruction$ with a $bc$ subscript to
+indicate that it makes use of $bc$, which is a parameter of the $Thr$
+pocess in which $HandleInstruction$ occurs. 
+\begin{restatable}[$pc$-expansion]{crule}{PCExpansionRule}
+  \label{pc-expansion-rule}
+  Given $bc : ProgramAddress \pfun Bytecode$,
+  \begin{circus}
+    HandleInstruction_{bc} = \circif {} \circelse_{i\in\dom bc} pc = i \then HandleInstruction_{bc} \circfi
+  \end{circus}
+\end{restatable}
+% \begin{circus}
+%   \circif pc = 0 \circthen HandleInstruction \\
+%   {} \circelse pc = 1 \circthen HandleInstruction \\
+%   {} \circelse pc = 2 \circthen HandleInstruction \\
+%   {} \cdots {} \\
+%   \circfi
+% \end{circus}
+After applying Rule [\nameref{pc-expansion-rule}], we operate on the
+occurrence of $HandleInstruction$ at each $pc$ value, applying Rule
+[\nameref{HandleInstruction-refinement-rule}], shown below, to refine
+each occurrence to a more specific form that is easier to operate on
+during the rest of the strategy.
+These new actions are determined from the bytecode instruction in $bc$
+at each $pc$ value by applying a syntactic function $handleAction$,
+which is defined by Table~\ref{handle-action-table}.
+\begin{restatable}[$HandleInstruction$-refinement]{crule}{HandleInstructionRefinementRule}
+  \label{HandleInstruction-refinement-rule}
+  Given $bc : ProgramAddress \pfun Bytecode$ and
+  $i : ProgramAddress$,
+  \begin{circus}
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \then HandleInstruction_{bc} \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \then handleAction(bc~i) \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+  \end{circus}
+  where $handleAction$ is a syntactic function defined by
+  Table~\ref{handle-action-table}.
+\end{restatable}
 \begin{table}
   \centering
   \begin{tabular}{lp{8.5cm}}
@@ -1717,52 +1719,107 @@ shown in Table~\ref{handle-action-table}.
     $iconst~n$ & $HandleIconstEPC(n) \circseq pc := i+1$ \\
     $ineg$ & $HandleInegEPC \circseq pc := i+1$ \\
     $goto~ofst$ & $pc := i+ofst$ \\
-    $if\_icmple(ofst)$ & $\circvar value1, value2 : Word \circspot$ \endgraf
+    $if\_icmple~ofst$ & $\circvar value1, value2 : Word \circspot$ \endgraf
                          \t1 $InterpreterPop2 \circseq$ \endgraf
-                         \t1 $\IF value1 \leq value2 \THEN i+ofst \ELSE i+1$ \\
+                         \t1 $pc := \IF value1 \leq value2 \THEN i+ofst \ELSE i+1$ \\
     $areturn$ & $HandleAreturnEPC$ \\
     $return$ & $HandleReturnEPC$ \\
     $getfield~cpi$ & $HandleGetfieldEPC(cpi) \circseq pc := i+1$ \\
     $putfield~cpi$ & $HandlePutfieldEPC(cpi) \circseq pc := i+1$ \\
     $getstatic~cpi$ & $HandleGetstaticEPC(cpi) \circseq pc := i+1$ \\
     $putstatic~cpi$ & $HandlePutstaticEPC(cpi) \circseq pc := i+1$ \\
-    $invokevirtual~cpi$ & $pc := i \circseq HandleInvokevirtualEPC(cpi)$ \\
-    $invokespecial~cpi$ & $pc := i \circseq HandleInvokespecialEPC(cpi)$ \\
-    $invokestatic~cpi$ & $pc := i \circseq HandleInvokestaticEPC(cpi)$ \\
+    $invokevirtual~cpi$ & $\{pc = i\} \circseq HandleInvokevirtualEPC(cpi)$ \\
+    $invokespecial~cpi$ & $\{pc = i\} \circseq HandleInvokespecialEPC(cpi)$ \\
+    $invokestatic~cpi$ & $\{pc = i\} \circseq HandleInvokestaticEPC(cpi)$ \\
     \hline
   \end{tabular}
   \caption{The syntactic function $handleAction$}
   \label{handle-action-table}
 \end{table}
-Note that the $Handle^*$ actions are eliminated completely in the case
-of the \texttt{goto} and \texttt{if\_icmple} instructions, since the
-$pc$ update is the main effect of these actions.
+% \begin{circus}
+%   \circif pc = 0 \circthen HandleAload \\
+%   {} \circelse pc = 1 \circthen HandleAload \\
+%   {} \circelse pc = 2 \circthen HandleAload \\
+%   {} \cdots {} \\
+%   {} \circelse pc = 7 \circthen HandleNew \\
+%   {} \circelse pc = 8 \circthen HandleDup \\
+%   {} \circelse pc = 9 \circthen HandleAconst\_null \\
+%   {} \cdots {} \\
+%   \circfi
+% \end{circus}
+The actions generated by $handleAction$ use new actions for handling
+the individual bytecode instructions.
+These are similar to the actions used to define $HandleInstruction$
+(e.g.\ $HandleDup$, $HandleAload$ etc.), which refer to as $Handle*$
+actions.
+They are named by appending $EPC$ to the names of the actions used to
+define $HandleInstruction$, and we refer to them as $Handle*EPC$
+actions.
 
-This replacement of the $Handle*$ actions with these new actions
-occurs in line~\ref{algorithm-expand-handle-action}. 
-After this transformation has been applied, the $Running$ action for
-our example is as shown in
+The $Handle*EPC$ actions have some differences from the $Handle*$
+actions on which they are based. 
+Firstly, they are not guarded on the value of $bc$ at the current $pc$
+value, since the choice those guards mediate is collapsed by Rule
+[\nameref{HandleInstruction-refinement-rule}].
+The parameters of the bytecode instructions are also transferred to
+become parameters of the $Handle*EPC$ actions.
+Finally, the $Handle*EPC$ actions do not affect $pc$, since the
+updates to $pc$ are extracted from the actions by Rule
+[\nameref{HandleInstruction-refinement-rule}].
+
+% are obtained by first replacing
+% $HandleInstruction$ with its definition, which is a choice between
+% actions to handle each type of instruction (e.g.\ $HandleDup$,
+% $HandleAload$ etc.).
+% This choice is then collapsed to the action for handling the bytecode
+% instruction at the given $pc$ value, $i$.
+% That action is converted to a new action that has its Those new
+% actions are not guarded on the value of $bc$ at the current $pc$
+% value, since the choice those guards mediate has already been
+% collapsed.
+
+% a particular $pc$ value (e.g.\ $HandleDup$, $HandleAload$ etc.).
+% For brevity, we refer to these handling actions that define
+% $HandleInstruction$ as $Handle^*$ actions.
+% Since the value of $bc$ at a given $pc$ value is known, we can
+% determine which of the $Handle^*$ actions is chosen for each
+% occurrence of $HandleInstruction$.
+
+% For brevity, we refer to these handling actions that define
+% $HandleInstruction$ as $Handle^*$ actions.
+% Since the value of $bc$ at a given $pc$ value is known, we can
+% determine which of the $Handle^*$ actions is chosen for each
+% occurrence of $HandleInstruction$.
+% The occurrences of $HandleInstruction$ are therefore collapsed to the
+% appropriate $Handle^*$ actions on
+% line~\ref{algorithm-collapse-handle-instruction}.
+% This produces the following choice for our example.
+
+% The $Handle^*$ actions are then replaced with new actions.
+% Those new actions are not guarded on the value of $bc$ at the
+% current $pc$ value, since the choice those guards mediate has already
+% been collapsed.
+% The parameters of the bytecode instructions are also transferred to
+% become parameters of the new actions.
+% Finally, the updates to $pc$ contained in the $Handle^*$ actions are
+% extracted in the form of assignments to $pc$.
+
+The $pc$ updates are not removed in the case of the actions for
+handling method invocation and return, where the $pc$ updates are
+closely connected to the operations on the stack and require special
+handling.
+Instead, an assumption on the value of $pc$ is introduced for the
+method invocation handling actions, since the $pc$ information is used
+in setting the return address.
+We discuss how we operate on the method invocation and return handling
+actions in Section~\ref{resolve-method-calls-subsection}.
+
+At the end of Algorithm~\ref{expand-bytecode-algorithm}, our example
+has the form shown earlier in
 Figure~\ref{bytecode-expansion-example-figure}.
-
-The overall transformation of the $HandleInstruction$ action in this
-step is summarised by Rule [\nameref{bytecode-expansion-rule}], which
-makes use of a syntactic function $handleAction$ that maps bytecode
-instructions onto \Circus{} actions as shown in
-Table~\ref{handle-action-table}.
-\begin{restatable}[bytecode-expansion]{crule}{BytecodeExpansionRule}
-  \label{bytecode-expansion-rule}
-  For a given $bc$
-  \begin{circus}
-    HandleInstruction_{bc} \circrefines_A
-    \begin{array}{l}
-      \circif {} \circelse_{i\in\dom bc} pc = i \then handleAction(bc~i) \circfi
-    \end{array}
-  \end{circus}
-  where $handleAction$ is a syntactic function defined by
-  Table~\ref{handle-action-table}.
-\end{restatable}
-After the bytecode semantics is expanded in the $Running$ action, the
-control flow that corresponds to each $pc$ update can be introduced.
+After the bytecode semantics is expanded in the $Running$ action by
+this step, the control flow that corresponds to each $pc$ update can
+be introduced.
 
 \subsection{Introduce Sequential Composition}
 \label{introduce-forward-sequence-subsection}
@@ -2634,9 +2691,8 @@ conditionals.
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \circseq \\
       \t3 \circif b \circthen \Skip \\
-      \t3 {} \circelse \lnot b \circthen B \\
+      \t3 {} \circelse \lnot b \circthen pc := k \circseq B \\
       \t3 \circfi \circseq pc := j \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
