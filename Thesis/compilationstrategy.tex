@@ -703,7 +703,7 @@ We explain the strategy in detail with an example, the Java code for
 which is shown in Figure~\ref{example-code-figure}.
 \begin{figure}[t!]
   \begin{center}
-  \begin{minipage}{10cm}
+  \begin{minipage}{12cm}
   \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,keywordstyle=\bf\footnotesize,language=Java,numbers=left,numberstyle=\tiny,stepnumber=1, numbersep=5pt,escapeinside={(*@}{@*)}]
 public class TPK extends AperiodicEventHandler {
 
@@ -1184,8 +1184,9 @@ As loops and conditionals are introduced, nodes in the control flow
 graph are merged until the graph consists of a single node, which is
 the starting point of the method, containing the complete method body.
 
-The result of introducing loops and conditionals after method calls
-have been resolved in \texttt{handleAsyncEvent()} is shown in
+The result of introducing loops and conditionals in
+\texttt{handleAsyncEvent()} after method calls have been resolved is
+shown in
 Figure~\ref{loop-and-conditional-introduction-example-figure}.
 The process of introducing loops and conditionals is described in more
 detail in Section~\ref{introduce-loops-and-conditionals-subsection},
