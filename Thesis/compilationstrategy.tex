@@ -1628,8 +1628,8 @@ The remaining instruction handling actions then only affect the stack,
 the removal of which is the concern of the next stage of the
 compilation strategy.
 
-We now proceed to describe each of the steps of program counter
-elimination in more detail.
+We now proceed to describe each of the steps of
+Algorithm~\ref{epc-algorithm} in more detail.
 
 \FloatBarrier
 
@@ -1646,8 +1646,9 @@ Algorithm~\ref{expand-bytecode-algorithm}.
     \State \ApplyFor{Rule [\nameref{pc-expansion-rule}]}{$bc$}
     \label{algorithm-introduce-choice-over-pc}
     \For{$i \gets \dom bc$}
+    \label{algorithm-expand-bytecode-loop}
     \State \ApplyFor{Rule [\nameref{HandleInstruction-refinement-rule}]}{$bc$, $i$}
-    \label{algorithm-collapse-handle-instruction}
+    \label{algorithm-HandleInstruction-refinement}
     \EndFor
   \end{algorithmic}
   \caption{ExpandBytecode}
@@ -1677,8 +1678,10 @@ pocess in which $HandleInstruction$ occurs.
 %   \circfi
 % \end{circus}
 After applying Rule [\nameref{pc-expansion-rule}], we operate on the
-occurrence of $HandleInstruction$ at each $pc$ value, applying Rule
-[\nameref{HandleInstruction-refinement-rule}], shown below, to refine
+occurrence of $HandleInstruction$ at each $pc$ value in the loop at
+line~\ref{algorithm-expand-bytecode-loop}.
+Rule [\nameref{HandleInstruction-refinement-rule}], shown below, is
+applied on line~\ref{algorithm-HandleInstruction-refinement} to refine
 each occurrence to a more specific form that is easier to operate on
 during the rest of the strategy.
 These new actions are determined from the bytecode instruction in $bc$
