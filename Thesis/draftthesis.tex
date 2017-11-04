@@ -85,6 +85,14 @@ refname={Rule,Rules},
 Refname={Rule,Rules}
 ]{crule}
 
+\declaretheorem[
+name=Law,
+style=rule,
+numbered=no,
+refname={Law,Laws},
+Refname={Law,Laws}
+]{law}
+
 \makeatletter
 \declaretheoremstyle[
 style=definition,
@@ -232,6 +240,9 @@ prefoothook={\qedsymbol\relax}
 
 \chapter{Compilation Rules}
 \input{compilationrules.tex}
+
+\chapter{Algebraic Laws}
+\input{algebraiclaws.tex}
 
 \chapter{Z/Eves Theorems and Proofs}
 \label{zeves-proofs}

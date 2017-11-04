@@ -1,0 +1,43 @@
+This appendix contains algebraic laws that are not specific to our
+compilation strategy but are used in our compilation strategy and the
+proofs of our compilation rules.
+
+% proved in Isabelle
+\begin{law}[alt-intro]
+  If $x : T$ is a state variable,
+  \begin{circus}
+    A
+    =
+    \circif {} \circelse_{i \in T} x = i \circthen A \circfi
+  \end{circus}
+\end{law}
+
+% proved in Isabelle
+\begin{law}[alt-seq-dist]
+  \begin{circus}
+    \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
+    =
+    \circif {} \circelse_{i} g_i \circthen A_i \circseq B \circfi
+  \end{circus}
+\end{law}
+
+% proved in Isabelle
+\begin{law}[alt-assump-intro]
+  \begin{circus}
+    \circif {} \circelse_{i} g_i \circthen A_i \circfi
+    =
+    \circif {} \circelse_{i} g_i \circthen \{g_i\} \circseq A_i \circfi
+  \end{circus}
+\end{law}
+
+% standard rule
+\begin{law}[copy-rule]
+  If
+  \begin{circus}
+    A \circdef B
+  \end{circus}
+  then,
+  \begin{circus}
+    F(A) = F(B)
+  \end{circus}
+\end{law}
