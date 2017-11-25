@@ -4,6 +4,7 @@ proofs of our compilation rules.
 
 % proved in Isabelle
 \begin{law}[alt-intro]
+  \label{alt-intro-law}
   If $x : T$ is a state variable,
   \begin{circus}
     A
@@ -14,6 +15,7 @@ proofs of our compilation rules.
 
 % proved in Isabelle
 \begin{law}[alt-seq-dist]
+  \label{alt-seq-dist-law}
   \begin{circus}
     \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
     =
@@ -23,6 +25,7 @@ proofs of our compilation rules.
 
 % proved in Isabelle
 \begin{law}[alt-assump-intro]
+  \label{alt-assump-intro-law}
   \begin{circus}
     \circif {} \circelse_{i} g_i \circthen A_i \circfi
     =
@@ -30,14 +33,386 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% standard rule
+% proved in Isabelle
+\begin{law}[assump-assign-dist]
+  \label{assump-assign-dist-law}
+  If $g_1 \implies g_2[e/x]$ then,
+  \begin{circus}
+    \{ g_1 \} \circseq x := e
+    =
+    \{ g_1 \} \circseq x := e \circseq \{ g_2 \}
+  \end{circus}
+\end{law}
+
+% proved in Isabelle
+\begin{law}[assump-seq-subst]
+  \label{assump-seq-subst-law}
+  \begin{circus}
+    \{x = e\} \circseq A
+    \circrefines_A
+    \{x = e\} \circseq A[e/x]
+  \end{circus}
+\end{law}
+
+% proved in Isabelle
+\begin{law}[assump-assign-subst]
+  \label{assump-assign-subst-law}
+  \begin{circus}
+    \{x = e\} \circseq y := f
+    \circrefines_A
+    \{x = e\} \circseq y := f[e/x]
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle (similar to Law[assign-seq-dist] in Alvaro's thesis)
+\begin{law}[assign-seq-subst]
+  \label{assign-seq-subst-law}
+  If $x$ is free in $e$ then,
+  \begin{circus}
+    x := e \circseq A
+    =
+    x := e \circseq A[e/x]
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle
+\begin{law}[assump-alt-guard-replace]
+  \label{assump-alt-guard-replace-law}
+  If $\forall i @ h \land g1_i \iff h \land g2_i$ then,
+  \begin{circus}
+    \{h\} \circseq \circif {} \circelse_{i} g1_i \circthen A_i \circfi
+    =
+    \{h\} \circseq \circif {} \circelse_{i} g2_i \circthen A_i \circfi
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle (similar to Law[assump-alt-dist] in Alvaro's thesis)
+\begin{law}[assump-alt-dist]
+  \label{assump-alt-dist-law}
+  \begin{circus}
+    \{h\} \circseq \circif {} \circelse_{i} g_i \circthen A_i \circfi
+    =
+    \{h\} \circseq \circif {} \circelse_{i} g_i \circthen \{h\} \circseq A_i \circfi
+  \end{circus}
+\end{law}
+
+% TODO: Needs Isabelle proof
+\begin{law}[alt-branch-elim]
+  \label{alt-branch-elim-law}
+  \begin{circus}
+    \begin{array}{l}
+      \circif \cdots \\
+      {} \circelse g_i \circthen \Chaos \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+    =
+    \begin{array}{l}
+      \circif \cdots \\
+      {} \circelse g_i \circthen \Chaos \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+  \end{circus}
+  provided the guards of the alternation are disjoint.
+\end{law}
+
+
+% Definition B.28 in Marcel's thesis
 \begin{law}[copy-rule]
-  If
+  \label{copy-rule-law}
+  If $N$ is the name of an action in the current process then,
   \begin{circus}
-    A \circdef B
+    N(e) = B(N)(e)
   \end{circus}
-  then,
+  where $B$ is a function that returns the body of an action given its
+  name.
+\end{law}
+
+% Definition B.37 in Marcel's thesis
+\begin{law}[val-def]
+  \label{val-def-law}
+  If $x$ is free in $e$ then,
   \begin{circus}
-    F(A) = F(B)
+    (\circval x : T \circspot A)(e)
+    =
+    (\circvar x : T \circspot x := e \circspot A)
   \end{circus}
+\end{law}
+
+% Law C.27 in Marcel's thesis
+\begin{law}[assump-assump-intro]
+  \label{assump-assump-intro-law}
+  If $g \implies g_1$ then,
+  \begin{circus}
+    \{g\} = \{g\} \circseq \{g_1\}
+  \end{circus}
+\end{law}
+
+% Law C.32 in Marcel's thesis
+\begin{law}[assump-guard-elim1]
+  \label{assump-guard-elim1-law}
+  If $g_1 \implies g_2$ then,
+  \begin{circus}
+    \{g_1\} \circseq (\lcircguard g_2 \rcircguard \circguard A)
+    =
+    \{g_1\} \circseq A
+  \end{circus}
+\end{law}
+
+% Law C.33 in Marcel's thesis
+\begin{law}[assump-guard-elim2]
+  \label{assump-guard-elim2-law}
+  If $g_1 \implies \lnot g_2$ then,
+  \begin{circus}
+    \{g_1\} \circseq (\lcircguard g_2 \rcircguard \circguard A)
+    =
+    \{g_1\} \circseq \Stop
+  \end{circus}
+\end{law}
+
+% Law C.35 in Marcel's Thesis
+\begin{law}[assump-elim]
+  \label{assump-elim-law}
+  \begin{circus}
+    \{g\} \circrefines_A \Skip
+  \end{circus}
+\end{law}
+  
+% Law C.37 in Marcel's thesis
+\begin{law}[assump-extchoice-distr]
+  \label{assump-extchoice-distr-law}
+  \begin{circus}
+    \{g\} \circseq (A \extchoice B)
+    =
+    (\{g\} \circseq A) \extchoice (\{g\} \circseq B)
+  \end{circus}
+\end{law}
+
+% Law C.46 in Marcel's thesis
+\begin{law}[assump-output-prefix-dist]
+  \label{assump-output-prefix-dist-law}
+  \begin{circus}
+    \{ g \} \circseq c!x \then A = \{ g \} \circseq c!x \then \{ g \} \circseq A
+  \end{circus}
+\end{law}
+  
+% Law C.48 in Marcel's thesis
+\begin{law}[assump-input-prefix-dist]
+  \label{assump-input-prefix-dist-law}
+  If $x$ is not free in $g$ then,
+  \begin{circus}
+    \{ g \} \circseq c?x \then A = \{ g \} \circseq c?x \then \{ g \} \circseq A
+  \end{circus}
+\end{law}
+
+% Law C.53 in Marcel's thesis
+\begin{law}[assump-schema-dist]
+  \label{assump-schema-dist-law}
+  If $g \land p \implies g'$
+  \begin{circus}
+    \{ g \} \circseq \lschexpract [ decl | p ] \rschexpract
+    \circrefines_A
+    \lschexpract [ decl | p ] \rschexpract \circseq \{ g \}
+  \end{circus}
+\end{law}
+
+% Law C.71 in Marcel's thesis
+\begin{law}[schema-seq-intro]
+  \label{schema-seq-intro-law}
+  \begin{circus}
+    [\Delta S_1; \Delta S_2; i? : T | preS_1 \land preS_2 \land CS_1 \land CS_2] \\
+    \circrefines_A \\
+    [\Delta S_1; \Xi S_2; i? : T | preS_1 \land CS_1] \circseq [\Xi S_1; \Delta S_2; i? : T | preS_2 \land CS_2]
+  \end{circus}
+  provided
+  \begin{itemize}
+  \item $\alpha(S_1) \cap \alpha(S_2) = \emptyset$
+  \item $FV(preS_1) \subseteq \alpha(S_1) \cup \{i?\}$
+  \item $FV(preS_2) \subseteq \alpha(S_2) \cup \{i?\}$
+  \item $DFV(CS_1) \subseteq \alpha(S_1')$
+  \item $DFV(CS_2) \subseteq \alpha(S_2')$
+  \item $UDFV(CS_2) \cap DFV(CS_1) = \emptyset$
+  \end{itemize}
+  where $\alpha(S)$ is the alphabet of a schema $S$, $FV(P)$ is the
+  free variable set of the predicate $P$, and $DFV(P)$ and $UDFV(P)$
+  are the dashed and undashed free variables of a predicated $P$.
+\end{law}
+
+% Law C.75 in Marcel's thesis
+\begin{law}[schema-refinement]
+  \label{schema-refinement-law}
+  \begin{circus}
+    \lschexpract [ decls | P_1 ] \rschexpract
+    \circrefines_A
+    \lschexpract [ decls | P_2 ] \rschexpract
+  \end{circus}
+  provided
+  \begin{itemize}
+  \item $\pre [ decls | P_1 ] \implies \pre [ decls | P_2 ]$
+  \item $(\pre [ decls | P_1 ] \land P_2) \implies P_1$
+  \end{itemize}
+\end{law}
+
+% Law C.110 in Marcel's thesis
+\begin{law}[extchoice-comm]
+  \label{extchoice-comm-law}
+  \begin{circus}
+    A \extchoice B = B \extchoice A
+  \end{circus}
+\end{law}
+
+% Law C.114 in Marcel's thesis
+\begin{law}[extchoice-unit]
+  \label{extchoice-unit-law}
+  \begin{circus}
+    \Stop \extchoice A = A
+  \end{circus}
+\end{law}
+
+% Law C.132A in Marcel's thesis
+\begin{law}[seq-unitl]
+  \label{seq-unitl-law}
+  \begin{circus}
+    \Skip \circseq A = A
+  \end{circus}
+\end{law}
+
+% Law C.134 in Marcel's thesis
+\begin{law}[seq-zerol]
+  \label{seq-zerol-law}
+  \begin{circus}
+    \Chaos \circseq A = \Chaos
+  \end{circus}
+\end{law}
+
+% From Corollary 3.1 in Marcel's thesis and the deifinition of hiding
+\begin{law}[schema-hide-var-conv]
+  \label{schema-hide-var-conv-law}
+  If $x$ and $x'$ have type $T$ in $S$ then,
+  \begin{circus}
+    \lschexpract S \hide (x,x') \rschexpract
+    =
+    (\circvar x : T \circspot \lschexpract S \rschexpract)
+  \end{circus}
+\end{law}
+  
+% Law[var-seq-ext-left] in Alvaro's thesis (from C.137 in Marcel's thesis)
+\begin{law}[var-seq-extl]
+  \label{var-seq-extl-law}
+  If $x$ is not free in $A_1$ then,
+  \begin{circus}
+    A \circseq (\circvar x : T \circspot B)
+    =
+    (\circvar x : T \circspot A \circseq B)
+  \end{circus}
+\end{law}
+
+% Law[var-seq-ext-right] in Alvaro's thesis (from C.137 in Marcel's thesis)
+\begin{law}[var-seq-extr]
+  \label{var-seq-extr-law}
+  If $x$ is not free in $A_1$ then,
+  \begin{circus}
+    (\circvar x : T \circspot A) \circseq B
+    =
+    (\circvar x : T \circspot A \circseq B)
+  \end{circus}
+\end{law}
+
+% Law[var-assign-intro] in Alvaro's thesis
+\begin{law}[var-assign-intro]
+  \label{var-assign-intro-law}
+  If $x$ is not free in $A$ then,
+  \begin{circus}
+    A
+    =
+    \circvar x : T \circspot x := e \circseq A
+  \end{circus}
+\end{law}
+
+% Law[assign-schema-conv] in Alvaro's thesis
+\begin{law}[assign-schema-conv]
+  \label{assign-schema-conv-law}
+  \begin{circus}
+    \{ inv \} \circseq v := e
+    =
+    [\Delta S | vs' = vs \land v' = e]
+  \end{circus}
+  where
+  \begin{itemize}
+  \item $S == [dv; dvs | inv]$
+  \item $dv$ is the declaration of $v$
+  \item $dvs$ are the declarations of the variables $vs$
+  \item $inv \implies
+    inv \land (\exists dv; dvs @
+    inv' \land vs' = vs land v' = e)$
+  \end{itemize}
+\end{law}
+
+% Law[assign-seq-com] in Alvaro's thesis
+\begin{law}[assign-seq-dist]
+  \label{assign-seq-dist-law}
+  If $x$ is not written to by $A$ then,
+  \begin{circus}
+    x := e \circseq A
+    =
+    A[e/x] \circseq x := e
+  \end{circus}
+\end{law}
+
+
+% Law scompC in ZRC paper
+\begin{law}[schema-comp-seq-conv]
+  \label{schema-comp-seq-conv-law}
+  \begin{circus}
+    \lschexpract S_1 \comp S_2 \rschexpract \circrefines_A \lschexpract S_1 \rschexpract \circseq \lschexpract S_2 \rschexpract
+  \end{circus}
+  provided $S_1$ and $S_2$ act over the same state, have no common
+  output variables, and $pre_C \land S_1 \implies pre_2'$, where
+  \begin{itemize}
+  \item $pre_C = \pre(S_1 \comp S_2) \land inv \land t \land t_1 \land t_2$;
+  \item $\pre~S_2 = pre_2 \land inv \land t \land t_2$;
+  \item $t$, $t_1$ and $t_2$ are the restriticions imposed by the
+    state variables, the inputs of $S_1$, and the inputs of $S_2$,
+    respectively. 
+  \end{itemize}
+\end{law}
+
+% From Definition B.40 in Marcel's thesis and Law vrbI in ZRC paper
+\begin{law}[schema-var-intro]
+  \label{schema-var-intro-law}
+  If $x$ is not declared in $decls$ then,
+  \begin{circus}
+    \lschexpract [decls | pred] \rschexpract
+    =
+    \circvar x : T \circspot \lschexpract [decls; x, x' : T | pred] \rschexpract
+  \end{circus}
+\end{law}
+
+% From the definition of process refinement (Definition 3.2 in Marcel's thesis)
+\begin{law}[action-intro]
+  \label{action-intro-law}
+  If $N$ is not referenced in the body of $P$ then,
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+    \circrefines_P
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 N \circdef B \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+  
 \end{law}

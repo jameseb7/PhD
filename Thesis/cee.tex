@@ -2222,11 +2222,14 @@ parameter and passed into $Invoke$ along with $mid$, $poppedArgs$, and
 a boolean value indicating that the method invocation is not from the
 \texttt{invokestatic} instruction.
 \begin{circusaction}
-  HandleInvokespecial \circdef \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
-  \t1 \lcircguard pc \in\dom bc \land bc~pc \in \ran invokespecial \land ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \rcircguard \circguard \\
-  \t1 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
-  \t1 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t1 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false)
+  HandleInvokespecial \circdef \\
+  \t1 \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
+  \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
+  \t1 \circif ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \circthen {}
+  \t2 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
+  \t2 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+  \t2 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false) \\
+  \t1 {} \circelse ((invokespecial\inv)~(bc~pc)) \notin methodRefIndices~currentClass \circthen \Chaos
 \end{circusaction}
 The $HandleInvokestatic$ and $HandleInvokevirtual$ actions are
 similar, except that $argsToPop?$ does not include the extra
