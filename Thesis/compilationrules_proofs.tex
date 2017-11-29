@@ -3491,14 +3491,6 @@
       \end{array}\\
       = & Schema calculus \\
       \begin{array}{l}
-        \{ pc = i \} \circseq \lschexpract \exists \Delta StackFrame @ S \land ([\Delta InterpreterState; \Delta StackFrame | \\
-	\t1 \theta StackFrame = last~frameStack \land frameStack' = (front~frameStack) \cat \langle \theta StackFrame~' \rangle \land \\
-	\t1 pc' = pc \land currentClass' = currentClass \land frameStackID' = frameStackID] \semi \\
-        \t1 [\Delta InterpreterState; \Delta StackFrame | \theta StackFrame~' = \theta StackFrame \land \\
-	\t1 pc' = pc + 1 \land currentClass' = currentClass \land frameStackID' = frameStackID]) \rschexpract
-      \end{array}\\
-      = & Schema calculus \\
-      \begin{array}{l}
         \{ pc = i \} \circseq \lschexpract (\exists \Delta StackFrame @ (S \land [\Delta InterpreterState; \Delta StackFrame | \\
 	\t1 \theta StackFrame = last~frameStack \land frameStack' = (front~frameStack) \cat \langle \theta StackFrame~' \rangle \land \\
 	\t1 pc' = pc \land currentClass' = currentClass \land frameStackID' = frameStackID])) \semi \\
