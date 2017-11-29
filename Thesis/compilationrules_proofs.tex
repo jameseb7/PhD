@@ -1198,7 +1198,7 @@
         \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
-        \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~((getfield\inv)~(bc~pc)) \circseq \\
+        \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~((putfield\inv)~(bc~pc)) \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \lschexpract InterpreterPop2[value!/value1!,oid!/value2!] \rschexpract \circseq \\
         \t2 putField!oid!fid!value \then \Skip \\
         \t1 {} \circelse cpIndex \notin fieldRefIndices~currentClass \circthen {} \\
@@ -1214,7 +1214,7 @@
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot \\
         \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
-        \t2 fid := fieldOf~currentClass~((getfield\inv)~(bc~pc)) \circseq \\
+        \t2 fid := fieldOf~currentClass~((putfield\inv)~(bc~pc)) \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot
         \lschexpract InterpreterPop2[value!/value1!,oid!/value2!] \rschexpract \circseq \\
         \t2 putField!oid!fid!value \then \Skip \\
@@ -1537,7 +1537,7 @@
         handleAction~(bc~i)
       \end{array}\\
     \end{argue}
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Case 16: putstatic
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     \item Suppose $bc~i = putstatic~cpi$ then,

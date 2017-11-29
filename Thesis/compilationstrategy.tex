@@ -1752,6 +1752,7 @@ Algorithm~\ref{expand-bytecode-algorithm}, before the application of
 Rule~[\nameref{HandleInstruction-refinement-rule}], by application of
 Law~[\nameref{action-intro-law}], which introduces unused actions to
 processes.
+
 In addtion to the $Handle{*}EPC$ actions, the actions output from
 $handleAction$ also include $pc$ updates extracted from the $Handle*$
 actions.
@@ -1773,7 +1774,7 @@ below.
 \begin{circusaction}
   HandleAstoreEPC \circdef \circval variableIndex : \nat \circspot \lschexpract InterpreterAstoreEPC \rschexpract
 \end{circusaction}
-The first difference of $HandleAstoreEPC$ from $HandleAstore$, is that
+The first difference of $HandleAstoreEPC$ from $HandleAstore$ is that
 it is not guarded by the condition on the value of $bc$ at the current
 $pc$ value.
 The choice that such guards mediate is collapsed by
