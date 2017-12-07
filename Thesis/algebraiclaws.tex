@@ -96,6 +96,45 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Proved in Isabelle
+\begin{law}[assign-assump-intro]
+  \label{assign-assump-intro-law}
+  If $x$ is free in $e$ then,
+  \begin{circus}
+    x := e = x := e \circseq \{x = e\}
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle
+\begin{law}[assump-alt-collapse1]
+  \label{assump-alt-collapse1-law}
+  \begin{circus}
+    \{g\} \circseq
+    \circblockbegin
+    \circif g \circthen A \\
+    {} \circelse \not g \circthen B \\
+    \circfi
+    \circblockend
+    =
+    \{g\} \circseq A
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle
+\begin{law}[assump-alt-collapse2]
+  \label{assump-alt-collapse2-law}
+  If $e \in I$ then,
+  \begin{circus}
+    \{ x = e \} \circseq
+    \circblockbegin
+    \circif {} \circelse_{i \in I} x = i \circthen A_i \\
+    \circfi
+    \circblockend
+    =
+    \{ x = e \} \circseq A_e
+  \end{circus}
+\end{law}
+
 % TODO: Needs Isabelle proof
 \begin{law}[alt-branch-elim]
   \label{alt-branch-elim-law}
@@ -262,6 +301,14 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% From Law C.112 in Marcel's thesis
+\begin{law}[extchoice-seq-distr]
+  \label{extchoice-seq-distr-law}
+  \begin{circus}
+    (\extchoice i \circspot c_i \then A_i) \circseq B = (\extchoice i \circspot c_i \then A_i \circseq B) 
+  \end{circus}
+\end{law}
+
 % Law C.114 in Marcel's thesis
 \begin{law}[extchoice-unit]
   \label{extchoice-unit-law}
@@ -270,11 +317,36 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Law C.128 in Marcel's thesis
+\begin{law}[rec-unfold]
+  \label{rec-unfold-law}
+  \begin{circus}
+    \circmu X \circspot F(X) = F(\circmu X \circspot F(X))
+  \end{circus}
+\end{law}
+
+% Law C.129 in Marcel's thesis
+\begin{law}[rec-least-fixed-point]
+  \label{rec-least-fixed-point-law}
+  If $F(Y) \circrefines_A Y$ then,
+  \begin{circus}
+    \circmu X \circspot F(X) \circrefines_A Y
+  \end{circus}
+\end{law}
+
 % Law C.132A in Marcel's thesis
 \begin{law}[seq-unitl]
   \label{seq-unitl-law}
   \begin{circus}
     \Skip \circseq A = A
+  \end{circus}
+\end{law}
+
+% Law C.132B in Marcel's thesis
+\begin{law}[seq-unitr]
+  \label{seq-unitr-law}
+  \begin{circus}
+     A \circseq \Skip = A
   \end{circus}
 \end{law}
 
@@ -414,5 +486,39 @@ proofs of our compilation rules.
       \t1 \circend
     \end{array}
   \end{circus}
-  
+\end{law}
+
+% From Exercise 2.6.4(2) in the UTP book with
+% F(X) = \{g\} \circseq f(X)
+% G(X) = X \circseq \{g\}
+% H(X) = f(X)
+\begin{law}[rec-assump-distr]
+  \label{rec-assump-distr-law}
+  If $\{g\} \circseq F(X \circseq \{g\}) \circrefines_A F(X) \circseq \{g\}$ then,
+  \begin{circus}
+    (\circmu X \circspot \{g\} \circseq F(X))
+    \circrefines_A
+    (\circmu X \circspot F(X)) \circseq \{g\}
+  \end{circus}
+\end{law}
+
+% From the dual of Exercise 2.6.4 in the UTP book and Theorem 7.15
+% from Simon's reactive contracts paper with
+% F(X) = \{g\} \circseq f(X)
+% G(X) = \{g\} \circseq X 
+% H(X) = f(X)
+\begin{law}[assump-rec-distl]
+  \label{assump-rec-distl-law}
+  If, for all actions $X$ and $n \in \nat$,
+  \[\begin{array}{l}
+      (F(X) \land tr \leq tr' \land \# (tr'-tr) < n + 1) \\
+      {} = {} \\
+      (F(X \land tr \leq tr' \land \# (tr'-tr) < n) \land tr \leq tr' \land \# (tr'-tr) < n + 1)
+    \end{array}\]
+  and $\{g\} \circseq F(X) \circrefines_A \{g\} \circseq F(\{g\} \circseq X)$ then,
+  \begin{circus}
+    \{g\} \circseq (\circmu X \circspot F(X))
+    \circrefines_A
+    (\circmu X \circspot \{g\} \circseq F(X))
+  \end{circus}
 \end{law}
