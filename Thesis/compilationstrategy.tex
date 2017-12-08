@@ -1913,6 +1913,15 @@ For a node that meets the above requirement and isn't a method call,
 we can introduce sequential composition at that node by applying
 Rule~[\nameref{sequence-introduction-rule}], on
 line~\ref{algorithm-forward-sequence-application} of the algorithm.
+This rule works by unrolling the loop in $Running$ to sequence an
+instruction at $pc$ value $i$ with the instruction that is executed
+after it, inserting $Poll$ inbetween.
+It is required that the $pc$ value of the node's target, $j$, not be
+the same as $i$, since that would introduce a loop, rather than a
+sequential composition.
+Also, the sequence of instructions at the node, $A$, must not affect
+the non-emptiness of the $frameStack$ to ensure that the choice at the
+start of the main loop in $Running$ can be resolved.
 \begin{restatable}[sequence-intro]{crule}{SequenceIntroductionRule}
   \label{sequence-introduction-rule}
   Given $i : ProgramAddress$, if $i \neq j$ and \def\zedindent{0.25cm}
@@ -1951,15 +1960,6 @@ line~\ref{algorithm-forward-sequence-application} of the algorithm.
     \end{array}
   \end{circus}
 \end{restatable}
-This rule works by unrolling the loop in $Running$ to sequence an
-instruction at $pc$ value $i$ with the instruction that is executed
-after it, inserting $Poll$ inbetween.
-It is required that the $pc$ value of the node's target, $j$, not be
-the same as $i$, since that would introduce a loop, rather than a
-sequential composition.
-Also, the sequence of instructions at the node, $A$, must not affect
-the non-emptiness of the $frameStack$ to ensure that the choice at the
-start of the main loop in $Running$ can be resolved.
 
 Since Rule~[\nameref{sequence-introduction-rule}] pulls two nodes
 together, we can continue to introduce sequential composition at a
