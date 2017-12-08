@@ -1643,13 +1643,13 @@ This is achieved using the procedure shown in
 Algorithm~\ref{expand-bytecode-algorithm}.
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \State \ApplyFor{Rule [\nameref{pc-expansion-rule}]}{$bc$}
+    \State \ApplyFor{Rule~[\nameref{pc-expansion-rule}]}{$bc$}
     \label{algorithm-introduce-choice-over-pc}
-    \State \ApplyFor{Law [\nameref{action-intro-law}]}{$Handle{*}EPC$ actions}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$Handle{*}EPC$ actions}
     \label{algorithm-introduce-handleEPC-actions}
     \For{$i \gets \dom bc$}
     \label{algorithm-expand-bytecode-loop}
-    \State \ApplyFor{Rule [\nameref{HandleInstruction-refinement-rule}]}{$bc$, $i$}
+    \State \ApplyFor{Rule~[\nameref{HandleInstruction-refinement-rule}]}{$bc$, $i$}
     \label{algorithm-HandleInstruction-refinement}
     \EndFor
   \end{algorithmic}
@@ -1821,24 +1821,22 @@ This is dicussed in the next section.
 
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \Procedure{IntroduceSequentialComposition}{}
     \State $cfg \gets$ \Call{MakeControlFlowGraph}{}
     \label{algorithm-make-control-flow-graph}
     \For{$node \gets cfg$}
     \label{algorithm-sequence-cfg-loop}
     \While{\Call{HasSimpleSequence}{$node$}}
     \label{algorithm-forward-sequence-condition}
-    \State \Call{ApplyRule[\nameref{sequence-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
     \label{algorithm-forward-sequence-application}
     \EndWhile
     \EndFor
-    \EndProcedure
   \end{algorithmic}
-  \caption{Introduce Sequential Composition}
+  \caption{IntroduceSequentialComposition}
   \label{introduce-forward-sequence-algorithm}
 \end{algorithm}
-The simplest control flow to introduce is that of instructions where
-execution continues at the next program counter value.
+The simplest control flows to introduce are those of instructions
+where execution continues at the next program counter value.
 These control flows are introduced as shown in
 Algorithm~\ref{introduce-forward-sequence-algorithm}, which defines
 the \Call{IntroduceSequentialComposition}{} procedure.
@@ -1849,9 +1847,14 @@ Since the introduction of sequential composition does not depend on
 the relationships between methods, the control flow graph is
 constructed as a disconnected control flow graph containing the
 control flow of all the methods in the program.
+The subgraph corresponding to each method's control flow is a
+structured graph as defined in
+Section~\ref{compilation-assumptions-section}. 
 Although method calls have not had their $pc$ updates formally made
 explicit, we can assume a method call will be followed by the
 instruction at the next program counter value.
+We label the nodes of the graph with the $pc$ values of the
+instructions at the nodes.
 The control flow graph for our example is shown in
 Figure~\ref{example-control-flow-graph-figure}.
 
@@ -1908,12 +1911,11 @@ nodes are nodes $35$ and $39$.
 
 For a node that meets the above requirement and isn't a method call,
 we can introduce sequential composition at that node by applying
-Rule [\nameref{sequence-introduction-rule}], on
+Rule~[\nameref{sequence-introduction-rule}], on
 line~\ref{algorithm-forward-sequence-application} of the algorithm.
 \begin{restatable}[sequence-intro]{crule}{SequenceIntroductionRule}
   \label{sequence-introduction-rule}
-  \def\zedindent{0.25cm}
-  If $i \neq j$ and
+  Given $i : ProgramAddress$, if $i \neq j$ and \def\zedindent{0.25cm}
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -1950,28 +1952,31 @@ line~\ref{algorithm-forward-sequence-application} of the algorithm.
   \end{circus}
 \end{restatable}
 This rule works by unrolling the loop in $Running$ to sequence an
-instruction with the instruction that is executed after it, inserting
-$Poll$ inbetween.
+instruction at $pc$ value $i$ with the instruction that is executed
+after it, inserting $Poll$ inbetween.
 It is required that the $pc$ value of the node's target, $j$, not be
-the same as the $pc$ value of the node, $i$, since that would
-introduce a loop, rather than a sequential composition.
+the same as $i$, since that would introduce a loop, rather than a
+sequential composition.
 Also, the sequence of instructions at the node, $A$, must not affect
 the non-emptiness of the $frameStack$ to ensure that the choice at the
 start of the main loop in $Running$ can be resolved.
 
-Since Rule [\nameref{sequence-introduction-rule}] pulls two nodes
+Since Rule~[\nameref{sequence-introduction-rule}] pulls two nodes
 together, we can continue to introduce sequential composition at a
 node after the first application of
-Rule [\nameref{sequence-introduction-rule}], until that node no longer
+Rule~[\nameref{sequence-introduction-rule}], until that node no longer
 satisfies the conditions for introducing sequential composition.
 This is specified by the while loop at
 line~\ref{algorithm-forward-sequence-condition} of the algorithm.
 This means the control flow graph is updated as
-Rule [\nameref{sequence-introduction-rule}] is applied, to take into
+Rule~[\nameref{sequence-introduction-rule}] is applied, to take into
 account the merging of nodes.
 The resulting control flow graph after introduction of sequential
 composition has been performed at every point is shown in
 Figure~\ref{example-control-flow-graph-after-sequence-introduction-figure}.
+We note that this graph is still a union of structured graphs since
+merging sequentially composed nodes does not affect whether a graph is
+structured.
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}[every new ->/.style={-latex}]
@@ -2000,8 +2005,8 @@ Figure~\ref{example-control-flow-graph-after-sequence-introduction-figure}.
   \label{example-control-flow-graph-after-sequence-introduction-figure}
 \end{figure}
 The only remaining nodes in this graph are those where the sequence of
-instructions ends with a method call or which represent a more complex
-control flow.
+instructions ends with a method call or return, or which represent a
+more complex control flow.
 In particular, the instructions for the \texttt{f()} method of
 \texttt{TPK}, which begin at $pc = 43$, have been completely sequenced
 together into a single node.
