@@ -2252,949 +2252,641 @@
 \end{crproof}
 
 \begin{crproof}[\nameref{if-introduction-rule}]
-  We seek to apply Law C.129, taking the RHS of the rule as $Y$, and the LHS as $\circmu X \circspot F(X)$, and proving $F(Y) \circrefines_A Y$:
+  As in the proof of Rule~[\nameref{sequence-introduction-rule}], we seek to
+  apply Law~[\nameref{rec-least-fixed-point-law}] taking the
+  right-hand-side of the rule as $Y$, and the left-hand-side as
+  $\circmu X \circspot F(X)$, and proving $F(Y) \circrefines_A Y$:
   \begin{argue}
     \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq pc := \IF b \THEN j \ELSE k \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq \\
-      \t2 \circmu X \circspot \\
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 pc := \IF b \THEN j \ELSE k \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 \circif b \circthen \Skip \\
-      \t4 {} \circelse \lnot b \circthen pc := k \circseq B \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
       \t4 \circfi \circseq pc := j \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
       \t3 {} \cdots {} \\
       \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\ 
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & introduce alternation \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-intro2-law}] \\
     \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := \IF b \THEN j \ELSE k \\
-      \t3 {} \circelse \lnot b \circthen pc := \IF b \THEN j \ELSE k \\
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \circelse \lnot b \circthen pc := \IF b \THEN j \ELSE k \\
+      \t2 \circfi
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-assump-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen \{ b \} \circseq pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \circelse \lnot b \circthen \{ \lnot b \} \circseq pc := \IF b \THEN j \ELSE k \\
+      \t2 \circfi
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-assign-cond-collapse-true-law}] and Law~[\nameref{assump-assign-cond-collapse-false-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen \{ b \} \circseq pc := j \\
+      \t2 {} \circelse \lnot b \circthen \{ \lnot b \} \circseq pc := k \\
+      \t2 \circfi
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Introduce and distribute assumptions as in proof of Lemma~\ref{Running-loop-unroll-lemma} \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \{ frameStack = \emptyset \} \\
+      {} \circelse frameStack \neq \emptyset \circthen \{ frameStack \neq \emptyset \} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen \{ frameStack \neq \emptyset \} \circseq A \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t2 \circif b \circthen \{ b \} \circseq pc := j \\
+      \t2 {} \circelse \lnot b \circthen \{ \lnot b \} \circseq pc := k \\
+      \t2 \circfi
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen \{ frameStack \neq \emptyset \} \circseq B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-dist-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \{ frameStack = \emptyset \} \\
+      {} \circelse frameStack \neq \emptyset \circthen \{ frameStack \neq \emptyset \} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen \{ frameStack \neq \emptyset \} \circseq A \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t2 \circif b \circthen \{ frameStack \neq \emptyset \} \circseq \{ b \} \circseq pc := j \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq \{ \lnot b \} \circseq pc := k \\
+      \t2 \circfi
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen \{ frameStack \neq \emptyset \} \circseq B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq pc := k \\
+      \t2 \circfi
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-seq-dist-law}] twice \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq X \\
       \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq \\
-      \t2 \circmu X \circspot \\
-      \t2 \circif frameStack = \emptyset \circthen \Skip \\
-      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t4 \circif b \circthen \Skip \\
-      \t4 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t4 \circfi \circseq pc := j \\
-      \t3 {} \cdots {} \\
-      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t3 {} \cdots {} \\
-      \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\ 
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & introduce assumptions \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen \{b\} \circseq pc := \IF b \THEN j \ELSE k \\
-      \t3 {} \circelse \lnot b \circthen \{\lnot b\} \circseq pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq pc := k \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq X \\
       \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq \\
-      \t2 \circmu X \circspot \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 \circif b \circthen \Skip \\
-      \t4 {} \circelse \lnot b \circthen pc := k \circseq B \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
       \t4 \circfi \circseq pc := j \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
       \t3 {} \cdots {} \\
       \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\ 
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & collapse conditionals \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{rec-unfold-law}] \\
     \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen \{b\} \circseq pc := j \\
-      \t3 {} \circelse \lnot b \circthen \{\lnot b\} \circseq pc := k \\
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq X \\
       \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq \\
-      \t2 \circmu X \circspot \\
-      \t2 \circif frameStack = \emptyset \circthen \Skip \\
-      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t4 \circif b \circthen \Skip \\
-      \t4 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t4 \circfi \circseq pc := j \\
-      \t3 {} \cdots {} \\
-      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t3 {} \cdots {} \\
-      \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\ 
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & eliminate assumptions \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := j \\
-      \t3 {} \circelse \lnot b \circthen pc := k \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq pc := k \circseq Poll \circseq \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t5 \circif frameStack = \emptyset \circthen \Skip \\
+      \t5 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t6 \circif \cdots \\
+      \t6 {} \circelse pc = i \circthen A \circseq \\
+      \t7 \circif b \circthen \Skip \\
+      \t7 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t7 \circfi \circseq pc := j \\
+      \t6 {} \cdots {} \\
+      \t6 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t6 {} \cdots {} \\
+      \t6 \circfi \circseq Poll \circseq X \\
+      \t5 \circfi \\
       \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq \\
-      \t2 \circmu X \circspot \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 \circif b \circthen \Skip \\
-      \t4 {} \circelse \lnot b \circthen pc := k \circseq B \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
       \t4 \circfi \circseq pc := j \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
       \t3 {} \cdots {} \\
       \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\ 
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & distribute sequential composition over alternation \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-assign-dist-law}] and Lemma~\ref{Poll-assumption-distribution-lemma} \\
     \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := j \\
-      \t3 {} \circelse \lnot b \circthen pc := k \\
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq pc := k \circseq Poll \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t5 \circif frameStack = \emptyset \circthen \Skip \\
+      \t5 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t6 \circif \cdots \\
+      \t6 {} \circelse pc = i \circthen A \circseq \\
+      \t7 \circif b \circthen \Skip \\
+      \t7 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t7 \circfi \circseq pc := j \\
+      \t6 {} \cdots {} \\
+      \t6 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t6 {} \cdots {} \\
+      \t6 \circfi \circseq Poll \circseq X \\
+      \t5 \circfi \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t4 \circif \cdots \\
+      \t4 {} \circelse pc = i \circthen A \circseq \\
+      \t5 \circif b \circthen \Skip \\
+      \t5 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t5 \circfi \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t4 {} \cdots {} \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq pc := k \circseq Poll \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
       \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t5 \circif \cdots \\
+      \t5 {} \circelse pc = i \circthen A \circseq \\
+      \t6 \circif b \circthen \Skip \\
+      \t6 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t6 \circfi \circseq pc := j \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t5 {} \cdots {} \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
       \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & distribute sequential composition over alternation \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-seq-dist-law}] twice \\
     \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \\
+      \t2 {} \circelse \lnot b \circthen \{ frameStack \neq \emptyset \} \circseq pc := k \circseq Poll \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi 
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \\
+      \t2 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi 
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assign-assump-intro-law}] and Lemma~\ref{Poll-assumption-distribution-lemma} \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \\
+      \t2 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{ pc = k \} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi 
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse2-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen pc := j \\
+      \t2 {} \circelse \lnot b \circthen
+      pc := k \circseq Poll \circseq \{ pc = k \} \circseq B \circseq pc := j \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-seq-dist-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen \Skip \\
+      \t2 {} \circelse \lnot b \circthen
+      pc := k \circseq Poll \circseq \{ pc = k \} \circseq B \\
+      \t2 \circfi \circseq \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circif b \circthen \Skip \\
+      \t2 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t2 \circfi \circseq \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
+      \t4 \circif b \circthen \Skip \\
+      \t4 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t4 \circfi \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{rec-unfold-law}] \\
+    \begin{array}{l}
+      \circmu X \circspot \\
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
+      \t3 \circif b \circthen \Skip \\
+      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t3 \circfi \circseq pc := j \\
       \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
+      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
       \t2 {} \cdots {} \\
-      \t2 \circfi \\
+      \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi
-    \end{array} \\
-    \circrefines_A & introduce assumption \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & distribute assumption into conditional \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & precondition of rule \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & distribute assumption into conditional \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen \{frameStack \neq \emptyset\} \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen \{frameStack \neq \emptyset\} \circseq pc := k \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & $pc$ assignment doesn't affect $frameStack$ \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq \{frameStack \neq \emptyset\} \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq \{frameStack \neq \emptyset\} \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & $Poll$ doesn't affect $frameStack$ \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & unroll loop \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & collapse conditionals \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & introduce assumptions \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq \{pc = j\} \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq \{ pc = k\} \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & $Poll$ doesn't affect $pc$ \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq \{pc = j\} \circseq  \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{ pc = k\} \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & $frameStack$ and $pc$ are independent \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq  \{frameStack \neq \emptyset\} \circseq \{pc = j\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \{ pc = k\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
-    \circrefines_A & collapse conditional \\
-    \begin{array}{l}
-      \t1 \circif frameStack = \emptyset \circthen \{frameStack = \emptyset\} \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \{frameStack \neq \emptyset\} \circseq \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\} \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq  \{frameStack \neq \emptyset\} \circseq \{pc = j\} \circseq \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq \{frameStack \neq \emptyset\} \circseq \{ pc = k\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t4 \circif frameStack = \emptyset \circthen \Skip \\
-      \t4 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t5 \circif \cdots \\
-      \t5 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t6 \circif b \circthen \Skip \\
-      \t6 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t6 \circfi \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t5 {} \cdots {} \\
-      \t5 \circfi \circseq Poll \circseq X \\
-      \t4 \circfi \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen \{frameStack \neq \emptyset\} \circseq B \circseq pc := j \circseq Poll \circseq \circmu X \circspot \\
-      \t3 \circif frameStack = \emptyset \circthen \Skip \\
-      \t3 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t4 \circif \cdots \\
-      \t4 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
-      \t5 \circif b \circthen \Skip \\
-      \t5 {} \circelse \lnot b \circthen pc := k \circseq B \\
-      \t5 \circfi \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 {} \circelse pc = k \circthen B \circseq pc := j \\
-      \t4 {} \cdots {} \\
-      \t4 \circfi \circseq Poll \circseq X \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \\
-      \t1 \circfi
-    \end{array} \\
+    \end{array}
   \end{argue}
 \end{crproof}
 

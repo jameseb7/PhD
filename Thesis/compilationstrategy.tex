@@ -2711,9 +2711,9 @@ conditionals.
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 \circif b \circthen \Skip \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq B \\
+      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
       \t3 \circfi \circseq pc := j \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = k \circthen B \circseq pc := j \\

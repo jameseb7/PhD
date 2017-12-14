@@ -3,13 +3,27 @@ compilation strategy but are used in our compilation strategy and the
 proofs of our compilation rules.
 
 % proved in Isabelle
-\begin{law}[alt-intro]
+\begin{law}[alt-intro1]
   \label{alt-intro-law}
   If $x : T$ is a state variable,
   \begin{circus}
     A
     =
     \circif {} \circelse_{i \in T} x = i \circthen A \circfi
+  \end{circus}
+\end{law}
+
+% proved in Isabelle
+\begin{law}[alt-intro2]
+  \label{alt-intro2-law}
+  \begin{circus}
+    A
+    =
+    \circblockbegin
+    \circif g \circthen A \\
+    {} \circelse \lnot g \circthen A \\
+    \circfi
+    \circblockend
   \end{circus}
 \end{law}
 
@@ -102,6 +116,26 @@ proofs of our compilation rules.
   If $x$ is free in $e$ then,
   \begin{circus}
     x := e = x := e \circseq \{x = e\}
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle
+\begin{law}[assump-assign-cond-collapse-true]
+  \label{assump-assign-cond-collapse-true-law}
+  \begin{circus}
+    \{g\} \circseq x := \IF g \THEN e \ELSE f
+    \circrefines_A
+    \{g\} \circseq x := e
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle
+\begin{law}[assump-assign-cond-collapse-false]
+  \label{assump-assign-cond-collapse-false-law}
+  \begin{circus}
+    \{ \lnot g \} \circseq x := \IF g \THEN e \ELSE f
+    \circrefines_A
+    \{ \lnot g \} \circseq x := f
   \end{circus}
 \end{law}
 
