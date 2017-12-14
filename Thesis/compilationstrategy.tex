@@ -1840,23 +1840,35 @@ where execution continues at the next program counter value.
 These control flows are introduced as shown in
 Algorithm~\ref{introduce-forward-sequence-algorithm}, which defines
 the \Call{IntroduceSequentialComposition}{} procedure.
-The algorithm consists of constructing a control flow graph for each
-method in the program, as specified on
-line~\ref{algorithm-make-control-flow-graph}.
+The algorithm constructs a control flow graph for each method in the
+program, as specified on line~\ref{algorithm-make-control-flow-graph}.
 Since the introduction of sequential composition does not depend on
 the relationships between methods, the control flow graph is
-constructed as a disconnected control flow graph containing the
-control flow of all the methods in the program.
-The subgraph corresponding to each method's control flow is a
-structured graph as defined in
-Section~\ref{compilation-assumptions-section}. 
-Although method calls have not had their $pc$ updates formally made
-explicit, we can assume a method call will be followed by the
-instruction at the next program counter value.
-We label the nodes of the graph with the $pc$ values of the
-instructions at the nodes.
+constructed as a disconnected graph containing the control flow of all
+the methods in the program.
+The nodes in this graph correspond to the branches in the choice over
+$pc$ values introduced in the previous section.
+
+We construct the control flow graph by starting at the entry point for
+each method and following the $pc$ update at the end of each node,
+introducing an edge in the process.
+For method call instructions, we introduce an edge to the node for the
+next $pc$ value, as if the instruction were replaced with
+$pc := pc + 1$.
+This is consistent with how method calls are handled later in the
+strategy, since execution resumes at the next instruction after the
+called method returns.
+We finish construction of the control graph for a method when we
+encounter a return instruction.
+
+
 The control flow graph for our example is shown in
 Figure~\ref{example-control-flow-graph-figure}.
+We label the nodes of the graph with the $pc$ values of the
+instructions at the nodes.
+Due to our assumptions about the source bytecode, the subgraph
+corresponding to each method's control flow is a structured graph as
+defined in Section~\ref{compilation-assumptions-section}.
 
 \begin{figure}
   \begin{center}
@@ -1909,7 +1921,7 @@ These prevent introduction of sequential composition for the $pc$
 values $20$, $31$, $34$, and $38$, since those the targets of those
 nodes are nodes $35$ and $39$.
 
-For a node that meets the above requirement and isn't a method call,
+For a node that meets the above requirement and is not a method call,
 we can introduce sequential composition at that node by applying
 Rule~[\nameref{sequence-introduction-rule}], on
 line~\ref{algorithm-forward-sequence-application} of the algorithm.
@@ -1971,12 +1983,20 @@ line~\ref{algorithm-forward-sequence-condition} of the algorithm.
 This means the control flow graph is updated as
 Rule~[\nameref{sequence-introduction-rule}] is applied, to take into
 account the merging of nodes.
+Since there are finitely many nodes, the merging of nodes will result
+in a state in which no further sequential compositions can be
+introduced and so the loop terminates.
+
 The resulting control flow graph after introduction of sequential
 composition has been performed at every point is shown in
 Figure~\ref{example-control-flow-graph-after-sequence-introduction-figure}.
 We note that this graph is still a union of structured graphs since
 merging sequentially composed nodes does not affect whether a graph is
 structured.
+This is due to the fact that sequential composition is one of the
+constructs used to define structured control flow graphs, and merging
+the nodes may be seen as performing the reverse of node replacement
+for it.
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}[every new ->/.style={-latex}]
@@ -2004,6 +2024,7 @@ structured.
   \caption{Control flow graph for our example after sequential composition introduction}
   \label{example-control-flow-graph-after-sequence-introduction-figure}
 \end{figure}
+
 The only remaining nodes in this graph are those where the sequence of
 instructions ends with a method call or return, or which represent a
 more complex control flow.
@@ -2658,7 +2679,7 @@ branch to the specified address if the condition is true and go to the
 next instruction if it is false.
 We provide Rule [\nameref{if-introduction-rule}] for introducing such
 conditionals.
-\begin{restatable}[\texttt{if} conditional introduction]{crule}{IfConditionalIntroductionRule}
+\begin{restatable}[\texttt{if}-conditional-introduction]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
