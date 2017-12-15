@@ -1858,8 +1858,12 @@ $pc := pc + 1$.
 This is consistent with how method calls are handled later in the
 strategy, since execution resumes at the next instruction after the
 called method returns.
-We finish construction of the control graph for a method when we
-encounter a return instruction.
+We do not add an edge from a return instruction, since no further
+instructions are executed in the method after a return instruction.
+We finish construction of the control graph for a method when there
+are no further edges to add.
+This terminates since there are only finitely many instructions in a
+method so edges for all the reachable nodes will eventually be added.
 
 
 The control flow graph for our example is shown in
@@ -1906,11 +1910,10 @@ After the control flow graph is constructed, we consider each node in
 turn, as specified by the for loop on
 line~\ref{algorithm-sequence-cfg-loop}.
 As mentioned earlier, we require a node to have only a single outgoing
-edge and its target to have only a single incoming edge in order to be
-considered for the introduction of sequential composition.
+edge and its target to have only a single incoming edge in order for
+it to be considered for the introduction of sequential composition.
 The reason for this is that nodes with two outgoing edges are points
-at which conditionals should be introduced, rather than sequential
-compositions.
+at which conditionals should be introduced.
 Such nodes in our example are the nodes for $pc$ values $27$ and $41$,
 which represent the start of conditionals.
 Likewise, nodes with multiple incoming edges represent points at which
@@ -1918,8 +1921,8 @@ a more complex control flows occur.
 For our example, such nodes include $39$, which is the start of a
 loop, and $35$, which is the end of a conditional.
 These prevent introduction of sequential composition for the $pc$
-values $20$, $31$, $34$, and $38$, since those the targets of those
-nodes are nodes $35$ and $39$.
+values $20$, $31$, $34$, and $38$, since the targets of those nodes
+are nodes $35$ and $39$.
 
 For a node that meets the above requirement and is not a method call,
 we can introduce sequential composition at that node by applying
@@ -1983,8 +1986,8 @@ line~\ref{algorithm-forward-sequence-condition} of the algorithm.
 This means the control flow graph is updated as
 Rule~[\nameref{sequence-introduction-rule}] is applied, to take into
 account the merging of nodes.
-Since there are finitely many nodes, the merging of nodes will result
-in a state in which no further sequential compositions can be
+Since there are finitely many nodes, the merging of nodes eventually
+results in a graph in which no further sequential compositions can be
 introduced and so the loop terminates.
 
 The resulting control flow graph after introduction of sequential
@@ -1994,9 +1997,9 @@ We note that this graph is still a union of structured graphs since
 merging sequentially composed nodes does not affect whether a graph is
 structured.
 This is due to the fact that sequential composition is one of the
-constructs used to define structured control flow graphs, and merging
-the nodes may be seen as performing the reverse of node replacement
-for it.
+constructs used to define structured control flow graphs
+(Figure~\ref{sequence-figure}), and merging the nodes may be seen as
+performing the reverse of node replacement for it.
 \begin{figure}
   \begin{center}
     \begin{tikzpicture}[every new ->/.style={-latex}]
@@ -2031,7 +2034,7 @@ more complex control flow.
 In particular, the instructions for the \texttt{f()} method of
 \texttt{TPK}, which begin at $pc = 43$, have been completely sequenced
 together into a single node.
-The code which corresponds to this control flow graph is that shown
+The code that corresponds to this control flow graph is that shown
 earlier in Figure~\ref{forward-sequence-introduction-example-figure}
 
 \subsection{Introduce Loops and Conditionals}
