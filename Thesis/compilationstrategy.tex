@@ -2116,7 +2116,8 @@ dashed line since looping edges are ignored at certain points in this
 part of the strategy.
 \begin{figure}
   \begin{center}
-    \begin{multicols}{4}
+    % \begin{multicols}{4}
+    \begin{minipage}{0.3\linewidth}
       \begin{tikzpicture}
         \node (7)  at (0,0)  {7};
         \node (39)  at (0,-1) {39};
@@ -2135,7 +2136,9 @@ part of the strategy.
         % \draw[-latex,red!70!black,dashed,out=0,in=0,looseness=1.1] (35) to (39);
         \draw[-latex,dashed,out=0,in=0,looseness=1.1] (35) to (39);
       \end{tikzpicture}
-      \columnbreak
+    \end{minipage}
+    % \columnbreak
+    \begin{minipage}{0.6\linewidth}
       \scriptsize
       \setlength{\zedindent}{0cm}
       \begin{circus}
@@ -2143,16 +2146,20 @@ part of the strategy.
         \t1 \circif frameStack = \emptyset \circthen \Skip \\
         \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
         \t2 \circif pc = 0 \circthen {} \cdots {} \\
-        \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq \cdots \circseq pc := 39 \\
+        \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 39 \\
         \t2 {} \cdots {} \\
         \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \cdots \circseq \\
         \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
         \t2 {} \cdots {} \\
-        \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \cdots \circseq pc := 35 \\
+        \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 35 \\
         \t2 {} \cdots {} \\
-        \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \cdots \circseq pc := 35 \\
+        \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 35 \\
         \t2 {} \cdots {} \\
-        \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq pc := 39 \\
+        \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 39 \\
         \t2 {} \cdots {} \\
         \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq \\
         \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
@@ -2161,7 +2168,8 @@ part of the strategy.
         \t2 \circfi \circseq Poll \circseq Running \\
         \t1 \circfi
       \end{circus}
-    \end{multicols}
+    \end{minipage}
+    %\end{multicols}
   \end{center}
   \caption{Simplified control flow graph and corresponding code for our example
     program}
@@ -2289,7 +2297,7 @@ branch to the specified address if the condition is true and go to the
 next instruction if it is false.
 We provide Rule~[\nameref{if-introduction-rule}] for introducing such
 conditionals.
-\begin{restatable}[\texttt{if}-conditional-introduction]{crule}{IfConditionalIntroductionRule}
+\begin{restatable}[\texttt{if}-conditional-intro]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
@@ -2343,7 +2351,7 @@ The assignment $pc := j$ is moved outside the conditional from both
 the empty true branch and the end of the false branch, so that a
 sequential composition with the node after the conditional can be
 introduced later on.
-As in Rule [\nameref{sequence-introduction-rule}], the sequence of
+As in Rule~[\nameref{sequence-introduction-rule}], the sequence of
 actions for the node must not affect the nonemptiness of the
 $frameStack$.
 A similar condition is required for all the rules in this section.
@@ -2366,7 +2374,7 @@ the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
 nodes are required to end with a common assignment $pc := z$.
 Conditionals matching this form may be introduced using
 Rule~[\nameref{if-else-introduction-rule}].
-\begin{restatable}[\texttt{if}-\texttt{else}-conditional-introduction]{crule}{IfElseConditionalIntroductionRule}
+\begin{restatable}[\texttt{if}-\texttt{else}-conditional-intro]{crule}{IfElseConditionalIntroductionRule}
   \label{if-else-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
@@ -2417,7 +2425,7 @@ Rule~[\nameref{if-else-introduction-rule}].
 Rule~[\nameref{if-else-introduction-rule}] operates similarly to
 Rule~[\nameref{if-introduction-rule}] in how it introduces the conditional
 and moves the common $pc$ assignment outside the conditional.
-However, Rule [\nameref{if-else-introduction-rule}] includes sequences of
+However, Rule~[\nameref{if-else-introduction-rule}] includes sequences of
 instructions for both branches of the introduced conditional, each of
 which end with a $pc$ assignment to jump to the node after the
 conditional.
@@ -2458,7 +2466,7 @@ Rule~[\nameref{if-introduction-rule}] and
 Rule~[\nameref{if-else-introduction-rule}], but it does not place any
 requirement on the structure of the conditional or move a $pc$
 assignment outside of it.
-\begin{restatable}[Conditional-introduction]{crule}{ConditionalIntroductionRule}
+\begin{restatable}[conditional-intro]{crule}{ConditionalIntroductionRule}
   \label{conditional-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
@@ -2526,10 +2534,11 @@ Since this loop may be within a conditional, we simply move the $pc$
 assignment for the true branch outside the conditional.
 A sequential composition can then be introduced later, as with
 \texttt{if} and \texttt{if}-\texttt{else} conditionals.
-\begin{restatable}[\texttt{while} loop introduction 1]{crule}{WhileLoopIntroductionRuleA}
+\begin{restatable}[\texttt{while}-loop-intro1]{crule}{WhileLoopIntroductionRuleA}
   \label{while-introduction-rule1}
-  \def\zedindent{0.25cm}
-  If $i \neq j$,
+  \setlength{\zedindent}{0.2cm}
+  \setlength{\zedtab}{0.9\zedtab}
+  Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -2586,12 +2595,12 @@ loop, which has the form shown in Figure~\ref{do-while-figure}.
 These loops are distinguished from \texttt{while} loops by the fact
 that the conditional $pc$ assignment which causes the loop is at the
 end of the loop, rather than at the beginning or in the middle.
-We introduce these loops using Rule
-[\nameref{do-while-introduction-rule}].
-\begin{restatable}[\texttt{do}-\texttt{while} loop introduction]{crule}{DoWhileLoopIntroductionRule}
+We introduce these loops using
+Rule~[\nameref{do-while-introduction-rule}].
+\begin{restatable}[\texttt{do}-\texttt{while}-loop-intro]{crule}{DoWhileLoopIntroductionRule}
   \label{do-while-introduction-rule}
   \def\zedindent{0.25cm}
-  If $i \neq j$,
+  Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -2628,10 +2637,10 @@ We introduce these loops using Rule
     \end{array}
   \end{circus}
 \end{restatable}%
-This rule introduces a conditional, as with Rule
-[\nameref{while-introduction-rule1}], but the true branch contains
-just the recursive call, since the conditional occurs at the end of
-the loop.
+This rule introduces a conditional, as with
+Rule~[\nameref{while-introduction-rule1}], but the true branch
+contains just the recursive call, since the conditional occurs at the
+end of the loop.
 The $pc$ assignment for the false branch is moved outside the
 conditional to allow a sequential composition to be introduced later,
 as in previous rules.
@@ -2643,7 +2652,7 @@ conditional, so it would be dealt with as a \texttt{while} loop.
 Therefore, it is not necessary to provide two compilation rules for
 \texttt{do}-\texttt{while} loops, unlike \texttt{while} loops where
 both cases must be accounted for.
-Rule [\nameref{do-while-introduction-rule}] is applied on
+Rule~[\nameref{do-while-introduction-rule}] is applied on
 line~\ref{algorithm-introduce-do-while} of the algorithm.
 
 The final loop structure that we attempt to introduce is that of an
@@ -2656,14 +2665,14 @@ ends with a $pc$ assignment that causes a jump back to the beginning
 of the block of instructions.
 Such a block will have a control flow graph of the form shown in
 Figure~\ref{infinite-loop-figure}.
-We introduce these loops using Rule
-[\nameref{infinite-loop-introduction-rule}], which introduces a
+We introduce these loops using
+Rule~[\nameref{infinite-loop-introduction-rule}], which introduces a
 recursive call after the $pc$ assignment that causes the loop.
 This rule is applied on line~\ref{algorithm-introduce-infinite-loop}
 of the algorithm.
-\begin{restatable}[Infinite loop introduction]{crule}{InfiniteLoopIntroductionRule}
+\begin{restatable}[infinite-loop-intro]{crule}{InfiniteLoopIntroductionRule}
   \label{infinite-loop-introduction-rule}
-  If
+  Given $i : ProgramAddress$, if
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -2736,8 +2745,8 @@ The sequential composition from the $pc=21$ node to the $pc=35$ node
 can then be introduced immediately as it is now a simple sequential
 composition (because it is not at the end of an outer conditional).
 We then introduce a \texttt{while} loop at the $pc=39$ loop (using
-Rule [\nameref{while-introduction-rule2}]), and the sequential composition
-with the $pc=42$ node is introduced afterwards.
+Rule~[\nameref{while-introduction-rule2}]), and the sequential
+composition with the $pc=42$ node is introduced afterwards.
 Finally, a sequential composition from the $pc=7$ to the $pc=39$ node
 is introduced, collapsing the control flow graph to a single node.
 The code at $pc=7$ is then that shown earlier in
