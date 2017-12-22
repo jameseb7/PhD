@@ -2058,7 +2058,6 @@ been resolved undergo loop and conditional introduction.
 
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \Procedure{IntroduceLoopsAndConditionals}{}
     \For{$m \gets methods$}
     \label{algorithm-introduce-loops-and-conditionals-method-loop}
     \If{\Call{HasNoUresolvedCalls}{$m$}}
@@ -2067,36 +2066,34 @@ been resolved undergo loop and conditional introduction.
     \label{algorithm-make-control-flow-graph2}
     \For{$node \gets$ \Call{ReverseNodes}{$cfg$}}
     \label{algorithm-node-checking-loop}
-    \State \Call{ApplyRule[\nameref{if-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{if-introduction-rule}]}{$node$}
     \label{algorithm-introduce-if}
-    \State \Call{ApplyRule[\nameref{if-else-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{if-else-introduction-rule}]}{$node$}
     \label{algorithm-introduce-if-else}
     \If{\Call{IsSimpleConditional}{$node$}}
     \label{algorithm-conditional-check}
-    \State \Call{ApplyRule[\nameref{conditional-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{conditional-introduction-rule}]}{$node$}
     \label{algorithm-introduce-conditional}
     \EndIf
-    \State \Call{ApplyRule[\nameref{while-introduction-rule1}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{while-introduction-rule1}]}{$node$}
     \label{algorithm-introduce-while1}
-    \State \Call{ApplyRule[\nameref{while-introduction-rule2}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{while-introduction-rule2}]}{$node$}
     \label{algorithm-introduce-while2}
-    \State \Call{ApplyRule[\nameref{do-while-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{do-while-introduction-rule}]}{$node$}
     \label{algorithm-introduce-do-while}
-    \State \Call{ApplyRule[\nameref{infinite-loop-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{infinite-loop-introduction-rule}]}{$node$}
     \label{algorithm-introduce-infinite-loop}
     \If{\Call{HasSimpleSequence}{$node$}}
     \label{algorithm-lci-sequence-check}
-    \State
-    \Call{ApplyRule[\nameref{sequence-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
     \label{algorithm-lci-sequence-introduction}
     \EndIf
 
     \EndFor
     \EndIf
     \EndFor
-    \EndProcedure
   \end{algorithmic}
-  \caption{Introduce Loops and Conditionals}
+  \caption{IntroduceLoopsAndConditionals}
   \label{introduce-loops-and-conditionals-algorithm}
 \end{algorithm}
 
@@ -2105,10 +2102,10 @@ must again consider the control flow graph of the method to ensure the
 loops and conditionals are introduced in the correct order to properly
 form the bodies of loops and conditionals.
 This involves constructing a control flow graph for the method, at
-line~\ref{algorithm-make-control-flow-graph2}, beginning at the entry
-point of the method and following each \texttt{goto} and
-\texttt{if\_icmple} instruction until a loop is detected or a
-\texttt{return} or \texttt{areturn} instruction is reached.
+line~\ref{algorithm-make-control-flow-graph2}.
+The procedure for creating the control flow graph is the same as in
+the previous section, but we only focus on a single method rather than
+constructing a disconnected graph for all methods.
 The graph for the our example, beginning at $pc=7$ (the entry point of
 the \texttt{handleAsyncEvent()} method), is shown in
 Figure~\ref{example-simplified-control-flow-graph-figure}, alongside
@@ -2171,411 +2168,17 @@ part of the strategy.
   \label{example-simplified-control-flow-graph-figure}
 \end{figure}
 
-% A method's control flow graph must be well-structured in order to
-% properly introduce the control flow structures in this section.
-% We define a rooted directed graph below. The definition is standard,
-% but we include it here to introduce the terminology for the subsequent
-% definition of what we mean by a structured control flow graph.
-% \begin{defn}[Rooted Directed Graph] A \emph{rooted directed graph},
-% $G$, is a triple $(V,E,r)$, where
-%   \begin{itemize}
-%   \item $V$ is a set of \emph{nodes},
-%   \item $E$ is a set of ordered pairs of nodes in $V$, called
-% \emph{edges}, and
-%   \item $r$ is a node in $V$, called the \emph{root} of the graph.
-%   \end{itemize} The first component of an edge is its \emph{source}
-% and the second component is its \emph{target}. We say that an edge
-% goes from its source to its target. The source of an edge going to a
-% given node is said to be a \emph{predecessor} of that node; similarly,
-% the target of an edge from a given node is a \emph{successor} of that
-% node. For every node $n \in V$, the pair $(r,n)$ must be in the
-% reflexive transitive closure of $E$, that is, there must be a path of
-% edges from the root to any node in the graph.
-  
-%   In diagrams we represent the nodes as points or as the names of the
-% nodes, the edges as arrows, and the root node as a node with an arrow
-% pointing to it that does not come from another node. For a graph $G$,
-% we refer to the set $T(G) = \{ n \in V | \forall m \in V.\; (n,m)
-% \notin E\}$ of nodes with no edges coming from them as the set of
-% \emph{end nodes} of the graph.
-% \end{defn}
-% Having defined a rooted directed graph, we now define what we mean by
-% a structured control flow graph as a specific type of rooted directed
-% graph.
-% This definition we use for a structured program is based on Dijkstra's
-% notion of program structure found in~\cite{dijkstra1972}.
-% In that definition, there are a set of known program structures that
-% are permitted, and these structures may contain further occurrences of
-% the same structures (e.g.\ a conditional in which each branch is also
-% a conditional).
-% In order to formalise this, we first define what it means to replace a
-% node with a graph.
-% \begin{defn}[Node Replacement]
-%   Given two rooted directed graphs $G$ and $H$, we say $G'$ is the
-%   graph formed by \emph{replacing} a node $n$ of $G$ with $H$ if one
-%   of the following cases holds:
-%   \begin{itemize}
-%   \item $n$ has no predecessors in $G$, $H$ has only one end node, and
-%     \begin{itemize}
-%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-%     \item $G'$ contains the edges of $G$ except those going to or from
-%       $n$,
-%     \item $G'$ contains edges from the end node of $H$ to the
-%       successors of $n$ in $G$, and
-%     \item the root node of $H$ is the root node of $G'$;
-%     \end{itemize}
-%   \item $n$ has no successors in $G$, and
-%     \begin{itemize}
-%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-%     \item $G'$ contains the edges of $G$ except those going to or from
-%       $n$,
-%     \item $G'$ contains edges from the predecessors $n$ in $G$ to the
-%       root node of $H$, and
-%     \item the root node of $G$ is the root node of $G'$;
-%     \end{itemize}
-%   \item $H$ has a single end node and
-%     \begin{itemize}
-%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-%     \item $G'$ contains the edges of $G$ and the edges of $H$ except
-%       those going to or from $n$,
-%     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
-%       the root node of $H$,
-%     \item $G'$ contains edges from the end node of $H$ to the
-%       successors of $n$ in $G$, and
-%     \item the root node of $G$ is the root node of $G'$;
-%     \end{itemize}
-%   \item $n$ has a single successor in $G$, $H$ has a single end
-%     node, and
-%     \begin{itemize}
-%     \item $G'$ contains all the nodes of $H$ and $G$, except $n$ and
-%       the end node of $H$,
-%     \item $G'$ contains the edges of $G$ except those going to or from
-%       $n$,
-%     \item $G'$ contains edges from the predecessors of the end node of
-%       $H$ to the successor of $n$ in $G$
-%     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
-%       the root node of $H$, and
-%     \item the root node of $G$ is the root node of $G'$.
-%     \end{itemize}
-%   \end{itemize}
-% \end{defn}
-% Each of the different cases of node replacement represents a different
-% way of placing a graph inside another graph.
-% We show an example of each of these cases in
-% Figure~\ref{node-replacement-example-figures}.
-% The example used is that of an \texttt{if}-\texttt{else} conditional,
-% introduced later in Figure~\ref{if-else-figure}, with one of its nodes
-% replaced with another \texttt{if}-\texttt{else} conditional whose
-% nodes are shown in white.
-
-% The first case (Figure~\ref{root-replacement-figure}) is that of
-% placing a graph at the start of another graph, i.e.\ replacing the
-% root node of a graph that does not have a loop to its root node.
-% The second case (Figure~\ref{end-replacement-figure}) is that of
-% replacing one of the end nodes of a graph.
-% The third case (Figure~\ref{internal-replacement-figure}) is that of
-% replacing an internal node of the graph. 
-% There must be a single end node in this case in order to have a source
-% for the outgoing edges of the replaced node.
-% At the end of one of the branches of a conditional, the end node of
-% the replacing graph may be unified with the node at the end of the
-% conditional.
-% This represents such cases as loops and conditionals occurring at the
-% end of a branch of a conditional, with no instructions following them
-% inside the conditional, and is handled by the fourth case of node
-% replacement, shown in Figure~\ref{branch-end-replacement-figure}.
-% \begin{figure}
-%   \begin{subfigure}{0.24\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \node at (0,2) (start) {};
-%         \node at ( 0, 1)  (A) {$\circ$};
-%         \node at (-1, 0)  (B) {$\circ$};
-%         \node at ( 1, 0)  (C) {$\circ$};
-%         \node at ( 0,-1)  (D) {$\circ$};
-%         \node at (-1,-2)  (E) {$\bullet$};
-%         \node at ( 1,-2)  (F) {$\bullet$};
-%         \node at ( 0,-3)  (G) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%         \draw[-latex] (B) -- (D);
-%         \draw[-latex] (C) -- (D);
-%         \draw[-latex] (D) -- (E);
-%         \draw[-latex] (D) -- (F);
-%         \draw[-latex] (E) -- (G);
-%         \draw[-latex] (F) -- (G);
-%       \end{tikzpicture}
-%     \caption{\centering root node\newline replacement}
-%     \label{root-replacement-figure}
-%   \end{center}
-%   \end{subfigure}
-%   \begin{subfigure}{0.24\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \node at (0,2) (start) {};
-%         \node at ( 0, 1)  (A) {$\bullet$};
-%         \node at (-1, 0)  (B) {$\bullet$};
-%         \node at ( 1, 0)  (C) {$\bullet$};
-%         \node at ( 0,-1)  (D) {$\circ$};
-%         \node at (-1,-2)  (E) {$\circ$};
-%         \node at ( 1,-2)  (F) {$\circ$};
-%         \node at ( 0,-3)  (G) {$\circ$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%         \draw[-latex] (B) -- (D);
-%         \draw[-latex] (C) -- (D);
-%         \draw[-latex] (D) -- (E);
-%         \draw[-latex] (D) -- (F);
-%         \draw[-latex] (E) -- (G);
-%         \draw[-latex] (F) -- (G);
-%       \end{tikzpicture}
-%     \caption{\centering end node\newline replacement}
-%     \label{end-replacement-figure}
-%     \end{center}
-%   \end{subfigure}
-%   \begin{subfigure}{0.24\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \node at (0,3) (start) {};
-%         \node at ( 0, 2)  (A) {$\bullet$};
-%         \node at (-1, 1)  (B) {$\circ$};
-%         \node at ( 1, 0)  (C) {$\bullet$};
-%         \node at (-2, 0)  (D) {$\circ$};
-%         \node at ( 0, 0)  (E) {$\circ$};
-%         \node at (-1,-1)  (F) {$\circ$};
-%         \node at ( 0,-2)  (G) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%         \draw[-latex] (B) -- (D);
-%         \draw[-latex] (B) -- (E);
-%         \draw[-latex] (D) -- (F);
-%         \draw[-latex] (E) -- (F);
-%         \draw[-latex] (F) -- (G);
-%         \draw[-latex] (C) -- (G);
-%       \end{tikzpicture}
-%       \caption{\centering internal node\newline replacement}
-%       \label{internal-replacement-figure}
-%     \end{center}
-%   \end{subfigure}
-%   \begin{subfigure}{0.24\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \node at (0,3) (start) {};
-%         \node at ( 0, 2)  (A) {$\bullet$};
-%         \node at (-1, 1)  (B) {$\circ$};
-%         \node at ( 1, 0)  (C) {$\bullet$};
-%         \node at (-2, 0)  (D) {$\circ$};
-%         \node at ( 0, 0)  (E) {$\circ$};
-%         \node at ( 0,-2)  (F) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%         \draw[-latex] (B) -- (D);
-%         \draw[-latex] (B) -- (E);
-%         \draw[-latex] (D) -- (F);
-%         \draw[-latex] (E) -- (F);
-%         \draw[-latex] (C) -- (F);
-%       \end{tikzpicture}
-%     \caption{\centering branch end\newline replacement}
-%     \label{branch-end-replacement-figure}
-%   \end{center}
-%   \end{subfigure}
-%   \caption{Examples of the different cases of node replacement}
-%   \label{node-replacement-example-figures}
-% \end{figure}
-
-% With node replacement defined, we can now define what we mean by a
-% structure control flow graph in terms of node replacement and the structured graphs shown in Figure~\ref{structured-cfg-figures}
-
-% \begin{defn}[Structured Control Flow Graph]
-%   If $G$ is a rooted directed graph, we say $G$ is a \emph{structured
-%     control flow graph} if $G$ is the trivial graph (the graph with a
-%   single node, which is also the root, and no edges) or if $G$ can be
-%   created by starting with the trivial graph and performing a finite
-%   number of node replacements to replace nodes with graphs of the
-%   forms shown in Figure~\ref{structured-cfg-figures}.
-% \end{defn}
-
-% % In particular, we target the requirements imposed by
-% % MISRA-C~\cite{misra2012}.
-% % This means that we do not allow \texttt{goto}s in the final C code and
-% % that loops must have a simple structure, with no use of
-% % \texttt{continue} and a single exit point.
-% % A single return per method is also a requirement of MISRA-C, but in a
-% % control flow graph there is no way to distinguish between a
-% % conditional return in the middle of a method and a conditional at the
-% % end of a method of which both branches are returns.
-% % Thus we treat all occurrences of returns in the middle of functions in
-% % the second way, which can then be treated as a single return at the
-% % end of the function in the translation to C code by extracting the
-% % returns from each branch.
-
-% \begin{figure}
-%   \begin{subfigure}{0.26\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-0.5,-1) rectangle (0.5,2);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1)  (A) {$\bullet$};
-%         \node at (0,-1) (B) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{sequential composition}
-%     \label{sequence-figure}
-%   \end{subfigure}
-%   \begin{subfigure}{0.23\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-1,-1) rectangle (0,2);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1)  (A) {$\bullet$};
-%         \node at (-1,0) (B) {$\bullet$};
-%         \node at (0,-1) (C) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%         \draw[-latex] (B) -- (C);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{\texttt{if} conditional}
-%     \label{if-figure}
-%   \end{subfigure}
-%   \begin{subfigure}{0.23\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-1,-1) rectangle (1,2);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1)  (A) {$\bullet$};
-%         \node at (1,0)  (B) {$\bullet$};
-%         \node at (-1,0) (C) {$\bullet$};
-%         \node at (0,-1) (D) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%         \draw[-latex] (B) -- (D);
-%         \draw[-latex] (C) -- (D);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{\texttt{if}-\texttt{else} conditional}
-%     \label{if-else-figure}
-%   \end{subfigure}
-%   \begin{subfigure}{0.23\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-1,0) rectangle (1,3);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1)  (A) {$\bullet$};
-%         \node at (1,0)  (B) {$\bullet$};
-%         \node at (-1,0) (C) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) -- (B);
-%         \draw[-latex] (A) -- (C);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{divergent conditional}
-%     \label{divergent-figure}
-%   \end{subfigure} 
-%   \\
-%   \begin{subfigure}{0.33\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-1,-1) rectangle (1,2);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1) (A) {$\bullet$};
-%         \node at (0,-1) (B) {$\bullet$};
-%         \node at (1,-1) (C) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) to (B);
-%         \draw[-latex] (A) to (C);
-%         \draw[-latex] (B) to[in=200,out=150] (A);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{\texttt{while} loop}
-%     \label{while-figure}
-%   \end{subfigure}
-%   \begin{subfigure}{0.33\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-1,0) rectangle (1,3);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1)  (A) {$\bullet$};
-%         \node at (1,0)  (B) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) to (B);
-%         \draw[-latex] (A) to[out=235,in=180,looseness=10] (A);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{\texttt{do}-\texttt{while} loop}
-%     \label{do-while-figure}
-%   \end{subfigure}
-%   \begin{subfigure}{0.33\textwidth}
-%     \begin{center}
-%       \begin{tikzpicture}
-%         \useasboundingbox (-1,0) rectangle (1,3);
-%         \node at (0,1.7) (start) {};
-%         \node at (0,1)  (A) {$\bullet$};
-%         \draw[-latex] (start) -- (A);
-%         \draw[-latex] (A) to[out=270,in=180,looseness=10] (A);
-%       \end{tikzpicture}
-%     \end{center}
-%     \caption{infinite loop}
-%     \label{infinite-loop-figure}
-%   \end{subfigure}
-%   \caption{Control flow graphs of program structures}
-%   \label{structured-cfg-figures}
-% \end{figure}
-
-% The first structure (Figure~\ref{sequence-figure}) is that of simple
-% sequential composition, with an edge going from the root node to a
-% single end node.
-% The next three structures
-% (Figure~\ref{if-figure}--\subref{divergent-figure}) are conditional
-% structures:~Figure~\ref{if-figure} shows an \texttt{if} statement with
-% no \texttt{else} clause, Figure~\ref{if-else-figure} shows an
-% \texttt{if} statement with an \texttt{else} clause, and
-% Figure~\ref{divergent-figure} shows a conditional in which both
-% branches end with a (infinite) loop or a return so that there is
-% nothing following the conditional, we refer to such conditionals as
-% divergent conditionals since the branches do not come back together.
-% The remaining three structures
-% (Figure~\ref{while-figure}--\subref{infinite-loop-figure}) are all
-% loop structures:~Figure~\ref{while-figure} shows a loop in which the
-% loop condition is checked at the beginning (a \texttt{while} loop),
-% Figure~\ref{do-while-figure} show a loop in which the loop condition
-% is checked at the end (a \texttt{do}-\texttt{while} loop), and
-% Figure~\ref{infinite-loop-figure} shows a loop which loops
-% unconditionally, forming an infinite loop.
-
-% From this definition it is clear that the control flow graph of our
-% example, shown in
-% Figure~\ref{example-simplified-control-flow-graph-figure}, is a
-% structured control flow graph.
-% It may be obtained from the trivial graph by replacing the node with a
-% sequential composition, replacing the end node of the sequential
-% composition with a \texttt{while} loop, and then replacing the node
-% inside the \texttt{while} loop with an \texttt{if}-\texttt{else}
-% conditional.
-
-In the strategy we check that the control flow graph is structured
-when we construct it in this section, and abort the strategy if it
-does not have the required structure.
-The introduction of sequential composition does not cause the control
-flow graph of a structured program to cease being structured, so we
-may also check that the control flow graph is structured when we
-construct it in
-Section~\ref{introduce-forward-sequence-subsection}.
-%TODO: mention the Dijkstra Graphs paper
-
 %TODO: explain how our definition of structure differs from that of
 % MISRA - leave for final considerations?
 
+The control flow graph of each method is structured since the
+transformations of the graph up to this point consist solely of
+collapsing sequential compositions, which, as mentioned in the
+previous section, do not cause a structured graph to become
+unstructured.
 Since we have defined the desired program structure in terms of a
-small number of standard structures, we can identify each of these
+small number of standard structures (shown in
+Figure~\ref{structured-cfg-figures}), we can identify each of these
 structures in the control flow graph and introduce them into the
 program, collapsing the control flow graph in the process.
 In order to easily identify the structures in isolation from other
@@ -2596,7 +2199,11 @@ The first type of structure we check for are conditionals, beginning
 with those conditionals that are followed by another node, that is,
 those shown in Figure~\ref{if-figure} and~\subref{if-else-figure}.
 These may be nested within one of the branches of another conditional
-in one of the two ways shown below:
+using internal node replacement
+(Figure~\ref{internal-replacement-figure}) or branch end replacement
+Figure~\ref{branch-end-replacement-figure}. 
+These different ways of nesting a conditional within another
+conditional may result in graphs such as those shown below:
 \begin{center}
   \begin{tikzpicture}
     \node (1) at (0, 0.0) {$\bullet$};
@@ -2675,19 +2282,19 @@ in the $Running$ action, which will be that of a node whose sequence
 of instructions ends with an assignment of the form
 $pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$ node ends in
 an assignment $pc := x$.
-Note that the branches will not be the other way round (i.e. 
+Note that the branches will not be the other way round (i.e.\
 the $pc = x$ branch will not be the body of the conditional) since the
 conditional branches come from Java's branching instructions which
 branch to the specified address if the condition is true and go to the
 next instruction if it is false.
-We provide Rule [\nameref{if-introduction-rule}] for introducing such
+We provide Rule~[\nameref{if-introduction-rule}] for introducing such
 conditionals.
 \begin{restatable}[\texttt{if}-conditional-introduction]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
-  If $i \neq j$, $i \neq k$, and 
+  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -2726,7 +2333,7 @@ conditionals.
     \end{array}
   \end{circus}
 \end{restatable}
-Rule [\nameref{if-introduction-rule}] introduces a conditional for
+Rule~[\nameref{if-introduction-rule}] introduces a conditional for
 nodes that match the form described above, which in the rule is the
 $pc = i$ node.
 The conditional is introduced with the true branch being empty
@@ -2743,11 +2350,11 @@ A similar condition is required for all the rules in this section.
 We also require that the targets of the conditional are different from
 the node at which the conditional is introduced, since that would
 introduce a loop, which is not the purpose of this rule.
-Rule [\nameref{if-introduction-rule}] is applied on
+Rule~[\nameref{if-introduction-rule}] is applied on
 line~\ref{algorithm-introduce-if} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 Note that, since the structure can be identified from the form of the
-\Circus{} code alone, it is node necessary to guard the application of
+\Circus{} code alone, it is not necessary to guard the application of
 the rule with a condition on the control flow graph.
 
 After attempting to introduce an \texttt{if} conditional, we attempt
@@ -2758,13 +2365,13 @@ As with an \texttt{if} conditional, a node with an
 the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
 nodes are required to end with a common assignment $pc := z$.
 Conditionals matching this form may be introduced using
-Rule [\nameref{if-else-introduction-rule}].
-\begin{restatable}[\texttt{if}-\texttt{else} conditional introduction]{crule}{IfElseConditionalIntroductionRule}
+Rule~[\nameref{if-else-introduction-rule}].
+\begin{restatable}[\texttt{if}-\texttt{else}-conditional-introduction]{crule}{IfElseConditionalIntroductionRule}
   \label{if-else-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
-  If $i \neq j$, $i \neq k$, and 
+  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -2807,16 +2414,16 @@ Rule [\nameref{if-else-introduction-rule}].
     \end{array}
   \end{circus}
 \end{restatable}
-Rule [\nameref{if-else-introduction-rule}] operates similarly to
-Rule [\nameref{if-introduction-rule}] in how it introduces the conditional
+Rule~[\nameref{if-else-introduction-rule}] operates similarly to
+Rule~[\nameref{if-introduction-rule}] in how it introduces the conditional
 and moves the common $pc$ assignment outside the conditional.
 However, Rule [\nameref{if-else-introduction-rule}] includes sequences of
 instructions for both branches of the introduced conditional, each of
 which end with a $pc$ assignment to jump to the node after the
 conditional.
-The preconditions of Rule [\nameref{if-else-introduction-rule}] are the
-same as those of Rule [\nameref{if-introduction-rule}].
-Rule [\nameref{if-else-introduction-rule}] is applied on
+The preconditions of Rule~[\nameref{if-else-introduction-rule}] are the
+same as those of Rule~[\nameref{if-introduction-rule}].
+Rule~[\nameref{if-else-introduction-rule}] is applied on
 line~\ref{algorithm-introduce-if-else} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 
@@ -2832,7 +2439,7 @@ method, so the actual return statement can be placed after the
 conditionals to create a single return statement at the end of the C
 function.
 
-The form of this type of conditionals is that shown in
+The form of this type of conditional is that shown in
 Figure~\ref{divergent-figure}.
 We require that the nodes in both branches of the conditional have
 only a single incoming edge each, and do not have any outgoing edges
@@ -2842,42 +2449,21 @@ already been introduced in the branches).
 We check that the control flow graph beginning at the node being
 considered has this form on line~\ref{algorithm-conditional-check} of
 the algorithm.
-This is to ensure unstructured conditionals such as the one shown
-below are ruled out by the strategy.
-\begin{center}
-  \begin{tikzpicture}
-    \node (0) at (-2, 0.0) {$\cdots$};
-    \node (1) at (0, 0.0) {$\bullet$};
-    \node (2) at (2, 0.5) {$\bullet$};
-    \node (3) at (2,-0.5) {$\bullet$};
-    \node (4) at (4, 1.0) {$\bullet$};
-    \node (5) at (4,-1.0) {$\bullet$};
-    \node (6) at (4, 0.0) {$\bullet$};
-
-    \draw[-latex] (0) to (1);
-    \draw[-latex] (1) to (2);
-    \draw[-latex] (1) to (3);
-    \draw[-latex] (2) to (4);
-    \draw[-latex] (3) to (5);
-    \draw[-latex] (2) to (6);
-    \draw[-latex] (3) to (6);
-  \end{tikzpicture}
-\end{center}
 
 If the correct structure is present, then we introduce the conditional
-by applying Rule [\nameref{conditional-introduction-rule}] on
+by applying Rule~[\nameref{conditional-introduction-rule}] on
 line~\ref{algorithm-introduce-conditional}.
 This rule introduces the conditional in much the same way as
-Rule [\nameref{if-introduction-rule}] and
-Rule [\nameref{if-else-introduction-rule}], but it does not place any
+Rule~[\nameref{if-introduction-rule}] and
+Rule~[\nameref{if-else-introduction-rule}], but it does not place any
 requirement on the structure of the conditional or move a $pc$
 assignment outside of it.
-\begin{restatable}[Conditional introduction]{crule}{ConditionalIntroductionRule}
+\begin{restatable}[Conditional-introduction]{crule}{ConditionalIntroductionRule}
   \label{conditional-introduction-rule}
   \setlength{\zedindent}{0.25cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
-  If $i \neq j$, $i \neq k$, and 
+  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
@@ -2931,7 +2517,7 @@ A \texttt{while} loop has a form similar to that of a conditional,
 except that one of the branches ends with a jump back to the beginning
 of the node with the conditional.
 This structure may be introduced using
-Rule [\nameref{while-introduction-rule1}].
+Rule~[\nameref{while-introduction-rule1}].
 This rule introduces a conditional at a node $pc=i$ with its false
 branch ending in an assignment of $i$ to $pc$, and introduces a
 recursion to the beginning of the $pc=i$ node in that branch of the
@@ -2972,11 +2558,11 @@ A sequential composition can then be introduced later, as with
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \circmu Y \circspot A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \circseq Poll \circseq \\
+      \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \circseq \\
       \t3 \circif b \circthen \Skip \\
-      \t3 {} \circelse \lnot b \circthen C \circseq pc := i \circseq Poll \circseq Y \\
-      \t3 \circfi \circseq pc := j \\
+      \t3 {} \circelse \lnot b \circthen {} \\
+      \t4 pc := k \circseq Poll \circseq C \circseq pc := i \circseq Poll \circseq Y \\
+      \t3 \circfi) \circseq pc := j \\
       \t2 \cdots \\
       \t2 {} \circelse pc = j \circthen B \\
       \t2 \cdots \\
@@ -2990,7 +2576,7 @@ A sequential composition can then be introduced later, as with
 As a \texttt{while} loop may occur with the loop at the end of either
 condition branch (since the loop may be created by a \texttt{goto}
 instruction in the Java bytecode), we also provide a similar rule,
-Rule [\nameref{while-introduction-rule2}], that introduces the loop in the
+Rule~[\nameref{while-introduction-rule2}], that introduces the loop in the
 true branch of the conditional.
 These two rules are applied on lines~\ref{algorithm-introduce-while1}
 and~\ref{algorithm-introduce-while2} of the algorithm.
@@ -3032,11 +2618,10 @@ We introduce these loops using Rule
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \circmu Y \circspot A \\
-      \t3 pc := \IF b \THEN i \ELSE j \circseq Poll \circseq \\
-      \t3 \circif b \circthen Y \\
+      \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \\
+      \t3 \circif b \circthen pc := i \circseq Poll \circseq Y \\
       \t3 {} \circelse \lnot b \circthen \Skip \\
-      \t3 \circfi \circseq pc := j \\
+      \t3 \circfi) \circseq pc := j \\
       \t2 \cdots \\
       \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi 
