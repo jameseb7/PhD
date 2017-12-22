@@ -466,15 +466,6 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[assign-seq-col] in Alvaro's thesis
-\begin{law}[assign-seq-col]
-  \label{assign-seq-col-law}
-  \begin{circus}
-    x := e_1 \circseq x := e_2 = x := e_2[e_1/x]
-  \end{circus}
-\end{law}
-
-
 % Law scompC in ZRC paper
 \begin{law}[schema-comp-seq-conv]
   \label{schema-comp-seq-conv-law}
@@ -541,20 +532,6 @@ proofs of our compilation rules.
     (\circmu X \circspot \{g\} \circseq F(X))
     \circrefines_A
     (\circmu X \circspot F(X)) \circseq \{g\}
-  \end{circus}
-\end{law}
-
-% From Exercise 2.6.4(2) in the UTP book with
-% F(X) = f(X) \circseq A
-% G(X) = X \circseq A
-% H(X) = f(X)
-\begin{law}[rec-seq-distr]
-  \label{rec-seq-distr-law}
-  If  $F(X \circseq A) \circseq A \circrefines_A F(X) \circseq A \circseq A$ then,
-  \begin{circus}
-    (\circmu X \circspot F(X) \circseq A)
-    \circrefines_A
-    (\circmu X \circspot F(X) \circseq A) \circseq A
   \end{circus}
 \end{law}
 
