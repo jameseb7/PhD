@@ -23,8 +23,8 @@ The algorithm constructs a control flow graph for each method in the
 program, as specified on line~\ref{algorithm-make-control-flow-graph}.
 Since the introduction of sequential composition does not depend on
 the relationships between methods, the control flow graph is
-constructed as a disconnected graph containing the control flow of all
-the methods in the program.
+constructed as a disconnected graph containing the control flow of
+each method in the program.
 The nodes in this graph correspond to the branches in the choice over
 $pc$ values introduced in the previous section.
 
@@ -42,8 +42,7 @@ instructions are executed in the method after a return instruction.
 We finish construction of the control graph for a method when there
 are no further edges to add.
 This terminates since there are only finitely many instructions in a
-method so edges for all the reachable nodes will eventually be added.
-
+method so edges for all the reachable nodes are eventually added.
 
 The control flow graph for our example is shown in
 Figure~\ref{example-control-flow-graph-figure}.
@@ -102,6 +101,16 @@ loop, and $35$, which is the end of a conditional.
 These prevent introduction of sequential composition for the $pc$
 values $20$, $31$, $34$, and $38$, since the targets of those nodes
 are nodes $35$ and $39$.
+
+The procedure \Call{HasSimpleSequence}{$node$} checks this requirement
+for introducing sequential composition.
+It returns a true value if $node$ has only a single outgoing edge and
+its target has only a single incoming edge.
+It returns a false value if either of these conditions does not hold.
+The check is performed on
+line~\ref{algorithm-forward-sequence-condition}, where it forms the
+condition of a while loop so that multiple sequential compositions can
+be introduced for a node.
 
 For a node that meets the above requirement and is not a method call,
 we can introduce sequential composition at that node by applying
@@ -162,7 +171,7 @@ Rule~[\nameref{sequence-introduction-rule}], until that node no longer
 satisfies the conditions for introducing sequential composition.
 This is specified by the while loop at
 line~\ref{algorithm-forward-sequence-condition} of the algorithm.
-This means the control flow graph is updated as
+The control flow graph is updated as
 Rule~[\nameref{sequence-introduction-rule}] is applied, to take into
 account the merging of nodes.
 Since there are finitely many nodes, the merging of nodes eventually
