@@ -1,10 +1,10 @@
 After sequential composition has been introduced for all methods, we
-must begin considering each method separately to ensure method calls
-are handled properly.
+must consider each method separately to handle method calls.
 This means the strategy must loop, introducing loops and conditionals
 to those methods that have no unresolved method calls and resolving
 calls of methods that are then complete, until every method is
 complete and has been separated into its own action.
+
 Introducing loops and conditionals is performed as described by
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 This considers each method individually, as specified by the for loop
@@ -13,6 +13,20 @@ of the algorithm.
 The condition on line~\ref{algorithm-no-unresolved-calls-condition}
 ensures that only those methods where all method calls have already
 been resolved undergo loop and conditional introduction.
+Since we do not allow recursion, there will always be at least one
+method that does not depend on another method in the program.
+It may be the case that a method depends only on special methods, in
+which case this stage will have no effect on that method until the
+special method calls have been resolved.
+Special method calls, however, do not depend on the application of the
+strategy to the program, since they are part of the infrastructure.
+
+The \Call{HasNoUresolvedCalls}{$m$} procedure, used in the condition
+on line~\ref{algorithm-no-unresolved-calls-condition}, checks that no
+node in the control flow graph of $m$ ends in a method call.
+Method resolution sequences a method call with the instructions
+following it, so a method call with nothing following it indicates a
+method call that has not yet been resolved.
 
 \begin{algorithm}
   \begin{algorithmic}[1]
