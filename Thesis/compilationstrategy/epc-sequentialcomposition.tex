@@ -1,0 +1,217 @@
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State $cfg \gets$ \Call{MakeControlFlowGraph}{}
+    \label{algorithm-make-control-flow-graph}
+    \For{$node \gets cfg$}
+    \label{algorithm-sequence-cfg-loop}
+    \While{\Call{HasSimpleSequence}{$node$}}
+    \label{algorithm-forward-sequence-condition}
+    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
+    \label{algorithm-forward-sequence-application}
+    \EndWhile
+    \EndFor
+  \end{algorithmic}
+  \caption{IntroduceSequentialComposition}
+  \label{introduce-forward-sequence-algorithm}
+\end{algorithm}
+The simplest control flows to introduce are those of instructions
+where execution continues at the next program counter value.
+These control flows are introduced as shown in
+Algorithm~\ref{introduce-forward-sequence-algorithm}, which defines
+the \Call{IntroduceSequentialComposition}{} procedure.
+The algorithm constructs a control flow graph for each method in the
+program, as specified on line~\ref{algorithm-make-control-flow-graph}.
+Since the introduction of sequential composition does not depend on
+the relationships between methods, the control flow graph is
+constructed as a disconnected graph containing the control flow of all
+the methods in the program.
+The nodes in this graph correspond to the branches in the choice over
+$pc$ values introduced in the previous section.
+
+We construct the control flow graph by starting at the entry point for
+each method and following the $pc$ update at the end of each node,
+introducing an edge in the process.
+For method call instructions, we introduce an edge to the node for the
+next $pc$ value, as if the instruction were replaced with
+$pc := pc + 1$.
+This is consistent with how method calls are handled later in the
+strategy, since execution resumes at the next instruction after the
+called method returns.
+We do not add an edge from a return instruction, since no further
+instructions are executed in the method after a return instruction.
+We finish construction of the control graph for a method when there
+are no further edges to add.
+This terminates since there are only finitely many instructions in a
+method so edges for all the reachable nodes will eventually be added.
+
+
+The control flow graph for our example is shown in
+Figure~\ref{example-control-flow-graph-figure}.
+We label the nodes of the graph with the $pc$ values of the
+instructions at the nodes.
+Due to our assumptions about the source bytecode, the subgraph
+corresponding to each method's control flow is a structured graph as
+defined in Section~\ref{compilation-assumptions-section}.
+
+\begin{figure}
+  \begin{center}
+    \footnotesize
+    \begin{tikzpicture}[every new ->/.style={-latex}]
+      % \node (start) at (0,0) {};
+      \foreach \x in {0,...,6}  { \node (\x) at (\x, 1cm) {\x}; }
+      \foreach \x in {7,...,20}  { \node (\x) at (0.85*\x - 0.85*7,0) {\x}; }
+      \foreach \x in {21,...,27} { \node (\x) at (0.85*\x - 0.85*21, -2cm) {\x}; }
+      \foreach \x in {28,...,31} { \node (\x) at (0.85*\x - 0.85*21, -1cm) {\x}; }
+      \foreach \x in {32,...,34} { \node (\x) at (0.85*\x - 0.85*25, -3cm) {\x}; }
+      \foreach \x in {35,...,42} { \node (\x) at (0.85*\x - 0.85*24.3, -2cm) {\x}; }
+      \foreach \x in {43,...,50} { \node (\x) at (-43+\x, -4.5cm) {\x}; }
+
+      \graph{ (7) -> (8) -> (9) -> (10) -> (11) -> (12) ->
+        (13) -> (14) -> (15) -> (16) -> (17) -> (18) -> (19) -> (20)
+        -> (39) -> (40) -> (41) -> (42); (21) -> (22) -> (23) -> (24)
+        -> (25) -> (26) -> (27) -> {
+          (28) -> (29) -> (30) -> (31);
+          (32) -> (33) -> (34);
+        } -> (35) -> (36) -> (37) -> (38) -> (39);
+      };
+
+      \graph{(0) -> (1) -> (2) -> (3) -> (4) -> (5) -> (6)};
+      \graph{(43) -> (44) -> (45) -> (46) -> (47) -> (48) -> (49) -> (50)};
+
+      \draw[-latex] (41) edge[out=270,in=270,looseness=0.35] (21);
+    \end{tikzpicture}
+  \end{center}
+  \caption{Control flow graph for our example program}
+  \label{example-control-flow-graph-figure}
+\end{figure}
+
+After the control flow graph is constructed, we consider each node in
+turn, as specified by the for loop on
+line~\ref{algorithm-sequence-cfg-loop}.
+As mentioned earlier, we require a node to have only a single outgoing
+edge and its target to have only a single incoming edge in order for
+it to be considered for the introduction of sequential composition.
+The reason for this is that nodes with two outgoing edges are points
+at which conditionals should be introduced.
+Such nodes in our example are the nodes for $pc$ values $27$ and $41$,
+which represent the start of conditionals.
+Likewise, nodes with multiple incoming edges represent points at which
+a more complex control flows occur.
+For our example, such nodes include $39$, which is the start of a
+loop, and $35$, which is the end of a conditional.
+These prevent introduction of sequential composition for the $pc$
+values $20$, $31$, $34$, and $38$, since the targets of those nodes
+are nodes $35$ and $39$.
+
+For a node that meets the above requirement and is not a method call,
+we can introduce sequential composition at that node by applying
+Rule~[\nameref{sequence-introduction-rule}], on
+line~\ref{algorithm-forward-sequence-application} of the algorithm.
+This rule works by unrolling the loop in $Running$ to sequence an
+instruction at $pc$ value $i$ with the instruction that is executed
+after it, inserting $Poll$ inbetween.
+It is required that the $pc$ value of the node's target, $j$, not be
+the same as $i$, since that would introduce a loop, rather than a
+sequential composition.
+Also, the sequence of instructions at the node, $A$, must not affect
+the non-emptiness of the $frameStack$ to ensure that the choice at the
+start of the main loop in $Running$ can be resolved.
+\begin{restatable}[sequence-intro]{crule}{SequenceIntroductionRule}
+  \label{sequence-introduction-rule}
+  Given $i : ProgramAddress$, if $i \neq j$ and \def\zedindent{0.25cm}
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then,
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif {} \cdots {} \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif {} \cdots {} \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 A \circseq pc := j \circseq Poll \circseq B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+Since Rule~[\nameref{sequence-introduction-rule}] pulls two nodes
+together, we can continue to introduce sequential composition at a
+node after the first application of
+Rule~[\nameref{sequence-introduction-rule}], until that node no longer
+satisfies the conditions for introducing sequential composition.
+This is specified by the while loop at
+line~\ref{algorithm-forward-sequence-condition} of the algorithm.
+This means the control flow graph is updated as
+Rule~[\nameref{sequence-introduction-rule}] is applied, to take into
+account the merging of nodes.
+Since there are finitely many nodes, the merging of nodes eventually
+results in a graph in which no further sequential compositions can be
+introduced and so the loop terminates.
+
+The resulting control flow graph after introduction of sequential
+composition has been performed at every point is shown in
+Figure~\ref{example-control-flow-graph-after-sequence-introduction-figure}.
+We note that this graph is still a union of structured graphs since
+merging sequentially composed nodes does not affect whether a graph is
+structured.
+This is due to the fact that sequential composition is one of the
+constructs used to define structured control flow graphs
+(Figure~\ref{sequence-figure}), and merging the nodes may be seen as
+performing the reverse of node replacement for it.
+\begin{figure}
+  \begin{center}
+    \begin{tikzpicture}[every new ->/.style={-latex}]
+      \path (0,0) node (0) {0} -- ++(1,0) node (6) {6};
+      \path (0,-1cm) node (7) {7} -- ++(1,0) node (11) {11} -- ++(1,0) node (14) {14} -- ++(1,0) node (17) {17};
+      \path (0,-3cm) node (21) {21} -- ++(1,0) node (23) {23} -- ++(1,0) node (24) {24};
+      \path (3,-2.3cm) node (28) {28} -- ++(1,0) node (31) {31};
+      \node at (3,-3.7cm) (32) {32};
+      \path (5,-3cm) node (35) {35} -- ++(1,0) node (39) {39} -- ++(1,0) node (42) {42};
+      
+      \graph{
+        (7) -> (11) -> (14) -> (17) -> (39) -> (42);
+        (21) -> (23) -> (24) -> {
+          (28) -> (31);
+          (32);
+        } -> (35) -> (39);
+      };
+
+      \graph[grow down]{(0) -> (6)};
+      \node at (0,-5cm) {43};
+
+      \draw[-latex] (39) edge[out=270,in=270,looseness=0.6] (21);
+    \end{tikzpicture}
+  \end{center}
+  \caption{Control flow graph for our example after sequential composition introduction}
+  \label{example-control-flow-graph-after-sequence-introduction-figure}
+\end{figure}
+
+The only remaining nodes in this graph are those where the sequence of
+instructions ends with a method call or return, or which represent a
+more complex control flow.
+In particular, the instructions for the \texttt{f()} method of
+\texttt{TPK}, which begin at $pc = 43$, have been completely sequenced
+together into a single node.
+The code that corresponds to this control flow graph is that shown
+earlier in Figure~\ref{forward-sequence-introduction-example-figure}.

@@ -1,0 +1,95 @@
+The first stage eliminates $pc$ from the state of each thread's
+process, $Thr(bc,cs,t)$, introducing the control flow constructs of C
+as a result. 
+It is summarised by the following theorem.
+%
+\begin{thm}[Elimination of Program Counter]\label{thread-splitting-thm}
+  \begin{circus}
+    Thr(bc,cs,t) \circrefines ThrCF_{bc,cs}(cs,t)
+  \end{circus}%
+\end{thm}
+%
+We act mainly upon the $Running$ action of $Thr$; its loop is unrolled
+to introduce the control flow that follows each bytecode instruction.
+The aim is to get each method's bytecode instructions into a form in
+which the control flow, but not the data operations, are described
+using C constructs and, moreover, each path of execution (including
+every branch of the conditionals) ends in a return instruction or a
+loop.
+We refer to a method in this form as a \emph{complete} method.
+
+It is important to observe that it is possible to transform the
+bytecode instructions of every method so that they become complete.
+If we consider the control flow of a method beginning from that
+method's entry point, each bytecode instruction reached must either be
+a return instruction, or followed by another bytecode.
+If another bytecode follows the bytecode's execution, then it must be
+either a bytecode already considered, resulting in a loop, or one not
+already considered.
+Since there are finitely many bytecode instructions in a method, a
+loop or return must eventually be reached.
+Failure to do so would lead to an instruction beyond the end of the
+method, which is forbidden by the structural restrictions on Java
+bytecode that are checked during bytecode verification. 
+% We assume bytecode input to our strategy will have undergone bytecode
+% verification so this cannot happen.
+
+When a method is complete, it can be defined by a separate \Circus{}
+action.
+When the code for all the methods has been separated out in this way,
+the choice of bytecode instruction using the program counter value can
+be removed and replaced with a choice over method identifiers.
+Thus dependency on the program counter can be completely removed,
+allowing it to be eliminated from the state of $Thr$.
+
+The detailed description of the strategy for transforming $Thr$ in
+this stage and achieving this elimination is provided by
+Algorithm~\ref{epc-algorithm}.
+It begins at line~\ref{algorithm-expand-bytecode} by expanding the
+\Circus{} definitions of the bytecode instructions from the $bc$ map
+into the $Running$ action, pulling out the program counter updates so
+that they can be more easily manipulated.
+In line~\ref{algorithm-introduce-forward-sequence}, simple sequential
+compositions, that is, those that do not involve handling loops or
+conditionals, are introduced.
+% instructions that
+% are followed by the execution of a bytecode instruction that is not
+% part of the start or end of a conditional or loop are sequenced with
+% the instructions following them.
+After that, for each method, its loops and conditionals are introduced
+in line~\ref{algorithm-introduce-loops-and-conditionals}. 
+Afterwards, any complete methods are separated out, in
+line~\ref{algorithm-separate-complete-methods}, and any method calls
+involving completed methods are resolved by sequencing the method call
+with the \Circus{} action representing the method, in
+line~\ref{algorithm-resolve-method-calls}.
+
+This is repeated until all methods have been separated out, as
+indicated by the while loop in line~\ref{algorithm-method-loop}.
+The $MainThread$ and $NotStarted$ actions are then refined in
+line~\ref{algorithm-refine-main-actions} to provide a choice over
+method identifiers, rather than $pc$ values, thus removing all uses of
+$pc$ from the interpreter.
+The $pc$ component is then removed from the state in
+line~\ref{algorithm-remove-pc-from-state} of the algorithm.
+
+\begin{algorithm}[t]
+  \begin{algorithmic}[1]
+    \State \Call{ExpandBytecode}{} \label{algorithm-expand-bytecode}
+    \State \Call{IntroduceSequentialComposition}{} \label{algorithm-introduce-forward-sequence}
+    \While{$\lnot$\Call{AllMethodsSeparated}{}} \label{algorithm-method-loop}
+    \State \Call{IntroduceLoopsAndConditionals}{} \label{algorithm-introduce-loops-and-conditionals}
+    \State \Call{SeparateCompleteMethods}{} \label{algorithm-separate-complete-methods}
+    \State \Call{ResolveMethodCalls}{} \label{algorithm-resolve-method-calls}
+    \EndWhile
+    \State \Call{RefineMainActions}{} \label{algorithm-refine-main-actions}
+    \State \Call{RemovePCFromState}{} \label{algorithm-remove-pc-from-state}
+  \end{algorithmic}
+  \caption{Elimination of Program Counter}
+  \label{epc-algorithm}
+\end{algorithm}
+
+Each of the procedures used in Algorithm~\ref{epc-algorithm} is
+defined in a separate section in the sequel.
+Beforehand, we give a more detailed overview of the strategy using an
+example.

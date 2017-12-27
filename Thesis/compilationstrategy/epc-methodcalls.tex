@@ -1,0 +1,244 @@
+When a method is complete, calls to that method can then be resolved.
+This is performed after introduction of loops and conditionals,
+ensuring methods with loops and conditionals are complete so that this
+step can be applied.
+% As mentioned previously, since this requires all the method calls in a
+% given method to be resolved first, we do not allow recursion.
+
+This step begins with the copying of the method into a separate
+action, so that it can be referenced elsewhere.
+This is performed by as described by
+Algorithm~\ref{separate-complete-methods-algorithm}.
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{SeparateCompleteMethods}{}
+    \For{$m \gets methods$} \label{algorithm-method-separation-loop}
+    % \For{$mc \gets$ \Call{MethodsCalls}{$m$}}
+    % \EndFor
+    \If{\Call{MethodIsComplete}{$m$}} \label{algorithm-check-method-completeness}
+    \State \Call{ApplyCopyRule}{$m$}
+    \EndIf
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Separate Complete Methods}
+  \label{separate-complete-methods-algorithm}
+\end{algorithm}
+
+Algorithm~\ref{separate-complete-methods-algorithm} looks at each
+method separately, as specified by the loop on
+line~\ref{algorithm-method-separation-loop}, and determines if it is
+complete, on line~\ref{algorithm-check-method-completeness}.
+This involves a simple syntactic check that each conditional branch
+ends in a return instruction or a recursion.
+Those methods that are complete are moved into a separate action by an
+application of the copy rule.
+
+In our example, the method \texttt{f()} of the \texttt{TPK} class,
+which starts at $pc = 43$, is complete on the first iteration of the
+loop on line~\ref{algorithm-method-loop} of
+Algorithm~\ref{epc-algorithm}, with the $Running$ action as shown
+below.
+The method is complete in this case because it consists of a straight
+sequence of instructions ending with $HandleAreturnEPC$, which
+represents the \texttt{areturn} instruction.
+\begin{circus}
+  Running \circdef \\
+  \t1 \circif frameStack = \emptyset \circthen \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+  \t2 \circif pc = 0 \circthen {} \cdots {} \\
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 43 \circthen HandleAloadEPC(0) \circseq Poll \circseq HandleAloadEPC(0) \circseq \\
+  \t3 Poll \circseq HandleIaddEPC \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq \\
+  \t3 HandleIaddEPC \circseq Poll \circseq HandleIconstEPC(5) \circseq Poll \circseq \\
+  \t3 HandleIaddEPC \circseq Poll \circseq HandleAreturnEPC \\
+  \t2 {} \cdots {} \\
+  \t2 \circfi \circseq Poll \circseq Running \\
+  \t1 \circfi
+\end{circus}
+The sequence of instructions at $pc = 43$ can then be copied into a
+separate action, shown below.
+The name of this action contains the name of the class and method
+identifier of the method it represents.
+\begin{circus}
+  TPK\_f \circdef HandleAloadEPC(0) \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq \\
+  \t1 HandleIaddEPC \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq HandleIaddEPC \circseq \\
+  \t1 Poll \circseq HandleIconstEPC(5) \circseq Poll \circseq  HandleIaddEPC \circseq Poll \circseq \\
+  \t1 HandleAreturnEPC 
+\end{circus}
+
+After all the complete methods have been copied into separate actions,
+calls to those methods are resolved.
+This is performed as described by
+Algorithm~\ref{resolve-method-calls-algorithm}.
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \Procedure{ResolveMethodCalls}{}
+    \For{$m \gets methods$}
+    \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
+    \State $targets \gets$ \Call{DetermineMethodCallTargets}{$mc$}
+    \If{$\# targets = 1$}
+    \State \Call{ApplyRule[\nameref{method-call-resolution-rule}]}{}
+    \Else
+    \State \Call{ApplyRule[\nameref{dynamic-method-call-resolution-rule}]}{}
+    \EndIf
+    \EndFor
+    \EndFor
+    \EndProcedure
+  \end{algorithmic}
+  \caption{Resolve Method Calls}
+  \label{resolve-method-calls-algorithm}
+\end{algorithm}
+
+
+%%%%
+
+To resolve a method call, the type of method call must be considered.
+Some methods are handled directly by the SCJVM as they relate to the
+SCJVM services.
+Such methods are treated specially by the interpreter, communicating
+with the launcher to perform the behaviour of the method.
+In cases where the method invocation is simply handled by
+communication with the launcher and then followed by execution of the
+next instruction, the control flow can be introduced using
+Rule [\nameref{sequence-introduction-rule}] as for other instructions with
+simple control flow.
+
+% TODO: discuss special methods with nested calls here
+
+For method calls that do not require special handling, the control
+flow is that of the corresponding method's action, followed by
+execution of the next instruction.
+If the method is called with static dispatch (as is the case with the
+\texttt{invokespecial} and \texttt{invokestatic} instructions), the
+correct method, and hence the corresponding action can be easily
+determined.
+The method call is then resolved using
+Rule [\nameref{method-call-resolution-rule}].
+We require as a precondition of the rule that the method action
+returns to the return address stored on the stack, to ensure that the
+control flow is resolved correctly.
+This will be the case for a method where every path of execution ends
+in a return or loop, since returns establish the condition and loops
+will either lead to a return eventually or form an infinite loop that
+may be followed by any action (including the assumption we require).
+%
+\begin{restatable}[Method call resolution]{crule}{MethodCallResolutionRule}
+  \label{method-call-resolution-rule}
+  If an action $M$ is such that
+  \[\{ (head~frameStack).storedPC = i \land frameStack = fs \} \circseq M \\
+    {} = {} \\
+    \{ (head~frameStack).storedPC = i \land frameStack = fs \}
+    \circseq M \circseq \\
+    \t1 \{ pc = i \land frameStack = tail~fs \}\]
+  and $i \neq j$,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \{ pc = k \} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := j \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \{ pc = k \} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := j \circseq Poll \circseq M \circseq Poll \circseq B \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+  %TODO: elimination of pc assignment
+\end{restatable}
+%
+For method calls that have dynamic dispatch (as in the case of
+\texttt{invokevirtual} instructions), we must determine what classes
+the method may be called on.
+The control flow is then a choice over the class of the object the
+method is called on, with the method action corresponding to that
+class chosen.
+As with the static case, we require the method action to return to the
+return address stored on the stack.
+In the dynamic case, this requirement must be met by all the method
+actions so that the next instruction can be executed after the choice
+of methods.
+Rule [\nameref{dynamic-method-call-resolution-rule}] is used to
+introduce this choice.
+%
+\begin{restatable}[Dynamic method call resolution]{crule}{DynamicMethodCallResolutionRule}
+  \label{dynamic-method-call-resolution-rule}
+  If actions $M_1, \dots, M_n$ are such that
+  \[\{ returnAddress = i \land frameStack = fs \} \circseq M_k \\
+    {} = {} \\
+    \{ returnAddress = i \land frameStack = fs \}
+    \circseq M_k \circseq \{ pc = i \land frameStack = tail~fs \}\]
+   for $k in \{ 1, \dots, n \}$ and $i \neq j$,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A(class, method) \circseq \\
+      \t3 \{ class \in \{ c_1, \dots, c_n \}\} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := entry(class, method) \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j_1 \circthen M_1 \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A(class, method) \circseq \\
+      \t3 \{ class \in \{ c_1, \dots, c_n \} \circseq \\
+      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
+      \t4 SetReturnAddr \rschexpract \circseq \\
+      \t3 pc := entry(class, method) \circseq Poll \circseq \\
+      \t3 \circif class = c_1 \circthen M_1 \\
+      \t3 \cdots \\
+      \t3 {} \circelse class = c_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq B \\
+      \t2 {} \circelse pc = k+1 \circthen B \\
+      \t2 {} \circelse pc = j_1 \circthen M_1 \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+  %TODO: elimination of pc assignment
+\end{restatable}
+
+The resolution of loops, conditionals and methods is performed in a
+loop until all the methods have been separated into their own action.
+The remaining use of the program counter in the main actions of $Thr$
+can then be eliminated as described in the next section.

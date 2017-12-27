@@ -1,0 +1,711 @@
+After sequential composition has been introduced for all methods, we
+must begin considering each method separately to ensure method calls
+are handled properly.
+This means the strategy must loop, introducing loops and conditionals
+to those methods that have no unresolved method calls and resolving
+calls of methods that are then complete, until every method is
+complete and has been separated into its own action.
+Introducing loops and conditionals is performed as described by
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+This considers each method individually, as specified by the for loop
+on line~\ref{algorithm-introduce-loops-and-conditionals-method-loop}
+of the algorithm. 
+The condition on line~\ref{algorithm-no-unresolved-calls-condition}
+ensures that only those methods where all method calls have already
+been resolved undergo loop and conditional introduction.
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \For{$m \gets methods$}
+    \label{algorithm-introduce-loops-and-conditionals-method-loop}
+    \If{\Call{HasNoUresolvedCalls}{$m$}}
+    \label{algorithm-no-unresolved-calls-condition}
+    \State $cfg \gets$ \Call{MakeControlFlowGraph}{$m$}
+    \label{algorithm-make-control-flow-graph2}
+    \For{$node \gets$ \Call{ReverseNodes}{$cfg$}}
+    \label{algorithm-node-checking-loop}
+    \State \ApplyFor{Rule~[\nameref{if-introduction-rule}]}{$node$}
+    \label{algorithm-introduce-if}
+    \State \ApplyFor{Rule~[\nameref{if-else-introduction-rule}]}{$node$}
+    \label{algorithm-introduce-if-else}
+    \If{\Call{IsSimpleConditional}{$node$}}
+    \label{algorithm-conditional-check}
+    \State \ApplyFor{Rule~[\nameref{conditional-introduction-rule}]}{$node$}
+    \label{algorithm-introduce-conditional}
+    \EndIf
+    \State \ApplyFor{Rule~[\nameref{while-introduction-rule1}]}{$node$}
+    \label{algorithm-introduce-while1}
+    \State \ApplyFor{Rule~[\nameref{while-introduction-rule2}]}{$node$}
+    \label{algorithm-introduce-while2}
+    \State \ApplyFor{Rule~[\nameref{do-while-introduction-rule}]}{$node$}
+    \label{algorithm-introduce-do-while}
+    \State \ApplyFor{Rule~[\nameref{infinite-loop-introduction-rule}]}{$node$}
+    \label{algorithm-introduce-infinite-loop}
+    \If{\Call{HasSimpleSequence}{$node$}}
+    \label{algorithm-lci-sequence-check}
+    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
+    \label{algorithm-lci-sequence-introduction}
+    \EndIf
+
+    \EndFor
+    \EndIf
+    \EndFor
+  \end{algorithmic}
+  \caption{IntroduceLoopsAndConditionals}
+  \label{introduce-loops-and-conditionals-algorithm}
+\end{algorithm}
+
+For each method that undergoes loop and conditional introduction, we
+must again consider the control flow graph of the method to ensure the
+loops and conditionals are introduced in the correct order to properly
+form the bodies of loops and conditionals.
+This involves constructing a control flow graph for the method, at
+line~\ref{algorithm-make-control-flow-graph2}.
+The procedure for creating the control flow graph is the same as in
+the previous section, but we only focus on a single method rather than
+constructing a disconnected graph for all methods.
+The graph for the our example, beginning at $pc=7$ (the entry point of
+the \texttt{handleAsyncEvent()} method), is shown in
+Figure~\ref{example-simplified-control-flow-graph-figure}, alongside
+the \Circus{} code obtained at the beginning of this stage for the
+method.
+The edge which forms a loop from $pc=35$ to $pc=39$ is shown as a
+dashed line since looping edges are ignored at certain points in this
+part of the strategy.
+\begin{figure}
+  \begin{center}
+    % \begin{multicols}{4}
+    \begin{minipage}{0.3\linewidth}
+      \begin{tikzpicture}
+        \node (7)  at (0,0)  {7};
+        \node (39)  at (0,-1) {39};
+        \node (42) at (-1,-2) {42};
+        \node (21) at (1,-2) {21};
+        \node (28) at (0.5,-3) {28};
+        \node (32) at (1.5,-3) {32};
+        \node (35) at (1,-4) {35};
+        \draw[-latex] (7) to (39);
+        \draw[-latex] (39) to (42);
+        \draw[-latex] (39) to (21);
+        \draw[-latex] (21) to (28);
+        \draw[-latex] (21) to (32);
+        \draw[-latex] (28) to (35);
+        \draw[-latex] (32) to (35);
+        % \draw[-latex,red!70!black,dashed,out=0,in=0,looseness=1.1] (35) to (39);
+        \draw[-latex,dashed,out=0,in=0,looseness=1.1] (35) to (39);
+      \end{tikzpicture}
+    \end{minipage}
+    % \columnbreak
+    \begin{minipage}{0.6\linewidth}
+      \scriptsize
+      \setlength{\zedindent}{0cm}
+      \begin{circus}
+        Running \circdef \\
+        \t1 \circif frameStack = \emptyset \circthen \Skip \\
+        \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+        \t2 \circif pc = 0 \circthen {} \cdots {} \\
+        \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 39 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 35 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 32 \circthen HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 35 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 35 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := 39 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 36 \circseq Poll \circseq \cdots \circseq \\
+        \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
+        \t2 \circfi \circseq Poll \circseq Running \\
+        \t1 \circfi
+      \end{circus}
+    \end{minipage}
+    %\end{multicols}
+  \end{center}
+  \caption{Simplified control flow graph and corresponding code for our example
+    program}
+  \label{example-simplified-control-flow-graph-figure}
+\end{figure}
+
+%TODO: explain how our definition of structure differs from that of
+% MISRA - leave for final considerations?
+
+The control flow graph of each method is structured since the
+transformations of the graph up to this point consist solely of
+collapsing sequential compositions, which, as mentioned in the
+previous section, do not cause a structured graph to become
+unstructured.
+Since we have defined the desired program structure in terms of a
+small number of standard structures (shown in
+Figure~\ref{structured-cfg-figures}), we can identify each of these
+structures in the control flow graph and introduce them into the
+program, collapsing the control flow graph in the process.
+In order to easily identify the structures in isolation from other
+structures, we begin at the end nodes of the method (ignoring looping
+edges for the purposes of determining end nodes) and work backwards,
+considering each node in turn.
+This is specified by the loop beginning on
+line~\ref{algorithm-node-checking-loop} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+In our example this means we consider the $pc=42$ and $pc=35$ nodes
+first, then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally
+$pc=7$.
+
+For each node, we check each type of structure to see if the control
+flow graph starting at that point matches the structure, and introduce
+the structure if it does.
+The first type of structure we check for are conditionals, beginning
+with those conditionals that are followed by another node, that is,
+those shown in Figure~\ref{if-figure} and~\subref{if-else-figure}.
+These may be nested within one of the branches of another conditional
+using internal node replacement
+(Figure~\ref{internal-replacement-figure}) or branch end replacement
+Figure~\ref{branch-end-replacement-figure}. 
+These different ways of nesting a conditional within another
+conditional may result in graphs such as those shown below:
+\begin{center}
+  \begin{tikzpicture}
+    \node (1) at (0, 0.0) {$\bullet$};
+    \node (2) at (2, 0.5) {$\bullet$};
+    \node (3) at (2,-0.5) {$\bullet$};
+    \node (4) at (4, 1.0) {$\bullet$};
+    \node (5) at (4,-1.0) {$\bullet$};
+    \node (6) at (4, 0.2) {$\bullet$};
+    \node (7) at (4,-0.2) {$\bullet$};
+    \node (8) at (6, 0.0) {$\bullet$};
+    
+    \draw[-latex] (-1,0) to (1);
+    
+    \draw[-latex] (1) to (2);
+    \draw[-latex] (1) to (3);
+    \draw[-latex] (2) to (4);
+    \draw[-latex] (3) to (5);
+    \draw[-latex] (2) to (6);
+    \draw[-latex] (3) to (7);
+    \draw[-latex] (4) to (8);
+    \draw[-latex] (5) to (8);
+    \draw[-latex] (6) to (8);
+    \draw[-latex] (7) to (8);
+  \end{tikzpicture}
+  \hfill
+  \begin{tikzpicture}
+    \node (1) at (0.0, 0.0) {$\bullet$};
+    \node (2) at (1.5, 0.5) {$\bullet$};
+    \node (3) at (1.5,-0.5) {$\bullet$};
+    \node (4) at (3.0, 1.0) {$\bullet$};
+    \node (5) at (3.0,-1.0) {$\bullet$};
+    \node (6) at (3.0, 0.2) {$\bullet$};
+    \node (7) at (3.0,-0.2) {$\bullet$};
+    \node (8) at (4.0, 0.5) {$\bullet$};
+    \node (9) at (4.0,-0.5) {$\bullet$};
+    \node (0) at (5.0, 0.0) {$\bullet$};
+    
+    \draw[-latex] (-1,0) to (1);
+    
+    \draw[-latex] (1) to (2);
+    \draw[-latex] (1) to (3);
+    \draw[-latex] (2) to (4);
+    \draw[-latex] (3) to (5);
+    \draw[-latex] (2) to (6);
+    \draw[-latex] (3) to (7);
+    \draw[-latex] (4) to (8);
+    \draw[-latex] (5) to (9);
+    \draw[-latex] (6) to (8);
+    \draw[-latex] (7) to (9);
+    \draw[-latex] (8) to (0);
+    \draw[-latex] (9) to (0);
+  \end{tikzpicture}
+\end{center}
+In the first case the sequential composition with the node at the end
+cannot be introduced until the outermost conditional is introduced,
+because both of the inner conditionals end at the same point.
+However, in the second case the inner conditionals can be completely
+introduced, including the sequential composition with the node after
+the end of each inner conditional, before the outer conditional is
+introduced.
+To ensure both cases are covered, we separate the introduction of the
+conditional itself and the sequential composition with the node after
+the conditional. 
+In the first case the introduction of the sequential composition is
+deferred until after the outermost conditional is resolved, whereas in
+the second case it may be performed immediately after the introduction
+of the conditional.
+
+We provide separate compilation rules for introducing \texttt{if}
+conditionals and \texttt{if}-\texttt{else} conditionals.
+An \texttt{if} conditional with no else branch may be recognised from
+the control flow graph as having the form shown in
+Figure~\ref{if-figure}.
+However, it can also be recognised from the form of the \Circus{} code
+in the $Running$ action, which will be that of a node whose sequence
+of instructions ends with an assignment of the form
+$pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$ node ends in
+an assignment $pc := x$.
+Note that the branches will not be the other way round (i.e.\
+the $pc = x$ branch will not be the body of the conditional) since the
+conditional branches come from Java's branching instructions which
+branch to the specified address if the condition is true and go to the
+next instruction if it is false.
+We provide Rule~[\nameref{if-introduction-rule}] for introducing such
+conditionals.
+\begin{restatable}[\texttt{if}-conditional-intro]{crule}{IfConditionalIntroductionRule}
+  \label{if-introduction-rule}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \circif b \circthen \Skip \\
+      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
+      \t3 \circfi \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
+Rule~[\nameref{if-introduction-rule}] introduces a conditional for
+nodes that match the form described above, which in the rule is the
+$pc = i$ node.
+The conditional is introduced with the true branch being empty
+(represented here by $\Skip$) and the false branch containing the
+instructions in the body of the conditional.
+The assignment $pc := j$ is moved outside the conditional from both
+the empty true branch and the end of the false branch, so that a
+sequential composition with the node after the conditional can be
+introduced later on.
+As in Rule~[\nameref{sequence-introduction-rule}], the sequence of
+actions for the node must not affect the nonemptiness of the
+$frameStack$.
+A similar condition is required for all the rules in this section.
+We also require that the targets of the conditional are different from
+the node at which the conditional is introduced, since that would
+introduce a loop, which is not the purpose of this rule.
+Rule~[\nameref{if-introduction-rule}] is applied on
+line~\ref{algorithm-introduce-if} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+Note that, since the structure can be identified from the form of the
+\Circus{} code alone, it is not necessary to guard the application of
+the rule with a condition on the control flow graph.
+
+After attempting to introduce an \texttt{if} conditional, we attempt
+to introduce an \texttt{if}-\texttt{else} conditional, the form of
+which is shown in Figure~\ref{if-else-figure}.
+As with an \texttt{if} conditional, a node with an
+\texttt{if}-\texttt{else} conditional will end with an assignment of
+the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
+nodes are required to end with a common assignment $pc := z$.
+Conditionals matching this form may be introduced using
+Rule~[\nameref{if-else-introduction-rule}].
+\begin{restatable}[\texttt{if}-\texttt{else}-conditional-intro]{crule}{IfElseConditionalIntroductionRule}
+  \label{if-else-introduction-rule}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \circif b \circthen pc := j \circseq Poll \circseq B \\
+      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq C \\
+      \t3 \circfi \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
+Rule~[\nameref{if-else-introduction-rule}] operates similarly to
+Rule~[\nameref{if-introduction-rule}] in how it introduces the conditional
+and moves the common $pc$ assignment outside the conditional.
+However, Rule~[\nameref{if-else-introduction-rule}] includes sequences of
+instructions for both branches of the introduced conditional, each of
+which end with a $pc$ assignment to jump to the node after the
+conditional.
+The preconditions of Rule~[\nameref{if-else-introduction-rule}] are the
+same as those of Rule~[\nameref{if-introduction-rule}].
+Rule~[\nameref{if-else-introduction-rule}] is applied on
+line~\ref{algorithm-introduce-if-else} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+
+Having attempted to introduce conditionals with a node following them,
+we then consider conditionals that are not followed by a node.
+These conditionals are those where both branches end in a return or an
+infinite loop.
+This includes conditionals where both branches are a return, which can
+arise from multiple returns in the Java source code. 
+Though multiple returns are not allowed in the final C code, the
+returns will all end up in branches of conditionals at the end of the
+method, so the actual return statement can be placed after the
+conditionals to create a single return statement at the end of the C
+function.
+
+The form of this type of conditional is that shown in
+Figure~\ref{divergent-figure}.
+We require that the nodes in both branches of the conditional have
+only a single incoming edge each, and do not have any outgoing edges
+(at the point in the strategy where this type of conditional is
+introduced, that is, there may be more complex structures that have
+already been introduced in the branches).
+We check that the control flow graph beginning at the node being
+considered has this form on line~\ref{algorithm-conditional-check} of
+the algorithm.
+
+If the correct structure is present, then we introduce the conditional
+by applying Rule~[\nameref{conditional-introduction-rule}] on
+line~\ref{algorithm-introduce-conditional}.
+This rule introduces the conditional in much the same way as
+Rule~[\nameref{if-introduction-rule}] and
+Rule~[\nameref{if-else-introduction-rule}], but it does not place any
+requirement on the structure of the conditional or move a $pc$
+assignment outside of it.
+\begin{restatable}[conditional-intro]{crule}{ConditionalIntroductionRule}
+  \label{conditional-introduction-rule}
+  \setlength{\zedindent}{0.25cm}
+  % \setlength{\abovedisplayskip}{0.1cm}
+  % \setlength{\belowdisplayskip}{0.1cm}
+  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 \circif b \circthen pc := j \circseq Poll \circseq B \\
+      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq C \\
+      \t3 \circfi \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = k \circthen C \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+After attempting to introduce conditionals, we may attempt to
+introduce loops.
+There are three types of loop to consider, as shown earlier:
+\texttt{while} loops (Figure~\ref{while-figure}),
+\texttt{do}-\texttt{while} loops (Figure~\ref{do-while-figure}), and
+infinite loops (Figure~\ref{infinite-loop-figure}).
+A \texttt{while} loop has a form similar to that of a conditional,
+except that one of the branches ends with a jump back to the beginning
+of the node with the conditional.
+This structure may be introduced using
+Rule~[\nameref{while-introduction-rule1}].
+This rule introduces a conditional at a node $pc=i$ with its false
+branch ending in an assignment of $i$ to $pc$, and introduces a
+recursion to the beginning of the $pc=i$ node in that branch of the
+conditional, representing a loop.
+Since this loop may be within a conditional, we simply move the $pc$
+assignment for the true branch outside the conditional.
+A sequential composition can then be introduced later, as with
+\texttt{if} and \texttt{if}-\texttt{else} conditionals.
+\begin{restatable}[\texttt{while}-loop-intro1]{crule}{WhileLoopIntroductionRuleA}
+  \label{while-introduction-rule1}
+  \setlength{\zedindent}{0.2cm}
+  \setlength{\zedtab}{0.9\zedtab}
+  Given $i : ProgramAddress$, if $i \neq j$,
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := i \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \circseq \\
+      \t3 \circif b \circthen \Skip \\
+      \t3 {} \circelse \lnot b \circthen {} \\
+      \t4 pc := k \circseq Poll \circseq C \circseq pc := i \circseq Poll \circseq Y \\
+      \t3 \circfi) \circseq pc := j \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = k \circthen C \circseq pc := i \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}%
+As a \texttt{while} loop may occur with the loop at the end of either
+condition branch (since the loop may be created by a \texttt{goto}
+instruction in the Java bytecode), we also provide a similar rule,
+Rule~[\nameref{while-introduction-rule2}], that introduces the loop in the
+true branch of the conditional.
+These two rules are applied on lines~\ref{algorithm-introduce-while1}
+and~\ref{algorithm-introduce-while2} of the algorithm.
+
+The next type of loop we consider is the \texttt{do}-\texttt{while}
+loop, which has the form shown in Figure~\ref{do-while-figure}.
+These loops are distinguished from \texttt{while} loops by the fact
+that the conditional $pc$ assignment which causes the loop is at the
+end of the loop, rather than at the beginning or in the middle.
+We introduce these loops using
+Rule~[\nameref{do-while-introduction-rule}].
+\begin{restatable}[\texttt{do}-\texttt{while}-loop-intro]{crule}{DoWhileLoopIntroductionRule}
+  \label{do-while-introduction-rule}
+  \def\zedindent{0.25cm}
+  Given $i : ProgramAddress$, if $i \neq j$,
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 pc := \IF b \THEN i \ELSE j \\
+      \t2 \cdots \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \\
+      \t3 \circif b \circthen pc := i \circseq Poll \circseq Y \\
+      \t3 {} \circelse \lnot b \circthen \Skip \\
+      \t3 \circfi) \circseq pc := j \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}%
+This rule introduces a conditional, as with
+Rule~[\nameref{while-introduction-rule1}], but the true branch
+contains just the recursive call, since the conditional occurs at the
+end of the loop.
+The $pc$ assignment for the false branch is moved outside the
+conditional to allow a sequential composition to be introduced later,
+as in previous rules.
+Note that the false branch can never cause the loop in this case,
+since it will just go to the next instruction.
+Attempting to redirect it and create the loop with a \texttt{goto}
+instruction would add an instruction within the loop after the
+conditional, so it would be dealt with as a \texttt{while} loop.
+Therefore, it is not necessary to provide two compilation rules for
+\texttt{do}-\texttt{while} loops, unlike \texttt{while} loops where
+both cases must be accounted for.
+Rule~[\nameref{do-while-introduction-rule}] is applied on
+line~\ref{algorithm-introduce-do-while} of the algorithm.
+
+The final loop structure that we attempt to introduce is that of an
+infinite loop.
+Infinite loops are rare in most programs, but an infinite loop is
+nonetheless a well-structured program construct that has use in a few
+cases so we handle it here.
+An infinite loop may be identified as a block of instructions that
+ends with a $pc$ assignment that causes a jump back to the beginning
+of the block of instructions.
+Such a block will have a control flow graph of the form shown in
+Figure~\ref{infinite-loop-figure}.
+We introduce these loops using
+Rule~[\nameref{infinite-loop-introduction-rule}], which introduces a
+recursive call after the $pc$ assignment that causes the loop.
+This rule is applied on line~\ref{algorithm-introduce-infinite-loop}
+of the algorithm.
+\begin{restatable}[infinite-loop-intro]{crule}{InfiniteLoopIntroductionRule}
+  \label{infinite-loop-introduction-rule}
+  Given $i : ProgramAddress$, if
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  then
+  \def\zedindent{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 A \circseq pc := i \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen {} \\
+      \t3 \circmu Y \circspot A \circseq pc := i \circseq Poll \circseq Y \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+\end{restatable}%
+
+After we have attempted to introduce each of the structures for a
+particular node, we attempt to introduce a sequential composition.
+This ensures that \texttt{if}, \texttt{if}-\texttt{else},
+\texttt{while} and \texttt{do}-\texttt{while} structures that occur
+within conditionals are sequentially composed with the node following
+them if possible.
+It also handles cases where sequential compositions occur before
+loops, preventing them from being introduced in
+Section~\ref{introduce-forward-sequence-subsection} without
+interfering with the introduction of the loop.
+Such a case occurs at the $pc=7$ node in our example.
+The requirement for sequential composition to be introduced is the
+same as in Section~\ref{introduce-forward-sequence-subsection}:~it
+must be a simple sequential composition from a node with a single
+outgoing edge to a node with a single incoming edge.
+Thus we check for a simple sequence on
+line~\ref{algorithm-lci-sequence-check} of
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+The sequential composition is then introduced on
+line~\ref{algorithm-lci-sequence-introduction} if it is a simple
+sequential composition.
+
+As mentioned earlier, these steps are repeated for each node, working
+backwards through the control flow graph of each method.
+Given a structured control flow graph at the beginning, this means all
+the structures in the method are introduced, reducing the control flow
+graph to a single node.
+
+In our example, we begin at the $pc=35$ node, where there are no
+structures to introduce. 
+The same holds true of the $pc=28$ and $pc=32$ nodes (note that the
+edges coming from them are not simple sequential compositions).
+An \texttt{if}-\texttt{else} conditional is introduced at $pc=21$,
+absorbing the $pc=28$ and $pc=32$ nodes.
+The sequential composition from the $pc=21$ node to the $pc=35$ node
+can then be introduced immediately as it is now a simple sequential
+composition (because it is not at the end of an outer conditional).
+We then introduce a \texttt{while} loop at the $pc=39$ loop (using
+Rule~[\nameref{while-introduction-rule2}]), and the sequential
+composition with the $pc=42$ node is introduced afterwards.
+Finally, a sequential composition from the $pc=7$ to the $pc=39$ node
+is introduced, collapsing the control flow graph to a single node.
+The code at $pc=7$ is then that shown earlier in
+Figure~\ref{loop-and-conditional-introduction-example-figure}.
