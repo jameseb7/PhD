@@ -178,40 +178,20 @@ $pc=7$.
 For each node, we check each type of structure to see if the control
 flow graph starting at that point matches the structure, and introduce
 the structure if it does.
-The first type of structure we check for are conditionals, beginning
-with those conditionals that are followed by another node, that is,
-those shown in Figure~\ref{if-figure} and~\subref{if-else-figure}.
-These may be nested within one of the branches of another conditional
-using internal node replacement
-(Figure~\ref{internal-replacement-figure}) or branch end replacement
-Figure~\ref{branch-end-replacement-figure}. 
-These different ways of nesting a conditional within another
-conditional may result in graphs such as those shown below:
+Some of the structures (Figure~\ref{if-figure},
+\subref{if-else-figure}, \subref{while-figure} and
+\subref{do-while-figure}) are followed by further instructions.
+A sequential composition must be introduced with the instructions
+following the structure.
+However, in programs with graphs such as the one shown below, the
+sequential composition can only be introduced after the outer
+conditional has been introduced.
+Thus, the introduction of the sequential composition cannot be made
+part of the rule for introducing the conditional.
+In our rules for introducting the structures, we instead leave a $pc$
+assignment after the structure that can be used to introduce the
+sequential composition separately later on.
 \begin{center}
-  \begin{tikzpicture}
-    \node (1) at (0, 0.0) {$\bullet$};
-    \node (2) at (2, 0.5) {$\bullet$};
-    \node (3) at (2,-0.5) {$\bullet$};
-    \node (4) at (4, 1.0) {$\bullet$};
-    \node (5) at (4,-1.0) {$\bullet$};
-    \node (6) at (4, 0.2) {$\bullet$};
-    \node (7) at (4,-0.2) {$\bullet$};
-    \node (8) at (6, 0.0) {$\bullet$};
-    
-    \draw[-latex] (-1,0) to (1);
-    
-    \draw[-latex] (1) to (2);
-    \draw[-latex] (1) to (3);
-    \draw[-latex] (2) to (4);
-    \draw[-latex] (3) to (5);
-    \draw[-latex] (2) to (6);
-    \draw[-latex] (3) to (7);
-    \draw[-latex] (4) to (8);
-    \draw[-latex] (5) to (8);
-    \draw[-latex] (6) to (8);
-    \draw[-latex] (7) to (8);
-  \end{tikzpicture}
-  \hfill
   \begin{tikzpicture}
     \node (1) at (0.0, 0.0) {$\bullet$};
     \node (2) at (1.5, 0.5) {$\bullet$};
@@ -240,38 +220,27 @@ conditional may result in graphs such as those shown below:
     \draw[-latex] (9) to (0);
   \end{tikzpicture}
 \end{center}
-In the first case the sequential composition with the node at the end
-cannot be introduced until the outermost conditional is introduced,
-because both of the inner conditionals end at the same point.
-However, in the second case the inner conditionals can be completely
-introduced, including the sequential composition with the node after
-the end of each inner conditional, before the outer conditional is
-introduced.
-To ensure both cases are covered, we separate the introduction of the
-conditional itself and the sequential composition with the node after
-the conditional. 
-In the first case the introduction of the sequential composition is
-deferred until after the outermost conditional is resolved, whereas in
-the second case it may be performed immediately after the introduction
-of the conditional.
 
-We provide separate compilation rules for introducing \texttt{if}
-conditionals and \texttt{if}-\texttt{else} conditionals.
-An \texttt{if} conditional with no else branch may be recognised from
-the control flow graph as having the form shown in
-Figure~\ref{if-figure}.
-However, it can also be recognised from the form of the \Circus{} code
-in the $Running$ action, which will be that of a node whose sequence
-of instructions ends with an assignment of the form
+The first type of structure we check for are conditionals.
+There are three conditional structures:~\texttt{if} conditionals
+(Figure~\ref{if-figure}), \texttt{if}-\texttt{else} conditionals
+(Figure~\ref{if-else-figure}), and divergent conditionals
+(Figure~\ref{divergent-figure}).
+We introduce each with a separate rule, specialised to the form of the
+conditional.
+
+An \texttt{if} conditional with no else branch is introduced using
+Rule~[\nameref{if-introduction-rule}], shown below.
+Such a structure can be recognised from the form of the \Circus{} code
+in the $Running$ action, which is that of a node whose sequence of
+instructions ends with an assignment of the form
 $pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$ node ends in
 an assignment $pc := x$.
-Note that the branches will not be the other way round (i.e.\
-the $pc = x$ branch will not be the body of the conditional) since the
-conditional branches come from Java's branching instructions which
+Note that the branches cannot be the other way round (i.e.\ the
+$pc = x$ branch will not be the body of the conditional) since the
+conditional branches come from Java's branching instructions, which
 branch to the specified address if the condition is true and go to the
 next instruction if it is false.
-We provide Rule~[\nameref{if-introduction-rule}] for introducing such
-conditionals.
 \begin{restatable}[\texttt{if}-conditional-intro]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
@@ -324,8 +293,8 @@ The conditional is introduced with the true branch being empty
 instructions in the body of the conditional.
 The assignment $pc := j$ is moved outside the conditional from both
 the empty true branch and the end of the false branch, so that a
-sequential composition with the node after the conditional can be
-introduced later on.
+sequential composition can be introduced as discussed above.
+
 As in Rule~[\nameref{sequence-introduction-rule}], the sequence of
 actions for the node must not affect the nonemptiness of the
 $frameStack$.
@@ -340,155 +309,25 @@ Note that, since the structure can be identified from the form of the
 \Circus{} code alone, it is not necessary to guard the application of
 the rule with a condition on the control flow graph.
 
-After attempting to introduce an \texttt{if} conditional, we attempt
-to introduce an \texttt{if}-\texttt{else} conditional, the form of
-which is shown in Figure~\ref{if-else-figure}.
-As with an \texttt{if} conditional, a node with an
-\texttt{if}-\texttt{else} conditional will end with an assignment of
-the form $pc := \IF b \THEN x \ELSE y$, but the $pc = x$ and $pc = y$
-nodes are required to end with a common assignment $pc := z$.
-Conditionals matching this form may be introduced using
-Rule~[\nameref{if-else-introduction-rule}].
-\begin{restatable}[\texttt{if}-\texttt{else}-conditional-intro]{crule}{IfElseConditionalIntroductionRule}
-  \label{if-else-introduction-rule}
-  \setlength{\zedindent}{0.25cm}
-  % \setlength{\abovedisplayskip}{0.1cm}
-  % \setlength{\belowdisplayskip}{0.1cm}
-  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq B \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq C \\
-      \t3 \circfi \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \circseq pc := x \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-\end{restatable}
-Rule~[\nameref{if-else-introduction-rule}] operates similarly to
-Rule~[\nameref{if-introduction-rule}] in how it introduces the conditional
-and moves the common $pc$ assignment outside the conditional.
-However, Rule~[\nameref{if-else-introduction-rule}] includes sequences of
-instructions for both branches of the introduced conditional, each of
-which end with a $pc$ assignment to jump to the node after the
-conditional.
-The preconditions of Rule~[\nameref{if-else-introduction-rule}] are the
-same as those of Rule~[\nameref{if-introduction-rule}].
-Rule~[\nameref{if-else-introduction-rule}] is applied on
-line~\ref{algorithm-introduce-if-else} of
-Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+We introduce \texttt{if}-\texttt{else} conditionals using
+Rule~[\nameref{if-else-introduction-rule}] and divergent conditionals
+using Rule~[\nameref{conditional-introduction-rule}].
+Since these are similar to Rule~[\nameref{if-introduction-rule}], we
+omit them here.
+They can be found in Appendix~\ref{compilation-rules-appendix}.
+We apply these rules on lines~\ref{algorithm-introduce-if-else}
+and~\ref{algorithm-introduce-conditional}.
 
-Having attempted to introduce conditionals with a node following them,
-we then consider conditionals that are not followed by a node.
-These conditionals are those where both branches end in a return or an
-infinite loop.
-This includes conditionals where both branches are a return, which can
-arise from multiple returns in the Java source code. 
-Though multiple returns are not allowed in the final C code, the
-returns will all end up in branches of conditionals at the end of the
-method, so the actual return statement can be placed after the
-conditionals to create a single return statement at the end of the C
-function.
-
-The form of this type of conditional is that shown in
-Figure~\ref{divergent-figure}.
-We require that the nodes in both branches of the conditional have
-only a single incoming edge each, and do not have any outgoing edges
-(at the point in the strategy where this type of conditional is
-introduced, that is, there may be more complex structures that have
-already been introduced in the branches).
-We check that the control flow graph beginning at the node being
-considered has this form on line~\ref{algorithm-conditional-check} of
-the algorithm.
-
-If the correct structure is present, then we introduce the conditional
-by applying Rule~[\nameref{conditional-introduction-rule}] on
-line~\ref{algorithm-introduce-conditional}.
-This rule introduces the conditional in much the same way as
-Rule~[\nameref{if-introduction-rule}] and
-Rule~[\nameref{if-else-introduction-rule}], but it does not place any
-requirement on the structure of the conditional or move a $pc$
-assignment outside of it.
-\begin{restatable}[conditional-intro]{crule}{ConditionalIntroductionRule}
-  \label{conditional-introduction-rule}
-  \setlength{\zedindent}{0.25cm}
-  % \setlength{\abovedisplayskip}{0.1cm}
-  % \setlength{\belowdisplayskip}{0.1cm}
-  Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \circif b \circthen pc := j \circseq Poll \circseq B \\
-      \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq C \\
-      \t3 \circfi \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 {} \cdots {} \\
-      \t2 {} \circelse pc = k \circthen C \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-\end{restatable}
+Note that Rule~[\nameref{conditional-introduction-rule}] simply
+introduces a conditional with no restrictions on its form.
+To ensure it is only applied to nodes that match the form of
+Figure~\ref{divergent-figure}, we guard its application by the
+condition \Call{IsSimpleConditional}{$node$} on
+line~\ref{algorithm-conditional-check}.
+The procedure \Call{IsSimpleConditional}{$node$} checks if the targets
+of $node$ have no outgoing nodes.
+This is a condition on the control flow graph that cannot be expressed
+in the statement of the rule.
 
 After attempting to introduce conditionals, we may attempt to
 introduce loops.
@@ -572,46 +411,7 @@ that the conditional $pc$ assignment which causes the loop is at the
 end of the loop, rather than at the beginning or in the middle.
 We introduce these loops using
 Rule~[\nameref{do-while-introduction-rule}].
-\begin{restatable}[\texttt{do}-\texttt{while}-loop-intro]{crule}{DoWhileLoopIntroductionRule}
-  \label{do-while-introduction-rule}
-  \def\zedindent{0.25cm}
-  Given $i : ProgramAddress$, if $i \neq j$,
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN i \ELSE j \\
-      \t2 \cdots \\
-      \t2 {} \circelse pc = j \circthen B \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \\
-      \t3 \circif b \circthen pc := i \circseq Poll \circseq Y \\
-      \t3 {} \circelse \lnot b \circthen \Skip \\
-      \t3 \circfi) \circseq pc := j \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-\end{restatable}%
+%
 This rule introduces a conditional, as with
 Rule~[\nameref{while-introduction-rule1}], but the true branch
 contains just the recursive call, since the conditional occurs at the
@@ -645,42 +445,7 @@ Rule~[\nameref{infinite-loop-introduction-rule}], which introduces a
 recursive call after the $pc$ assignment that causes the loop.
 This rule is applied on line~\ref{algorithm-introduce-infinite-loop}
 of the algorithm.
-\begin{restatable}[infinite-loop-intro]{crule}{InfiniteLoopIntroductionRule}
-  \label{infinite-loop-introduction-rule}
-  Given $i : ProgramAddress$, if
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
-  \end{circus}
-  then
-  \def\zedindent{0.25cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen {} \\
-      \t3 A \circseq pc := i \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen {} \\
-      \t3 \circmu Y \circspot A \circseq pc := i \circseq Poll \circseq Y \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-  \end{circus}
-\end{restatable}%
+%
 
 After we have attempted to introduce each of the structures for a
 particular node, we attempt to introduce a sequential composition.
