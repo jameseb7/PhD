@@ -171,6 +171,9 @@ considering each node in turn.
 This is specified by the loop beginning on
 line~\ref{algorithm-node-checking-loop} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+The procedure \Call{ReverseNodes}{$cfg$} iterates over the nodes of
+$cfg$ beginning at the end nodes and moving in the reverse direction
+of the graph edges, ignoring looping edges.
 In our example this means we consider the $pc=42$ and $pc=35$ nodes
 first, then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally
 $pc=7$.
