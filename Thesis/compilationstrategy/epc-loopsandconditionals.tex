@@ -34,7 +34,7 @@ method call that has not yet been resolved.
     \label{algorithm-introduce-loops-and-conditionals-method-loop}
     \If{\Call{HasNoUresolvedCalls}{$m$}}
     \label{algorithm-no-unresolved-calls-condition}
-    \State $cfg \gets$ \Call{MakeControlFlowGraph}{$m$}
+    \State $cfg \gets$ \Call{MakeMethodControlFlowGraph}{$m$}
     \label{algorithm-make-control-flow-graph2}
     \For{$node \gets$ \Call{ReverseNodes}{$cfg$}}
     \label{algorithm-node-checking-loop}
@@ -60,7 +60,6 @@ method call that has not yet been resolved.
     \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
     \label{algorithm-lci-sequence-introduction}
     \EndIf
-
     \EndFor
     \EndIf
     \EndFor
@@ -75,11 +74,14 @@ loops and conditionals are introduced in the correct order to properly
 form the bodies of loops and conditionals.
 This involves constructing a control flow graph for the method, at
 line~\ref{algorithm-make-control-flow-graph2}.
-The procedure for creating the control flow graph is the same as in
-the previous section, but we only focus on a single method rather than
-constructing a disconnected graph for all methods.
-The graph for the our example, beginning at $pc=7$ (the entry point of
-the \texttt{handleAsyncEvent()} method), is shown in
+The control flow graph for a method $m$ is created by the procedure
+\Call{MakeMethodControlFlowGraph}{$m$}.
+This is similar to the \Call{MakeControlFlowGraph}{} procedure used in
+the previous section, but it just constructs the control flow graph
+for a single method, starting at the entry point of that method.
+
+The graph for the \texttt{handleAsyncEvent()} method in our example
+(beginning at $pc=7$, its entry point) is shown in
 Figure~\ref{example-simplified-control-flow-graph-figure}, alongside
 the \Circus{} code obtained at the beginning of this stage for the
 method.
@@ -154,13 +156,14 @@ part of the strategy.
 The control flow graph of each method is structured since the
 transformations of the graph up to this point consist solely of
 collapsing sequential compositions, which, as mentioned in the
-previous section, do not cause a structured graph to become
+previous section, does not cause a structured graph to become
 unstructured.
 Since we have defined the desired program structure in terms of a
 small number of standard structures (shown in
 Figure~\ref{structured-cfg-figures}), we can identify each of these
 structures in the control flow graph and introduce them into the
 program, collapsing the control flow graph in the process.
+
 In order to easily identify the structures in isolation from other
 structures, we begin at the end nodes of the method (ignoring looping
 edges for the purposes of determining end nodes) and work backwards,
