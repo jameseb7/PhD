@@ -332,8 +332,8 @@ of $node$ have no outgoing nodes.
 This is a condition on the control flow graph that cannot be expressed
 in the statement of the rule.
 
-After attempting to introduce conditionals, we may attempt to
-introduce loops.
+After attempting to introduce conditionals, we attempt to introduce
+loops.
 There are three types of loop to consider, as shown earlier:
 \texttt{while} loops (Figure~\ref{while-figure}),
 \texttt{do}-\texttt{while} loops (Figure~\ref{do-while-figure}), and
@@ -348,9 +348,9 @@ branch ending in an assignment of $i$ to $pc$, and introduces a
 recursion to the beginning of the $pc=i$ node in that branch of the
 conditional, representing a loop.
 Since this loop may be within a conditional, we simply move the $pc$
-assignment for the true branch outside the conditional.
-A sequential composition can then be introduced later, as with
-\texttt{if} and \texttt{if}-\texttt{else} conditionals.
+assignment for the true branch outside the conditional, so that a
+sequential composition can be introduced later, as with \texttt{if}
+and \texttt{if}-\texttt{else} conditionals.
 \begin{restatable}[\texttt{while}-loop-intro1]{crule}{WhileLoopIntroductionRuleA}
   \label{while-introduction-rule1}
   \setlength{\zedindent}{0.2cm}
@@ -402,26 +402,22 @@ A sequential composition can then be introduced later, as with
 As a \texttt{while} loop may occur with the loop at the end of either
 condition branch (since the loop may be created by a \texttt{goto}
 instruction in the Java bytecode), we also provide a similar rule,
-Rule~[\nameref{while-introduction-rule2}], that introduces the loop in the
-true branch of the conditional.
+Rule~[\nameref{while-introduction-rule2}], that introduces the loop in
+the true branch of the conditional.
 These two rules are applied on lines~\ref{algorithm-introduce-while1}
 and~\ref{algorithm-introduce-while2} of the algorithm.
 
-The next type of loop we consider is the \texttt{do}-\texttt{while}
-loop, which has the form shown in Figure~\ref{do-while-figure}.
-These loops are distinguished from \texttt{while} loops by the fact
-that the conditional $pc$ assignment which causes the loop is at the
-end of the loop, rather than at the beginning or in the middle.
+The second type of loop we introduce is the \texttt{do}-\texttt{while}
+loop.
+A \texttt{do}-\texttt{while} loop is similar to a \texttt{while} loop,
+but is distinguished by the fact that the conditional $pc$ assignment
+that causes the loop is at the end of the loop, rather than at the
+beginning or in the middle.
 We introduce these loops using
-Rule~[\nameref{do-while-introduction-rule}].
-%
-This rule introduces a conditional, as with
-Rule~[\nameref{while-introduction-rule1}], but the true branch
-contains just the recursive call, since the conditional occurs at the
-end of the loop.
-The $pc$ assignment for the false branch is moved outside the
-conditional to allow a sequential composition to be introduced later,
-as in previous rules.
+Rule~[\nameref{do-while-introduction-rule}], which we omit due to its
+similarity with Rule~[\nameref{while-introduction-rule1}].
+This rule is applied on line~\ref{algorithm-introduce-do-while} of the
+algorithm.
 Note that the false branch can never cause the loop in this case,
 since it will just go to the next instruction.
 Attempting to redirect it and create the loop with a \texttt{goto}
@@ -429,26 +425,18 @@ instruction would add an instruction within the loop after the
 conditional, so it would be dealt with as a \texttt{while} loop.
 Therefore, it is not necessary to provide two compilation rules for
 \texttt{do}-\texttt{while} loops, unlike \texttt{while} loops where
-both cases must be accounted for.
-Rule~[\nameref{do-while-introduction-rule}] is applied on
-line~\ref{algorithm-introduce-do-while} of the algorithm.
 
 The final loop structure that we attempt to introduce is that of an
 infinite loop.
-Infinite loops are rare in most programs, but an infinite loop is
-nonetheless a well-structured program construct that has use in a few
-cases so we handle it here.
 An infinite loop may be identified as a block of instructions that
 ends with a $pc$ assignment that causes a jump back to the beginning
 of the block of instructions.
-Such a block will have a control flow graph of the form shown in
-Figure~\ref{infinite-loop-figure}.
 We introduce these loops using
-Rule~[\nameref{infinite-loop-introduction-rule}], which introduces a
-recursive call after the $pc$ assignment that causes the loop.
+Rule~[\nameref{infinite-loop-introduction-rule}].
 This rule is applied on line~\ref{algorithm-introduce-infinite-loop}
 of the algorithm.
-%
+
+%%%%
 
 After we have attempted to introduce each of the structures for a
 particular node, we attempt to introduce a sequential composition.
