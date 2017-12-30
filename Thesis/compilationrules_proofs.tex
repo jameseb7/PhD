@@ -1,3 +1,7 @@
+\section{Elimination of Program Counter}
+
+\subsection{Expand Bytecode}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{crproof}[\nameref{pc-expansion-rule}]
@@ -2079,6 +2083,9 @@
 \end{crproof}
 
 \pagebreak
+
+\subsection{Introduce Sequential Composition}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{crproof}[\nameref{sequence-introduction-rule}]
@@ -2174,6 +2181,8 @@
   $\circmu X \circspot F(X) \circrefines_A Y$, which is the statement of
   the rule.
 \end{crproof}
+
+\subsection{Introduce Loops and Conditionals}
 
 \begin{crproof}[\nameref{if-introduction-rule}]
   As in the proof of Rule~[\nameref{sequence-introduction-rule}], we seek to
