@@ -449,6 +449,7 @@ loops, preventing them from being introduced in
 Section~\ref{introduce-forward-sequence-subsection} without
 interfering with the introduction of the loop.
 Such a case occurs at the $pc=7$ node in our example.
+
 The requirement for sequential composition to be introduced is the
 same as in Section~\ref{introduce-forward-sequence-subsection}:~it
 must be a simple sequential composition from a node with a single
@@ -462,9 +463,30 @@ sequential composition.
 
 As mentioned earlier, these steps are repeated for each node, working
 backwards through the control flow graph of each method.
-Given a structured control flow graph at the beginning, this means all
-the structures in the method are introduced, reducing the control flow
-graph to a single node.
+Each of the rules for introducing control flow structures reduces the
+control flow graph of the structure to either a sequential composition
+graph (Figure~\ref{sequence-figure}) or a single node.
+Divergent conditionals and infinite loops are the only structures
+whose control flow graphs are reduced to a single node by their
+introduction rules.
+The remaining structures are reduced to sequential composition graphs.
+The sequential compositions can be introduced immediately if the graph
+is embedded in another graph through end node replacement or internal
+node replacement.
+Replacing the root node of a graph $G$ with a graph $H$ can be viewed
+as replacing the end node of $H$ with $G$, so this accounts for root
+node replacement as well.
+
+The final case that must be accounted for is that of branch end
+replacement (Figure~\ref{branch-end-replacement-figure}).
+It can be seen that, if $H$ is embedded in $G$ through branch end
+replacement and $H$ is reduced to a sequential composition graph, then
+the resulting graph will have the form of $G$.
+The graph $G$ will then be reduced by consideration of its nodes on
+further iterations of the strategy.
+Thus, given a structured control flow graph at the beginning of this
+stage, the control flow graph will be reduced to a single node, with
+all the control flow strucutres in the method introduced.
 
 In our example, we begin at the $pc=35$ node, where there are no
 structures to introduce. 
