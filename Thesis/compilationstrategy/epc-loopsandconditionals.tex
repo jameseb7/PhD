@@ -192,8 +192,10 @@ conditional has been introduced.
 Thus, the introduction of the sequential composition cannot be made
 part of the rule for introducing the conditional.
 In our rules for introducting the structures, we instead leave a $pc$
-assignment after the structure that can be used to introduce the
-sequential composition separately later on.
+assignment after the structure that is used to introduce the
+sequential composition separately later on (we introduce the
+sequential composition on
+line~\ref{algorithm-lci-sequence-introduction} of the algorithm).
 \begin{center}
   \begin{tikzpicture}
     \node (1) at (0.0, 0.0) {$\bullet$};
@@ -435,8 +437,6 @@ We introduce these loops using
 Rule~[\nameref{infinite-loop-introduction-rule}].
 This rule is applied on line~\ref{algorithm-introduce-infinite-loop}
 of the algorithm.
-
-%%%%
 
 After we have attempted to introduce each of the structures for a
 particular node, we attempt to introduce a sequential composition.
