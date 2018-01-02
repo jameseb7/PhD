@@ -39,10 +39,10 @@ strategy, since execution resumes at the next instruction after the
 called method returns.
 We do not add an edge from a return instruction, since no further
 instructions are executed in the method after a return instruction.
-We finish construction of the control graph for a method when there
+Construction of the control graph for a method terminates when there
 are no further edges to add.
-This terminates since there are only finitely many instructions in a
-method so edges for all the reachable nodes are eventually added.
+Since there are only finitely many instructions in a method, edges for
+all the reachable nodes are eventually added.
 
 The control flow graph for our example is shown in
 Figure~\ref{example-control-flow-graph-figure}.
@@ -97,7 +97,7 @@ which represent the start of conditionals.
 Likewise, nodes with multiple incoming edges represent points at which
 a more complex control flows occur.
 For our example, such nodes include $39$, which is the start of a
-loop, and $35$, which is the end of a conditional.
+loop, and $35$, which is the end oxf a conditional.
 These prevent introduction of sequential composition for the $pc$
 values $20$, $31$, $34$, and $38$, since the targets of those nodes
 are nodes $35$ and $39$.
@@ -105,12 +105,11 @@ are nodes $35$ and $39$.
 The procedure \Call{HasSimpleSequence}{$node$} checks this requirement
 for introducing sequential composition.
 It returns a true value if $node$ has only a single outgoing edge and
-its target has only a single incoming edge.
-It returns a false value if either of these conditions does not hold.
-The check is performed on
-line~\ref{algorithm-forward-sequence-condition}, where it forms the
-condition of a while loop so that multiple sequential compositions can
-be introduced for a node.
+its target has only a single incoming edge, and otherwise returns a
+false value.
+This check is performed on
+line~\ref{algorithm-forward-sequence-condition}, where it defines the
+condition of a while loop.
 
 For a node that meets the above requirement and is not a method call,
 we can introduce sequential composition at that node by applying
