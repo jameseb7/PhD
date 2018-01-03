@@ -13,20 +13,21 @@ of the algorithm.
 The condition on line~\ref{algorithm-no-unresolved-calls-condition}
 ensures that only those methods where all method calls have already
 been resolved undergo loop and conditional introduction.
-Since we do not allow recursion, there will always be at least one
-method that does not depend on another method in the program.
+Since we do not allow recursion, there is always at least one method
+that does not depend on another method in the program.
 It may be the case that a method depends only on special methods, in
-which case this stage will have no effect on that method until the
-special method calls have been resolved.
-Special method calls, however, do not depend on the application of the
-strategy to the program, since they are part of the infrastructure.
+which case this stage has no effect on that method until the special
+method calls have been resolved.
+Special method calls can always be resolved as they do not depend on
+other methods in the program.
 
 The \Call{HasNoUresolvedCalls}{$m$} procedure, used in the condition
 on line~\ref{algorithm-no-unresolved-calls-condition}, checks that no
-node in the control flow graph of $m$ ends in a method call.
-Method resolution sequences a method call with the instructions
-following it, so a method call with nothing following it indicates a
-method call that has not yet been resolved.
+node in the control flow graph of $m$ ends in a method call, as a way
+of determining whether $m$ has unresolved calls.
+Since method resolution sequences a method call with the instructions
+following it, a method call with nothing following it is a call that
+has not yet been resolved.
 
 \begin{algorithm}
   \begin{algorithmic}[1]
@@ -69,15 +70,15 @@ method call that has not yet been resolved.
 \end{algorithm}
 
 For each method that undergoes loop and conditional introduction, we
-must again consider the control flow graph of the method to ensure the
-loops and conditionals are introduced in the correct order to properly
-form the bodies of loops and conditionals.
-This involves constructing a control flow graph for the method, at
+consider again its control-flow graph to ensure the loops and
+conditionals are introduced in the correct order to properly form
+their bodies.
+This involves constructing a control-flow graph for the method, at
 line~\ref{algorithm-make-control-flow-graph2}.
-The control flow graph for a method $m$ is created by the procedure
+The control-flow graph for a method $m$ is created by the procedure
 \Call{MakeMethodControlFlowGraph}{$m$}.
 This is similar to the \Call{MakeControlFlowGraph}{} procedure used in
-the previous section, but it just constructs the control flow graph
+the previous section, but it just constructs the graph
 for a single method, starting at the entry point of that method.
 
 The graph for the \texttt{handleAsyncEvent()} method in our example
@@ -85,7 +86,7 @@ The graph for the \texttt{handleAsyncEvent()} method in our example
 Figure~\ref{example-simplified-control-flow-graph-figure}, alongside
 the \Circus{} code obtained at the beginning of this stage for the
 method.
-The edge which forms a loop from $pc=35$ to $pc=39$ is shown as a
+The edge that forms a loop from $pc=35$ to $pc=39$ is shown as a
 dashed line since looping edges are ignored at certain points in this
 part of the strategy.
 \begin{figure}
@@ -153,7 +154,7 @@ part of the strategy.
 %TODO: explain how our definition of structure differs from that of
 % MISRA - leave for final considerations?
 
-The control flow graph of each method is structured since the
+The control-flow graph of each method is structured since the
 transformations of the graph up to this point consist solely of
 collapsing sequential compositions, which, as mentioned in the
 previous section, does not cause a structured graph to become
@@ -161,8 +162,8 @@ unstructured.
 Since we have defined the desired program structure in terms of a
 small number of standard structures (shown in
 Figure~\ref{structured-cfg-figures}), we can identify each of these
-structures in the control flow graph and introduce them into the
-program, collapsing the control flow graph in the process.
+structures in the graph and introduce them into the program,
+collapsing the graph in the process.
 
 In order to easily identify the structures in isolation from other
 structures, we begin at the end nodes of the method (ignoring looping
@@ -171,6 +172,8 @@ considering each node in turn.
 This is specified by the loop beginning on
 line~\ref{algorithm-node-checking-loop} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+% TODO: ReverseNodes should return a sequence and should be more
+% carefully defined
 The procedure \Call{ReverseNodes}{$cfg$} iterates over the nodes of
 $cfg$ beginning at the end nodes and moving in the reverse direction
 of the graph edges, ignoring looping edges.
@@ -178,9 +181,9 @@ In our example this means we consider the $pc=42$ and $pc=35$ nodes
 first, then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally
 $pc=7$.
 
-For each node, we check each type of structure to see if the control
-flow graph starting at that point matches the structure, and introduce
-the structure if it does.
+For each node, we check each type of structure to see if the
+control-flow graph starting at that point matches the structure, and
+introduce the structure if it does.
 Some of the structures (Figure~\ref{if-figure},
 \subref{if-else-figure}, \subref{while-figure} and
 \subref{do-while-figure}) are followed by further instructions.
@@ -191,11 +194,6 @@ sequential composition can only be introduced after the outer
 conditional has been introduced.
 Thus, the introduction of the sequential composition cannot be made
 part of the rule for introducing the conditional.
-In our rules for introducting the structures, we instead leave a $pc$
-assignment after the structure that is used to introduce the
-sequential composition separately later on (we introduce the
-sequential composition on
-line~\ref{algorithm-lci-sequence-introduction} of the algorithm).
 \begin{center}
   \begin{tikzpicture}
     \node (1) at (0.0, 0.0) {$\bullet$};
@@ -293,12 +291,11 @@ next instruction if it is false.
 Rule~[\nameref{if-introduction-rule}] introduces a conditional for
 nodes that match the form described above, which in the rule is the
 $pc = i$ node.
-The conditional is introduced with the true branch being empty
-(represented here by $\Skip$) and the false branch containing the
-instructions in the body of the conditional.
+The conditional is introduced with the true branch empty (represented
+by $\Skip$) and the false branch containing the instructions in the
+body of the conditional.
 The assignment $pc := j$ is moved outside the conditional from both
-the empty true branch and the end of the false branch, so that a
-sequential composition can be introduced as discussed above.
+the true amd false branches.
 
 As in Rule~[\nameref{sequence-introduction-rule}], the sequence of
 actions for the node must not affect the nonemptiness of the
@@ -312,7 +309,7 @@ line~\ref{algorithm-introduce-if} of
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 Note that, since the structure can be identified from the form of the
 \Circus{} code alone, it is not necessary to guard the application of
-the rule with a condition on the control flow graph.
+the rule with a condition on the control-flow graph.
 
 We introduce \texttt{if}-\texttt{else} conditionals using
 Rule~[\nameref{if-else-introduction-rule}] and divergent conditionals
@@ -323,15 +320,15 @@ They can be found in Appendix~\ref{compilation-rules-appendix}.
 We apply these rules on lines~\ref{algorithm-introduce-if-else}
 and~\ref{algorithm-introduce-conditional}.
 
-Note that Rule~[\nameref{conditional-introduction-rule}] simply
-introduces a conditional with no restrictions on its form.
+Rule~[\nameref{conditional-introduction-rule}] introduces a
+conditional with no restrictions on its form.
 To ensure it is only applied to nodes that match the form of
 Figure~\ref{divergent-figure}, we guard its application by the
 condition \Call{IsSimpleConditional}{$node$} on
 line~\ref{algorithm-conditional-check}.
 The procedure \Call{IsSimpleConditional}{$node$} checks if the targets
 of $node$ have no outgoing nodes.
-This is a condition on the control flow graph that cannot be expressed
+This is a condition on the control-flow graph that cannot be expressed
 in the statement of the rule.
 
 After attempting to introduce conditionals, we attempt to introduce
@@ -344,7 +341,7 @@ A \texttt{while} loop has a form similar to that of a conditional,
 except that one of the branches ends with a jump back to the beginning
 of the node with the conditional.
 This structure may be introduced using
-Rule~[\nameref{while-introduction-rule1}].
+Rule~[\nameref{while-introduction-rule1}] below.
 This rule introduces a conditional at a node $pc=i$ with its false
 branch ending in an assignment of $i$ to $pc$, and introduces a
 recursion to the beginning of the $pc=i$ node in that branch of the
@@ -404,10 +401,12 @@ and \texttt{if}-\texttt{else} conditionals.
 As a \texttt{while} loop may occur with the loop at the end of either
 condition branch (since the loop may be created by a \texttt{goto}
 instruction in the Java bytecode), we also provide a similar rule,
-Rule~[\nameref{while-introduction-rule2}], that introduces the loop in
-the true branch of the conditional.
+Rule~[\nameref{while-introduction-rule2}], which introduces the loop
+in the true branch of the conditional.
 These two rules are applied on lines~\ref{algorithm-introduce-while1}
 and~\ref{algorithm-introduce-while2} of the algorithm.
+Rule~[\nameref{while-introduction-rule2}] is presented in
+Appendix~\ref{compilation-rules-appendix}.
 
 The second type of loop we introduce is the \texttt{do}-\texttt{while}
 loop.
@@ -417,7 +416,8 @@ that causes the loop is at the end of the loop, rather than at the
 beginning or in the middle.
 We introduce these loops using
 Rule~[\nameref{do-while-introduction-rule}], which we omit due to its
-similarity with Rule~[\nameref{while-introduction-rule1}].
+similarity with Rule~[\nameref{while-introduction-rule1}]; it is
+presented in Appendix~\ref{compilation-rules-appendix}.
 This rule is applied on line~\ref{algorithm-introduce-do-while} of the
 algorithm.
 Note that the false branch can never cause the loop in this case,
@@ -434,7 +434,8 @@ An infinite loop may be identified as a block of instructions that
 ends with a $pc$ assignment that causes a jump back to the beginning
 of the block of instructions.
 We introduce these loops using
-Rule~[\nameref{infinite-loop-introduction-rule}].
+Rule~[\nameref{infinite-loop-introduction-rule}], presented in
+Appendix~\ref{compilation-rules-appendix}.
 This rule is applied on line~\ref{algorithm-introduce-infinite-loop}
 of the algorithm.
 
@@ -462,17 +463,19 @@ line~\ref{algorithm-lci-sequence-introduction} if it is a simple
 sequential composition.
 
 As mentioned earlier, these steps are repeated for each node, working
-backwards through the control flow graph of each method.
+backwards through the control-flow graph of each method.
 Each of the rules for introducing control flow structures reduces the
-control flow graph of the structure to either a sequential composition
-graph (Figure~\ref{sequence-figure}) or a single node.
-Divergent conditionals and infinite loops are the only structures
-whose control flow graphs are reduced to a single node by their
-introduction rules.
+graph to either a sequential composition graph
+(Figure~\ref{sequence-figure}) or a single node.
+Divergent conditionals and infinite loops are the structures whose
+control-flow graphs are reduced to a single node by their introduction
+rules.
+
 The remaining structures are reduced to sequential composition graphs.
+How the sequential composition is handled depends on which form of node replacement is used to 
 The sequential compositions can be introduced immediately if the graph
-is embedded in another graph through end node replacement or internal
-node replacement.
+is embedded in another graph through end-node replacement or
+internal-node replacement.
 Replacing the root node of a graph $G$ with a graph $H$ can be viewed
 as replacing the end node of $H$ with $G$, so this accounts for root
 node replacement as well.
