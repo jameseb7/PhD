@@ -472,24 +472,62 @@ control-flow graphs are reduced to a single node by their introduction
 rules.
 
 The remaining structures are reduced to sequential composition graphs.
-How the sequential composition is handled depends on which form of node replacement is used to 
-The sequential compositions can be introduced immediately if the graph
-is embedded in another graph through end-node replacement or
-internal-node replacement.
-Replacing the root node of a graph $G$ with a graph $H$ can be viewed
-as replacing the end node of $H$ with $G$, so this accounts for root
-node replacement as well.
+The reduction of the seqential composition graph depends on which form
+of node replacement is used to embed the structure in the control-flow
+graph of the method.
+There are four cases to consider:~root-node replacement
+(Figure~\ref{root-replacement-figure}), end-node replacement
+(Figure~\ref{end-replacement-figure}), internal-node replacement
+(Figure~\ref{internal-replacement-figure}) and branch-end replacement
+(Figure~\ref{branch-end-replacement-figure}).
+Replacing the root node of a
+graph $G$ with a graph $H$ can be viewed as replacing the end node of
+$H$ with $G$.
+Since we are considering the nodes moving backwards through the
+control flow graph, we will always treat this as an end node
+replacement.
 
-The final case that must be accounted for is that of branch end
-replacement (Figure~\ref{branch-end-replacement-figure}).
-It can be seen that, if $H$ is embedded in $G$ through branch end
-replacement and $H$ is reduced to a sequential composition graph, then
-the resulting graph will have the form of $G$.
-The graph $G$ will then be reduced by consideration of its nodes on
-further iterations of the strategy.
+In the cases of end-node replacement and internal-node replacement we
+can introduce the sequential composition immediately, reducing the
+graph to a single node.
+In the case of branch-end replacement, if some graph $H$ is embedded
+in a graph $G$, then reducing $H$ to a sequential composition results
+in the overall graph having the form of $G$.
+This can be seen from the example shown in
+Figure~\ref{branch-end-replacement-figure}, where reducing the
+\texttt{while} loop structure formed by nodes $a$, $b$ and $4$ to a
+sequential composition yields the graph shown in
+Figure~\ref{branch-end-reduction-figure}.
+This has the form of a \texttt{if}-\texttt{else} conditional
+(Figure~\ref{if-else-figure}).
+Such structures are introduced on further iterations of the loop over
+the nodes.
 Thus, given a structured control flow graph at the beginning of this
-stage, the control flow graph will be reduced to a single node, with
-all the control flow strucutres in the method introduced.
+stage, the control flow graph is reduced to a single node, with all
+the control flow structures in the method introduced.
+
+\begin{figure}
+  \begin{center}
+    \begin{tikzpicture}
+      \useasboundingbox (-1.5,-2.5) rectangle (1.5,2);
+      \node at (0,2) (start) {};
+      \node at ( 0, 1)    (A) {$1$};
+      \node at (-1,-0.5)  (B) {$a$};
+      \node at ( 1,-0.5)  (C) {$3$};
+      %\node at (-2,-1.5)  (D) {$b$};
+      \node at ( 0,-2)    (G) {$4$};
+      \draw[-latex] (start) -- (A);
+      \draw[-latex] (A) -- (B);
+      \draw[-latex] (A) -- (C);
+      %\draw[-latex] (B) to (D);
+      \draw[-latex] (B) to (G);
+      %\draw[-latex] (D) to[in=180,out=90] (B);
+      \draw[-latex] (C) -- (G);
+    \end{tikzpicture}
+  \end{center}
+  \caption{The graph of Figure~\ref{branch-end-replacement-figure} after loop introduction}
+  \label{branch-end-reduction-figure}
+\end{figure}
 
 In our example, we begin at the $pc=35$ node, where there are no
 structures to introduce. 
