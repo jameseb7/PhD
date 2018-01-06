@@ -165,21 +165,41 @@ Figure~\ref{structured-cfg-figures}), we can identify each of these
 structures in the graph and introduce them into the program,
 collapsing the graph in the process.
 
-In order to easily identify the structures in isolation from other
-structures, we begin at the end nodes of the method (ignoring looping
-edges for the purposes of determining end nodes) and work backwards,
-considering each node in turn.
+We iterate over the nodes in the methods control flow graph,
+identifying the control flow structures at each node.
 This is specified by the loop beginning on
 line~\ref{algorithm-node-checking-loop} of
-Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
-% TODO: ReverseNodes should return a sequence and should be more
-% carefully defined
-The procedure \Call{ReverseNodes}{$cfg$} iterates over the nodes of
-$cfg$ beginning at the end nodes and moving in the reverse direction
-of the graph edges, ignoring looping edges.
-In our example this means we consider the $pc=42$ and $pc=35$ nodes
-first, then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally
-$pc=7$.
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}. 
+In order to easily identify the structures in isolation from other
+structures, structures must be introduced for the the sucessors of a
+node before they can be introduced for the node itself.
+We specify this using the procedure \Call{ReverseNodes}{$cfg$}, which
+constructs a sequence indicating the order in which the nodes should
+be iterated over.
+
+\Call{ReverseNodes}{$cfg$} begins by constructing a set of nodes that
+can occur next in the order.
+This is initially set to the end nodes of $cfg$ (ignoring looping
+edges for the purposes of determining end nodes).
+A node is removed from the set (the choice of node is
+nondeterministic, since the order does not matter among the nodes that
+can occur next), and added to the end of the sequence.
+Each of the predecessors of the chosen node (ignoring looping edges)
+are then added to the set, if their successors already occur in the
+sequence.
+The \Call{ReverseNodes}{$cfg$} procedure then loops, choosing a new
+node from the set, until there are no more nodes to consider in the
+set.
+This loop terminates since looping edges are ignored in the
+control-flow graph.
+
+In our example, we may consider the $pc=42$ and $pc=35$ nodes first,
+then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally $pc=7$.
+This ensures the sucessors of each node (ignoring loops) are
+introduced before the node itself, as can be seen from the graph in
+Figure~\ref{example-simplified-control-flow-graph-figure}.
+Other valid orders may be used in an implementation of the strategy,
+without affecting the validity of the strategy.
 
 For each node, we check each type of structure to see if the
 control-flow graph starting at that point matches the structure, and
