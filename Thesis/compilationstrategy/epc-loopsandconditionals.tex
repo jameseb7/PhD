@@ -37,7 +37,9 @@ has not yet been resolved.
     \label{algorithm-no-unresolved-calls-condition}
     \State $cfg \gets$ \Call{MakeMethodControlFlowGraph}{$m$}
     \label{algorithm-make-control-flow-graph2}
-    \For{$node \gets$ \Call{ReverseNodes}{$cfg$}}
+    \State $iterationOrder \gets$ \Call{ReverseNodes}{$cfg$}
+    \label{algorithm-compute-iteration-order}
+    \For{$node \gets iterationOrder$}
     \label{algorithm-node-checking-loop}
     \State \ApplyFor{Rule~[\nameref{if-introduction-rule}]}{$node$}
     \label{algorithm-introduce-if}
@@ -169,29 +171,36 @@ We iterate over the nodes in the methods control flow graph,
 identifying the control flow structures at each node.
 This is specified by the loop beginning on
 line~\ref{algorithm-node-checking-loop} of
-Algorithm~\ref{introduce-loops-and-conditionals-algorithm}. 
-In order to easily identify the structures in isolation from other
-structures, structures must be introduced for the the sucessors of a
-node before they can be introduced for the node itself.
-We specify this using the procedure \Call{ReverseNodes}{$cfg$}, which
-constructs a sequence indicating the order in which the nodes should
-be iterated over.
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
 
-\Call{ReverseNodes}{$cfg$} begins by constructing a set of nodes that
-can occur next in the order.
-This is initially set to the end nodes of $cfg$ (ignoring looping
-edges for the purposes of determining end nodes).
-A node is removed from the set (the choice of node is
-nondeterministic, since the order does not matter among the nodes that
-can occur next), and added to the end of the sequence.
-Each of the predecessors of the chosen node (ignoring looping edges)
-are then added to the set, if their successors already occur in the
-sequence.
-The \Call{ReverseNodes}{$cfg$} procedure then loops, choosing a new
-node from the set, until there are no more nodes to consider in the
-set.
-This loop terminates since looping edges are ignored in the
-control-flow graph.
+In order to identify a structure, we must first introduce any
+structures embedded in it.
+This can be seen by considering a graph such as that shown in
+Figure~\ref{internal-replacement-figure}, where the graph starting at
+node $1$ does not have the form of an \texttt{if}-\texttt{else}
+conditional (Figure~\ref{if-else-graph}), although it is constructed
+from such a graph.
+The subgraph starting at $a$, however, does have the form of a
+\texttt{while} loop, so it can be introduced.
+Once that has been introduced, the graph has the form of an
+\texttt{if}-\texttt{else} conditional.
+To introduce such embedded structures first, we consider the
+successors of each node (ignoring loops) before the node itself.
+This ensures that we consider the internal nodes of a structure first
+and introduce any structures that may have been inserted at those
+nodes via internal-node or branch-end replacement.
+
+The iteration order is specified using a procedure
+\Call{ReverseNodes}{$cfg$}, which constructs a sequence indicating the
+order in which the nodes of $cfg$ should be iterated over.
+The sequence is constructed such that, where a node occurs in the
+sequence, the successors of that node (ignoring loops) must occur
+earlier in the sequence than the node itself.
+This means that the sequence begins with an end node (ignoring loops).
+The order, $iterationOrder$, is constructed on
+line~\ref{algorithm-compute-iteration-order} of the algorithm and used
+for the range of the for loop on
+line~\ref{algorithm-node-checking-loop}.
 
 In our example, we may consider the $pc=42$ and $pc=35$ nodes first,
 then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally $pc=7$.
