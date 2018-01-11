@@ -20,6 +20,8 @@ which case this stage has no effect on that method until the special
 method calls have been resolved.
 Special method calls can always be resolved as they do not depend on
 other methods in the program.
+% TODO: discussion of accuracy of static recursion detection in
+% conclusions
 
 The \Call{HasNoUresolvedCalls}{$m$} procedure, used in the condition
 on line~\ref{algorithm-no-unresolved-calls-condition}, checks that no
@@ -29,6 +31,7 @@ Since method resolution sequences a method call with the instructions
 following it, a method call with nothing following it is a call that
 has not yet been resolved.
 
+%TODO: possibly use try here
 \begin{algorithm}
   \begin{algorithmic}[1]
     \For{$m \gets methods$}
@@ -158,7 +161,7 @@ part of the strategy.
 
 The control-flow graph of each method is structured since the
 transformations of the graph up to this point consist solely of
-collapsing sequential compositions, which, as mentioned in the
+collapsing sequential compositions, which, as explained in the
 previous section, does not cause a structured graph to become
 unstructured.
 Since we have defined the desired program structure in terms of a
@@ -193,9 +196,8 @@ nodes via internal-node or branch-end replacement.
 The iteration order is specified using a procedure
 \Call{ReverseNodes}{$cfg$}, which constructs a sequence indicating the
 order in which the nodes of $cfg$ should be iterated over.
-The sequence is constructed such that, where a node occurs in the
-sequence, the successors of that node (ignoring loops) must occur
-earlier in the sequence than the node itself.
+The sequence is constructed ensuring that, where a node occurs in the
+sequence, the successors of that node (ignoring loops) occur earlier.
 This means that the sequence begins with an end node (ignoring loops).
 The order, $iterationOrder$, is constructed on
 line~\ref{algorithm-compute-iteration-order} of the algorithm and used
@@ -203,12 +205,10 @@ for the range of the for loop on
 line~\ref{algorithm-node-checking-loop}.
 
 In our example, we may consider the $pc=42$ and $pc=35$ nodes first,
-then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally $pc=7$.
-This ensures the sucessors of each node (ignoring loops) are
-introduced before the node itself, as can be seen from the graph in
+then $pc=28$ and $pc=32$, then $pc=21$, $pc=39$, and finally $pc=7$,
+as can be seen from the graph in
 Figure~\ref{example-simplified-control-flow-graph-figure}.
-Other valid orders may be used in an implementation of the strategy,
-without affecting the validity of the strategy.
+Other valid orders may be used in an implementation of the strategy.
 
 For each node, we check each type of structure to see if the
 control-flow graph starting at that point matches the structure, and
@@ -216,8 +216,8 @@ introduce the structure if it does.
 Some of the structures (Figure~\ref{if-figure},
 \subref{if-else-figure}, \subref{while-figure} and
 \subref{do-while-figure}) are followed by further instructions.
-A sequential composition must be introduced with the instructions
-following the structure.
+In these cases, a sequential composition must be introduced with the
+instructions following the structure.
 However, in programs with graphs such as the one shown below, the
 sequential composition can only be introduced after the outer
 conditional has been introduced.
@@ -269,7 +269,7 @@ instructions ends with an assignment of the form
 $pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$ node ends in
 an assignment $pc := x$.
 Note that the branches cannot be the other way round (i.e.\ the
-$pc = x$ branch will not be the body of the conditional) since the
+$pc = x$ branch cannot be the body of the conditional) since the
 conditional branches come from Java's branching instructions, which
 branch to the specified address if the condition is true and go to the
 next instruction if it is false.
@@ -375,10 +375,6 @@ This rule introduces a conditional at a node $pc=i$ with its false
 branch ending in an assignment of $i$ to $pc$, and introduces a
 recursion to the beginning of the $pc=i$ node in that branch of the
 conditional, representing a loop.
-Since this loop may be within a conditional, we simply move the $pc$
-assignment for the true branch outside the conditional, so that a
-sequential composition can be introduced later, as with \texttt{if}
-and \texttt{if}-\texttt{else} conditionals.
 \begin{restatable}[\texttt{while}-loop-intro1]{crule}{WhileLoopIntroductionRuleA}
   \label{while-introduction-rule1}
   \setlength{\zedindent}{0.2cm}
@@ -445,7 +441,7 @@ that causes the loop is at the end of the loop, rather than at the
 beginning or in the middle.
 We introduce these loops using
 Rule~[\nameref{do-while-introduction-rule}], which we omit due to its
-similarity with Rule~[\nameref{while-introduction-rule1}]; it is
+similarity with Rule~[\nameref{while-introduction-rule1}]; it is also
 presented in Appendix~\ref{compilation-rules-appendix}.
 This rule is applied on line~\ref{algorithm-introduce-do-while} of the
 algorithm.
@@ -455,7 +451,7 @@ Attempting to redirect it and create the loop with a \texttt{goto}
 instruction would add an instruction within the loop after the
 conditional, so it would be dealt with as a \texttt{while} loop.
 Therefore, it is not necessary to provide two compilation rules for
-\texttt{do}-\texttt{while} loops, unlike \texttt{while} loops where
+\texttt{do}-\texttt{while} loops.
 
 The final loop structure that we attempt to introduce is that of an
 infinite loop.
@@ -496,29 +492,28 @@ backwards through the control-flow graph of each method.
 Each of the rules for introducing control flow structures reduces the
 graph to either a sequential composition graph
 (Figure~\ref{sequence-figure}) or a single node.
-Divergent conditionals and infinite loops are the structures whose
-control-flow graphs are reduced to a single node by their introduction
-rules.
 
+Divergent conditionals and infinite loops are the structures whose
+control-flow graphs are reduced to a single node.
 The remaining structures are reduced to sequential composition graphs.
-The reduction of the seqential composition graph depends on which form
-of node replacement is used to embed the structure in the control-flow
-graph of the method.
+The reduction of the sequential composition graph depends on which
+form of node replacement is used to embed the structure in the
+control-flow graph of the method.
 There are four cases to consider:~root-node replacement
 (Figure~\ref{root-replacement-figure}), end-node replacement
 (Figure~\ref{end-replacement-figure}), internal-node replacement
 (Figure~\ref{internal-replacement-figure}) and branch-end replacement
 (Figure~\ref{branch-end-replacement-figure}).
-Replacing the root node of a
-graph $G$ with a graph $H$ can be viewed as replacing the end node of
-$H$ with $G$.
+
+Replacing the root node of a graph $G$ with a graph $H$ can be viewed
+as replacing the end node of $H$ with $G$.
 Since we are considering the nodes moving backwards through the
-control flow graph, we will always treat this as an end node
-replacement.
+control flow graph, we always treat this as an end node replacement.
 
 In the cases of end-node replacement and internal-node replacement we
 can introduce the sequential composition immediately, reducing the
 graph to a single node.
+
 In the case of branch-end replacement, if some graph $H$ is embedded
 in a graph $G$, then reducing $H$ to a sequential composition results
 in the overall graph having the form of $G$.
@@ -531,9 +526,9 @@ This has the form of a \texttt{if}-\texttt{else} conditional
 (Figure~\ref{if-else-figure}).
 Such structures are introduced on further iterations of the loop over
 the nodes.
-Thus, given a structured control flow graph at the beginning of this
-stage, the control flow graph is reduced to a single node, with all
-the control flow structures in the method introduced.
+Thus, given a structured control-flow graph at the beginning of this
+stage, the control-flow graph is reduced to a single node, with all
+the control-flow structures in the method introduced.
 
 \begin{figure}
   \begin{center}
