@@ -263,10 +263,10 @@ externally visible channels when the component processes are composed
 into the complete SCJVM model.
 % The fact that they are external channels is indicated by the use of
 % \textless{}ext.\textgreater{} in the final columns of the table.
-Some channels are marked with various symbols (*, \dag{}, {}+{} and
-\ddag{}) so that we can refer to them later in the text.
+Some channels are marked with various symbols (*, \dag{} and {}+{}) so
+that we can refer to them later in the text.
 
-\begin{table}[t]
+\begin{table}[thp]
   \begin{center}
     \begin{tabular}{@{}lllll}
       \hline
@@ -275,14 +275,20 @@ Some channels are marked with various symbols (*, \dag{}, {}+{} and
       \hline
       & $executeMethod$ & $ThreadID \cross ClassID \cross MethodID \cross \seq Word$ & L & I  \\
       & $executeMethodRet$ & $ThreadID \cross Word$ & I & L  \\
-      & $continueExecution$ & $ThreadID$ & I & L \\
+      % & $continueExecution$ & $ThreadID$ & I & L \\
       & $initMainThread$ & $StackID$ & L & I \\ 
-      *\dag & $register$ & $ThreadID \cross ObjectID$ & I & L \\
-      %* & $registerRet$ & \textless no parameters\textgreater & L & I \\
-      *\dag & $enterPrivateMemory$ & $ThreadID \cross \nat \cross ObjectID$ & I & L \\
-      *\dag & $executeInAreaOf$ & $ThreadID \cross ObjectID \cross ObjectID$ & I & L \\
-      *\dag & $executeInOuterArea$ & $ThreadID \cross ObjectID$ & I & L \\
-      \dag & $enterPerReleaseMemory$ & $ThreadID \cross ObjectID$ & I & L \\
+      * & $register$ & $ThreadID \cross ObjectID$ & I & L \\
+      * & $registerRet$ & \textless no parameters\textgreater & L & I \\
+      * & $enterPrivateMemory$ & $ThreadID \cross \nat \cross ObjectID$ & I & L \\
+      * & $enterPrivateMemoryRet$ & \textless no parameters\textgreater & L & I \\
+      * & $executeInAreaOf$ & $ThreadID \cross ObjectID \cross ObjectID$ & I & L \\
+      * & $executeInAreaOfRet$ & \textless no parameters\textgreater & L & I \\
+      * & $executeInOuterArea$ & $ThreadID \cross ObjectID$ & I & L \\
+      * & $executeInOuterAreaRet$ & \textless no parameters\textgreater & L & I \\
+      & $enterPerReleaseMemory$ & $ThreadID \cross ObjectID$ & I & L \\
+      & $enterPerReleaseMemoryRet$ & \textless no parameters\textgreater & L & I \\
+      & $exitMemory$ & $ThreadID$ & I & L \\
+      & $exitMemoryRet$ & \textless no parameters\textgreater & L & I \\
       {}+{} & $suspend$ & \textless no parameters\textgreater & I & L \\
       {}+{} & $suspendRet$ & \textless no parameters\textgreater & L & I \\
       {}+{} & $resumeThread$ & $ThreadID$ & I & L \\
@@ -296,13 +302,13 @@ Some channels are marked with various symbols (*, \dag{}, {}+{} and
       & $getCurrentACRet$ & $BackingStoreID$ & OM & L \\
       & $newObject$ & $ThreadID \cross ClassID$ & I/L & OM  \\
       & $newObjectRet$ & $ObjectID$ & OM & I/L  \\
-      \ddag & $getClassIDOf$ & $ObjectID \cross ClassID$ & I/L & OM  \\
-      \ddag & $getField$ & $ObjectID \cross FieldID$ & I & OM \\
-      \ddag & $getFieldRet$ & $Word$ & OM & I \\
-      \ddag & $putField$ & $ObjectID \cross FieldID \cross Word$ & I & OM \\
-      \ddag & $getStatic$ & $ClassID \cross FieldID$ & I & OM \\
-      \ddag & $getStaticRet$ & $Word$ & OM & I \\
-      \ddag & $putStatic$ & $ClassID \cross FieldID \cross Word$ & I & OM \\
+      \dag & $getClassIDOf$ & $ObjectID \cross ClassID$ & I/L & OM  \\
+      \dag & $getField$ & $ObjectID \cross FieldID$ & I & OM \\
+      \dag & $getFieldRet$ & $Word$ & OM & I \\
+      \dag & $putField$ & $ObjectID \cross FieldID \cross Word$ & I & OM \\
+      \dag & $getStatic$ & $ClassID \cross FieldID$ & I & OM \\
+      \dag & $getStaticRet$ & $Word$ & OM & I \\
+      \dag & $putStatic$ & $ClassID \cross FieldID \cross Word$ & I & OM \\
       & $addThreadMemory$ & $ThreadID \cross BackingStoreID$ & I & OM \\
       & $removeThreadMemory$ & $ThreadID$ & I & OM \\       
       \hline
@@ -324,18 +330,18 @@ and supply any outputs.
 The return channel is named by appending $Ret$ to the name of the
 channel used to initiate the operation.
 
-There are some channels that deviate this pattern of having a return
-channel.
+% There are some channels that deviate this pattern of having a return
+% channel.
 The $executeMethod$ channel is used to signal to the interpreter that
 it should begin execution of a method on a given thread.
 The interpreter signals on $executeMethodRet$ channel when it has
 finished execution of the method.
-Since the launcher may need to take some action, such as exiting a
-memory area, after the interpreter has finished executing a method,
-the interpreter waits until it receives a signal on the
-$continueExecution$ channel before continuing to execute.
-Since the $continueExecution$ channel forms part of this communication
-pattern, it does not have its own return channel.
+% Since the launcher may need to take some action, such as exiting a
+% memory area, after the interpreter has finished executing a method,
+% the interpreter waits until it receives a signal on the
+% $continueExecution$ channel before continuing to execute.
+% Since the $continueExecution$ channel forms part of this communication
+% pattern, it does not have its own return channel.
 
 Before the interpreter can execute methods on the $main$ thread, the
 stack space for the $main$ thread must allocated by the launcher and
@@ -354,13 +360,13 @@ The channels marked with a * represent calls to infrastructure methods
 that are part of the SCJ API.
 The inputs and outputs of these methods (and hence the types of the
 channels associated with them) are taken from the SCJ specification.
-The channels marked with a \dag{} are methods that do not return a
-value and involve execution of a method in the interpreter as part of
-their handling.
-Thus, the interpreter waits for a signal on the $executeMethod$
-channel after signalling the launcher to handle one of these methods.
-The methods marked with a \dag{} do not, therefore, require separate
-return channels.
+% The channels marked with a \dag{} are methods that do not return a
+% value and involve execution of a method in the interpreter as part of
+% their handling.
+% Thus, the interpreter waits for a signal on the $executeMethod$
+% channel after signalling the launcher to handle one of these methods.
+% The methods marked with a \dag{} do not, therefore, require separate
+% return channels.
 The channels marked with a + expose SCJVM scheduler operations to the
 code executed in the interpreter, in order to allow for the
 implementation of event handlers. 
@@ -700,7 +706,7 @@ $WaitForExecution$.
   \t2 HandleSpecialMethodsMainLoop(memoryEntries, retVal)) \\
   \t1 {} \extchoice {} \\
   \t1 (\lcircguard \forall t : ThreadID @ memoryEntries~t = 0 \rcircguard \circguard {} \\
-  \t2 executeMethodRet?thr \prefixcolon (thr = main) ?r \then continueExecution!main \then retVal := r)
+  \t2 executeMethodRet?thr \prefixcolon (thr = main) ?r \then retVal := r)
 \end{circusaction}
 $HandleSpecialMethodsMainLoop$ takes a value parameter,
 $memoryEntries$, which is a map recording how many times a memory area
@@ -765,8 +771,9 @@ may occur inbetween.
   \t1 \circval thread : ThreadID \circspot \circvar runnable, object : ObjectID; bs : BackingStoreID \circspot \\
   \t1 executeInAreaOf?t \prefixcolon (t = thread) ?obj?r \then object, runnable := obj, r \circseq \\
   \t1 FindBackingStore(object, bs) \circseq \\
-  \t1 enterBackingStore!thread!bs \then getClassIDOf!runnable?runnableClass \\
-  \t1 {} \then executeMethod!thread!runnableClass!run!(\langle runnable \rangle) \then \Skip
+  \t1 enterBackingStore!thread!bs \then executeInAreaOfRet
+  % \then getClassIDOf!runnable?runnableClass \\
+  % \t1 {} \then executeMethod!thread!runnableClass!run!(\langle runnable \rangle) \then \Skip
 \end{circusaction}
 The return from the \texttt{run()} method, and the exit from the
 memory-area, is specified by the $ExitMemory$ action below.
