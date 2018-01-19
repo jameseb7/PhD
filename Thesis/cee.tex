@@ -1002,6 +1002,8 @@ the event handler.
   \t1 \circfi
 \end{circusaction}
 
+%TODO: need better ending for this section
+
 In the next section, we describe the bytecode interpreter, which,
 along with the $Launcher$, forms the CEE before the application of the
 compilation strategy.
@@ -1982,21 +1984,14 @@ counter value as a return address when another method is invoked.
 The fourth component, $frameClass$, is a copy of the $Class$
 information for the class of the stack frame's method, so that the
 constant pool for the class is available to the operations of $Thr$.
-The fifth component, $stackSize$, stores the maximum size of the
+The final component, $stackSize$, stores the maximum size of the
 $operandStack$ for the thread.
-The final component of $StackFrame$, $baseFrame$ is a boolean value
-indicating whether or not the frame was created in response to an
-external request, so that it forms the base of a substack of frames.
-This is used when determining whether to send a return value to the
-$executeMethodRet$ channel or push it onto the previous method's
-$operandStack$.
 \begin{schema}{StackFrame}
   localVariables : \seq Word \\
   operandStack : \seq Word \\
   storedPC : ProgramAddress \\
   frameClass : Class \\
-  stackSize : \nat \\
-  baseFrame : \boolean
+  stackSize : \nat
 \where
   \# operandStack \leq stackSize
 \end{schema}
@@ -2023,9 +2018,8 @@ information for the current method.
   frameStackID = Uninitialised \implies frameStack = \emptyset \\
   % definition of currentClass (only important if the frame stack is nonempty)
   frameStack \neq \emptyset \implies currentClass = (last~frameStack).frameClass \\
-  frameStack \neq \emptyset \implies (head~frameStack).baseFrame = \true \\
   % need to ensure pc is consistent with currentClass
-  \exists m : MethodID | m \in \dom currentClass.methodEntry @ \\
+  \exists_1 m : MethodID | m \in \dom currentClass.methodEntry @ \\
   \t1 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m
 \end{schema}
 The first conjunct of the invariant requires that there be no
@@ -2035,12 +2029,10 @@ The second conjunct defines $currentClass$ as the $frameClass$ of the
 last $StackFrame$ on the $frameStack$.
 This is only required when $frameStack$ is nonempty, since
 $currentClass$ is unused when $frameStack$ is empty.
-The third conjunct states that, if the $frameStack$ is nonempty, the
-first $StackFrame$ must have $baseFrame$ set to $\true$, since it is
-always the start of a substack of frames.
-Finally, the fourth conjunct states that $pc$ must be in the
-$ProgramAddress$ range for a method of $currentClass$, to ensure the
-bytecodes are associated with the correct class information.
+Finally, the third conjunct states that $pc$ must be in the
+$ProgramAddress$ range for a unique method of $currentClass$, to
+ensure the bytecodes are associated with the correct class
+information.
 
 The state is initialised as described in a schema $InterpreterInit$.
 The initialisation just sets $frameStackID$ to $Unintialised$ and the
@@ -2182,26 +2174,59 @@ The identifier, $bsid$, of the thread's backing store is then passed
 to $ObjMan$ via the $addThreadMemory$ channel and the $stack$
 identifier is used to initialise $frameStackID$.
 The remaining information is stored in $classID$, $methodID$ and
-$methodArgs$, and the $Class$ information is determined and a new
-$StackFrame$ is created, similarly to what happends in
-$StartInterpreter$. 
+$methodArgs$. 
 The process then behaves as the $Blocked$ action, waiting for an
-instruction to switch to that thread, after which it behaves as the
-$Running$ action, executing bytecode instructions.
-When the execution of the thread's method has finished, the scheduler
-is signalled on the $CEEremoveThread$ channel.
+instruction to switch to that thread.
+After the thread is switched to, execution is passed to the $Launcher$
+via the $runThread$ channel.
+The process then behaves as the $Started$ action, which waits for a
+response from the $Launcher$.
+\begin{circusaction}
+  NotStarted \circdef \circvar methodID : MethodID; methodArgs : \seq Word \circspot \\
+  \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \\
+  \t1 {} \then addThreadMemory!thread!bsid \\
+  \t1 {} \then frameStackID, methodID, methodArgs := Initialised~stack, mid, args \circseq \\
+  \t1 Blocked \circseq runThread!thread!(head~methodArgs)!methodID \circseq Started
+\end{circusaction}
+
+The $Started$, shown below, offers a choice of three behaviours.
+The first behaviour offered is accepting a request to execute a method
+as described by the $StartInterpreter$ action, after which it behaves
+as the $Running$ action, executing bytecode instructions.
+When $Running$ terminates, a further choice is offered.
+The interpreter can continue to execute methods on the thread,
+signalled by the $continue$ channel, after which the $Started$ action
+recurses to offer the main choice again.
+The interpreter can also end execution on the thread, signalled by the
+$endThread$ channel, after which $Started$ finishes offering the main
+choice and terminates the thread, as we describe below.
+The second action in the choice offered by $NotStarted$ allows a
+switch away from $thread$ to be accepted, after which the process
+behaves as $Blocked$ before offering the choice again.
+The final action in the choice allows a request to terminate the
+thread to be accepted on the $endThread$ channel.
+When the termination of the thread is requested, the thread's memory
+is removed using the $removeThreadMemory$ channel and the scheduler is
+signalled on the $CEEremoveThread$ channel.
 This causes the scheduler to switch to a different thread, so a thread
 switch is accepted on the $CEEswitchThread$ channel.
-After that, the action recurses to allow the thread to be restarted.
+After that, the process again behaves as $NotStarted$, allowing the
+thread to be restarted.
 \begin{circusaction}
-  NotStarted \circdef \\
-  \t1 \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
-  \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \then {} \\
-  \t1 addThreadMemory!thread!bsid \then {} \\
-  \t1 frameStackID, classID, methodID, methodArgs := Initialised~stack, cid, mid, args \circseq \\
-  \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrame \rschexpract \circseq \\
-  \t1 Blocked \circseq Running \circseq CEEremoveThread!thread \then {} \\
-  \t1 CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
+  Started \circdef \\
+  \t1 \circblockbegin
+  StartInterpreter \circseq Running \circseq \circblockbegin
+  continue?t \prefixcolon (t = thread) \then Started \\
+  {} \extchoice {} \\
+  endThread?t \prefixcolon (t = thread) \then \Skip
+  \circblockend \\
+  {} \extchoice {} \\
+  CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq Started \\
+  {} \extchoice {} \\
+  endThread?t \prefixcolon (t = thread) \then \Skip
+  \circblockend \circseq \\
+  \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
+  \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
 \end{circusaction}
 
 The $Blocked$ and $Running$ actions define the behaviour of threads
@@ -2324,41 +2349,30 @@ started by the $Launcher$.
 This is performed by an additional action, $CheckLauncherReturn$, that
 is called after return from the schema action.
 This can be seen in the definition of $HandleAreturn$ below, where
-$CheckLauncherReturn$ is passed the two output values from the
-$InterpreterAreturn$ function.
-The first output, $returnValue$, holds the return value for the
-returning method, while the second, $fromBaseFrame$, is a boolean
-value indicating if the $StackFrame$ for the method had its
-$baseFrame$ value set to $\true$.
+$CheckLauncherReturn$ is passed the return value, $returnValue$, from
+the $InterpreterAreturn$ operation.
 \begin{circusaction}
-  HandleAreturn \circdef \circvar returnValue : Word; fromBaseFrame : \boolean \circspot \\
-  \t1 \lcircguard pc \in\dom bc \land bc~pc = areturn \rcircguard \circguard \lschexpract InterpreterAreturn \rschexpract \circseq \\
-  \t1 CheckLauncherReturn(returnValue, fromBaseFrame)
+  HandleAreturn \circdef \circvar returnValue : Word \circspot \\
+  \t1 \lcircguard pc \in \dom bc \land bc~pc = areturn \rcircguard \circguard \lschexpract InterpreterAreturn \rschexpract \circseq \\
+  \t1 CheckLauncherReturn(returnValue)
 \end{circusaction}
 The form of the $HandleReturn$ action is similar, but since
 $InterpreterReturn$ does not output a return value, $returnValue$
 takes an arbitrary value.
 
 Within the $CheckLauncherReturn$ action, the definition of which is
-shown below, the boolean value $fromBaseFrame$ is used to determine
-whether the return value should be communicated to the $Launcher$.
-If $fromBaseFrame$ is set to $\true$, then that normally indicates
-that the return value needs to be passed to the launcher.
-The exception to this is if the return is from the first frame of a
-$thread$ other than $main$, which is created in response to a
-$CEEstartThread$ signal from the scheduler and so does not require a
-return value to be sent to the launcher.
-Thus, the condition checked is that $fromBaseFrame$ is $\true$, and
-either $frameStack$ is empty or the current $thread$ is $main$.
-If that is true, then $returnValue$ is sent to the $Launcher$ on the
-$executeMethodRet$ channel and a signal is awaited on the
-$continueExecution$ channel before continuing.
-If the condition is not true then the action terminates.
+shown below, the $frameStack$ is checked to determine whether the
+return value should be communicated to the $Launcher$.
+If $frameStack$ is empty then the method being returned from was
+initiated via a signal on the $executeMethod$ channel, and so the
+return value is communicated back to the $Launcher$ via the
+$executeMethodRet$. 
+If the $frameStack$ is not empty then nothing more needs to be done
+and the action terminates.
 \begin{circusaction}
-  CheckLauncherReturn \circdef \circval returnValue : Word; \circval fromBaseFrame : \boolean \circspot \\
-  \t1 \circif fromBaseFrame = \true \land (frameStack \neq \emptyset \lor thread = main) \circthen \\
-  \t2 executeMethodRet!thread!returnValue \then continueExecution?t \prefixcolon (t = thread) \then \Skip \\
-  \t1 {} \circelse fromBaseFrame = \false \lor (frameStack = \emptyset \land thread \neq main) \circthen \Skip \\
+  CheckLauncherReturn \circdef \circval returnValue : Word \circspot \\
+  \t1 \circif frameStack = \emptyset \circthen executeMethodRet!thread!returnValue \then \Skip \\
+  \t1 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
   \t1 \circfi
 \end{circusaction}
 
