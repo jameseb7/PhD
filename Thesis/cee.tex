@@ -2405,7 +2405,8 @@ The field's value is returned via the $getFieldRet$ channel and pushed
 onto the $operandStack$ of the current $StackFrame$ by the data
 operation $InterpreterPush$.
 \begin{circusaction}
-  HandleGetfield \circdef \lcircguard pc \in\dom bc \land bc~pc \in \ran getfield \land (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \rcircguard \circguard \\
+  HandleGetfield \circdef \\
+  \t1 \lcircguard pc \in\dom bc \land bc~pc \in \ran getfield \land (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \rcircguard \circguard \\
   \t1 \circvar oid : ObjectID \circspot \lschexpract InterpreterPop[oid!/value!] \hide (pc, pc') \rschexpract \circseq \\
   \t1 getField!oid!(fieldOf~currentClass~((getfield\inv)~(bc~pc))) \\
   \t1 {} \then getFieldRet?value \then \lschexpract InterpreterPush \rschexpract
@@ -2441,7 +2442,7 @@ a boolean value indicating that the method invocation is not from the
   HandleInvokespecial \circdef \\
   \t1 \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
   \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
-  \t1 \circif ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \circthen {}
+  \t1 \circif ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \circthen {} \\
   \t2 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
   \t2 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
   \t2 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false) \\
