@@ -2509,31 +2509,6 @@ before continuing.
   \t1 \circfi
 \end{circusaction}
 
-Some of the special methods start other methods as part of their
-execution, which requires additional handling.
-An example is \texttt{enterPrivateMemory()} from the SCJ API, which
-executes the \texttt{run()} method of a \texttt{Runnable} object after
-entering a private memory area.
-This is handled in the action $InvokeEnterPrivateMemory$, shown below.
-It begins in a similar way to $InvokeResumeThread$, with a guard on
-the $classID$ and $method$ passed into the action, and a check of the
-$static$ parameter.
-The method is then handled by communicating with the $Launcher$ on the
-$enterPrivateMemory$ channel, passing the arguments from $methodArgs$.
-The execution of the nested method is then handled as in
-$StartInterpreter$, waiting for the request to execute the nested
-method on the $executeMethod$ channel and creating a new $StackFrame$
-for it.
-\begin{circusaction}
-  InvokeEnterPrivateMemory \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
-  \t1 \lcircguard (classID,managedMemoryClass) \in subclassRel~cs \land method = enterPrivateMemoryID \rcircguard \circguard {} \\
-  \t1 \circif static = \true \circthen {} \\
-  \t2 enterPrivateMemory!thread!(methodArgs~1)!(methodArgs~2) \then StartInterpreter \\
-  \t1 {} \circelse static = \false \circthen \Chaos \\
-  \t1 \circfi
-\end{circusaction}
-
 In addition to the special methods handled in the $Launcher$, we also
 supply \texttt{read()} and \texttt{write()} methods for reading from
 and writing to some standard input and output device. 
