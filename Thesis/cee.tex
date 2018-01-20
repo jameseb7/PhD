@@ -2197,7 +2197,7 @@ response from the $Launcher$.
   \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \\
   \t1 {} \then addThreadMemory!thread!bsid \\
   \t1 {} \then frameStackID, methodID, methodArgs := Initialised~stack, mid, args \circseq \\
-  \t1 Blocked \circseq runThread!thread!(head~methodArgs)!methodID \circseq Started
+  \t1 Blocked \circseq runThread!thread!(head~methodArgs)!methodID \then Started
 \end{circusaction}
 
 The $Started$, shown below, offers a choice of three behaviours.
@@ -2673,7 +2673,7 @@ $executeMethodRet$ channel.
   \circseq X \circblockend
 \end{circusaction}
 
-Similarly, the $NotStarted$ action in $CThr_{bc,cs}$ is shown below,
+Similarly, the $Started$ action in $CThr_{bc,cs}$ is shown below,
 with $ExecuteMethod$ after $Blocked$, replacing $Running$.
 The return value, $retVal$, is discarded since the methods that are
 executed at the top level on the non-$main$ threads should not return
