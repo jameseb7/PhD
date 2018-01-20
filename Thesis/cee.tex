@@ -2648,7 +2648,7 @@ been allocated.
 The $stackID$ is initially set to $Uninitialised$.
 
 The $Running$ action and creation of stack frames (in $MainThread$ and
-$NotStarted$) are replaced with an $ExecuteMethod$ action that
+$Started$) are replaced with an $ExecuteMethod$ action that
 executes the C function corresponding to a given method identifier.
 The main action of $CThr_{bc,cs}$ thus has the same structure as that
 of $Interpreter$, with a choice of $MainThread$ for the $main$ thread
@@ -2667,28 +2667,14 @@ $executeMethodRet$ channel.
   \t1 \circblockbegin
   \circvar retVal : Word \circspot executeMethod?t \prefixcolon (t = thread) ?cid?mid?args \then {} \\
   \t1 ExecuteMethod(cid,mid,args,retVal) \circseq \\
-  \t1 executeMethodRet!retVal \then continueExecution \then X \\
+  \t1 executeMethodRet!retVal \then X \\
   {} \extchoice {} \\
   CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked
   \circseq X \circblockend
 \end{circusaction}
-
-Similarly, the $Started$ action in $CThr_{bc,cs}$ is shown below,
-with $ExecuteMethod$ after $Blocked$, replacing $Running$.
-The return value, $retVal$, is discarded since the methods that are
-executed at the top level on the non-$main$ threads should not return
-a value.
-The thread's removal is handled by $CEEremoveThread$, so no
-communication on $executeMethodRet$ follows the method's execution.
-\begin{circusaction}
-  NotStarted \circdef \\
-  \t1 \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
-  \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \then {} \\
-  \t1 addThreadMemory!thread!bsid \then {} \\
-  \t1 frameStackID, classID, methodID, methodArgs := Initialised~stack, cid, mid, args \circseq \\
-  \t1 Blocked \circseq \circvar retVal : Word \circspot ExecuteMethod(classID, methodID, methodArgs, retVal) \circseq \\
-  \t1 CEEremoveThread!thread \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
-\end{circusaction}
+The sequential composition of $StartInterpreter$ and $Running$ in
+$Started$ is replaced with a use of $ExecuteMethod$ in the same way as
+for the same sequential composition in $MainThread$.
 
 The $ExecuteMethod$ action has the form shown below.
 It takes as parameters the class identifier, $cid$, method identifier,
