@@ -11,17 +11,14 @@ This is performed by as described by
 Algorithm~\ref{separate-complete-methods-algorithm}.
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \Procedure{SeparateCompleteMethods}{}
     \For{$m \gets methods$} \label{algorithm-method-separation-loop}
-    % \For{$mc \gets$ \Call{MethodsCalls}{$m$}}
-    % \EndFor
     \If{\Call{MethodIsComplete}{$m$}} \label{algorithm-check-method-completeness}
-    \State \Call{ApplyCopyRule}{$m$}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$} \label{algorithm-introduce-method-action}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$} \label{algorithm-copy-method-action}
     \EndIf
     \EndFor
-    \EndProcedure
   \end{algorithmic}
-  \caption{Separate Complete Methods}
+  \caption{SeparateCompleteMethods}
   \label{separate-complete-methods-algorithm}
 \end{algorithm}
 
@@ -31,41 +28,37 @@ line~\ref{algorithm-method-separation-loop}, and determines if it is
 complete, on line~\ref{algorithm-check-method-completeness}.
 This involves a simple syntactic check that each conditional branch
 ends in a return instruction or a recursion.
-Those methods that are complete are moved into a separate action by an
-application of the copy rule.
+
+% TODO: move a predicate concerning class information across?
+
+For the methods that are complete, the sequence of actions for the
+method are placed in a separate action, which is introduced using
+Law~[\nameref{action-intro-law}] on
+line~\ref{algorithm-introduce-method-action}.
+We form the name of this action from the name of the class to which
+the method belongs and the name of the method, concatenated together
+with an underscore.
+The name used for the action does not have an effect upon the
+correctness of the strategy, provided it is unique.
+Once the method action has been introduced, the sequence of actions at
+the method's entry point in the $Running$ action is replaced with a
+reference to the newly introduced action by applying
+Law~[\nameref{copy-rule-law}] on
+line~\ref{algorithm-copy-method-action}.
 
 In our example, the method \texttt{f()} of the \texttt{TPK} class,
 which starts at $pc = 43$, is complete on the first iteration of the
 loop on line~\ref{algorithm-method-loop} of
-Algorithm~\ref{epc-algorithm}, with the $Running$ action as shown
-below.
+Algorithm~\ref{epc-algorithm}.
+This can be seen in
+Figure~\ref{forward-sequence-introduction-example-figure}.
 The method is complete in this case because it consists of a straight
 sequence of instructions ending with $HandleAreturnEPC$, which
 represents the \texttt{areturn} instruction.
-\begin{circus}
-  Running \circdef \\
-  \t1 \circif frameStack = \emptyset \circthen \Skip \\
-  \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-  \t2 \circif pc = 0 \circthen {} \cdots {} \\
-  \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 43 \circthen HandleAloadEPC(0) \circseq Poll \circseq HandleAloadEPC(0) \circseq \\
-  \t3 Poll \circseq HandleIaddEPC \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq \\
-  \t3 HandleIaddEPC \circseq Poll \circseq HandleIconstEPC(5) \circseq Poll \circseq \\
-  \t3 HandleIaddEPC \circseq Poll \circseq HandleAreturnEPC \\
-  \t2 {} \cdots {} \\
-  \t2 \circfi \circseq Poll \circseq Running \\
-  \t1 \circfi
-\end{circus}
-The sequence of instructions at $pc = 43$ can then be copied into a
-separate action, shown below.
-The name of this action contains the name of the class and method
-identifier of the method it represents.
-\begin{circus}
-  TPK\_f \circdef HandleAloadEPC(0) \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq \\
-  \t1 HandleIaddEPC \circseq Poll \circseq HandleAloadEPC(0) \circseq Poll \circseq HandleIaddEPC \circseq \\
-  \t1 Poll \circseq HandleIconstEPC(5) \circseq Poll \circseq  HandleIaddEPC \circseq Poll \circseq \\
-  \t1 HandleAreturnEPC 
-\end{circus}
+The sequence of instructions at $pc = 43$ is copied into the action $TPK\_f$,
+which can be seen in
+Figure~\ref{method-call-resolution-example-figure}.
+The $pc = 43$ branch is replaced with a call to $TPK\_f$.
 
 After all the complete methods have been copied into separate actions,
 calls to those methods are resolved.
@@ -75,15 +68,31 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
   \begin{algorithmic}[1]
     \For{$m \gets methods$}
     \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
+    \If{\Call{HasMultipleTargets}{$mc$}}
+    \State \ApplyFor{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$mc$}
+    \For{$target \gets $\Call{Targets}{$mc$}}
+    \Try
+    \State \ApplyFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$mc$}
+    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$mc$}
+    \EndTry
+    \EndFor
+    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$mc$}
+    \Else
+    \Try
     \State \ApplyFor{Rule~[\nameref{refine-invokespecial-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{refine-invokestatic-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{refine-invokevirtual-single-rule}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{resolve-simple-special-method-rule}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{resolve-nested-special-method-rule}]}{$mc$}
+    \EndTry
+    \Try
+    \State \ApplyFor{Rule~[\nameref{resolve-special-method-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$mc$}
-    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$mc$}
+    \EndTry
+    \EndIf
+    \If{\Call{HasSimpleSequence}{$node$}}
+    \label{algorithm-lci-sequence-check}
+    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
+    \label{algorithm-lci-sequence-introduction}
+    \EndIf
     \EndFor
     \EndFor
   \end{algorithmic}
@@ -93,14 +102,7 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
 
 \begin{restatable}[refine-invokespecial]{crule}{RefineInvokespecialRule}
   \label{refine-invokespecial-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$, if
-  \begin{itemize}
-  \item $c_0 \in \ran cs$,
-  \item $m_0 \in \dom c_0.methodEntry $
-  \item $j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0$,
-  \item $cpi \in methodRefIndices~c_0$, and
-  \item $c_0.constantPool~cpi = MethodRef~(c,m)$, then
-  \end{itemize}
+  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
@@ -124,18 +126,18 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
       \circfi
     \end{array}
   \end{circus}
+  where $m : MethodID$ and $c : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
+  \end{displaymath}
 \end{restatable}
 
 \begin{restatable}[refine-invokestatic]{crule}{RefineInvokestaticRule}
   \label{refine-invokestatic-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$, if
-  \begin{itemize}
-  \item $c_0 \in \ran cs$,
-  \item $m_0 \in \dom c_0.methodEntry $
-  \item $j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0$,
-  \item $cpi \in methodRefIndices~c_0$, and
-  \item $c_0.constantPool~cpi = MethodRef~(c,m)$, then
-  \end{itemize}
+  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
@@ -159,19 +161,18 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
       \circfi
     \end{array}
   \end{circus}
+  where $m : MethodID$ and $c : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
+  \end{displaymath}
 \end{restatable}
 
 \begin{restatable}[refine-invokevirtual-single]{crule}{RefineInvokeVirtualSingleRule}
   \label{refine-invokevirtual-single-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$, if
-  \begin{itemize}
-  \item $c_0 \in \ran cs$,
-  \item $m_0 \in \dom c_0.methodEntry $
-  \item $j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0$,
-  \item $cpi \in methodRefIndices~c_0$,
-  \item $c_0.constantPool~cpi = MethodRef~(c,m)$, and
-  \item $\exists_1 c_1 : ClassID @ (c_1,c) \in subclassRel~cs$, then
-  \end{itemize}
+  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
@@ -195,6 +196,14 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
       \circfi
     \end{array}
   \end{circus}
+  where $m : MethodID$ and $c : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0,
+  \end{displaymath}
+  and provided $\exists_1 c_1 : ClassID @ (c_1,c) \in subclassRel~cs$.
 \end{restatable}
 
 \begin{restatable}[refine-invokevirtual-multi]{crule}{RefineInvokeVirtualMultiRule}
@@ -235,10 +244,19 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
       \circfi
     \end{array}
   \end{circus}
+  where $m : MethodID$ and $c_1, \ldots, c_n : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0 \land \\
+    \t1 \exists c : ClassID @ c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 \{ x : ClassID | (x,c) \in subclassRel~cs \} = \{c_1, \ldots , c_n\}
+  \end{displaymath}
+  and provided $n > 1$.
 \end{restatable}
 
-\begin{restatable}[resolve-simple-special-method]{crule}{ResolveSimpleSpecialMethodRule}
-  \label{resolve-simple-special-method-rule}
+\begin{restatable}[resolve-special-method]{crule}{ResolveSpecialMethodRule}
+  \label{resolve-special-method-rule}
   If
   \setlength{\zedindent}{0.25cm}
   \setlength{\zedtab}{0.5cm}
