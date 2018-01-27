@@ -2093,42 +2093,53 @@ Figure~\ref{interpreter-flow-figure}.
 
     \path (0,0) --
     node[pos=0.00] (Initxpos) {}
-    node[pos=0.25] (Interpreterxpos) {}
-    node[pos=0.55] (Executexpos) {}
-    node[pos=0.8] (ExecuteAndPollxpos) {}
+    node[pos=0.25] (MainThreadxpos) {}
+    node[pos=0.25] (NotStartedxpos) {}
+    node[pos=0.50] (Startedxpos) {}
+    node[pos=0.75] (Runningxpos) {}
+    node[pos=1.00] (Blockedxpos) {}
     (width);
 
     \path (0,0) --
-    node[pos=0] (threadypos) {}
+    node[pos=-1]  (threadBlockedypos) {}
+    node[pos=0]   (threadypos) {}
     node[pos=0.5] (Initypos) {}
-    node[pos=1] (mainypos) {}
-    node[pos=2] (mainBlockedypos) {}
+    node[pos=1]   (mainypos) {}
+    node[pos=2]   (mainBlockedypos) {}
     (height);
 
     \path (Initxpos |- Initypos) node (Init) {$Init$} ++(-1cm,0cm) node (start) {};
-    \node at (Interpreterxpos |- mainypos) (IMn) {$MainThread$};
-    \node at (Executexpos |- mainypos) (MRn) {$Running$};
-    \node at (Interpreterxpos |- mainBlockedypos) (MBl) {$Blocked$};
-    \node at (ExecuteAndPollxpos |- mainypos) (MB2) {$Blocked$};
-    \node at (Interpreterxpos |- threadypos) (NSt) {$NotStarted$};
-    \node at (Executexpos |- threadypos) (TBl) {$Blocked$};
-    \node at (ExecuteAndPollxpos |- threadypos) (TRn) {$Running$};
-
+    \node at (MainThreadxpos |- mainypos) (IMn) {$MainThread$};
+    \node at (Runningxpos |- mainypos) (MRn) {$Running$};
+    \node at (MainThreadxpos |- mainBlockedypos) (MBl) {$Blocked$};
+    \node at (Blockedxpos |- mainypos) (MB2) {$Blocked$};
+    \node at (NotStartedxpos |- threadypos) (NSt) {$NotStarted$};
+    \node at (Startedxpos |- threadypos) (Sta) {$Started$};
+    \node at (Startedxpos |- threadBlockedypos) (TBl) {$Blocked$};
+    \node at (Runningxpos |- threadypos) (TRn) {$Running$};
+    \node at (Blockedxpos |- threadypos) (TB2) {$Blocked$};
+    
     \draw[-latex] (start) to (Init);
     \draw[-latex] (Init) to[out=90,in=180,looseness=0.5] (IMn);
     \draw[-latex] (Init) to[out=270,in=180,looseness=0.5] (NSt);
-    \draw[-latex] (IMn) to[bend left,looseness=0.7] (MRn);
-    \draw[-latex] (MRn) to[bend left,looseness=0.7] (IMn);
+    \draw[-latex] (IMn) to[bend left,looseness=0.5] (MRn);
+    \draw[-latex] (MRn) to[bend left,looseness=0.5] (IMn);
     \draw[-latex] (MRn) to[bend left,looseness=0.7] (MB2);
     \draw[-latex] (MB2) to[bend left,looseness=0.7] (MRn);
     \draw[-latex] (IMn) to[bend left,looseness=1.0] (MBl);
     \draw[-latex] (MBl) to[bend left,looseness=1.0] (IMn);
-    \draw[-latex] (NSt) to (TBl);
-    \draw[-latex] (TBl) to[bend left,looseness=0.7] (TRn);
-    \draw[-latex] (TRn) to[bend left,looseness=0.7] (TBl);
-    \draw[-latex] (TRn) to[bend left,looseness=0.7] (NSt);
-    \draw[-latex] (TRn) to[loop below] (TRn);
-    \draw[-latex] (MRn) to[loop above] (MRn);
+    \draw[-latex] (NSt) to[out=270,in=180,looseness=0.5] (TBl);
+    \draw[-latex] (TBl) to[bend left,looseness=0.7] (Sta);
+    \draw[-latex] (Sta) to[bend left,looseness=0.7] (TBl);
+    \draw[-latex] (Sta) to (NSt);
+    % \draw[-latex] (NSt) to (Sta);
+    \draw[-latex] (Sta) to[bend left,looseness=0.7] (TRn);
+    \draw[-latex] (TRn) to[bend left,looseness=0.7] (Sta);
+    \draw[-latex] (TB2) to[bend left,looseness=0.7] (TRn);
+    \draw[-latex] (TRn) to[bend left,looseness=0.7] (TB2);
+    % \draw[-latex] (TRn) to[bend left,looseness=0.7] (NSt);
+    % \draw[-latex] (TRn) to[loop below] (TRn);
+    % \draw[-latex] (MRn) to[loop above] (MRn);
   \end{tikzpicture}
   \caption{The overall control flow of $Thr$}
   \label{interpreter-flow-figure}
@@ -2214,7 +2225,8 @@ response from the $Launcher$.
   \t1 Blocked \circseq runThread!thread!(head~methodArgs)!methodID \then Started
 \end{circusaction}
 
-The $Started$, shown below, offers a choice of three behaviours.
+The $Started$ action, shown below, offers a choice of three
+behaviours.
 The first behaviour offered is accepting a request to execute a method
 as described by the $StartInterpreter$ action, after which it behaves
 as the $Running$ action, executing bytecode instructions.
