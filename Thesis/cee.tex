@@ -526,7 +526,7 @@ beginning of which is shown below.
 Class initialisers must be executed as part of the SCJVM startup
 procedure.
 The order in which they are executed is determined by the dependencies
-between class initialisers and classes, and is passed to the
+between class initialisers and classes, and is also passed to the
 $Launcher$ process as a second parameter, $initOrder$, which is a
 sequence of $ClassID$s.
 \begin{circus}
@@ -541,17 +541,17 @@ Appendix~\ref{launcher-appendix}.
 The state of the $Launcher$ is divided into four parts.
 The first part contains the identifiers of the objects that form the
 SCJ mission model, so that the $Launcher$ can call methods of those
-objects during SCJVM startup.
-The second part contains information on the memory-area objects of the
-program, including the relationship between the memory-areas and the
-backing stores they represent, so that methods for entering and
-exiting memory-areas can be handled.
+objects during the SCJVM startup.
+The second part contains information on the memory-area objects,
+including the relationship between the memory areas and the backing
+stores they represent, so that methods for entering and exiting memory
+areas can be handled.
 The third part of the state contains information about the schedulable
 objects of SCJ and the threads used by the CEE so that the schedulable
 objects can be managed by the $Launcher$.
-The final part of the state contains information on alarms used for
-coordinating releases of schedulable objects, so that they can be set
-in the real-time clock in the correct order.
+The final part contains information on alarms for coordinating
+releases of schedulable objects, so that they can be set in the
+real-time clock in the correct order.
 
 We use separate Z schemas to specify each part of the state.
 The first part is described by the $MissionManager$ schema, shown
@@ -591,27 +591,27 @@ private backing stores they contain, $privateMemoryMap$.
 \where
   \cdots
 \end{schema}
-Each of the maps in the $MemoryAreaManager$ is injective, since each
-memory-area object has a distinct backing store and memory-areas
-cannot share a nested private memory-area.
+Each of the maps in $MemoryAreaManager$ is injective, since each
+memory-area object has a distinct backing store and memory areas
+cannot share a nested private memory area.
 The invariants of $MemoryAreaManager$ are elided above. 
 They ensure that each memory-area object has a corresponding backing
-store in $backingStores$, and that areas which are not nested private
-memories do not appear in the range of $privateMemoryMap$.
+store in $backingStores$, and that areas that are not private do not
+appear in $privateMemoryMap$.
 
 The third part of the state is specified in the $SchedulableManager$
 schema below.
 It contains maps that relate the identifiers of schedulable objects to
-information stored about them.
-The $schedulableThreads$ map stores the thread identifier for each
+information about them.
+The $schedulableThreads$ map records the thread identifier for each
 schedulable object.
 This map must be injective, since every schedulable object has a
 separate thread.
-The $schedulableTypes$ map stores information about which type of
+The $schedulableTypes$ map has information about which type of
 event handler each schedulable object belongs to.
 This is represented by a type $HandlerType$ that has constructors
 representing aperiodic, periodic, and one-shot event handlers.
-The $schedulableSizes$ map stores the backing store, allocation area,
+The $schedulableSizes$ map records the backing store, allocation area,
 and stack sizes required for each schedulable object.
 In addition to these maps, $SchedulableManager$ contains a set
 $registeredObjects$, containing the schedulable objects that have been
@@ -630,27 +630,27 @@ $registeredObjects$ is a subset of the map domains.
 
 The final part of the state is described by the $AlarmManager$ schema
 below.
-It contains a map, $alarms$, that stores the time of the next alarm to
-be set for each thread.
-It also stores the identifier, $clockHandler$ of the clock interrupt
+It contains a map, $alarms$, that records the time of the next alarm
+to be set for each thread.
+It also stores the identifier, $clockHandler$, of the clock interrupt
 handler object, since that is used in management of alarms.
 \begin{schema}{AlarmManager}
 	alarms : ThreadID \ffun Time \\
 	clockHandler : ObjectID
 \end{schema}
 
-The state of the process is then the conjunction of these four
-schemas.
+The state of the process is then the conjunction of the four schemas
+above.
 \begin{circusaction}
   \circstate LauncherState == \\
   \t1 MissionManager \land MemoryAreaManager \land SchedulableManager \land AlarmManager
 \end{circusaction}
 
 The $Launcher$ state is initialised as described in $LauncherInit$,
-which is shown below.
+shown below.
 The object identifiers are initialised to the $null$ identifier.
-They are later filled with non-$null$ identifiers as the corresponding
-objects are created during SCJVM execution.
+They are later updated as the corresponding objects are created during
+SCJVM execution.
 Similarly, each of the maps and sets is initialised to the empty set.
 \begin{schema}{LauncherInit}
 	LauncherState~'
@@ -668,16 +668,16 @@ Similarly, each of the maps and sets is initialised to the empty set.
   alarms' = \emptyset
 \end{schema}
 
-The main action of the $Interpreter$ proceeds as shown below.
+The main action of the $Launcher$ proceeds as shown below.
 The state is first initialised as described by $LauncherInit$ and then
 the actions $Startup$ and $RunNextMission$ follow in sequence.
 $Startup$ defines the SCJVM startup procedure that must be performed
 once at the start of SCJVM execution, whereas $RunNextMission$ defines
-the procedure that must be performed for each mission run.
-We do not handle mission termination in our $Launcher$ model.
+the procedure performed for each mission run.
+We do not handle mission termination.
 This is because the SCJ mission termination procedure has almost no
-effect on our compilation strategy; a single mission is sufficient for
-our examples to evaluate the compilation strategy.
+effect on our compilation strategy; a single mission is sufficient to
+evaluate the compilation strategy.
 A formal account of it is available elsewhere~\cite{cavalcanti2013,
   luckcuck2016, zeyda2011}. 
 Thus, $RunNextMission$ is only executed once.
@@ -741,17 +741,17 @@ indefinitely.
 \end{circusaction}
 
 During these actions, methods are executed using the channels
-$executeMethod$ and $executeMethodRet$, discussed
-earlier.
+$executeMethod$ and $executeMethodRet$, discussed earlier.
 The identifiers of the methods, which may be standard methods from the
 SCJ API, or implementation-defined API methods required by the
 launcher, are represented by constants in the model.
 Although most of the methods used by the $Launcher$ are executed
 simply by communicating on each of the channels mentioned above in
-turn, as noted above, in $InitializeMission$, the
-\texttt{initialize()} method of a mission requires handling of the
-\texttt{register()} method for each schedulable object.
-We must also provide handling for other special methods.
+turn in $InitializeMission$, the \texttt{initialize()} method of a
+mission requires handling of the \texttt{register()} method for each
+schedulable object.
+We must also provide handling for the special methods mentioned in the
+previous section.
 This is done in the $HandleSpecialMethodsMainLoop$ action below, which
 offers handling of the special methods while waiting for return from
 the \texttt{initialize()} method on the $executeMethodRet$ channel.
@@ -778,27 +778,26 @@ $WaitForExecution$.
 $HandleSpecialMethodsMainLoop$ takes a value parameter,
 $memoryEntries$, which is a map recording how many times a memory area
 has been entered for each thread.
-It also take a value parameter, $retVal$, which captures the return
+It also takes a value parameter, $retVal$, which captures the return
 value from the execution of the method on the $main$ thread.
 It offers a choice of handling a memory-area entry, handling the
 corresponding memory-area exit, handling a special method that does
-not enter memory-areas, or accepting return from the execution of the
+not enter memory areas, or accepting return from the execution of the
 method on the $main$ thread (handled in the usual way using
-$executeMethodRet$ and $continueExecution$, with the return value
-stored in $retVal$).
+$executeMethodRet$, with the return value stored in $retVal$).
 
-$HandleSpecialMethodsMainLoop$ handles memory-area entering methods,
-after which another method is executed in the interpreter, during
-which further special methods may be called.
-Each entry to a memory-area must be matched by a corresponding exit
-from the memory-area after this extra method execution returns.
-Thus, the entries to memory-areas are tracked in the $memoryEntries$
+When $HandleSpecialMethodsMainLoop$ handles memory-area entering
+methods, afterwards another method is executed in the interpreter,
+during which further special methods may be called.
+Each entry to a memory area must be matched by a corresponding exit
+from the memory area after this extra method execution returns.
+Thus, the entries to memory areas are tracked in the $memoryEntries$
 map.
 
 The number stored in $memoryEntries$ for a thread identifier $t$ is
 incremented after handling a memory-area entry on that thread as
 described in $EnterMemory(t)$.
-Similarly, it is decremented after handling exit from the memory-area
+Similarly, it is decremented after handling exit from the memory area
 in $ExitMemory(t)$, which is only offered if the value is already
 greater than zero.
 After handling memory-area entry or exit, or another special method
@@ -823,7 +822,7 @@ also received and a $FindBackingStore$ action is used to communicate
 with the memory manager to determine its backing store.
 This backing store is then entered, via communication on the
 $enterBackingStore$ channel.
-The completion of the memory area entering operation is then signalled
+The completion of the memory-area entering operation is then signalled
 to the $Interpreter$ via the $executeInAreaOf$ channel, so that the
 \texttt{run()} method of the \texttt{Runnable} object can be executed.
 \begin{circusaction}
@@ -835,18 +834,18 @@ to the $Interpreter$ via the $executeInAreaOf$ channel, so that the
 \end{circusaction}
 
 After the \texttt{run()} method execution has finished, a further
-special method is called in the $Interpreter$ exit the memory area. 
-It's handling is specified by the $ExitMemory$ action below.
+special method is called in the $Interpreter$ to exit the memory area. 
+Its handling is specified by the $ExitMemory$ action below.
 This, as with the $ExecuteInAreaOf$ action, takes a $thread$
 parameter.
 A return from a method executing on that thread is accepted on the
 $exitMemory$ channel.
-The exit from the memory-area is then performed using the
+The exit from the memory area is then triggered using the
 $exitBackingStore$ and $exitBackingStoreRet$ channels.
 The $Launcher$ state may afterwards be updated to account for the
-exited memory-area being cleared (due to no longer being in use by any
+exited memory area being cleared (due to no longer being in use by any
 thread), which is specified in the $ClearPrivateMemory$ schema.
-After the exit from the memory-area has been handled, the $Launcher$
+After the exit from the memory area has been handled, the $Launcher$
 signals that the special method handling has finished using the
 $exitMemoryRet$ channel.
 \begin{circusaction}
@@ -855,26 +854,27 @@ $exitMemoryRet$ channel.
   \t1 {} \then exitBackingStore!thread \then exitBackingStoreRet?bsid?isCleared \then {} \\
   \t1 \circif isCleared = \true \circthen \lschexpract ClearPrivateMemory[bsid/toClear?] \rschexpract \\
   \t1 {} \circelse isCleared = \false \circthen \Skip \\
-  \t1 \circfi \circseq exitMemoryRet \then \Skip
+  \t1 \circfi \circseq
+  \t1 exitMemoryRet \then \Skip
 \end{circusaction}
 
-This handling of special methods is used by the interpreter process
-(or C program, after compilation), which must communicate with the
-$Launcher$ when such methods are encountered.
-We describe in more detail how this communication is performed in the
+This handling of special methods is used by the interpreter (or C
+program, after compilation), which communicates with the $Launcher$
+when such methods are encountered.
+We describe in detail how this communication is performed in the
 interpreter in Section~\ref{cee-interpreter-subsection}, and in C
 program in Section~\ref{cee-c-program-subsection}.
 
-In addition to handling special methods during the execution of a
-mission in $WaitForExecution$, the release of the event handlers of
-the mission must also be managed by the $Launcher$.
+During the execution of a mission in $WaitForExecution$, the release
+of the event handlers of the mission must also be managed by the
+$Launcher$.
 This is performed by the $ExecuteThreads$ action, shown below, which
-is executed in parallel interleaving with the action to handle special
-methods.
+is executed in parallel interleaving with the action above to handle
+special methods.
 In this interleaving, the state is partitioned such that the
-$AlarmManager$, $SchedulableManager$ and the $perReleaseMemories$ map,
-are controlled by the $ExecuteThreads$ action, with all other state
-components controlled by the special method handling action.
+$AlarmManager$, the $SchedulableManager$ and the $perReleaseMemories$
+map are controlled by $ExecuteThreads$, with all other state
+components controlled by the special-method handling action.
 The $ExecuteThreads$ action takes a parameter, $missionStart$, which
 is the start time of the mission received from the real-time clock in
 $WaitForExecution$.
@@ -889,29 +889,29 @@ $ExecuteThreads$ is itself a parallelism of actions:~$HandleAlarms$,
 which manages the setting of alarms for the schedulable objects of the
 mission, and $HandleThread$, which manages the release of the
 schedulable objects on their threads.
-information is transferred to and from the $HandleAlarms$ action via
-the channels $setAlarm$ and $triggerAlarm$, which are hidden.
-A separate copy of $HandleThread$ is used to manage each possible
-schedulable object, with the exception of the $clockHandler$ object,
-which is managed by $HandleAlarms$.
+Information is transferred to and from $HandleAlarms$ via the channels
+$setAlarm$ and $triggerAlarm$, which are hidden.
+A separate copy of $HandleThread$ manages each possible schedulable
+object, with the exception of $clockHandler$, which is managed by
+$HandleAlarms$.
 
 The $HandleAlarms$ action, shown below, offers a choice of accepting a
 request to set a new alarm for a schedulable object's thread via the
 $setAlarm$ channel, and accepting the execution of the $clockHandler$
-interrupt thread via the $runThread$ channel.
-When a request to set an alarm for a thread is accepted, the thread's
-identifier, $thread$, and the time of the desired alarm, $alarmTime$,
-are received via the $setAlarm$ channel.
+interrupt thread via $runThread$.
+When a request to set an alarm is accepted, the thread's identifier,
+$thread$, and the time of the desired alarm, $alarmTime$, are received
+via $setAlarm$.
 These are then added to the $alarms$ map with $thread$ associated to
 $alarmTime$, in the data operation $AddAlarm$.
-Execution of the $clockHandler$ thread begins with receiving the
-thread identifier, $tid$, an object identifier, which must be that of
-the $clockHandler$ object, and a method identifier, which must be that
-of the \texttt{handle()} method.
+Execution of the $clockHandler$ thread begins with receiving its
+identifier, $tid$, an object identifier, which must be that of
+$clockHandler$, and a method identifier, that of the \texttt{handle()}
+method.
 The threads on which an alarm is due to trigger next are then removed
 from the domain of $alarms$ in the data operation $PopAlarm$, and
 returned as a set $threads$.
-Each of the thread identifier's in the $threads$ set are then
+Each of the thread's whose identifier is in the $threads$ set are then
 signalled via the $triggerAlarm$ channel.
 The $clockHandler$ thread execution then is then signalled to finish
 via the $endThread$ channel so that the interrupt handler can execute
@@ -961,23 +961,24 @@ parallel with $HandleAlarms$, is composed of a choice of actions to
 handle each type of event handler.
 As an example of such an action, we present the
 $OneShotEventHandlerRel$ action, which models the execution of a
-one-shot event handler that was initialised with a relative release
+one-shot event handler that is initialised with a relative release
 time.
 It takes an object identifier $oseh$ as a parameter, along with the
 $missionStart$ time. 
 These are the same as the parameters passed to $HandleThread$.
-The action is guarded so that it will only be offered if $oseh$ is a
+The action is guarded so that it is only offered if $oseh$ is a
 registered schedulable object with a type of $OneShotRel$.
+
 The relative time offset, $startTime$, is extracted from
 $schedulableTypes$ for $oseh$ and the alarm is set by communicating
 with $HandleAlarms$ on the $setAlarm$ channel.
 The alarm time is computed by adding $startTime$ to $missionStart$,
 since $startTime$ is a relative offset from the time the mission
 starts.
-The thread for the alarm is that associated with $oseh$ in
-$schedulableThreads$.
 This is performed before execution of the thread begins to ensure that
 the alarms for all the threads are set when the mission starts.
+The thread for the alarm is that associated with $oseh$ in
+$schedulableThreads$.
 The execution of the thread itself occurs in
 $OneShotHandlerExecution$, which is used for one-shot handlers with
 both relative and absolute release times.
@@ -1005,9 +1006,9 @@ signals to the scheduler to resume its thread so that it can execute
 methods.
 We check that $thread$ has an associated backing store in
 $perReleaseMemories$, diverging if no such backing store exists. 
-If such a backing store does exist, then we enter it and execute the
-\texttt{handleAsyncEvent()} method of the object $oseh$ using the
-$executeMethod$ channel.
+If such a backing store does exist, then we enter it and trigger the
+execution of the \texttt{handleAsyncEvent()} method of the object
+$oseh$ using the $executeMethod$ channel.
 After the method returns, the backing store is exited using the
 $exitBackingStore$ and the end of the thread's execution is signalled
 via the $endThread$ channel, since there are no further releases of
@@ -1025,7 +1026,8 @@ the event handler.
   \t1 \circfi
 \end{circusaction}
 
-%TODO: need better ending for this section
+% TODO: is all this detail necessary?
+
 
 In the next section, we describe the bytecode interpreter, which,
 along with the $Launcher$, forms the CEE before the application of the
@@ -1950,10 +1952,9 @@ instructions themselves.
 
 The $Interpreter$ process is the final component of $CEE$ that we
 present. 
-It handles the execution of bytecode instructions.
-The bytecode instructions it handles are those in the subset described
-in Section~\ref{cee-bytecode-subset-subsection}, which in our model
-are represented by the free type $Bytecode$, sketched below.
+It handles the execution of bytecode instructions:~those in the subset
+described in Section~\ref{cee-bytecode-subset-subsection}, represented
+by the free type $Bytecode$, sketched below.
 $Bytecode$ has a constructor for each bytecode instruction, with any
 parameter to the instruction represented as a parameter of the
 constructor.
@@ -1970,6 +1971,7 @@ The $bc$ map is passed as a parameter to the $Interpreter$ process,
 along with the $cs$ map described in
 Section~\ref{cee-classes-subsection}, as can be seen from its
 definition shown below.
+
 The overall structure of $Interpreter$ is a parallel composition of
 $Thr$ processes representing the individual interpreter threads, with
 one process for each $ThreadID$ except for $idle$.
@@ -1984,7 +1986,7 @@ Each $Thr(bc,cs,t)$ process synchronises on a set $ThrChans(t)$,
 containing the $CEEswitchThread.t.t2$ and $CEEswitchThread.t2.t$
 events for all thread identifiers $t2$.
 This ensures thread switches can be handled since the two threads
-involved in the thread switch (the thread switched from and the thread
+involved in the switch (the thread switched from and the thread
 switched to) synchronise on the thread switch request.
 This model of the interpreter threads captures the fact that they are
 conceptually running in parallel, each with their own state, and we do
@@ -2000,14 +2002,14 @@ The contents of each stack frame are specified by the schema
 $StackFrame$.
 Its first component, $localVariables$, is a sequence of $Word$ values
 representing the local variable array for the method.
-Its second component, $operandStack$ represents the data stack upon
+Its second component, $operandStack$, represents the data stack upon
 which each bytecode instruction operates.
-The third component, $storedPC$, is used for storing the program
-counter value as a return address when another method is invoked.
+The third component, $storedPC$, is used for recording the program
+counter as a return address when another method is invoked.
 The fourth component, $frameClass$, is a copy of the $Class$
 information for the class of the stack frame's method, so that the
 constant pool for the class is available to the operations of $Thr$.
-The final component, $stackSize$, stores the maximum size of the
+The final component, $stackSize$, gives the maximum size of the
 $operandStack$ for the thread.
 \begin{schema}{StackFrame}
   localVariables : \seq Word \\
@@ -2050,8 +2052,8 @@ $StackFrames$ on the $frameStack$ when $frameStackID$ is
 $Uninitialised$.
 The second conjunct defines $currentClass$ as the $frameClass$ of the
 last $StackFrame$ on the $frameStack$.
-This is only required when $frameStack$ is nonempty, since
-$currentClass$ is unused when $frameStack$ is empty.
+This is only required when $frameStack$ is nonempty, since otherwise
+$currentClass$ is unused.
 Finally, the third conjunct states that $pc$ must be in the
 $ProgramAddress$ range for a unique method of $currentClass$, to
 ensure the bytecodes are associated with the correct class
