@@ -361,30 +361,36 @@ The channels marked with a \dag{} are used to implement calls to
 infrastructure methods that are part of the SCJ API.
 The inputs and outputs of these methods (and hence the types of the
 channels associated with them) are taken from the SCJ specification.
-However, in the case of the methods for entering memory areas, the
-identifier of the \texttt{Runnable} object passed to the methods is
-not communicated on the channels used to implement those methods.
-In response to a signal on those channels, the launcher instead simply
-enters the appropriate memory area, and the \texttt{Runnable} object's
-\texttt{run()} method is called separately by executing a bytecode
-instruction in the interpreter.
-Another special method is provided to exit memory areas after the
+
+The methods for entering memory areas are handled in a slightly
+different way. 
+In their case, the identifier of the \texttt{Runnable} object passed
+to a method is not communicated on the channels associated with their
+calls.
+In response to a signal on those channels, the launcher instead enters
+the appropriate memory area, and the \texttt{Runnable} object's
+\texttt{run()} method is called by executing a bytecode instruction in
+the interpreter.
+Another special method is used to exit the memory area after the
 \texttt{run()} method returns.
-It is implemented using the $exitMemory$ channel.
+It is called using the $exitMemory$ channel.
+This approach simplifies the interaction between the launcher and
+interpreter models, since it avoids call backs.
 
 The channels marked with a {}+{} are used to implement special methods
 for the intialisers of the event handler objects.
 They take as parameters the information passed to the constructors in
 the SCJ API.
-However, the event handler constructors accept parameters in the form
-of objects of classes that group together information such as the
-storage sizes and scheduling times.
+The event handler constructors accept parameters in the form of
+objects of classes that group together information such as the storage
+sizes and scheduling times.
 For simplicity, the channels used for the event handler intialisers
-just accept the information directly, without the added structure of
-these objects.
+accept the information directly, without the added structure of these
+objects.
 We also provide separate channels for initialisation of one-shot event
 handlers, depending on whether they are initialised with an absolute
 or relative start time. 
+
 The channels marked with a \S{} expose SCJVM scheduler operations to
 the code executed in the interpreter. 
 Their types follow those of the scheduler's channels.
