@@ -2157,15 +2157,22 @@ A request to start execution of a method is handled in the
 $StartIntepreter$ action, which creates the $StackFrame$ for the
 method.
 The process then behaves as the $Running$ action, executing bytecode
-instructions until the method has finished, after which the
+instructions until the method has finished.
+During method execution in $Running$, the thread may accept a request
+to switch to another thread, after which it behaves as $Blocked$,
+waiting for a request to switch back to the thread and continue
+execution in $Running$.
+When the execution of the method in $Running$ has finished, the
 $MainThread$ action recurses to offer the choice of method execution
 and thread switch again.
 If an instruction to switch to another thread from the scheduler is
 received on the $CEEswitchThread$ channel, then it is only accepted if
 the thread switched from is the $thread$ represented by the process.
-If it is accepted, then the process behaves as $Blocked$, waiting for
-a request to switch back to the thread, after which it recurses back
-to offer the choice of behaviours again.
+If it is accepted, then the process behaves as $Blocked$, after which
+it recurses back to offer the choice of behaviours again.
+Although the whole Interpreter model is the object of the compilation
+strategy, as we discuss in the next chapter, the action $Running$ is
+the main focus.
 \begin{circusaction}
   MainThread \circdef initMainThread?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
   \t1 \circblockbegin
@@ -2175,7 +2182,7 @@ to offer the choice of behaviours again.
   \circblockend
 \end{circusaction}
 
-The $StartIntepreter$ action, used by $MainThread$ also handles
+The $StartIntepreter$ action, used by $MainThread$, also handles
 special methods that execute nested methods.
 Its definition is shown below.
 It accepts communication on the $executeMethod$ channel, requiring the
