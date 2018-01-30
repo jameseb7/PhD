@@ -281,10 +281,10 @@ it.
       *\dag & $exitMemory$ & $ThreadID$ & I & L \\
       *\S & $suspend$ & \textless no parameters\textgreater & I & L \\
       *\S & $resumeThread$ & $ThreadID$ & I & L \\
-      *{}+{} & $initAperiodicEventHandler$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross \nat \cross \nat \cross \nat$ & I & L \\
-      *{}+{} & $initPeriodicEventHandler$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
-      *{}+{} & $initOneShotEventHandlerAbs$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
-      *{}+{} & $initOneShotEventHandlerRel$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
+      *{}+{} & $initAPEH$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross \nat \cross \nat \cross \nat$ & I & L \\
+      *{}+{} & $initPEH$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
+      *{}+{} & $initOSEHAbs$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
+      *{}+{} & $initOSEHRel$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
       & $output$ & $Word$ & I & \textless{}ext.\textgreater{} \\
       & $input$ & $Word$ & \textless{}ext.\textgreater{} & I \\
       & $enterBackingStore$ & $ThreadID \cross BackingStoreID$ & L & OM \\
@@ -2170,9 +2170,9 @@ received on the $CEEswitchThread$ channel, then it is only accepted if
 the thread switched from is the $thread$ represented by the process.
 If it is accepted, then the process behaves as $Blocked$, after which
 it recurses back to offer the choice of behaviours again.
-Although the whole Interpreter model is the object of the compilation
-strategy, as we discuss in the next chapter, the action $Running$ is
-the main focus.
+Although the whole $Interpreter$ model is the object of the
+compilation strategy, as we discuss in the next chapter, the action
+$Running$ is the main focus.
 \begin{circusaction}
   MainThread \circdef initMainThread?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
   \t1 \circblockbegin
@@ -2214,7 +2214,7 @@ $NotStarted$ action below.
 It accepts a request to start the $thread$ represented by the process
 from the scheduler on the $CEEstartThread$ channel.
 The identifier, $bsid$, of the thread's backing store is then passed
-to $ObjMan$ via the $addThreadMemory$ channel and the $stack$
+to $ObjMan$ via the $addThreadMemory$ channel, and the $stack$
 identifier is used to initialise $frameStackID$.
 The remaining information is stored in $classID$, $methodID$ and
 $methodArgs$. 
@@ -2241,9 +2241,10 @@ When $Running$ terminates, a further choice is offered.
 The interpreter can continue to execute methods on the thread,
 signalled by the $continue$ channel, after which the $Started$ action
 recurses to offer the main choice again.
-The interpreter can also end execution on the thread, signalled by the
-$endThread$ channel, after which $Started$ finishes offering the main
-choice and terminates the thread, as we describe below.
+The interpreter can also accept a request to end execution on the
+thread, signalled via the $endThread$ channel, after which $Started$
+no longer offers the main choice and terminates the thread, as we
+describe below.
 The second action in the choice offered by $NotStarted$ allows a
 switch away from $thread$ to be accepted, after which the process
 behaves as $Blocked$ before offering the choice again.
@@ -2277,7 +2278,7 @@ The $Blocked$ and $Running$ actions define the behaviour of threads
 after they have been started.
 The $Blocked$ action simply waits for a signal on the
 $CEEswitchThread$ channel to switch to $thread$, after which it
-terminates to allow execution in a different action to continue.
+terminates to allow execution to continue.
 \begin{circusaction}
   Blocked \circdef CEEswitchThread?from?to \prefixcolon (to = thread) \then \Skip
 \end{circusaction}
@@ -2295,8 +2296,7 @@ switches in $Poll$.
   \t1 {} \circelse frameStack \neq \emptyset \circthen HandleInstruction \circseq Poll \circseq Running \\
   \t1 \circfi
 \end{circusaction}
-The behaviour of polling for thread switches in $Poll$ permits thread
-switches inbetween bytecode instructions.
+$Poll$ permits thread switches inbetween bytecode instructions.
 Implementations that allow thread switches at other points are valid
 if they retain the same sequence of externally visible events, meaning
 only instructions involving communication with other parts of the
@@ -2335,6 +2335,7 @@ which uses the $InterpreterAconst\_null$ schema.
 The \Circus{} actions and Z schemas for each bytecode instruction are
 listed in Table~\ref{bytecode-model-table}.
 We omit the definitions of the Z schemas in our description here.
+They can be found in Appendix~\ref{interpreter-appendix}.
 Their contents are in line with the state updates for the bytecode
 instructions presented in Table~\ref{bytecode-subset-table}.
 
@@ -2387,11 +2388,14 @@ $HandleIf\_icmple$ actions all follow a similar form, extracting the
 parameter of the bytecode instruction into a separate variable.
 
 The actions to handle the return instructions (\texttt{areturn} and
-\texttt{return}) require additional communication to pass the return
-value to the $Launcher$ when returning from a method that has been
-started by the $Launcher$.
-This is performed by an additional action, $CheckLauncherReturn$, that
-is called after return from the schema action.
+\texttt{return}), besides calling the Z data operation to deal with
+these instructions, have the possibility of engaging in a
+communication to pass the return value to the $Launcher$ when
+returning from a method that has been started by the $Launcher$.
+This is performed by an additional action, $CheckLauncherReturn$,
+which is called after return from the schema action.
+It checks whether the extra communication is needed and carries it
+out, if this is the case.
 This can be seen in the definition of $HandleAreturn$ below, where
 $CheckLauncherReturn$ is passed the return value, $returnValue$, from
 the $InterpreterAreturn$ operation.
@@ -2407,7 +2411,7 @@ takes an arbitrary value.
 Within the $CheckLauncherReturn$ action, the definition of which is
 shown below, the $frameStack$ is checked to determine whether the
 return value should be communicated to the $Launcher$.
-If $frameStack$ is empty then the method being returned from was
+If $frameStack$ is empty then the method being returned from has been
 initiated via a signal on the $executeMethod$ channel, and so the
 return value is communicated back to the $Launcher$ via the
 $executeMethodRet$. 
@@ -2429,11 +2433,11 @@ where the object identifier, $oid$, is popped from the $operandStack$
 of the current $StackFrame$ using the data operation $IntepreterPop$,
 and the field identifier is extracted from the parameter to the
 bytecode instruction.
-Note that $pc$ is hidden from the $InterpreterPop$, since this action
-uses two data operations promoted from $StackFrame$ operations and
-only one of them need update $pc$. 
-This information is passed to $ObjMan$ via the $getField$ channel,
-which then handles the operation.
+Note that $pc$ and $pc'$ are hidden in $InterpreterPop$, so that it
+does not change the value of $pc$, which is updated by
+$InterpreterPush$. 
+The object and field identifiers are passed to $ObjMan$ via the
+$getField$ channel.
 The field's value is returned via the $getFieldRet$ channel and pushed
 onto the $operandStack$ of the current $StackFrame$ by the data
 operation $InterpreterPush$.
@@ -2445,10 +2449,7 @@ operation $InterpreterPush$.
   \t1 {} \then getFieldRet?value \then \lschexpract InterpreterPush \rschexpract
 \end{circusaction}
 The $HandleNew$, $HandlePutfield$, $HandleGetstatic$ and
-$HandlePutstatic$ actions are similar, getting information from the
-$operandStack$ using $InterpreterPop$, communicating with $ObjMan$ to
-handle the instruction, and using $InterpreterPush$ to push returned
-information onto the $operandStack$.
+$HandlePutstatic$ actions are similar.
 
 Finally, the method invocation instructions (\texttt{invokespecial},
 \texttt{invokestatic} and \texttt{invokevirtual}), require special
@@ -2463,7 +2464,7 @@ below.
 The method identifier $mid$ is extracted from the instruction's
 parameter, and the data operation $InterpreterStackFrameInvoke$ is
 used to store the return $pc$ address and pop the arguments of the
-method in $poppedArgs$.
+method into $poppedArgs$.
 The number of arguments popped, $argsToPop?$, is the $methodArguments$
 value for $mid$, plus one for the \texttt{this} identifier passed to
 the method.
@@ -2481,6 +2482,7 @@ a boolean value indicating that the method invocation is not from the
   \t2 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false) \\
   \t1 {} \circelse ((invokespecial\inv)~(bc~pc)) \notin methodRefIndices~currentClass \circthen \Chaos
 \end{circusaction}
+% TODO: is all this information necessary?
 The $HandleInvokestatic$ and $HandleInvokevirtual$ actions are
 similar, except that $argsToPop?$ does not include the extra
 \texttt{this} argument in $HandleInvokeStatic$, and
@@ -2495,10 +2497,7 @@ implemented in bytecode.
 The name of the action for each special method is formed from the name
 of the special method prefixed with $Invoke$ (e.g. 
 $InvokeResumeThread$ for the \texttt{resumeThread()} method).
-The parameters passed to the $Invoke$ action, which are the class
-identifier, $classID$, the method identifier, $method$, the method
-argument list, $args$, and a boolean value, $static$, indicating if
-the invocation is intended to be of a static method, are passed on to
+The parameters passed to $Invoke$ are passed on to
 each of the actions in the external choice.
 \begin{circusaction}
   Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word; \circval static : \boolean \circspot \\
@@ -2507,7 +2506,7 @@ each of the actions in the external choice.
   \t1 {} \extchoice InvokeOther(classID, method, args, static)
 \end{circusaction}
 
-Within the special method actions, there is a guard ensuring the
+Within the special-method actions, there is a guard ensuring the
 action is taken when the class and method identifiers are those for
 the method.
 The method is then handled by communication on the appropriate
@@ -2521,12 +2520,12 @@ The class and method identifiers used in the special method actions
 are a mixture of identifiers from the SCJ API and
 implementation-defined identifiers provided to expose SCJVM services
 to bytecode programs.
-The action checks if the $static$ parameter has the correct value for
-the method ($\true$ if the method is static, $\false$ otherwise), and
-diverges if it is incorrect (since that indicates an erroneous input
-program).
-In this case, the method is static as it is exposing an SCJVM service
-that isn't attached to an object instance.
+The special-method actions check if the $static$ parameter has the
+correct value for the method ($\true$ if the method is static,
+$\false$ otherwise), and diverges if it is incorrect (since that
+indicates an erroneous input program).
+In the example below, the method is static as it is exposing an SCJVM
+service that is not attached to an object instance.
 The argument to the method, stored as the first element of the
 $methodArgs$ parameter, is converted to a $ThreadID$ and passed to the
 $Launcher$ via the $resumeThread$ channel.
@@ -2544,7 +2543,7 @@ before continuing.
 
 In addition to the special methods handled in the $Launcher$, we also
 supply \texttt{read()} and \texttt{write()} methods for reading from
-and writing to some standard input and output device. 
+and writing to some standard input and output devices. 
 These methods are handled using the \texttt{input} and \texttt{output}
 channels that communicate the values from and to the environment of
 the SCJVM.
@@ -2557,7 +2556,7 @@ stack as the return value for the method.
   \t1 \lcircguard (classID,readClass) \in subclassRel~cs \land method = readID \rcircguard \circguard {} \\
   \t1 \circif static = \true \circthen {} \\
   \t2 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract \\
-  \t1 {} \circelse static = \false \circthen \Chaos
+  \t1 {} \circelse static = \false \circthen \Chaos \\
   \t1 \circfi
 \end{circusaction}
 The $InvokeWrite$ action is similar, writing the method argument to
@@ -2567,8 +2566,8 @@ The $InvokeOther$ action, shown in part below, describes the handling
 of non-special methods.
 It begins with a guard that is the conjunction of the negation of the
 guards for the invocation actions for the special methods.
-The actions starts execution of the method in the interpreter by first
-finding its $Class$ information with $ResolveMethod$.
+It starts execution of the method in the interpreter by first finding
+its $Class$ information with $ResolveMethod$.
 The $staticMethods$ set in the class information is then checked for
 consistency with the $static$ parameter, diverging if it is not.
 A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
@@ -2613,11 +2612,10 @@ below.
 \end{circus}
 The subscripts here indicate that the processes depend on the $bc$ and
 $cs$ constants used as inputs to the compilation strategy. 
-However, $bc$ and $cs$ are not true parameters of the processes and so
-are not referenced within the processes.
-We note that the $sid$ and $initOrder$ parameters to $Launcher$ remain
-as parameters here, since $Launcher$ is not transformed during the
-compilation strategy.
+However, $bc$ and $cs$ are not parameters of the processes.
+We note that the $sid$ and $initOrder$ parameters to $Launcher$
+remain, since $Launcher$ is not transformed during the compilation
+strategy.
 
 The channels used for communication between these processes are the
 same as those in Table~\ref{cee-channel-table}, except that the
@@ -2681,8 +2679,9 @@ $executeMethodRet$ channel.
   \circseq X \circblockend
 \end{circusaction}
 The sequential composition of $StartInterpreter$ and $Running$ in
-$Started$ is replaced with a use of $ExecuteMethod$ in the same way as
-for the same sequential composition in $MainThread$.
+$Started$ is replaced with a call to the action $ExecuteMethod$ in the
+same way as for the same sequential composition in $MainThread$ shown
+above.
 
 The $ExecuteMethod$ action has the form shown below.
 It takes as parameters the class identifier, $cid$, method identifier,
@@ -2703,7 +2702,7 @@ captured in $retVal$ to be returned to $MainThread$ or $NotStarted$.
   \t1 \circif
 \end{circusaction}
 
-The actions used by $ExecuteMethod$ represent C functions containing
+The actions used by $ExecuteMethod$ represent C functions embedding
 the behaviour of the compiled methods.
 The name of each action is made up of the class and method identifier
 for the method, separated by an underscore.
@@ -2948,16 +2947,13 @@ are represented as references to those actions.
 Function arguments in C are passed by value, although those values may
 be pointers to other values.
 Accordingly, since our SCJVM model represents pointers explicitly (via
-the object/struct manager), we represent function arguments using
+the object or struct manager), we represent function arguments using
 value parameters of the \Circus{} action.
 
 If a function has a return value, it is represented with a result
 parameter of the \Circus{} action, usually named $retVal$, with an
 assignment to that parameter at the end of the action representing
 return statements.
-We assume there is a single return statement at the end of the
-function, so the return can be represented by the termination of the
-action.
 We follow guidelines for safety-critical uses of C variants, such as
 MISRA-C~\cite{MISRA}, and use a single return statement at the end of
 a function.
@@ -2974,14 +2970,14 @@ Restricting ourselves to variables at the start of functions ensures
 the code our strategy generates is compatible with older versions of
 C.
 
-Finally, we represent accesses to structs representing objects using
-communication with the struct manager.
+Finally, we model accesses to structs representing objects using
+communications with the struct manager.
 Getting the value of a field is performed by obtaining the struct
-value representing the object using the $getObject$ and
-$getObjectRet$ channels.
+value representing the object using the $getObject$ and $getObjectRet$
+channels.
 This value is then converted to the correct schema type for the class
 of the object, and the appropriate field of that schema binding is
-then accessed to read the value and store it into a variable.
+accessed to read the value and store it into a variable.
 This represents dereferencing a pointer to a C struct, with a cast to
 a struct type that possibly has fewer fields in order to handle
 polymorphism.
