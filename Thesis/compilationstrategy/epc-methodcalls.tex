@@ -31,7 +31,6 @@ complete, on line~\ref{algorithm-check-method-completeness}.
 This involves a simple syntactic check that each conditional branch
 ends in a return instruction or a recursion.
 
-% TODO: move a predicate concerning class information across?
 If a method is complete, we first introduce an assumption at the start
 of the sequence of actions for the method that establishes what the
 value of $currentClass$ is during the method's execution.
@@ -115,6 +114,8 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
     \label{algorithm-mci-method-loop} 
     \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
     \label{algorithm-mci-method-call-loop}
+    \If{\Call{IsResolvable}{$mc$}}
+    \label{algorithm-is-resolvable-check}
     \If{\Call{HasSingleTarget}{$mc$}}
     \label{algorithm-multiple-targets-check}
     \Try
@@ -146,6 +147,7 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
     \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
     \EndIf
     \label{algorithm-mci-sequence-introduction-end}
+    \EndIf
     \EndFor
     \EndFor
   \end{algorithmic}
@@ -175,14 +177,24 @@ $36$.
 It is unresolved because it does not have any $pc$ assignment or other
 actions following it.
 
-For each method call that needs resolving, we check whether there is a
+For each method call that needs resolving, we check if it can be
+resolved at this point in the compilation strategy.
+This is performed on line~\ref{algorithm-is-resolvable-check}, where
+the boolean value \Call{IsResolvable}{$mc$} is checked.
+\Call{IsResolvable}{$mc$} is true if all the targets of the method
+call $mc$ are either special methods or non-special methods that are
+already complete and have been separated into their own actions (as
+described in Algorithm~\ref{separate-complete-methods-algorithm}).
+
+If the method call is resolvable, then we check whether there is a
 single target for the method call or multiple targets.
 Calls to a single target can be transformed to a simple reference to
 the corresponding method action.
 Calls with multiple targets are transformed into a choice over the
 behaviours for each of the possible targets.
 The check of the number of targets is performed on
-line~\ref{algorithm-multiple-targets-check}.
+line~\ref{algorithm-multiple-targets-check} of
+Algorithm~\ref{resolve-method-calls-algorithm}.
 This checks the condition \Call{HasSingleTarget}{$mc$}, which is true
 if the instruction to be handled is \texttt{invokespecial} or
 \texttt{invokestatic}, or an \texttt{invokevirtual} instruction
