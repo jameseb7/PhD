@@ -243,9 +243,193 @@
 
 \subsection{Resolve Method Calls}
 
-\MethodCallResolutionRule*
+\IntroduceClassInformationRule*
 
-\DynamicMethodCallResolutionRule*
+\RefineInvokestaticRule*
+
+\begin{restatable}[refine-invokespecial]{crule}{RefineInvokespecialRule}
+  \label{refine-invokespecial-rule}
+  Given $i : ProgramAddress$,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circif \cdots \\
+      {} \circelse pc = i \circthen \\
+      \t1 A \circseq pc := j \circseq Poll \circseq \\
+      \t1 HandleInvokespecialEPC(cpi) \\
+      \cdots \\
+      \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circif \cdots \\
+      {} \circelse pc = i \circthen \\
+      \t1 A \circseq pc := j \circseq Poll \circseq \\
+      \t1 \circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m + 1 @ \\
+      \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(c, m, poppedArgs, \false) \\
+      \cdots \\
+      \circfi
+    \end{array}
+  \end{circus}
+  where $m : MethodID$ and $c : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
+  \end{displaymath}
+\end{restatable}
+
+\begin{restatable}[refine-invokevirtual-single]{crule}{RefineInvokeVirtualSingleRule}
+  \label{refine-invokevirtual-single-rule}
+  Given $i : ProgramAddress$,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circif \cdots \\
+      {} \circelse pc = i \circthen \\
+      \t1 A \circseq pc := j \circseq Poll \circseq \\
+      \t1 HandleInvokevirtualEPC(cpi) \\
+      \cdots \\
+      \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circif \cdots \\
+      {} \circelse pc = i \circthen \\
+      \t1 A \circseq pc := j \circseq Poll \circseq \\
+      \t1 \circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ \\
+      \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(c, m, poppedArgs, \false) \\
+      \cdots \\
+      \circfi
+    \end{array}
+  \end{circus}
+  where $m : MethodID$ and $c : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0,
+  \end{displaymath}
+  and provided $\exists_1 c_1 : ClassID @ (c_1,c) \in subclassRel~cs$.
+\end{restatable}
+
+\ResolveSpecialMethodRule*
+
+\ResolveNormalMethodRule*
+
+\RefineInvokeVirtualMultiRule*
+
+\begin{restatable}[resolve-special-method-branch]{crule}{ResolveSpecialMethodBranchRule}
+  \label{resolve-special-method-branch-rule}
+  Given $c_\ell : ClassID$, if $c = c_\ell$, $m$ and $static = \false$
+  match one of the rows of Table~\ref{special-method-action-table},
+  then
+  \setlength{\zedindent}{0.25cm}
+  \setlength{\zedtab}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      pc := j \circseq Poll \circseq \\
+      \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == e @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \circif cid = c_1 \circthen A_1 \\
+      {} \cdots {} \\
+      {} \circelse cid = c_\ell \circthen {} \\
+      \t1 Invoke(c_\ell, m, poppedArgs, \false) \\
+      {} \cdots {} \\
+      {} \circelse cid = c_n \circthen A_n \\
+      \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      pc := j \circseq Poll \circseq \\
+      \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == e @ \\
+      InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \circif cid = c_1 \circthen A_1 \\
+      {} \cdots {} \\
+      {} \circelse cid = c_\ell \circthen {} \\
+      \t1 specialMethodAction(c_\ell, m, \false) \circseq pc := j + 1 \\
+      {} \cdots {} \\
+      {} \circelse cid = c_n \circthen A_n \\
+      \circfi
+    \end{array} 
+  \end{circus}
+  where $specialMethodAction$ is the syntactic function defined by
+  Table~\ref{special-method-action-table}.
+\end{restatable}
+
+\begin{restatable}[resolve-normal-method-branch]{crule}{ResolveNormalMethodBranchRule}
+  \label{resolve-normal-method-branch-rule}
+  \setlength{\zedtab}{0.4cm}
+  Given $i : ProgramAddress$, if
+  \begin{circus}
+    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
+    {} = {} \\
+    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
+    \{ class!.methodEntry~m = k \},
+  \end{circus}
+  and, for any $x : ProgramAddress$,
+  \begin{circus}
+    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \\
+    {} = {} \\
+    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \circseq \{ pc = x \land \# frameStack = \# fs - 1 \},
+  \end{circus}
+  and $m$ and $c$ do not match any of the conditions in
+  Table~\ref{special-method-action-table} then,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 \lschexpract \exists argsToPop? == e @ \\
+      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 \circif cid = c_1 \circthen A_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse cid = c_\ell \circthen {} \\
+      \t4 Invoke(c_\ell, m, poppedArgs, \false) \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse cid = c_n \circthen A_n \\
+      \t3 \circfi \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 \lschexpract \exists argsToPop? == e @ \\
+      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 \circif cid = c_1 \circthen A_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse cid = c_\ell \circthen {} \\
+      \t4 InvokeOther(c_\ell, m, poppedArgs, \false) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse cid = c_n \circthen A_n \\
+      \t3 \circfi \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
 
 \subsection{Refine Main Actions}
 

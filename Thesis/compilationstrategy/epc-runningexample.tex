@@ -346,12 +346,12 @@ Section~\ref{expand-bytecode-subsection}, where we define the
     % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \\
     % \t2 {} \circelse pc = 10 \circthen HandleInvokespecialEPC(29) \\
     \t2 {} \circelse pc = 11 \circthen HandleAstoreEPC(1) \circseq pc := 12 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
-    \t3 pc := 13 \circseq Poll \circseq \{pc = 13\} \circseq HandleInvokevirtualEPC(32) \\
+    \t3 pc := 13 \circseq Poll \circseq HandleInvokevirtualEPC(32) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 12 \circthen HandleAloadEPC(1) \circseq pc := 13 \\
     % \t2 {} \circelse pc = 13 \circthen HandleInvokevirtualEPC(32) \\
     \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
-    \t3 pc := 16 \circseq Poll \circseq \{pc = 16\} \circseq HandleInvokevirtualEPC(36) \\
+    \t3 pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 15 \circthen HandleAloadEPC(1) \circseq pc := 16 \\
     % \t2 {} \circelse pc = 16 \circthen HandleInvokevirtualEPC(36) \\

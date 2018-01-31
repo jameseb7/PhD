@@ -13,6 +13,8 @@ Algorithm~\ref{separate-complete-methods-algorithm}.
   \begin{algorithmic}[1]
     \For{$m \gets methods$} \label{algorithm-method-separation-loop}
     \If{\Call{MethodIsComplete}{$m$}} \label{algorithm-check-method-completeness}
+    \State \ApplyFor{Rule~[\nameref{introduce-class-information-rule}]}{$m$}
+    \label{algorithm-introduce-class-information}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$} \label{algorithm-introduce-method-action}
     \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$} \label{algorithm-copy-method-action}
     \EndIf
@@ -30,6 +32,49 @@ This involves a simple syntactic check that each conditional branch
 ends in a return instruction or a recursion.
 
 % TODO: move a predicate concerning class information across?
+If a method is complete, we first introduce an assumption at the start
+of the sequence of actions for the method that establishes what the
+value of $currentClass$ is during the method's execution.
+This ensures that the information can be used during the
+\emph{Elimination of Frame Stack} stage of the compilation, since it
+cannot be determined from the $pc$ value during that stage.
+The introduction of the assumption is performed by an application of
+Rule~[\nameref{introduce-class-information-rule}], shown below, on
+line~\ref{algorithm-introduce-class-information}.
+This determines the $currentClass$ by finding the class information
+$c$ in the range of $cs$ that contains a method $m$ with the same
+entry point, $i$, as the complete method being operated on.
+\begin{restatable}[introduce-class-information]{crule}{IntroduceClassInformationRule}
+  \label{introduce-class-information-rule}
+  Given $i : ProgramAddress$,
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \{currentClass = c\} \circseq A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}
+  \end{circus}
+  where $c : Class$ is such that
+  \begin{displaymath}
+    c \in \ran cs \land \exists  m : MethodID | m \in \dom c.methodEntry @ c.methodEntry~m = i.
+  \end{displaymath}
+\end{restatable}
 
 For the methods that are complete, the sequence of actions for the
 method are placed in a separate action, which is introduced using
@@ -64,35 +109,43 @@ After all the complete methods have been copied into separate actions,
 calls to those methods are resolved.
 This is performed as described by
 Algorithm~\ref{resolve-method-calls-algorithm}.
-\begin{algorithm}
+\begin{algorithm}[th]
   \begin{algorithmic}[1]
     \For{$m \gets methods$}
+    \label{algorithm-mci-method-loop} 
     \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
-    \If{\Call{HasMultipleTargets}{$mc$}}
-    \State \ApplyFor{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$mc$}
-    \For{$target \gets $\Call{Targets}{$mc$}}
+    \label{algorithm-mci-method-call-loop}
+    \If{\Call{HasSingleTarget}{$mc$}}
+    \label{algorithm-multiple-targets-check}
     \Try
-    \State \ApplyFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$mc$}
-    \EndTry
-    \EndFor
-    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$mc$}
-    \Else
-    \Try
+    \label{algorithm-try-block-begin}
     \State \ApplyFor{Rule~[\nameref{refine-invokespecial-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{refine-invokestatic-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{refine-invokevirtual-single-rule}]}{$mc$}
     \EndTry
     \Try
+    \label{algorithm-try-block2-start}
     \State \ApplyFor{Rule~[\nameref{resolve-special-method-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$mc$}
     \EndTry
+    \Else
+    \State \ApplyFor{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$mc$}
+    \label{algorithm-refine-invokevirtual-multi}
+    \For{$target \gets $\Call{Targets}{$mc$}}
+    \label{algorithm-targets-loop}
+    \Try
+    \State \ApplyFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$mc$, $target$}
+    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$mc$, $target$}
+    \EndTry
+    \EndFor
+    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$mc$}
+    \label{algorithm-move-pc-assignments}
     \EndIf
     \If{\Call{HasSimpleSequence}{$node$}}
-    \label{algorithm-lci-sequence-check}
+    \label{algorithm-mci-sequence-introduction-start}
     \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
-    \label{algorithm-lci-sequence-introduction}
     \EndIf
+    \label{algorithm-mci-sequence-introduction-end}
     \EndFor
     \EndFor
   \end{algorithmic}
@@ -100,51 +153,92 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
   \label{resolve-method-calls-algorithm}
 \end{algorithm}
 
-\begin{restatable}[refine-invokespecial]{crule}{RefineInvokespecialRule}
-  \label{refine-invokespecial-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
-  \setlength{\zedindent}{0.25cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 HandleInvokespecialEPC(cpi) \\
-      \cdots \\
-      \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 \circvar poppedArgs : \seq Word \circspot \\
-      \t1 \lschexpract \exists argsToPop? == methodArguments~m + 1 @ \\
-      \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \false) \\
-      \cdots \\
-      \circfi
-    \end{array}
-  \end{circus}
-  where $m : MethodID$ and $c : ClassID$ are such that
-  \begin{displaymath}
-    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
-    \t1 cpi \in methodRefIndices~c_0 \land \\
-    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
-  \end{displaymath}
-\end{restatable}
+The algorithm begins by checking each unresolved method call in each
+method, as specified by the loops on
+lines~\ref{algorithm-mci-method-loop}
+and~\ref{algorithm-mci-method-call-loop}.
+The list of unresolved method calls for a given method, $m$, is
+computed by \Call{UnresolvedMethodsCalls}{$m$}, which finds the $pc$
+values for which the sequence of instructions ends with a method
+invocation instruction with no $pc$ assignment following it.
+An example of an unresolved method call can be seen in the $pc = 14$
+branch of Figure~\ref{forward-sequence-introduction-example-figure},
+reproduced in part below.
+\begin{circusaction}
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 14 \circthen \cdots \circseq pc := 16 \circseq Poll \circseq HandleInvokevirtualEPC(36) \\
+  \t2 {} \cdots {}
+\end{circusaction}
+This ends with the action $HandleInvokeVirtualEPC(36)$, which handles
+the \texttt{invokevirtual} instruction for the constant pool index
+$36$.
+It is unresolved because it does not have any $pc$ assignment or other
+actions following it.
 
+For each method call that needs resolving, we check whether there is a
+single target for the method call or multiple targets.
+Calls to a single target can be transformed to a simple reference to
+the corresponding method action.
+Calls with multiple targets are transformed into a choice over the
+behaviours for each of the possible targets.
+The check of the number of targets is performed on
+line~\ref{algorithm-multiple-targets-check}.
+This checks the condition \Call{HasSingleTarget}{$mc$}, which is true
+if the instruction to be handled is \texttt{invokespecial} or
+\texttt{invokestatic}, or an \texttt{invokevirtual} instruction
+referencing a class with no subclasses (other than itself).
+It is false otherwise, that is, if the instruction is
+\texttt{invokevirtual} and there are multiple subclasses of the class
+referenced by the instruction.
+
+For method calls with a single target, we replace the action that
+handles the method invocation instruction with an action that pops the
+arguments for the method from the stack and handles invocation of the
+specific method referenced by the instruction.
+This is handled slightly differently for each of the method invocation
+instructions in our bytecode subset, so we have three rules for
+performing this transformation, one for each
+instruction:~Rule~[\nameref{refine-invokestatic-rule}],
+Rule~[\nameref{refine-invokespecial-rule}] and
+Rule~[\nameref{refine-invokevirtual-single-rule}].
+These rules are applied in a try block, beginning on
+line~\ref{algorithm-try-block-begin}, which trys to apply each rule in
+turn, stopping when one succeeds.
+
+Below, we show Rule~[\nameref{refine-invokestatic-rule}], which
+handles \texttt{invokestatic} instructions.
+Rule~[\nameref{refine-invokespecial-rule}] and
+Rule~[\nameref{refine-invokevirtual-single-rule}] are similar, and can
+be found in Appendix~\ref{compilation-rules-appendix}.
+Rule~[\nameref{refine-invokestatic-rule}] refines the
+$HandleInvokeStaticEPC(cpi)$ to an action that pops the method's
+arguments from the stack using the $InterpreterStackFrameInvoke$
+operation and then behaves as the $Invoke$ action described in
+Section~\ref{cee-interpreter-section}, for the class and method
+referenced by $cpi$.
+The identifiers of the class, $c$, and method, $m$, referenced by
+$cpi$ are determined by first finding the class information, $c_0$,for
+the current class.
+The $c_0$ information is obtained from the $pc$ value, $j$, when the
+method invocation instruction is executed by finding $Class$
+information in the range of $cs$ that contains a method with $j$
+between its entry point and end.
+If $cpi$ is the index of a $MethodRef$ in the $constantPool$ of $c_0$,
+then the class identifier, $c$ and method identifier, $m$, of the
+method to be invoked are those given in the $MethodRef$.
+The are passed to $Invoke$, along with the arguments popped from the
+stack, $poppedArgs$, and a boolean value indicating whether the method
+call is static, which is $\true$ in the case of \texttt{invokestatic}.
 \begin{restatable}[refine-invokestatic]{crule}{RefineInvokestaticRule}
   \label{refine-invokestatic-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
+  Given $i : ProgramAddress$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
       \circif \cdots \\
       {} \circelse pc = i \circthen \\
       \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 HandleInvokespecialEPC(cpi) \\
+      \t1 HandleInvokestaticEPC(cpi) \\
       \cdots \\
       \circfi
     \end{array}
@@ -163,60 +257,298 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
   \end{circus}
   where $m : MethodID$ and $c : ClassID$ are such that
   \begin{displaymath}
-    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
-    \t1 cpi \in methodRefIndices~c_0 \land \\
-    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
+    \exists c_0 : Class | c_0 \in \ran cs @ \\
+    \t1 (\exists m_0 : MethodID | m_0 \in \dom c_0.methodEntry @ j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0) \\
+    \t1 cpi \in methodRefIndices~c_0 \land c_0.constantPool~cpi = MethodRef~(c,m).
   \end{displaymath}
 \end{restatable}
 
-\begin{restatable}[refine-invokevirtual-single]{crule}{RefineInvokeVirtualSingleRule}
-  \label{refine-invokevirtual-single-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
-  \setlength{\zedindent}{0.25cm}
+After the action that handles the method invocation instruction has
+been transformed, the method invocation is resolved by transforming
+the $Invoke$ action to the behaviour of the method being invoked.
+A $pc$ assignment is also introduced after the method's behaviour so
+that it can be sequentially composed with the instructions after the
+method call.
+There are two rules for this in the case of method calls with a single
+target, applied in another try block on
+line~\ref{algorithm-try-block2-start}:~Rule~[\nameref{resolve-special-method-rule}],
+which handles resolution of special methods, and
+Rule~[\nameref{resolve-normal-method-rule}], which handles resolution
+of non-special methods.
+
+Rule~[\nameref{resolve-special-method-rule}], shown below, operates by
+simply replacing the $Invoke$ action with the behaviour for the
+special method and moving a $pc$ assignment after the methods
+behaviour.
+This collapses the choice in the definition of the $Invoke$ action.
+The behaviour of the special method is represented by the syntactic
+function $specialMethodAction$, which is defined by
+Table~\ref{special-method-action-table}.
+It determines which behaviour should be used based on the class and
+method identifiers passed to $Invoke$ and the boolean value indicating
+whether the method is static.
+\begin{restatable}[resolve-special-method]{crule}{ResolveSpecialMethodRule}
+  \label{resolve-special-method-rule}
+  If $c$, $m$ and $static$ match one of the rows of
+  Table~\ref{special-method-action-table}, then
+  \setlength{\zedindent}{0.25cm} \setlength{\zedtab}{0.5cm}
   \begin{circus}
     \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 HandleInvokevirtualEPC(cpi) \\
-      \cdots \\
-      \circfi
+      pc := j \circseq Poll \circseq \\
+      \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == e @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      Invoke(c, m, poppedArgs, static)
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 \circvar poppedArgs : \seq Word \circspot \\
-      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ \\
-      \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \false) \\
-      \cdots \\
-      \circfi
+      pc := j \circseq Poll \circseq \\
+      \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == e @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      specialMethodAction(c, m, static) \circseq \\
+      pc := j + 1
     \end{array}
   \end{circus}
-  where $m : MethodID$ and $c : ClassID$ are such that
-  \begin{displaymath}
-    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
-    \t1 cpi \in methodRefIndices~c_0 \land \\
-    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0,
-  \end{displaymath}
-  and provided $\exists_1 c_1 : ClassID @ (c_1,c) \in subclassRel~cs$.
+  where $specialMethodAction$ is the syntactic function defined by
+  Table~\ref{special-method-action-table}.
 \end{restatable}
 
+\begin{table}
+  \centering
+  \setlength{\abovedisplayskip}{-5pt}
+  \setlength{\belowdisplayskip}{-10pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \setlength{\zedindent}{-0.1cm}
+  \setlength{\zedleftsep}{0cm}
+  \renewcommand{\arraystretch}{1}
+  \rowcolors{1}{white}{lightgray}
+  \begin{tabular}{p{6.5cm}p{7.5cm}}
+    \hline
+    Conditions on $c$, $m$ and $static$ & $specialMethodAction(c, m, static)$ \\
+    \hline
+    \begin{circus}
+      (c,resumeThreadClass) \in subclassRel~cs \\
+      \land m = resumeThreadID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     resumeThread!(WordToThreadID~(methodArgs~1)) \\
+                     \t1 {} \then resumeThreadRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,suspendClass) \in subclassRel~cs \\
+      \land m = suspendID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     suspend \then suspendRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,writeClass) \in subclassRel~cs \\
+      \land m = writeID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     output!(methodArgs~1) \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,readClass) \in subclassRel~cs \\
+      \land m = readID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
+                   \end{circus}\\
+    \begin{circus}
+      (c,managedSchedulableClass) \\
+      \t1 {} \in subclassRel~cs \\
+      \land m = registerID \\
+      \land static = \false
+    \end{circus} &
+                   \begin{circus}
+                     register!thread!(head~methodArgs) \\
+                     \t1 {} \then registerRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,managedMemoryClass) \in subclassRel~cs \\
+      \land m = enterPrivateMemoryHelperID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     enterPrivateMemory!thread!(methodArgs~1) \\
+                     \t1 {} \then enterPrivateMemoryRet \then \Skip 
+                   \end{circus}\\
+    \begin{circus}
+      (c,managedMemoryClass) \in subclassRel~cs \\
+      \land m = executeInAreaOfHelperID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     executeInAreaOf!thread!(methodArgs~1) \\
+                     \t1 {} \then executeInAreaOfRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,managedMemoryClass) \in subclassRel~cs \\
+      \land m = executeInOuterAreaHelperID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     executeInOuterArea!thread \\
+                     \t1 {} \then executeInOuterAreaRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,managedMemoryClass) \in subclassRel~cs \\
+      \land m = exitMemoryID \\
+      \land static = \true
+    \end{circus} &
+                   \begin{circus}
+                     exitMemory!thread \\
+                     \t1 {} \then exitMemoryRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,aperiodicEventHandlerClass) \\
+      \t1 {} \in subclassRel~cs \\
+      \land m = initAPEHID \\
+      \land static = \false
+    \end{circus} &
+                   \begin{circus}
+                     initAPEH!thread!(seqTo5Tuple~methodArgs) \\
+                     \t1 {} \then initAPEHRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,periodicEventHandlerClass) \\
+      \t1 {} \in subclassRel~cs \\
+      \land m = initPEHID \\
+      \land static = \false
+    \end{circus} &
+                   \begin{circus}
+                     initPEH!thread!(seqTo7Tuple~methodArgs) \\
+                     \t1 {} \then initPEHRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,oneShotEventHandlerClass) \\
+      \t1 {} \in subclassRel~cs \\
+      \land m = initOSEHAbsID \\
+      \land static = \false
+    \end{circus} &
+                   \begin{circus}
+                     initOSEHAbs!thread!(seqTo6Tuple~methodArgs) \\
+                     \t1 {} \then initOSEHAbsRet \then \Skip
+                   \end{circus}\\
+    \begin{circus}
+      (c,oneShotEventHandlerClass) \\
+      \t1 {} \in subclassRel~cs \\
+      \land m = initOSEHRelID \\
+      \land static = \false
+    \end{circus} &
+                   \begin{circus}
+                     initOSEHRel!thread!(seqTo6Tuple~methodArgs) \\
+                     \t1 {} \then initOSEHRelRet \then \Skip
+                   \end{circus}\\
+  \end{tabular}
+  \caption{The syntactic function $specialMethodAction(c, m, static)$}
+  \label{special-method-action-table}
+\end{table}
+
+Rule~[\nameref{resolve-normal-method-rule}], shown below, resolves
+non-special methods by unrolling the loop in $Running$ to sequence the
+method call with the action containing the method's behaviour.
+The entry point of the method is obtained from the class information
+for the method, which is determined as described by the data operation
+$ResolveMethod$.
+The first proviso of the rule ensures that the entry point, $k$, is
+that given in the class information provided by $ResolveMethod$ for
+the class identifier $c$ and method identifier $m$.
+The action containing the behaviour of the method is the action $M$ at
+the $pc = k$ branch of the choice in Running.
+The second proviso requires that the execution of $M$ must result in
+the top stack frame being popped and the $pc$ being set to the value
+stored in the next stack frame.
+This is needed to ensure that the method can be sequenced with the
+behaviour after it.
+It is true for all complete methods, since the return instructions
+establish the required property and any property may be assumed to
+hold after an infinite loop.
+\begin{restatable}[resolve-normal-method]{crule}{ResolveNormalMethodRule}
+  \label{resolve-normal-method-rule}
+  Given $i : ProgramAddress$, if
+  \begin{circus}
+    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
+    {} = {} \\
+    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
+    \{ class!.methodEntry~m = k \},
+  \end{circus}
+  and, for any $x : ProgramAdress$,
+  \begin{circus}
+    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \\
+    {} = {} \\
+    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \circseq \{ pc = x \land \# frameStack = \# fs - 1 \},
+  \end{circus}
+  and $m$ and $c$ do not match any of the conditions in
+  Table~\ref{special-method-action-table} then,
+  \setlength{\zedindent}{0.25cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 \lschexpract \exists argsToPop? == e @ \\
+      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 Invoke(c, m, poppedArgs, static) \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 \lschexpract \exists argsToPop? == e @ \\
+      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 InvokeOther(c, m, poppedArgs, static) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
+Rule~[\nameref{resolve-normal-method-rule}] applies only to those
+class and method identifers that are not handled by
+Rule~[\nameref{resolve-special-method-rule}].
+Because of this, Rule~[\nameref{resolve-normal-method-rule}] collapses
+the choice in the $Invoke$ action, replacing it with $InvokeOther$.
+The $InvokeOther$ action is sequenced with the action $Poll$ and the
+method action, $M$, containing the methods behaviour.
+An assignment is placed after $M$ to set $pc$ to the address of the
+next instruction, allowing a sequential composition with the
+instructions after the method call to be introduced.
+
+For method calls with multiple targets, then we introduce the choice
+over those targets using Rule~\ref{refine-invokevirtual-multi-rule},
+which is applied on line~\ref{algorithm-refine-invokevirtual-multi}.
+This replaces the $HandleInvokeVirtualEPC$ action with an action that
+pops the arguments of the function from the stack using the
+$InterpreterStackFrameInvoke$ data operation and then makes a choice
+of which method to invoke using the class of the \texttt{this}
+argument for the method.
+The method invocations are left as references to the $Invoke$ actions,
+to be resolved later in
+Algorithm~\ref{resolve-method-calls-algorithm}.
 \begin{restatable}[refine-invokevirtual-multi]{crule}{RefineInvokeVirtualMultiRule}
   \label{refine-invokevirtual-multi-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$, if
-  \begin{itemize}
-  \item $c_0 \in \ran cs$,
-  \item $m_0 \in \dom c_0.methodEntry $
-  \item $j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0$,
-  \item $cpi \in methodRefIndices~c_0$,
-  \item $c_0.constantPool~cpi = MethodRef~(c,m)$, and
-  \item $\{ x | (x,c) \in subclassRel~cs \} = \{c_1, \ldots , c_n\}$, then
-  \end{itemize}
+  Given $i : ProgramAddress$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
@@ -254,401 +586,54 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
   \end{displaymath}
   and provided $n > 1$.
 \end{restatable}
+The class identifiers used in the choice are determined by first
+determining the current class information as for
+Rule~[\nameref{refine-invokestatic-rule}] and looking up the constant
+pool index $cpi$ to obtain a $MethodRef$ containing a class
+identifier, $c$, and method identifier, $m$.
+The identifier $m$ determines which method should be invoked, but the
+class of the method to be invoked is determined from the class of the
+\texttt{this} object popped from the stack.
+Since Java bytecode verification ensures that the class will be
+assignable to $c$, we need only consider the identifiers of subclasses
+of $c$:~$c_1, \cdots , c_n$.
+We require that $n$ be greater than $1$, since this rule handles cases
+with multiple targets.
 
-\begin{restatable}[resolve-special-method]{crule}{ResolveSpecialMethodRule}
-  \label{resolve-special-method-rule}
-  If
-  \setlength{\zedindent}{0.25cm}
-  \setlength{\zedtab}{0.5cm}
-  \begin{circus}
-    \begin{array}{l}
-      pc := j \circseq Poll \circseq \\
-      \circvar poppedArgs : \seq Word \circspot \\
-      \lschexpract \exists argsToPop? == e @ \\
-      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      Invoke(c, m, poppedArgs, static)
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      pc := j \circseq Poll \circseq \\
-      \circvar poppedArgs : \seq Word \circspot \\
-      \lschexpract \exists argsToPop? == e @ \\
-      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      specialMethodAction(c, m, static) \circseq \\
-      pc := j + 1
-      \end{array}
-  \end{circus}
-\end{restatable}
+After the action handling the method invocation instruction has been
+refined to introduce a choice over the different methods, the
+individual methods can be resolved.
+This is performed in a way similar to the single method case, but we
+must operate of each branch of the choice separately.
+Thus, we iterate over each branch of the choice in the loop beginning
+on line~\ref{algorithm-targets-loop}, using the function
+\Call{Targets}{$mc$} to obtain a list of the possible targets of the
+method call $mc$.
+For each target, we apply
+Rule~[\nameref{resolve-special-method-branch-rule}] or
+Rule~[\nameref{resolve-normal-method-branch-rule}].
+These are similar to Rule~[\nameref{resolve-special-method-rule}] and
+Rule~[\nameref{resolve-normal-method-rule}], but operate over only a
+single branch of the choice of targets.
+We omit these rules due to their similarity with the rules previously
+presented.
+They can be found in Appendix~\ref{compilation-rules-appendix}.
+After each of the targets has been resolved, the $pc$ assignment is
+moved outside the choice by an application of
+Law~[\nameref{alt-seq-dist-law}] on
+line~\ref{algorithm-move-pc-assignments}.
 
-\begin{table}
-  \centering
-  \setlength{\abovedisplayskip}{0pt}
-  \setlength{\belowdisplayskip}{0pt}
-  \setlength{\abovedisplayshortskip}{0pt}
-  \setlength{\belowdisplayshortskip}{0pt}
-  \setlength{\zedindent}{0cm}
-  \renewcommand{\arraystretch}{1}
-  \begin{tabular}{p{4.5cm}p{8cm}}
-    \hline
-    Conditions on $c$, $m$ and $static$ & $specialMethodAction(c, m, static)$ \\
-    \hline
-    \begin{circus}
-      (c,resumeThreadClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = resumeThreadID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     resumeThread!(WordToThreadID~(methodArgs~1)) \\
-                     {} \then resumeThreadRet \then \Skip
-                   \end{circus}\\
-    \begin{circus}
-      (c,suspendClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = suspendID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     suspend \then suspendRet \then \Skip
-                   \end{circus}\\
-    \begin{circus}
-      (c,writeClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = writeID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     output!(methodArgs~1) \then \Skip
-                   \end{circus}\\
-    \begin{circus}
-      (c,readClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = readID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
-                   \end{circus}\\
-    \hline
-
-  \end{tabular}
-  \caption{The syntactic function $specialMethodAction(c, m, static)$}
-\end{table}
-
-\begin{restatable}[resolve-nested-special-method]{crule}{ResolveNestedSpecialMethodRule}
-  \label{resolve-nested-special-method-rule}
-  \setlength{\zedindent}{0.25cm}
-  \setlength{\zedtab}{0.45cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \circmu Y \circspot \\
-      \t2 \circif last~frameStack = \emptyset \circthen \Skip \\
-      \t2 {} \circelse last~frameStack \neq \emptyset \circthen {} \\
-      \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
-      \t4 \circvar poppedArgs : \seq Word \circspot \\
-      \t4 \lschexpract \exists argsToPop? == e @ \\
-      \t5 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t4 Invoke(c, m, poppedArgs, static) \\
-      \t3 {} \cdots {} \\
-      \t3 \circfi \circseq Poll \circseq Y \\
-      \t2 \circfi \circseq \lschexpract PopSubFrameStack \rschexpract \circseq X \\
-      \t1 \circif
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen \circmu Y \circspot \\
-      \t2 \circif last~frameStack = \emptyset \circthen \Skip \\
-      \t2 {} \circelse last~frameStack \neq \emptyset \circthen {} \\
-      \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
-      \t4 \circvar poppedArgs : \seq Word \circspot \\
-      \t4 \lschexpract \exists argsToPop? == e @ \\
-      \t5 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t4 specialMethodAction2(c, m, static) \circseq \\
-      \t4 StartInterpreter \circseq Poll \circseq Y \circseq \\
-      \t4 \lschexpract PopSubFrameStack \rschexpract \circseq \\
-      \t4 pc := j + 1 \\
-      \t3 {} \cdots {} \\
-      \t3 \circfi \circseq Poll \circseq Y \\
-      \t2 \circfi \circseq \lschexpract PopSubFrameStack \rschexpract \circseq X \\
-      \t1 \circif
-    \end{array}
-  \end{circus}
-\end{restatable}
-
-\begin{table}[t]
-  \centering
-  \setlength{\abovedisplayskip}{0pt}
-  \setlength{\belowdisplayskip}{0pt}
-  \setlength{\abovedisplayshortskip}{0pt}
-  \setlength{\belowdisplayshortskip}{0pt}
-  \setlength{\zedindent}{0cm}
-  \renewcommand{\arraystretch}{1}
-  \begin{tabular}{p{5.5cm}p{9cm}}
-    \hline
-    Conditions on $c$, $m$ and $static$ & $specialMethodAction2(c, m, static)$ \\
-    \hline
-    \begin{circus}
-      (c,managedSchedulableClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = registerID \\
-      \land static = \false
-    \end{circus} &
-                   \begin{circus}
-                     register!thread!(head~methodArgs) \\
-                     {} \then registerRet \then \Skip
-                   \end{circus}\\
-    \begin{circus}
-      (c,managedMemoryClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = enterPrivateMemoryID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     enterPrivateMemory!thread!(methodArgs~1)!(methodArgs~2) \\
-                     {} \then \Skip 
-                   \end{circus}\\
-    \begin{circus}
-      (c,managedMemoryClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = executeInAreaOfID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     executeInAreaOf!thread!(methodArgs~1)!(methodArgs~2) \\
-                     {} \then \Skip 
-                   \end{circus}\\
-    \begin{circus}
-      (c,managedMemoryClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = executeInOuterAreaID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     executeInOuterArea!thread!(methodArgs~1) \\
-                     {} \then \Skip 
-                   \end{circus}\\
-    \begin{circus}
-      (c,managedMemoryClass) \\
-      \t1 {} \in subclassRel~cs \\
-      \land method = \\
-      \t1 enterPerReleaseMemoryID \\
-      \land static = \true
-    \end{circus} &
-                   \begin{circus}
-                     enterPerReleaseMemory!thread!(methodArgs~1) \\
-                     {} \then \Skip 
-                   \end{circus}\\
-    \hline
-  \end{tabular}
-  \caption{The syntactic function $specialMethodAction2(c, m, static)$}
-\end{table}
-
-\begin{restatable}[resolve-normal-method]{crule}{ResolveNormalMethodRule}
-  \label{resolve-normal-method-rule}
-  Given $i : ProgramAddress$ and $cs : ClassID \pfun Class$,
-  if
-  \begin{circus}
-    \{ methodID? = m \land class? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
-    {} = {} \\
-    \{ methodID? = m \land class? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
-    \{ class?.methodEntry~m = k \},
-  \end{circus}
-  and
-  \begin{circus}
-    \{ (last~(front~fs)).storedPC = k \land frameStack = fs \} \circseq M \\
-    {} = {} \\
-    \{ (last~(front~fs)).storedPC = k \land frameStack = fs \} \circseq M \circseq \{ pc = k \land frameStack = front~fs \},
-  \end{circus}
-  then,
-  \setlength{\zedindent}{0.25cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
-      \t3 \circvar poppedArgs : \seq Word \circspot \\
-      \t3 \lschexpract \exists argsToPop? == e @ \\
-      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t3 Invoke(c, m, poppedArgs, static) \\
-      \t2 {} \circelse pc = k \circthen M \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
-      \t3 \circvar poppedArgs : \seq Word \circspot \\
-      \t3 \lschexpract \exists argsToPop? == e @ \\
-      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t3 InvokeOther(c, m, poppedArgs, static) \circseq \\
-      \t3 Poll \circseq M \circseq pc := j + 1 \\
-      \t2 {} \circelse pc = k \circthen M \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-\end{restatable}
-
-%%%%
-
-To resolve a method call, the type of method call must be considered.
-Some methods are handled directly by the SCJVM as they relate to the
-SCJVM services.
-Such methods are treated specially by the interpreter, communicating
-with the launcher to perform the behaviour of the method.
-In cases where the method invocation is simply handled by
-communication with the launcher and then followed by execution of the
-next instruction, the control flow can be introduced using
-Rule [\nameref{sequence-introduction-rule}] as for other instructions with
-simple control flow.
-
-% TODO: discuss special methods with nested calls here
-
-For method calls that do not require special handling, the control
-flow is that of the corresponding method's action, followed by
-execution of the next instruction.
-If the method is called with static dispatch (as is the case with the
-\texttt{invokespecial} and \texttt{invokestatic} instructions), the
-correct method, and hence the corresponding action can be easily
-determined.
-The method call is then resolved using
-Rule [\nameref{method-call-resolution-rule}].
-We require as a precondition of the rule that the method action
-returns to the return address stored on the stack, to ensure that the
-control flow is resolved correctly.
-This will be the case for a method where every path of execution ends
-in a return or loop, since returns establish the condition and loops
-will either lead to a return eventually or form an infinite loop that
-may be followed by any action (including the assumption we require).
-%
-\begin{restatable}[Method call resolution]{crule}{MethodCallResolutionRule}
-  \label{method-call-resolution-rule}
-  If an action $M$ is such that
-  \[\{ (head~frameStack).storedPC = i \land frameStack = fs \} \circseq M \\
-    {} = {} \\
-    \{ (head~frameStack).storedPC = i \land frameStack = fs \}
-    \circseq M \circseq \\
-    \t1 \{ pc = i \land frameStack = tail~fs \}\]
-  and $i \neq j$,
-  \setlength{\zedindent}{0.25cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \{ pc = k \} \circseq \\
-      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
-      \t4 SetReturnAddr \rschexpract \circseq \\
-      \t3 pc := j \\
-      \t2 {} \circelse pc = k+1 \circthen B \\
-      \t2 {} \circelse pc = j \circthen M \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 \{ pc = k \} \circseq \\
-      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
-      \t4 SetReturnAddr \rschexpract \circseq \\
-      \t3 pc := j \circseq Poll \circseq M \circseq Poll \circseq B \\
-      \t2 {} \circelse pc = k+1 \circthen B \\
-      \t2 {} \circelse pc = j \circthen M \\
-      \t2 \cdots \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-  \end{circus}
-  %TODO: elimination of pc assignment
-\end{restatable}
-%
-For method calls that have dynamic dispatch (as in the case of
-\texttt{invokevirtual} instructions), we must determine what classes
-the method may be called on.
-The control flow is then a choice over the class of the object the
-method is called on, with the method action corresponding to that
-class chosen.
-As with the static case, we require the method action to return to the
-return address stored on the stack.
-In the dynamic case, this requirement must be met by all the method
-actions so that the next instruction can be executed after the choice
-of methods.
-Rule [\nameref{dynamic-method-call-resolution-rule}] is used to
-introduce this choice.
-%
-\begin{restatable}[Dynamic method call resolution]{crule}{DynamicMethodCallResolutionRule}
-  \label{dynamic-method-call-resolution-rule}
-  If actions $M_1, \dots, M_n$ are such that
-  \[\{ returnAddress = i \land frameStack = fs \} \circseq M_k \\
-    {} = {} \\
-    \{ returnAddress = i \land frameStack = fs \}
-    \circseq M_k \circseq \{ pc = i \land frameStack = tail~fs \}\]
-   for $k in \{ 1, \dots, n \}$ and $i \neq j$,
-  \setlength{\zedindent}{0.25cm}
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A(class, method) \circseq \\
-      \t3 \{ class \in \{ c_1, \dots, c_n \}\} \circseq \\
-      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
-      \t4 SetReturnAddr \rschexpract \circseq \\
-      \t3 pc := entry(class, method) \\
-      \t2 {} \circelse pc = k+1 \circthen B \\
-      \t2 {} \circelse pc = j_1 \circthen M_1 \\
-      \t2 \cdots \\
-      \t2 {} \circelse pc = j_n \circthen M_n \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi 
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A(class, method) \circseq \\
-      \t3 \{ class \in \{ c_1, \dots, c_n \} \circseq \\
-      \t3 \lschexpract \exists retAddr? == pc+1 @ \\
-      \t4 SetReturnAddr \rschexpract \circseq \\
-      \t3 pc := entry(class, method) \circseq Poll \circseq \\
-      \t3 \circif class = c_1 \circthen M_1 \\
-      \t3 \cdots \\
-      \t3 {} \circelse class = c_n \circthen M_n \\
-      \t3 \circfi \circseq Poll \circseq B \\
-      \t2 {} \circelse pc = k+1 \circthen B \\
-      \t2 {} \circelse pc = j_1 \circthen M_1 \\
-      \t2 \cdots \\
-      \t2 {} \circelse pc = j_n \circthen M_n \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-  \end{circus}
-  %TODO: elimination of pc assignment
-\end{restatable}
+In both the case of a single target and the case of multiple targets,
+we attempt to introduce a sequential composition with the instructions
+after the method call.
+This is done on lines~\ref{algorithm-mci-sequence-introduction-start}
+to~\ref{algorithm-mci-sequence-introduction-end} of
+Algorithm~\ref{resolve-method-calls-algorithm} in the same way as in
+Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
+It may not be possible to introduce the sequential composition at this
+point if, for example, a method call occurs at the end of a
+conditional branch, since we must wait until the conditional has been
+introduced before the sequential composition can be introduced.
 
 The resolution of loops, conditionals and methods is performed in a
 loop until all the methods have been separated into their own action.
