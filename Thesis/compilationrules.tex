@@ -245,32 +245,19 @@
 
 \IntroduceClassInformationRule*
 
-\RefineInvokestaticRule*
-
 \begin{restatable}[refine-invokespecial]{crule}{RefineInvokespecialRule}
   \label{refine-invokespecial-rule}
-  Given $i : ProgramAddress$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 HandleInvokespecialEPC(cpi) \\
-      \cdots \\
-      \circfi
+      \{ pc = i \} \circseq HandleInvokespecialEPC(cpi)
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 \circvar poppedArgs : \seq Word \circspot \\
+      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m + 1 @ \\
       \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \false) \\
-      \cdots \\
-      \circfi
+      \t1 Invoke(c, m, poppedArgs, \false)
     \end{array}
   \end{circus}
   where $m : MethodID$ and $c : ClassID$ are such that
@@ -278,34 +265,25 @@
     \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
     \t1 cpi \in methodRefIndices~c_0 \land \\
     \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
+    \t1 i \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
   \end{displaymath}
 \end{restatable}
 
+\RefineInvokestaticRule*
+
 \begin{restatable}[refine-invokevirtual-single]{crule}{RefineInvokeVirtualSingleRule}
   \label{refine-invokevirtual-single-rule}
-  Given $i : ProgramAddress$,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 HandleInvokevirtualEPC(cpi) \\
-      \cdots \\
-      \circfi
+      \{ pc = i \} \circseq HandleInvokevirtualEPC(cpi)
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \circif \cdots \\
-      {} \circelse pc = i \circthen \\
-      \t1 A \circseq pc := j \circseq Poll \circseq \\
-      \t1 \circvar poppedArgs : \seq Word \circspot \\
+      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ \\
       \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \false) \\
-      \cdots \\
-      \circfi
+      \t1 Invoke(c, m, poppedArgs, \false)
     \end{array}
   \end{circus}
   where $m : MethodID$ and $c : ClassID$ are such that
@@ -313,7 +291,7 @@
     \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
     \t1 cpi \in methodRefIndices~c_0 \land \\
     \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0,
+    \t1 i \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0,
   \end{displaymath}
   and provided $\exists_1 c_1 : ClassID @ (c_1,c) \in subclassRel~cs$.
 \end{restatable}
@@ -333,8 +311,7 @@
   \setlength{\zedtab}{0.5cm}
   \begin{circus}
     \begin{array}{l}
-      pc := j \circseq Poll \circseq \\
-      \circvar poppedArgs : \seq Word \circspot \\
+      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \lschexpract \exists argsToPop? == e @ \\
       \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
       \circif cid = c_1 \circthen A_1 \\
@@ -347,14 +324,13 @@
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      pc := j \circseq Poll \circseq \\
-      \circvar poppedArgs : \seq Word \circspot \\
+      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \lschexpract \exists argsToPop? == e @ \\
       InterpreterStackFrameInvoke \rschexpract \circseq \\
       \circif cid = c_1 \circthen A_1 \\
       {} \cdots {} \\
       {} \circelse cid = c_\ell \circthen {} \\
-      \t1 specialMethodAction(c_\ell, m, \false) \circseq pc := j + 1 \\
+      \t1 specialMethodAction(c_\ell, m, \false) \circseq pc := i + 1 \\
       {} \cdots {} \\
       {} \circelse cid = c_n \circthen A_n \\
       \circfi
@@ -389,7 +365,7 @@
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
       \t3 \circvar poppedArgs : \seq Word \circspot \\
       \t3 \lschexpract \exists argsToPop? == e @ \\
       \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
@@ -411,7 +387,7 @@
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq  \\
       \t3 \circvar poppedArgs : \seq Word \circspot \\
       \t3 \lschexpract \exists argsToPop? == e @ \\
       \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
