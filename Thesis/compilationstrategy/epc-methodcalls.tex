@@ -220,7 +220,7 @@ instruction:~Rule~[\nameref{refine-invokestatic-rule}],
 Rule~[\nameref{refine-invokespecial-rule}] and
 Rule~[\nameref{refine-invokevirtual-single-rule}].
 These rules are applied in a try block, beginning on
-line~\ref{algorithm-try-block-begin}, which trys to apply each rule in
+line~\ref{algorithm-try-block-begin}, which tries to apply each rule in
 turn, stopping when one succeeds.
 
 Below, we show Rule~[\nameref{refine-invokestatic-rule}], which
@@ -517,7 +517,7 @@ hold after an infinite loop.
     \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
     \{ class!.methodEntry~m = k \},
   \end{circus}
-  and, for any $x : ProgramAdress$,
+  and, for any $x : ProgramAddress$,
   \begin{circus}
     \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \\
     {} = {} \\
@@ -563,7 +563,7 @@ hold after an infinite loop.
   \end{circus}
 \end{restatable}
 Rule~[\nameref{resolve-normal-method-rule}] applies only to those
-class and method identifers that are not handled by
+class and method identifiers that are not handled by
 Rule~[\nameref{resolve-special-method-rule}].
 Because of this, Rule~[\nameref{resolve-normal-method-rule}] collapses
 the choice in the $Invoke$ action, replacing it with $InvokeOther$.
@@ -723,7 +723,7 @@ $HandleAreturnEPC$, which pops the last frame from the $frameStack$
 and sets $pc$ to the stored value.
 After the application of Rule~[\nameref{resolve-normal-method-rule}],
 the sequence of actions has the form below, with the method invocation
-action sequenced with the $TPK\_f$ action and an assingment
+action sequenced with the $TPK\_f$ action and an assignment
 $pc := 24$.
 \begin{circusaction}
   \t2 {} \cdots {} \\
@@ -740,7 +740,7 @@ $pc = 24$, to yield the code in
 Figure~\ref{method-call-resolution-example-figure}.
 
 As mentioned previously, the resolution of methods calls and
-introduction of loops and condtionals is performed in a loop until all
+introduction of loops and conditionals is performed in a loop until all
 the methods have been separated into their own action.
 After that, the remaining use of the program counter in the main
 actions of $Thr$ is eliminated as described in the next section.
