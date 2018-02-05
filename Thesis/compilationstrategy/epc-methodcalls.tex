@@ -131,7 +131,9 @@ applied to.
     \Try
     \label{algorithm-try-block2-start}
     \State \ApplyTo{Rule~[\nameref{resolve-special-method-rule}]}{$mc$}
+    \State \ApplyTo{Rule~[\nameref{resolve-special-method-virtual-rule}]}{$mc$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$mc$}
+    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-virtual-rule}]}{$mc$}
     \EndTry
     \Else
     \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$mc$}
@@ -223,9 +225,6 @@ turn, stopping when one succeeds.
 
 Below, we show Rule~[\nameref{refine-invokestatic-rule}], which
 handles \texttt{invokestatic} instructions.
-Rule~[\nameref{refine-invokespecial-rule}] and
-Rule~[\nameref{refine-invokevirtual-single-rule}] are similar, and can
-be found in Appendix~\ref{compilation-rules-appendix}.
 This rule, as with other rules in this section, is applied to an
 action beginning with an assumption on the value of $pc$.
 This allows it to be applied at the start of a branch of the choice in
@@ -282,18 +281,34 @@ The are passed to $Invoke$, along with the arguments popped from the
 stack, $poppedArgs$, and a boolean value indicating whether the method
 call is static, which is $\true$ in the case of \texttt{invokestatic}.
 
+Rule~[\nameref{refine-invokespecial-rule}] and
+Rule~[\nameref{refine-invokevirtual-single-rule}] are similar to
+Rule~[\nameref{refine-invokestatic-rule}], but they produce slightly
+different sequences of actions due to the differences in the semantics
+of the method invocation instructions, described in
+Section~\ref{cee-interpreter-subsection}.
+They provide for popping an additional \texttt{this} argument from the
+stack and pass a $\false$ boolean value to $Invoke$.
+Rule~[\nameref{refine-invokevirtual-single-rule}] also leaves a
+communication on the $getClassIDOf$ channel in place.
+The communication is eliminated later in the strategy, during the
+\emph{Data Refinement of Objects} stage, described in
+Section~\ref{data-refinement-of-objects-section}.
+
 After the action that handles the method invocation instruction has
 been transformed, the method invocation is resolved by transforming
 the $Invoke$ action to the behaviour of the method being invoked.
 A $pc$ assignment is also introduced after the method's behaviour so
 that it can be sequentially composed with the instructions after the
 method call.
-There are two rules for this in the case of method calls with a single
-target, applied in another try block on
-line~\ref{algorithm-try-block2-start}:~Rule~[\nameref{resolve-special-method-rule}],
-which handles resolution of special methods, and
-Rule~[\nameref{resolve-normal-method-rule}], which handles resolution
-of non-special methods.
+There are four rules for this in the case of method calls with a
+single target, applied in another try block on
+line~\ref{algorithm-try-block2-start}:~Rule~[\nameref{resolve-special-method-rule}]
+and Rule~[\nameref{resolve-special-method-virtual-rule}], which
+handles resolution of special methods, and
+Rule~[\nameref{resolve-normal-method-rule}] and
+Rule~[\nameref{resolve-normal-method-virtual-rule}], which handle
+resolution of non-special methods.
 
 Rule~[\nameref{resolve-special-method-rule}], shown below, operates by
 simply replacing the $Invoke$ action with the behaviour for the
@@ -330,6 +345,10 @@ whether the method is static.
   where $specialMethodAction$ is the syntactic function defined by
   Table~\ref{special-method-action-table}.
 \end{restatable}
+Rule~[\nameref{resolve-special-method-virtual-rule}] is similar to
+Rule~[\nameref{resolve-special-method-rule}], but handles the extra
+communication on $getClassIDOf$ in the case of an
+\texttt{invokevirtual} instruction.
 
 \begin{table}
   \centering
@@ -341,7 +360,7 @@ whether the method is static.
   \setlength{\zedleftsep}{0cm}
   \renewcommand{\arraystretch}{1}
   \rowcolors{1}{white}{lightgray}
-  \begin{tabular}{p{6.5cm}p{7.5cm}}
+  \begin{tabular}{p{6.5cm}p{7.7cm}}
     \hline
     Conditions on $c$, $m$ and $static$ & $specialMethodAction(c, m, static)$ \\
     \hline
@@ -491,6 +510,7 @@ hold after an infinite loop.
 \begin{restatable}[resolve-normal-method]{crule}{ResolveNormalMethodRule}
   \label{resolve-normal-method-rule}
   Given $i : ProgramAddress$, if
+  \setlength{\zedindent}{0.5cm}
   \begin{circus}
     \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
     {} = {} \\
@@ -505,8 +525,8 @@ hold after an infinite loop.
   \end{circus}
   and $m$ and $c$ do not match any of the conditions in
   Table~\ref{special-method-action-table} then,
-  \setlength{\zedindent}{0.25cm}
-  \setlength{\zedtab}{0.5cm}
+  \setlength{\zedindent}{0.2cm}
+  \setlength{\zedtab}{0.45cm}
   \begin{circus}
     \begin{array}{l}
       \circmu X \circspot \\
@@ -552,10 +572,14 @@ method action, $M$, containing the methods behaviour.
 An assignment is placed after $M$ to set $pc$ to the address of the
 next instruction, allowing a sequential composition with the
 instructions after the method call to be introduced.
+Rule~[\nameref{resolve-normal-method-virtual-rule}] is similar but, as
+with Rule~[\nameref{resolve-special-method-virtual-rule}], handles the
+$getClassIDOf$ communication.
 
 For method calls with multiple targets, then we introduce the choice
-over those targets using Rule~\ref{refine-invokevirtual-multi-rule},
-which is applied on line~\ref{algorithm-refine-invokevirtual-multi}.
+over those targets using
+Rule~[\nameref{refine-invokevirtual-multi-rule}], which is applied on
+line~\ref{algorithm-refine-invokevirtual-multi}.
 This replaces the $HandleInvokeVirtualEPC$ action with an action that
 pops the arguments of the function from the stack using the
 $InterpreterStackFrameInvoke$ data operation and then makes a choice
@@ -567,7 +591,8 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
 \begin{restatable}[refine-invokevirtual-multi]{crule}{RefineInvokeVirtualMultiRule}
   \label{refine-invokevirtual-multi-rule}
   Given $i : ProgramAddress$,
-  \setlength{\zedindent}{0.25cm}
+  \setlength{\zedindent}{0.15cm}
+  \setlength{\zedtab}{0.5cm}
   \begin{circus}
     \begin{array}{l}
       \{ pc = j \} \circseq HandleInvokevirtualEPC(cpi)
@@ -643,54 +668,76 @@ point if, for example, a method call occurs at the end of a
 conditional branch, since we must wait until the conditional has been
 introduced before the sequential composition can be introduced.
 
-In our example, the $pc = 14$ branch, shown earlier, has
-$HandleInvokeVirtualEPC(36)$ at a point when the value of $pc$ is
-$16$.
-This falls within the $methodEntry$ and $methodEnd$ values for
-$handleAsyncEvent$ in the $TPK$ class information shown in
-Figure~\ref{example-model-figure}.
-The constant pool index $36$ is thus looked up in its $constantPool$,
-to yield a $MethodRef$ whose class identifier is that of the
-\texttt{ConsoleConnection} class and whose method identifier is that
-of \texttt{openOutputStream()}.
-The \texttt{ConsoleConnection} class represents a connection to an
-input/output console, and there is only one class to represent that
-type of connection.
-This means it has no subclasses, and so the method call has a single
-target.
-Since the instruction being handled is \texttt{invokevirtual}, we
-apply Rule~[\nameref{refine-invokevirtual-single-rule}] to refine the
-branch to the form shown below.
+As an example of method call resolution, we consider the
+\texttt{invokestatic} instruction at $pc = 23$. 
+Before method call resolution this appear in the choice in $Running$
+as shown below.
 \begin{circusaction}
   \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 14 \circthen \cdots \circseq pc := 16 \circseq Poll \circseq \\
-  \t3 \circvar poppedArgs : \seq Word \circspot \\
-  \t3 \lschexpract \exists argsToPop == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t3 Invoke(ConsoleConnectionClassID, openOutputStream, poppedArgs, \false) \\
-  \t2 {} \cdots {}
+  \t2 {} \circelse pc = 23 \circthen HandleInvokestatic(46) \\
+  \t2 {} \cdots {} \\
 \end{circusaction}
-This method is not a special method, so it is resolved using
-Rule~[\nameref{resolve-normal-method-rule}].
-The method \texttt{openOutputStream()} is defined in the
-\texttt{ConsoleConnection} class itself as it returns an
-\texttt{OutputStream} specific to that class.
-Thus the calculation of the method's entry point using $ResolveMethod$
-is fairly straightforward.
-It results in a $pc$ value at which a method action
-$ConsoleConnection\_openOutputStream$ occurs.
-That is therefore sequentially composed with the $Invoke$ action,
-which is specialised to $InvokeOther$.
-That results in the sequence of actions shown below.
+The $pc$ value $23$ is between the $methodEntry$ and $methodEnd$
+values for $handleAsyncEvent$ in the $Class$ information $TPK$, shown
+in Figure~\ref{example-model-figure}.
+The constant pool index $46$ is thus looked up in $TPK$'s
+$constantPool$, yielding a $MethodRef$ containing the class identifier
+$TPKClassID$ and method identifier $f$.
+Since the instruction being handled is an \texttt{invokestatic}
+instruction, there is only a single target, which is the method
+referred to by these identifiers.
+That method is the \texttt{f()} method of \texttt{TPK}, whose entry
+point is at $pc = 43$.
+There is a straight sequence of instructions at this entry point,
+ending with an \texttt{areturn} instruction. 
+Thus, it has already been sequenced together at the point when method
+resolution occurs for the first time, and separated into a method
+action $TPK\_f$, which can be seen in
+Figure~\ref{method-call-resolution-example-figure}.
+This method call can thus be resolved.
+
+The $HandleInvokestatic(46)$ action is refined using
+Rule~[\nameref{refine-invokestatic-rule}]. 
+We introduce an assumption $\{ pc = 23 \}$ at the start of the branch
+to make the rule applicable.
+After applying the rule, the sequence of actions starting at $pc = 23$
+has the following form (with the $pc$ assumption left in).
 \begin{circusaction}
   \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 14 \circthen \cdots \circseq pc := 16 \circseq Poll \circseq \\
-  \t3 \circvar poppedArgs : \seq Word \circspot \\
-  \t3 \lschexpract \exists argsToPop == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t3 InvokeOther(ConsoleConnectionClassID, openOutputStream, poppedArgs, \false) \circseq \\
-  \t3 Poll \circseq ConsoleConnection\_openOutputStream \circseq pc := 17 \\
+  \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} \circseq \circvar poppedArgs : \seq Word \circspot \\
+  \t3 \lschexpract \exists argsToPop? == methodArguments~m @ \\
+  \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+  \t3 Invoke(TPKClassID, f, poppedArgs, \true) \\
   \t2 {} \cdots {}
 \end{circusaction}
-This can then be sequenced with the instructions at $pc = 17$.
+
+After refining the action with
+Rule~[\nameref{refine-invokestatic-rule}], we resolve the method call
+using Rule~[\nameref{resolve-normal-method-rule}], since \texttt{f()}
+is not a special method.
+The first proviso of this rule ensures that it is applied with
+$k = 43$, since $TPK$ matches the class identifier $TPKClassID$ and
+contains information for the method identifier $f$.
+The second proviso is met, since $TPK\_f$ ends with
+$HandleAreturnEPC$, which pops the last frame from the $frameStack$
+and sets $pc$ to the stored value.
+After the application of Rule~[\nameref{resolve-normal-method-rule}],
+the sequence of actions has the form below, with the method invocation
+action sequenced with the $TPK\_f$ action and an assingment
+$pc := 24$.
+\begin{circusaction}
+  \t2 {} \cdots {} \\
+  \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} \circseq \circvar poppedArgs : \seq Word \circspot \\
+  \t3 \lschexpract \exists argsToPop? == methodArguments~m @ \\
+  \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+  \t3 InvokeOther(TPKClassID, f, poppedArgs, \true) \circseq \\
+  \t3 Poll \circseq TPK\_f \circseq pc := 24
+  \t2 {} \cdots {}
+\end{circusaction}
+The assumption on the value of $pc$ can then be removed and a
+sequential composition can be introduced with the instructions at
+$pc = 24$, to yield the code in
+Figure~\ref{method-call-resolution-example-figure}.
 
 As mentioned previously, the resolution of methods calls and
 introduction of loops and condtionals is performed in a loop until all

@@ -283,7 +283,8 @@
       \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ \\
       \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \false)
+      \t1 getClassIDOf!(head~poppedArgs)?cid \\
+      \t1 {} \then Invoke(c, m, poppedArgs, \false)
     \end{array}
   \end{circus}
   where $m : MethodID$ and $c : ClassID$ are such that
@@ -298,7 +299,91 @@
 
 \ResolveSpecialMethodRule*
 
+\begin{restatable}[resolve-special-method-virtual]{crule}{ResolveSpecialMethodVirtualRule}
+  \label{resolve-special-method-virtual-rule}
+  If $c$, $m$ and $static$ match one of the rows of
+  Table~\ref{special-method-action-table}, then
+  \setlength{\zedindent}{0.25cm} \setlength{\zedtab}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == e @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      getClassIDOf!(head~poppedArgs)?cid \\
+      {} \then Invoke(c, m, poppedArgs, static)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == e @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      getClassIDOf!(head~poppedArgs)?cid \\
+      {} \then specialMethodAction(c, m, static) \circseq \\
+      pc := i + 1
+    \end{array}
+  \end{circus}
+  where $specialMethodAction$ is the syntactic function defined by
+  Table~\ref{special-method-action-table}.
+\end{restatable}
+
 \ResolveNormalMethodRule*
+
+\begin{restatable}[resolve-normal-method-virtual]{crule}{ResolveNormalMethodVirtualRule}
+  \label{resolve-normal-method-virtual-rule}
+  Given $i : ProgramAddress$, if
+  \begin{circus}
+    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
+    {} = {} \\
+    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
+    \{ class!.methodEntry~m = k \},
+  \end{circus}
+  and, for any $x : ProgramAdress$,
+  \begin{circus}
+    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \\
+    {} = {} \\
+    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \circseq \{ pc = x \land \# frameStack = \# fs - 1 \},
+  \end{circus}
+  and $m$ and $c$ do not match any of the conditions in
+  Table~\ref{special-method-action-table} then,
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.45cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 \lschexpract \exists argsToPop? == e @ \\
+      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 getClassIDOf!(head~poppedArgs)?cid \\
+      \t3 {} \then Invoke(c, m, poppedArgs, \false) \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 \lschexpract \exists argsToPop? == e @ \\
+      \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 getClassIDOf!(head~poppedArgs)?cid \\
+      \t3 {} \then InvokeOther(c, m, poppedArgs, \false) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
 
 \RefineInvokeVirtualMultiRule*
 
