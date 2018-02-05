@@ -127,6 +127,8 @@ prefoothook={\qedsymbol\relax}
 
 \newcommand{\Apply}[1]{{\bf apply} #1}
 \newcommand{\ApplyFor}[2]{{\bf apply} #1 {\bf for} #2}
+\newcommand{\ApplyTo}[2]{{\bf apply} #1 {\bf to} #2}
+\newcommand{\ApplyToFor}[3]{{\bf apply} #1 {\bf to} #2 {\bf for} #3}
 \algblockx[Try]{Try}{EndTry}
   {{\bf try}}
   {{\bf end try}}
@@ -167,19 +169,19 @@ prefoothook={\qedsymbol\relax}
 
 \tableofcontents
 
-\include{introduction}
+\input{introduction.tex}
 
-\include{field-survey}
+\input{field-survey.tex}
 
-\include{scjvm-services}
+\input{scjvm-services.tex}
 
-\include{cee}
+\input{cee.tex}
 
-\include{compilationstrategy}
+\input{compilationstrategy.tex}
 
-\include{evaluation}
+\input{evaluation.tex}
 
-\include{conclusion}
+\input{conclusion.tex}
 
 {\raggedright \printbibliography}
 
