@@ -1,0 +1,95 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{crproof}[\nameref{sequence-introduction-rule}]
+  This proof uses Law~[\nameref{rec-least-fixed-point-law}] taking the
+  right-hand-side of Rule~[\nameref{sequence-introduction-rule}] as
+  $Y$, and the left-hand-side as $\circmu X \circspot F(X)$, and proving
+  $F(Y) \circrefines_A Y$:
+  \begin{argue}
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif {} \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq pc := j \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = j \circthen B \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif {} \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq B \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = j \circthen B \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Lemma~\ref{Running-loop-unroll-lemma} \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif {} \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq \\
+      \t2 \circif {} \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = j \circthen B \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif {} \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq B \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = j \circthen B \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Lemma~\ref{pc-assignment-Poll-alternation-collapse-lemma} \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif {} \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq B \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse pc = j \circthen B \\
+      \t1 {} \cdots {} \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif {} \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq B \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = j \circthen B \\
+      \t3 {} \cdots {} \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{rec-unfold-law}] \\
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif {} \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq pc := j \circseq Poll \circseq B \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = j \circthen B \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+  \end{argue}
+  So we have $F(Y) \circrefines_A Y$ and so, by
+  Law~[\nameref{rec-least-fixed-point-law}], we have
+  $\circmu X \circspot F(X) \circrefines_A Y$, which is the statement of
+  the rule.
+\end{crproof}
