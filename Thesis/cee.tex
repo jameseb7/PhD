@@ -2044,8 +2044,12 @@ information for the current method.
   % definition of currentClass (only important if the frame stack is nonempty)
   frameStack \neq \emptyset \implies currentClass = (last~frameStack).frameClass \\
   % need to ensure pc is consistent with currentClass
-  \exists_1 m : MethodID | m \in \dom currentClass.methodEntry @ \\
-  \t1 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m
+  currentClass = (\mu c : \ran cs | \\
+  \t1 (\exists_1 m : MethodID | m \in \dom c.methodEntry @  \\
+  \t2 pc \in c.methodEntry~m \upto c.methodEnd~m)) \\
+  \forall f : \ran frameStack @ f.frameClass = (\mu c :\ran cs | \\
+  \t1 (\exists_1 m : MethodID | m \in \dom c.methodEntry @  \\
+  \t2 f.storedPC \in c.methodEntry~m \upto c.methodEnd~m))
 \end{schema}
 The first conjunct of the invariant requires that there be no
 $StackFrames$ on the $frameStack$ when $frameStackID$ is
@@ -2054,10 +2058,14 @@ The second conjunct defines $currentClass$ as the $frameClass$ of the
 last $StackFrame$ on the $frameStack$.
 This is only required when $frameStack$ is nonempty, since otherwise
 $currentClass$ is unused.
-Finally, the third conjunct states that $pc$ must be in the
-$ProgramAddress$ range for a unique method of $currentClass$, to
-ensure the bytecodes are associated with the correct class
-information.
+The third conjunct states that $currentClass$ is the unique $Class$
+information in $cs$ that contains a unique method containing $pc$ in
+its $ProgramAddress$ range.
+This ensures that the current class information can always be
+determined from the current $pc$ value.
+The final conjunct states a similar requirement for the $storedPC$
+value of each $StackFrame$ in the $frameStack$, to ensure that the
+third conjunct remains true when a method returns.
 
 The state is initialised as described in a schema $InterpreterInit$.
 The initialisation just sets $frameStackID$ to $Unintialised$ and the
