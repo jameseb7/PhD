@@ -332,6 +332,11 @@
   \label{resolve-normal-method-virtual-rule}
   Given $i : ProgramAddress$, if
   \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
+  \end{circus}
+  \begin{circus}
     \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
     {} = {} \\
     \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq

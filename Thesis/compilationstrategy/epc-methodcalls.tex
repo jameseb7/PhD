@@ -494,12 +494,15 @@ method call with the action containing the method's behaviour.
 The entry point of the method is obtained from the class information
 for the method, which is determined as described by the data operation
 $ResolveMethod$.
-The first proviso of the rule ensures that the entry point, $k$, is
+The first proviso of the rule requires that the nonemptiness of the
+$frameStack$ is not affected by the instructions before the method
+invocation, as with previous compilation rules in this stage. 
+The second proviso of the rule ensures that the entry point, $k$, is
 that given in the class information provided by $ResolveMethod$ for
 the class identifier $c$ and method identifier $m$.
 The action containing the behaviour of the method is the action $M$ at
 the $pc = k$ branch of the choice in Running.
-The second proviso requires that the execution of $M$ must result in
+The third proviso requires that the execution of $M$ must result in
 the top stack frame being popped and the $pc$ being set to the value
 stored in the next stack frame.
 This is needed to ensure that the method can be sequenced with the
@@ -511,6 +514,11 @@ hold after an infinite loop.
   \label{resolve-normal-method-rule}
   Given $i : ProgramAddress$, if
   \setlength{\zedindent}{0.5cm}
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq A \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
+  \end{circus}
   \begin{circus}
     \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
     {} = {} \\
