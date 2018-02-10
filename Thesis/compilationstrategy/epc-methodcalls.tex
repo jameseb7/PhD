@@ -239,12 +239,6 @@ Law~[\nameref{seq-unitl-law}].
 For brevity, we omit the application of these laws from the algorithm,
 and we understand that assumptions are introduced at the points
 required for the rules to be applied.
-Rule~[\nameref{refine-invokestatic-rule}] refines the
-$HandleInvokeStaticEPC(cpi)$ to an action that pops the method's
-arguments from the stack using the $InterpreterStackFrameInvoke$
-operation and then behaves as the $Invoke$ action described in
-Section~\ref{cee-interpreter-section}, for the class and method
-referenced by $cpi$.
 \begin{restatable}[refine-invokestatic]{crule}{RefineInvokestaticRule}
   \label{refine-invokestatic-rule}
   \setlength{\zedindent}{0.25cm}
@@ -267,17 +261,23 @@ referenced by $cpi$.
     \t1 cpi \in methodRefIndices~c_0 \land c_0.constantPool~cpi = MethodRef~(c,m).
   \end{displaymath}
 \end{restatable}
-The identifiers of the class, $c$, and method, $m$, referenced by
-$cpi$ are determined by first finding the class information, $c_0$,for
-the current class.
-The $c_0$ information is obtained from the $pc$ value, $i$, when the
-method invocation instruction is executed by finding $Class$
-information in the range of $cs$ that contains a method with $j$
-between its entry point and end.
-If $cpi$ is the index of a $MethodRef$ in the $constantPool$ of $c_0$,
-then the class identifier, $c$ and method identifier, $m$, of the
-method to be invoked are those given in the $MethodRef$.
-The are passed to $Invoke$, along with the arguments popped from the
+Rule~[\nameref{refine-invokestatic-rule}] refines the
+$HandleInvokeStaticEPC(cpi)$ to an action that pops the method's
+arguments from the stack using the $InterpreterStackFrameInvoke$
+operation and then behaves as the $Invoke$ action described in
+Section~\ref{cee-interpreter-section}.
+The method handled by $Invoke$ is identified by a class identifier,
+$c$ and a method identifier, $m$.
+These identifiers are determined from the $cpi$ parameter passed to
+$HandleInvokeStaticEPC$, which is an index into the $constantPool$ of
+the current class information.
+To access this information, we first determine the current class
+information, $c_0$, which is the class in $cs$ that contains a method,
+$m_0$, that contains the current $pc$ value, $i$.
+Within $c_0$, $constantPool$ entry at $cpi$ must be a $MethodRef$.
+The $c$ and $m$ values of the method to be invoked are those contained
+in the $MethodRef$.
+These are passed to $Invoke$, along with the arguments popped from the
 stack, $poppedArgs$, and a boolean value indicating whether the method
 call is static, which is $\true$ in the case of \texttt{invokestatic}.
 
@@ -627,11 +627,8 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
   \end{displaymath}
   and provided $n > 1$.
 \end{restatable}
-The class identifiers used in the choice are determined by first
-determining the current class information as for
-Rule~[\nameref{refine-invokestatic-rule}] and looking up the constant
-pool index $cpi$ to obtain a $MethodRef$ containing a class
-identifier, $c$, and method identifier, $m$.
+The class identifiers used in the choice are determined by looking up
+the constant pool index, $cpi$, as for Rule~[\nameref{refine-invokestatic-rule}], to obtain a class identifier, $c$, and method identifier, $m$.
 The identifier $m$ determines which method should be invoked, but the
 class of the method to be invoked is determined from the class of the
 \texttt{this} object popped from the stack.
