@@ -1,13 +1,7 @@
 When a method is complete, calls to that method can then be resolved.
-This is performed after introduction of loops and conditionals,
-ensuring methods with loops and conditionals are complete so that this
-step can be applied.
-% As mentioned previously, since this requires all the method calls in a
-% given method to be resolved first, we do not allow recursion.
-
 This step begins with the copying of the method into a separate
 action, so that it can be referenced elsewhere.
-This is performed by as described by
+This is performed as described by
 Algorithm~\ref{separate-complete-methods-algorithm}.
 \begin{algorithm}
   \begin{algorithmic}[1]
@@ -33,16 +27,16 @@ ends in a return instruction or a recursion.
 
 If a method is complete, we first introduce an assumption at the start
 of the sequence of actions for the method that establishes what the
-value of $currentClass$ is during the method's execution.
-This ensures that the information can be used during the
-\emph{Elimination of Frame Stack} stage of the compilation, since it
-cannot be determined from the $pc$ value during that stage.
-The introduction of the assumption is performed by an application of
-Rule~[\nameref{introduce-class-information-rule}], shown below, on
-line~\ref{algorithm-introduce-class-information}.
-This determines the $currentClass$ by finding the class information
-$c$ in the range of $cs$ that contains a method $m$ with the same
-entry point, $i$, as the complete method being operated on.
+value of $currentClass$ is during the method's execution
+(line~\ref{algorithm-introduce-class-information}).
+This is performed by an application of
+Rule~[\nameref{introduce-class-information-rule}], shown below.
+The $currentClass$ is determined by finding the class information $c$
+in the range of $cs$ that contains a method $m$ with the same entry
+point, $i$, as the complete method being operated on.
+By recording this information in an assumption, we can use it in later
+stages of the compilation, when the value of the $pc$ is no longer
+available.
 \begin{restatable}[introduce-class-information]{crule}{IntroduceClassInformationRule}
   \label{introduce-class-information-rule}
   Given $i : ProgramAddress$,
@@ -82,8 +76,9 @@ line~\ref{algorithm-introduce-method-action}.
 We form the name of this action from the name of the class to which
 the method belongs and the name of the method, concatenated together
 with an underscore.
-The name used for the action does not have an effect upon the
-correctness of the strategy, provided it is unique.
+This is similar to how icecap forms method names, although the name
+used for the action does not have an effect upon the correctness of
+the strategy, provided it is unique.
 Once the method action has been introduced, the sequence of actions at
 the method's entry point in the $Running$ action is replaced with a
 reference to the newly introduced action by applying
@@ -112,6 +107,8 @@ In this algorithm, while we indicate the parameters supplied to a rule
 with the word \textbf{for}, as in previous algorithms, we use the word
 \textbf{to} to indicate which part of the $Running$ action the rule is
 applied to.
+In all previous algorithms, the laws are applied to the whole action,
+and so we omit the \textbf{to} clause.
 \begin{algorithm}[th]
   \begin{algorithmic}[1]
     \For{$m \gets methods$}
@@ -201,8 +198,8 @@ behaviours for each of the possible targets.
 The check of the number of targets is performed on
 line~\ref{algorithm-multiple-targets-check} of
 Algorithm~\ref{resolve-method-calls-algorithm}.
-This checks the condition \Call{HasSingleTarget}{$mc$}, which is true
-if the instruction to be handled is \texttt{invokespecial} or
+This uses the condition \Call{HasSingleTarget}{$mc$}, which is true if
+the instruction to be handled is \texttt{invokespecial} or
 \texttt{invokestatic}, or an \texttt{invokevirtual} instruction
 referencing a class with no subclasses (other than itself).
 It is false otherwise, that is, if the instruction is
@@ -219,6 +216,8 @@ performing this transformation, one for each
 instruction:~Rule~[\nameref{refine-invokestatic-rule}],
 Rule~[\nameref{refine-invokespecial-rule}] and
 Rule~[\nameref{refine-invokevirtual-single-rule}].
+% TODO: move this to the loops and conditionals section if used
+% previously
 These rules are applied in a try block, beginning on
 line~\ref{algorithm-try-block-begin}, which tries to apply each rule in
 turn, stopping when one succeeds.
@@ -228,9 +227,9 @@ handles \texttt{invokestatic} instructions.
 This rule, as with other rules in this section, is applied to an
 action beginning with an assumption on the value of $pc$.
 This allows it to be applied at the start of a branch of the choice in
-$Running$, introducing the assumption using
+$Running$, after introducing the assumption using
 Law~[\nameref{alt-assump-intro-law}], or after a sequential
-composition, introducing the assumption using
+composition, after introducing the assumption using
 Law~[\nameref{assign-assump-intro-law}] and distributing it over
 $Poll$ using Lemma~\ref{Poll-assumption-distribution-lemma}.
 After the application of the rule, the assumption can be eliminated
