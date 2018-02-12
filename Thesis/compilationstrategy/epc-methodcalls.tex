@@ -266,14 +266,14 @@ arguments from the stack using the $InterpreterStackFrameInvoke$
 operation and then behaves as the $Invoke$ action described in
 Section~\ref{cee-interpreter-section}.
 The method handled by $Invoke$ is identified by a class identifier,
-$c$ and a method identifier, $m$.
+$c$, and a method identifier, $m$.
 These identifiers are determined from the $cpi$ parameter passed to
 $HandleInvokeStaticEPC$, which is an index into the $constantPool$ of
 the current class information.
-To access this information, we first determine the current class
+To determine the identifiers, we first determine the current class
 information, $c_0$, which is the class in $cs$ that contains a method,
-$m_0$, that contains the current $pc$ value, $i$.
-Within $c_0$, $constantPool$ entry at $cpi$ must be a $MethodRef$.
+$m_0$, whose bytecode spans over the current $pc$ value, $i$.
+Within $c_0$, the $constantPool$ entry at $cpi$ must be a $MethodRef$.
 The $c$ and $m$ values of the method to be invoked are those contained
 in the $MethodRef$.
 These are passed to $Invoke$, along with the arguments popped from the
@@ -294,14 +294,13 @@ The communication is eliminated later in the strategy, during the
 \emph{Data Refinement of Objects} stage, described in
 Section~\ref{data-refinement-of-objects-section}.
 
-After the action that handles the method invocation instruction has
-been transformed, the method invocation is resolved by transforming
-the $Invoke$ action to the behaviour of the method being invoked.
+After one of the above rules is applied, the method invocation is
+resolved by transforming the $Invoke$ action to the behaviour of the
+method being invoked.
 A $pc$ assignment is also introduced after the method's behaviour so
 that it can be sequentially composed with the instructions after the
 method call.
-There are four rules for this in the case of method calls with a
-single target, applied in another try block on
+There are four rules for this, applied in another try block on
 line~\ref{algorithm-try-block2-start}:~Rule~[\nameref{resolve-special-method-rule}]
 and Rule~[\nameref{resolve-special-method-virtual-rule}], which
 handles resolution of special methods, and
@@ -310,12 +309,12 @@ Rule~[\nameref{resolve-normal-method-virtual-rule}], which handle
 resolution of non-special methods.
 
 Rule~[\nameref{resolve-special-method-rule}], shown below, operates by
-simply replacing the $Invoke$ action with the behaviour for the
-special method and moving a $pc$ assignment after the methods
-behaviour.
+simply replacing the call to the $Invoke$ action with actions that
+specify the behaviour for the special method, and introducing a $pc$
+assignment after those actions.
 This collapses the choice in the definition of the $Invoke$ action.
-The behaviour of the special method is represented by the syntactic
-function $specialMethodAction$, which is defined by
+The actions that define behaviour of the special method are identified
+by the syntactic function $specialMethodAction$, which is defined by
 Table~\ref{special-method-action-table}.
 It determines which behaviour should be used based on the class and
 method identifiers passed to $Invoke$ and the boolean value indicating
@@ -489,7 +488,7 @@ communication on $getClassIDOf$ in the case of an
 
 Rule~[\nameref{resolve-normal-method-rule}], shown below, resolves
 non-special methods by unrolling the loop in $Running$ to sequence the
-method call with the action containing the method's behaviour.
+method call with the action defining the method's behaviour.
 The entry point of the method is obtained from the class information
 for the method, which is determined as described by the data operation
 $ResolveMethod$.
@@ -500,7 +499,7 @@ The second proviso of the rule ensures that the entry point, $k$, is
 that given in the class information provided by $ResolveMethod$ for
 the class identifier $c$ and method identifier $m$.
 The action containing the behaviour of the method is the action $M$ at
-the $pc = k$ branch of the choice in Running.
+the $pc = k$ branch of the choice in $Running$.
 The third proviso requires that the execution of $M$ must result in
 the top stack frame being popped and the $pc$ being set to the value
 stored in the next stack frame.
@@ -509,6 +508,8 @@ behaviour after it.
 It is true for all complete methods, since the return instructions
 establish the required property and any property may be assumed to
 hold after an infinite loop.
+% TODO: put this, and other rules, in a float to prevent breaking
+% across pages
 \begin{restatable}[resolve-normal-method]{crule}{ResolveNormalMethodRule}
   \label{resolve-normal-method-rule}
   Given $i : ProgramAddress$, if
@@ -573,23 +574,23 @@ Rule~[\nameref{resolve-normal-method-rule}] applies only to those
 class and method identifiers that are not handled by
 Rule~[\nameref{resolve-special-method-rule}].
 Because of this, Rule~[\nameref{resolve-normal-method-rule}] collapses
-the choice in the $Invoke$ action, replacing it with $InvokeOther$.
-The $InvokeOther$ action is sequenced with the action $Poll$ and the
-method action, $M$, containing the methods behaviour.
+the choice in the $Invoke$ action, replacing it with a call to
+$InvokeOther$, sequenced with the action $Poll$ and the method action,
+$M$, defining the method's behaviour.
 An assignment is placed after $M$ to set $pc$ to the address of the
-next instruction, allowing a sequential composition with the
-instructions after the method call to be introduced.
+next instruction.
+% , allowing a sequential composition with the
+% instructions after the method call to be introduced.
 Rule~[\nameref{resolve-normal-method-virtual-rule}] is similar but, as
 with Rule~[\nameref{resolve-special-method-virtual-rule}], handles the
 $getClassIDOf$ communication.
 
-For method calls with multiple targets, then we introduce the choice
-over those targets using
-Rule~[\nameref{refine-invokevirtual-multi-rule}], which is applied on
-line~\ref{algorithm-refine-invokevirtual-multi}.
+For method calls with multiple targets, we introduce the choice over
+those targets using Rule~[\nameref{refine-invokevirtual-multi-rule}],
+which is applied on line~\ref{algorithm-refine-invokevirtual-multi}.
 This replaces the $HandleInvokeVirtualEPC$ action with an action that
 pops the arguments of the function from the stack using the
-$InterpreterStackFrameInvoke$ data operation and then makes a choice
+$InterpreterStackFrameInvoke$ data operation, and then makes a choice
 of which method to invoke using the class of the \texttt{this}
 argument for the method.
 The method invocations are left as references to the $Invoke$ actions,
@@ -627,13 +628,16 @@ Algorithm~\ref{resolve-method-calls-algorithm}.
   and provided $n > 1$.
 \end{restatable}
 The class identifiers used in the choice are determined by looking up
-the constant pool index, $cpi$, as for Rule~[\nameref{refine-invokestatic-rule}], to obtain a class identifier, $c$, and method identifier, $m$.
+the constant pool index, $cpi$, as for
+Rule~[\nameref{refine-invokestatic-rule}], to obtain a class
+identifier, $c$, and method identifier, $m$.
 The identifier $m$ determines which method should be invoked, but the
 class of the method to be invoked is determined from the class of the
 \texttt{this} object popped from the stack.
-Since Java bytecode verification ensures that the class will be
-assignable to $c$, we need only consider the identifiers of subclasses
-of $c$:~$c_1, \cdots , c_n$.
+% TODO: should we reference the fact that this is mentioned above
+Since Java bytecode verification ensures that the class is assignable
+to $c$, we need only consider the identifiers of subclasses of
+$c$:~$c_1, \cdots , c_n$.
 We require that $n$ be greater than $1$, since this rule handles cases
 with multiple targets.
 
