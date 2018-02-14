@@ -1,4 +1,4 @@
-\documentclass[a4paper,10pt]{report}
+\documentclass[a4paper,11pt]{report}
 
 \usepackage[table]{xcolor}
 \usepackage{array}
@@ -31,8 +31,8 @@
 
 \setcounter{secnumdepth}{4}
 
-\title{An Approach to Verification of Safety-Critical Java Virtual
-  Machines with Ahead-of-time Compilation}
+\title{An Approach to Verification of Ahead-of-time Compilation for
+  Safety-Critical Java}
 \author{James Baxter}
 \date{}
 
@@ -146,25 +146,46 @@ prefoothook={\qedsymbol\relax}
 \begin{document}
 \maketitle
 
+
 \begin{abstract}
   In recent years Java has been increasingly considered as a language
   for safety-critical embedded systems.
-  However, some features of Java are unsuitable for such systems and
-  this has resulted in the creation of Safety-Critical Java (SCJ).
-  The different scheduling and memory management model of SCJ means
-  that a specialised virtual machine is required to run SCJ programs.
+  However, some features of Java are unsuitable for such systems.
+  This has resulted in the creation of Safety-Critical Java (SCJ),
+  which facilitates the creation of certifiable real-time and embedded
+  Java programs.
+  SCJ uses different scheduling and memory management models to
+  standard Java, so it requires a specialised virtual machine (SCJVM).
+  Several such virtual machines have been developed.
+  A common approach of these virtual machines is to compile Java
+  bytecode program to a native language, usually C, ahead-of-time for
+  greater performance on low-resource embedded systems.
+  
   Given the safety-critical nature of the applications, it must be
-  ensured that the virtual machine is correct, but so far no SCJ
-  virtual machine has been formally verified.
-  In this dissertation, we propose a framework for verification of SCJ
-  virtual machines.
-  We consider the differences between SCJ and standard Java, and
-  discuss some of the existing virtual machines for SCJ.
-  Seeing that many SCJ virtual machines precompile to native code, we
-  then survey some of the literature on compiler correctness.
-  Finally, we present some preliminary results identifying the
-  requirements of the services of an SCJ virtual machine and
-  constructing a formal model of those requirements.
+  ensured that the virtual machine is correct.
+  However, so far formal verification has not been applied to any
+  SCJVM.
+  This thesis contributes to the formal verification of SCJVMs that
+  utilise ahead-of-time compilation by presenting a verification of
+  compilation from Java bytecode to C.
+  The approach we adopt to verifying compilation is an adaptation of
+  the algebraic approach developed by Augusto Sampaio.
+  Our approach involves beginning with a formal specification of an
+  SCJVM executing the bytecodes of a program and transforming it,
+  through the application of proven compilation rules, to a
+  representation of the target C code.
+  Thus, our contributions are a formal specification of an SCJVM, a
+  set of compilation rules with proofs, and a strategy for applying
+  those compilation rules.
+  
+  Our compilation strategy can be used as the basis for an
+  implementation of an ahead-of-time compiling SCJVM, or verification
+  of an existing implementation.
+  Additionally, our formal model of an SCJVM may be used as a
+  specification for creating an interpreting SCJVM.
+  To ensure the applicability of our results, we base our work on
+  icecap, the only SCJVM that is open source and up-to-date with the
+  SCJ standard.
 \end{abstract}
 
 \tableofcontents
