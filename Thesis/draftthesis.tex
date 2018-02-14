@@ -152,14 +152,13 @@ prefoothook={\qedsymbol\relax}
   for safety-critical embedded systems.
   However, some features of Java are unsuitable for such systems.
   This has resulted in the creation of Safety-Critical Java (SCJ),
-  which facilitates the creation of certifiable real-time and embedded
-  Java programs.
+  which facilitates the development of certifiable real-time and
+  embedded Java programs.
   SCJ uses different scheduling and memory management models to
   standard Java, so it requires a specialised virtual machine (SCJVM).
-  Several such virtual machines have been developed.
-  A common approach of these virtual machines is to compile Java
-  bytecode program to a native language, usually C, ahead-of-time for
-  greater performance on low-resource embedded systems.
+  A common approach is to compile Java bytecode program to a native
+  language, usually C, ahead-of-time for greater performance on
+  low-resource embedded systems.
   
   Given the safety-critical nature of the applications, it must be
   ensured that the virtual machine is correct.
@@ -168,12 +167,12 @@ prefoothook={\qedsymbol\relax}
   This thesis contributes to the formal verification of SCJVMs that
   utilise ahead-of-time compilation by presenting a verification of
   compilation from Java bytecode to C.
-  The approach we adopt to verifying compilation is an adaptation of
-  the algebraic approach developed by Augusto Sampaio.
-  Our approach involves beginning with a formal specification of an
-  SCJVM executing the bytecodes of a program and transforming it,
-  through the application of proven compilation rules, to a
-  representation of the target C code.
+  The approach we adopt is an adaptation of the algebraic approach
+  developed by Sampaio and Hoare.
+  We start with a formal specification of an SCJVM executing the
+  bytecodes of a program, and transform it, through the application
+  of proven compilation rules, to a representation of the target C
+  code.
   Thus, our contributions are a formal specification of an SCJVM, a
   set of compilation rules with proofs, and a strategy for applying
   those compilation rules.
