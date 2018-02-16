@@ -1,0 +1,2346 @@
+\begin{crproof}[\nameref{introduce-class-information-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-assump-intro-law}] \\
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \{ pc = i \} \circseq A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] and invariant of $InterpreterState$ \\
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t3 \{currentClass = (\mu c : \ran cs | \\
+      \t4 (\exists_1 m : MethodID | m \in \dom c.methodEntry @  \\
+      \t5 i \in c.methodEntry~m \upto c.methodEnd~m)) \} \circseq A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-subst-law}] and definition of $c$ \\
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t3 \{currentClass = c\} \circseq A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen \{ currentClass = c \} \circseq A \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+
+\begin{crproof}[\nameref{refine-invokestatic-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \{ pc = i \} \circseq HandleInvokestaticEPC(cpi)
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $HandleInvokeStaticEPC$ \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circval cpIndex : CPIndex \circspot \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpIndex \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \false) \\
+      \t1 {} \circelse cpIndex \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)(cpi)
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar cpIndex : CPIndex \circspot cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpIndex \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpIndex \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assign-assump-intro-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \{ cpIndex = cpi \} \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpIndex \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpIndex \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpIndex \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpIndex \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-guard-replace-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-alt-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 \{ cpIndex = cpi \} \circseq mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-assign-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 \{ cpIndex = cpi \} \circseq mid := methodOf~currentClass~cpi \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 \{ cpIndex = cpi \} \circseq  mid := methodOf~currentClass~cpi \circseq \{ cpIndex = cpi \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 \{ cpIndex = cpi \} \circseq  mid := methodOf~currentClass~cpi \circseq \{ cpIndex = cpi \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \{ cpIndex = cpi \} \circseq Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \\
+      \t1 (\circvar cpIndex : CPIndex \circspot
+      cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 \{ cpIndex = cpi \} \circseq  mid := methodOf~currentClass~cpi \circseq \{ cpIndex = cpi \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \{ cpIndex = cpi \} \circseq Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar cpIndex : CPIndex \circspot cpIndex := cpi \circseq \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpi \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpi \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}], invariant of $InterpreterState$, and global assumption of passing bytecode verification \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpi \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpi \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true) \\
+      \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \Chaos \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}], invariant of $InterpreterState$, and definition of $c$ and $m$ \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq  \{ mid = m \} \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq  \{ mid = m \} \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ mid = m \} \circseq Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ mid = m \} \circseq Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-assign-dist-law}] and Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
+      \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
+      \t1 Invoke(c, m, poppedArgs, \true))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(c, m, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{var-var-comm-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \circvar mid : MethodID \circspot \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(c, m, poppedArgs, \true))
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 Invoke(c, m, poppedArgs, \true))
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+
+\pagebreak
+
+\begin{crproof}[\nameref{resolve-normal-method-rule}]
+  As in previous proofs, we seek to apply
+  Law~[\nameref{rec-least-fixed-point-law}], taking the right-hand-side
+  of the rule as $Y$, and the left-hand-side as
+  $\circmu X \circspot F(X)$, and proving $F(Y) \circrefines_A Y$:
+  \begin{argue}
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(c, m, poppedArgs, s) \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi \\
+    \end{array}\\
+    \circrefines_A & Lemma~\ref{Running-loop-unroll-lemma} and first proviso of rule \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 Invoke(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi \\
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $Invoke$ \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word; \circval static : \boolean \circspot \\
+      \t3 InvokeResumeThread(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeSuspend(classID, method, static) \\
+      \t3 {} \extchoice InvokeRegister(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeEnterPrivateMemory(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeExecuteInAreaOf(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeExecuteInOuterArea(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeExitMemory(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitAperiodicEventHandler(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitPeriodicEventHandler(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerAbs(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerRel(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeWrite(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeRead(classID, method, static) \\
+      \t3 {} \extchoice InvokeOther(classID, method, args, static))(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi \\
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t2 \circvar method : MethodID \circspot methodID := m \circseq \\
+      \t2 \circvar args : \seq Word \circspot args := poppedArgs \circseq \\
+      \t2 \circvar staticFlag : \boolean \circspot static := s \circseq \\
+      \t3 InvokeResumeThread(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeSuspend(classID, method, static) \\
+      \t3 {} \extchoice InvokeRegister(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeEnterPrivateMemory(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeExecuteInAreaOf(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeExecuteInOuterArea(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeExitMemory(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitAperiodicEventHandler(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitPeriodicEventHandler(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerAbs(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerRel(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeWrite(classID, method, args, static) \\
+      \t3 {} \extchoice InvokeRead(classID, method, static) \\
+      \t3 {} \extchoice InvokeOther(classID, method, args, static)) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi \\
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-subst-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t2 \circvar method : MethodID \circspot methodID := m \circseq \\
+      \t2 \circvar args : \seq Word \circspot args := poppedArgs \circseq \\
+      \t2 \circvar staticFlag : \boolean \circspot static := s \circseq \\
+      \t3 InvokeResumeThread(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeSuspend(c, m, s) \\
+      \t3 {} \extchoice InvokeRegister(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeEnterPrivateMemory(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeExecuteInAreaOf(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeExecuteInOuterArea(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeExitMemory(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitAperiodicEventHandler(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitPeriodicEventHandler(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerAbs(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerRel(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeWrite(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeRead(c, m, s) \\
+      \t3 {} \extchoice InvokeOther(c, m, poppedArgs, s)) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi \\
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 (InvokeResumeThread(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeSuspend(c, m, s) \\
+      \t3 {} \extchoice InvokeRegister(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeEnterPrivateMemory(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeExecuteInAreaOf(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeExecuteInOuterArea(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeExitMemory(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitAperiodicEventHandler(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitPeriodicEventHandler(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerAbs(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeInitOneShotEventHandlerRel(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeWrite(c, m, poppedArgs, s) \\
+      \t3 {} \extchoice InvokeRead(c, m, s) \\
+      \t3 {} \extchoice InvokeOther(c, m, poppedArgs, s)) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}], definitions of $Invoke*$ actions, Law~[\nameref{val-def-law}], Law~[\nameref{assign-seq-subst-law}], and Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \circblockbegin
+      (\lcircguard (c,resumeThreadClass) \in subclassRel~cs \land m = resumeThreadID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,suspendClass) \in subclassRel~cs \land m = suspendID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,managedSchedulableClass) \in subclassRel~cs \land m = registerID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,managedMemoryClass) \in subclassRel~cs \\
+      \t2 {} \land m = enterPrivateMemoryHelperID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,managedMemoryClass) \in subclassRel~cs \\
+      \t2 {} \land m = executeInAreaOfHelperID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,managedMemoryClass) \in subclassRel~cs \\
+      \t2 {} \land m = executeInOuterAreaHelperID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,managedMemoryClass) \in subclassRel~cs \land m = exitMemoryID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,aperiodicEventHandlerClass) \in subclassRel~cs \land m = initAPEHID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,periodicEventHandlerClass) \in subclassRel~cs \land m = initPEHID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,oneShotEventHandlerClass) \in subclassRel~cs \land m = initOSEHAbsID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,oneShotEventHandlerClass) \in subclassRel~cs \land m = initOSEHRelID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,writeClass) \in subclassRel~cs \land m = writeID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice (\lcircguard (c,readClass) \in subclassRel~cs \land m = readID \rcircguard \circguard \cdots {}) \\
+      {} \extchoice InvokeOther(c, m, poppedArgs, s)
+      \circblockend \circseq \\
+      \t2 Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{false-guard-law}] and assumption of rule \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \circblockbegin
+      \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice \Stop \\
+      \t1 {} \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice InvokeOther(c, m, poppedArgs, s)
+      \circblockend \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{extchoice-unit-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & schema calculus \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract [ \Delta InterpreterState; poppedArgs! : \seq Word |  \\
+      
+      \t3 (\exists \Delta StackFrame @ \\
+      \t4 \theta StackFrame = last~frameStack \land \\
+      \t4 frameStack' = (front~frameStack) \cat \langle \theta StackFrame~' \rangle \land \\
+      \t4 e \leq \# operandStack \land \\
+      \t4 operandStack' = (1 \upto \# operandStack - e) \dres operandStack \land \\
+      \t4 poppedArgs! = \\
+      \t5 \lambda n : 1 \upto e @ operandStack~(\# operandStack - argsToPop? + n) \land \\
+      \t4 storedPC' = pc \land \\
+      \t4 localVariables' = localVariables \land stackSize' = stackSize \land frameClass' = frameClass) \land \\
+      \t3 pc' = pc + 1 \land \\
+      \t3 currentClass' = currentClass \land frameStackID' = frameStackID] \rschexpract \circseq \\
+      \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & schema calculus and Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract [ \Delta InterpreterState; poppedArgs! : \seq Word |  \\
+      
+      \t3 (\exists \Delta StackFrame @ \\
+      \t4 \theta StackFrame = last~frameStack \land \\
+      \t4 frameStack' = (front~frameStack) \cat \langle \theta StackFrame~' \rangle \land \\
+      \t4 e \leq \# operandStack \land \\
+      \t4 operandStack' = (1 \upto \# operandStack - e) \dres operandStack \land \\
+      \t4 poppedArgs! = \\
+      \t5 \lambda n : 1 \upto e @ operandStack~(\# operandStack - argsToPop? + n) \land \\
+      \t4 storedPC' = pc + 1 \land \\
+      \t4 localVariables' = localVariables \land stackSize' = stackSize \land frameClass' = frameClass) \land \\
+      \t3 pc' = pc + 1 \land \\
+      \t3 currentClass' = currentClass \land frameStackID' = frameStackID] \rschexpract \circseq \\
+      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & schema calculus \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $InvokeOther$ \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t2 (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
+      \t3 \lcircguard ((classID, suspendClass) \notin subclassRel~cs \lor methodID \neq suspendID) \\
+      \t4 {} \land ((classID,resumeThreadClass) \notin subclassRel~cs \lor methodID \neq resumeThreadID) \\
+      \t4 {} \land ((classID,managedSchedulableClass) \notin subclassRel~cs \lor methodID \neq registerID) \\
+      \t4 {} \land ((classID,managedMemoryClass) \notin subclassRel~cs \\
+      \t5 {} \lor methodID \notin   \{enterPrivateMemoryHelperID, executeInAreaOfHelperID, \\
+      \t6 executeInOuterAreaHelperID, exitMemoryID\}) \\
+      \t4 {} \land ((classID,aperiodicEventHandlerClass) \notin subclassRel~cs \lor methodID \neq initAPEHID) \\
+      \t4 {} \land ((classID,periodicEventHandlerClass) \notin subclassRel~cs \lor methodID \neq initPEHID) \\
+      \t4 {} \land ((classID,oneShotEventHandlerClass) \notin subclassRel~cs \lor methodID \neq initOSEHAbsID) \\
+      \t4 {} \land ((classID,oneShotEventHandlerClass) \notin subclassRel~cs \lor methodID \neq initOSEHRelID) \\
+      \t4 {} \land ((classID, readClass) \notin subclassRel~cs \lor methodID \neq readID) \\
+      \t4 {} \land ((classID, writeClass) \notin subclassRel~cs \lor methodID \neq writeID) \rcircguard \circguard {} \\
+      \t3 \circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
+      \t3 \circif static = \true \iff methodID \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame \rschexpract \\
+      \t3 {} \circelse \lnot (static = \true \iff methodID \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi)(c, m, poppedArgs, s) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}], Law~[\nameref{assign-seq-subst-law}], and Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t2 (\lcircguard ((c, suspendClass) \notin subclassRel~cs \lor m \neq suspendID) \\
+      \t4 {} \land ((c,resumeThreadClass) \notin subclassRel~cs \lor m \neq resumeThreadID) \\
+      \t4 {} \land ((c,managedSchedulableClass) \notin subclassRel~cs \lor m \neq registerID) \\
+      \t4 {} \land ((c,managedMemoryClass) \notin subclassRel~cs \\
+      \t5 {} \lor m \notin \{enterPrivateMemoryHelperID, executeInAreaOfHelperID, \\
+      \t6 executeInOuterAreaHelperID, exitMemoryID\}) \\
+      \t4 {} \land ((c,aperiodicEventHandlerClass) \notin subclassRel~cs \lor m \neq initAPEHID) \\
+      \t4 {} \land ((c,periodicEventHandlerClass) \notin subclassRel~cs \lor m \neq initPEHID) \\
+      \t4 {} \land ((c,oneShotEventHandlerClass) \notin subclassRel~cs \lor m \neq initOSEHAbsID) \\
+      \t4 {} \land ((c,oneShotEventHandlerClass) \notin subclassRel~cs \lor m \neq initOSEHRelID) \\
+      \t4 {} \land ((c, readClass) \notin subclassRel~cs \lor m \neq readID) \\
+      \t4 {} \land ((c, writeClass) \notin subclassRel~cs \lor m \neq writeID) \rcircguard \circguard {} \\
+      \t3 \circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?, c/classID?, m/methodID?] \rschexpract \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{true-guard-law}] and assumption of rule \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t2 (\circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?, c/classID?, m/methodID?] \rschexpract \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq
+      \lschexpract ResolveMethod[cs/cs?, c/classID?, m/methodID?] \rschexpract \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] and Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t4 \circvar methodID : MethodID \circspot methodID := m \circseq \\
+      \t4 \lschexpract ResolveMethod \rschexpract) \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assign-assump-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1\} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \{ classID = c \} \circseq \\
+      \t4 \circvar methodID : MethodID \circspot methodID := m \circseq \\
+      \t4 \lschexpract ResolveMethod \rschexpract) \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t4 \circvar methodID : MethodID \circspot \{ classID = c \} \circseq methodID := m \circseq \\
+      \t4 \lschexpract ResolveMethod \rschexpract) \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t4 \circvar methodID : MethodID \circspot \{ classID = c \} \circseq methodID := m \circseq \\
+      \t4 \{ classID = c \land methodID = m \} \circseq \lschexpract ResolveMethod \rschexpract) \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & second proviso of rule \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t4 \circvar methodID : MethodID \circspot \{ classID = c \} \circseq methodID := m \circseq \\
+      \t4 \{ classID = c \land methodID = m \} \circseq \lschexpract ResolveMethod \rschexpract) \circseq \\
+      \t3 \{ class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t4 \circvar methodID : MethodID \circspot \{ classID = c \} \circseq methodID := m \circseq \\
+      \t4 \{ classID = c \land methodID = m \} \circseq \lschexpract ResolveMethod[c/classID?,m/methodID] \rschexpract) \circseq \\
+      \t3 \{ class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circseq_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t4 \circvar methodID : MethodID \circspot methodID := m \circseq \\
+      \t4  \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract) \circseq \\
+      \t3 \{ class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & schema calculus and Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t3 \{ class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}], Law~[\nameref{assump-conj-law}], and global assumption of passing bytecode verification \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \\
+      \t4 {} \land class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \{ s = \true \iff m \in class.staticMethods \} \circseq \\
+      \t3 \circif s = \true \iff m \in class.staticMethods \circthen {} \\
+      \t4 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract \\
+      \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
+      \t3 \circfi) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \\
+      \t4 {} \land class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \{ s = \true \iff m \in class.staticMethods \} \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \\
+      \t4 {} \land class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \{class = classInfo\} \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \{class = classInfo\} \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & schema calculus \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \{ (last~frameStack).storedPC = j + 1 \land classInfo.methodEntry~m = k \} \circseq \\
+      \t3 \lschexpract [\Delta InterpreterState | \\
+      \t4 \exists numLocals? : \nat | numLocals? = classInfo.methodLocals~m @ \\
+      \t4 \exists stackSize? : \nat | stackSize? = classInfo.methodStackSize~m @ \\
+      \t4 \exists storedPC? : ProgramAddress | storedPC? = classInfo.methodEntry~m @ \\
+      \t4 \exists StackFrame~' | StackFrameInit[classInfo/class?,poppedArgs/initLocals?] @ \\
+      \t4 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle \land \\
+      \t4 pc' = storedPC? \\
+      \t4 currentClass' = classInfo \\
+      \t4 frameStackID' = frameStackID] \rschexpract) \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract [\Delta InterpreterState | \\
+      \t4 \exists numLocals? : \nat | numLocals? = classInfo.methodLocals~m @ \\
+      \t4 \exists stackSize? : \nat | stackSize? = classInfo.methodStackSize~m @ \\
+      \t4 \exists storedPC? : ProgramAddress | storedPC? = classInfo.methodEntry~m @ \\
+      \t4 \exists StackFrame~' | StackFrameInit[classInfo/class?, poppedArgs/initLocals?] @ \\
+      \t4 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle \land \\
+      \t4 pc' = storedPC? \\
+      \t4 currentClass' = classInfo \\
+      \t4 frameStackID' = frameStackID] \rschexpract) \circseq \\
+      \t2 \{ (last~(front~frameStack)).storedPC = j + 1 \land pc = k \} \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & schema calculus \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 \{ (last~(front~frameStack)).storedPC = j + 1 \land pc = k \} \circseq Poll \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Lemma~\ref{Poll-assumption-distribution-lemma} \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \land pc = k \} \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \} \circseq \{ pc = k \} \circseq \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 \cdots \\
+      \t2 \circfi \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse2-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \} \circseq \{ pc = k \} \circseq M \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \} \circseq M \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & assumption of rule \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \} \circseq M \circseq \{ pc = j + 1 \} \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \} \circseq M \circseq \{ pc = j + 1 \} \circseq pc := j + 1 \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 (\circvar class : Class \circspot \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \circseq M \circseq pc := j + 1 \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 (\circvar class : Class \circspot
+      \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+      \t2 Poll \circseq \circseq M \circseq pc := j + 1 \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & schema calculus and Law~[\nameref{var-schema-intro-law}] \\
+    \begin{array}{l}
+      \circif frameStack = \emptyset \circthen \Skip \\
+      {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t1 \circif \cdots \\
+      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t2 Poll \circseq \circseq M \circseq pc := j + 1 \\
+      \t1 {} \circelse pc = k \circthen M \\
+      \t1 \cdots \\
+      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t3 \circif \cdots \\
+      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t5 \lschexpract InterpreterNewStackFrame[\\
+      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t4 Poll \circseq M \circseq pc := j + 1 \\
+      \t3 {} \circelse pc = k \circthen M \\
+      \t3 \cdots \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{rec-unfold-law}] \\
+    \begin{array}{l}
+      \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 \circif \cdots \\
+      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot
+      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[\\
+      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t2 {} \circelse pc = k \circthen M \\
+      \t2 {} \cdots {} \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi \\
+      \circfi
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+
+\begin{crproof}[\nameref{refine-invokevirtual-multi-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \{ pc = j \} \circseq HandleInvokevirtualEPC(cpi)
+    \end{array}\\
+    = & Law~[\nameref{copy-rule}] and definition of $HandleInvokevirtualEPC$ \\
+    \begin{array}{l}
+      \{ pc = j \} \circseq (\circval cpIndex : CPIndex \circspot \\
+      \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \circif cpIndex \in methodRefIndices~currentClass \circthen {} \\
+      \t2 mid := methodOf~currentClass~cpIndex \circseq \\
+      \t2 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 getClassIDOf!(head~poppedArgs)?cid \then Invoke(cid, mid, poppedArgs, \false) \\
+      \t1 {} \circelse cpIndex \notin methodRefIndices~currentClass \circthen Chaos
+      \t1 \circfi)(cpi)
+    \end{array}\\
+    \circrefines_A & similar to proof of Law[\nameref{refine-invokestatic-rule}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then Invoke(cid, m, poppedArgs, \false))
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
+      \t1 mid := methodOf~currentClass~cpi \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then Invoke(cid, m, poppedArgs, \false))
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then Invoke(cid, m, poppedArgs, \false))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then Invoke(cid, m, poppedArgs, \false))
+    \end{array}\\
+    = & Law~[\nameref{assump-input-prefix-dist-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq Invoke(cid, m, poppedArgs, \false)))
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}], global assumption of passing bytecode verification, and definition of $c$ \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ \bigvee x \in \{c_1, \ldots , c_n\} @ cid = x \} \circseq Invoke(cid, m, poppedArgs, \false)))
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extr-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ \bigvee x \in \{c_1, \ldots , c_n\} @ cid = x \} \circseq Invoke(cid, m, poppedArgs, \false))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-alt-intro-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \circif cid = c_1 \circthen \{cid = c_1\} \circseq Invoke(cid, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen \{cid = c_n\} \circseq Invoke(cid, m, poppedArgs, \false) \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \circif cid = c_1 \circthen \{cid = c_1\} \circseq Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen \{cid = c_n\} \circseq Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}]\\
+    \begin{array}{l}
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then \\
+      \t1 \circif cid = c_1 \circthen Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+

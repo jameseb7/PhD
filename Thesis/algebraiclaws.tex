@@ -63,7 +63,7 @@ proofs of our compilation rules.
   \label{assump-seq-subst-law}
   \begin{circus}
     \{x = e\} \circseq A
-    \circrefines_A
+    =
     \{x = e\} \circseq A[e/x]
   \end{circus}
 \end{law}
@@ -120,6 +120,14 @@ proofs of our compilation rules.
 \end{law}
 
 % Proved in Isabelle
+\begin{law}[assump-assign-intro]
+  \label{assump-assign-intro-law}
+  \begin{circus}
+    \{ x = e \} = \{ x = e \} \circseq x := e
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle
 \begin{law}[assump-assign-cond-collapse-true]
   \label{assump-assign-cond-collapse-true-law}
   \begin{circus}
@@ -146,7 +154,7 @@ proofs of our compilation rules.
     \{g\} \circseq
     \circblockbegin
     \circif g \circthen A \\
-    {} \circelse \not g \circthen B \\
+    {} \circelse \lnot g \circthen B \\
     \circfi
     \circblockend
     =
@@ -169,20 +177,29 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% TODO: Needs Isabelle proof
+% Proved in Isabelle
+\begin{law}[assump-alt-intro]
+  \label{assump-alt-intro-law}
+  \begin{circus}
+    \{ \bigvee i \in I @ g_i \} \circseq A = \circif {} \circelse_{i \in I} g_i \circthen \{ g_i \} \circseq A \circfi
+  \end{circus}
+\end{law}
+
+% TODO: Needs Isabelle proof (similar to Law 18.4 in Programming from Specifications)
 \begin{law}[alt-branch-elim]
   \label{alt-branch-elim-law}
   \begin{circus}
     \begin{array}{l}
       \circif \cdots \\
-      {} \circelse g_i \circthen \Chaos \\
+      {} \circelse_i g_i \circthen A_i \\
+      {} \circelse h \circthen \Chaos \\
       {} \cdots {} \\
       \circfi
     \end{array}
     =
     \begin{array}{l}
       \circif \cdots \\
-      {} \circelse g_i \circthen \Chaos \\
+      {} \circelse_i g_i \circthen A_i \\
       {} \cdots {} \\
       \circfi
     \end{array}
@@ -213,12 +230,31 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Law C.26 in Marcel's thesis
+\begin{law}[assump-conj]
+  \label{assump-conj-law}
+  \begin{circus}
+    \{ g_1 \} \circseq \{ g_2 \} = \{ g_1 \land g_2 \}
+  \end{circus}
+\end{law}
+
 % Law C.27 in Marcel's thesis
 \begin{law}[assump-assump-intro]
   \label{assump-assump-intro-law}
   If $g \implies g_1$ then,
   \begin{circus}
     \{g\} = \{g\} \circseq \{g_1\}
+  \end{circus}
+\end{law}
+
+% Law c.28 in Marcel's thesis
+\begin{law}[schema-assump-intro]
+  \label{schema-assump-intro-law}
+  \begin{circus}
+    [\Delta State; i? : T_i; o! : T_o | p \land assump'] \\
+    {} = {} \\
+    [\Delta State; i? : T_i; o! : T_o | p \land assump'] \circseq
+    \{ assump \} \\
   \end{circus}
 \end{law}
 
@@ -244,11 +280,20 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.35 in Marcel's Thesis
+% Law C.35 in Marcel's thesis
 \begin{law}[assump-elim]
   \label{assump-elim-law}
   \begin{circus}
     \{g\} \circrefines_A \Skip
+  \end{circus}
+\end{law}
+
+% Law C.36 in Marcel's thesis
+\begin{law}[assump-subst]
+  \label{assump-subst-law}
+  If $g_1 \implies g_2$ then,
+  \begin{circus}
+    \{g_1\} \circrefines_A \{g_2\}
   \end{circus}
 \end{law}
   
@@ -287,6 +332,22 @@ proofs of our compilation rules.
     \{ g \} \circseq \lschexpract [ decl | p ] \rschexpract
     \circrefines_A
     \lschexpract [ decl | p ] \rschexpract \circseq \{ g \}
+  \end{circus}
+\end{law}
+
+% Law C.67 in Marcel's thesis
+\begin{law}[true-guard]
+  \label{true-guard-law}
+  \begin{circus}
+    \lcircguard \true \rcircguard \circguard A = A
+  \end{circus}
+\end{law}
+
+% Law C.68 in Marcel's thesis
+\begin{law}[false-guard]
+  \label{false-guard-law}
+  \begin{circus}
+    \lcircguard \false \rcircguard \circguard A = \Stop
   \end{circus}
 \end{law}
 
@@ -466,6 +527,15 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Law[var-rename] in Alvaro's thesis
+\begin{law}[var-rename]
+  \label{var-rename-law}
+  If $y$ is not free in $A$ then,
+  \begin{circus}
+    (\circvar x : T \circspot A) = (\circvar y : T \circspot A[y/x])
+  \end{circus}
+\end{law}
+
 % Law scompC in ZRC paper
 \begin{law}[schema-comp-seq-conv]
   \label{schema-comp-seq-conv-law}
@@ -553,5 +623,25 @@ proofs of our compilation rules.
     \{g\} \circseq (\circmu X \circspot F(X))
     \circrefines_A
     (\circmu X \circspot \{g\} \circseq F(X))
+  \end{circus}
+\end{law}
+
+% From Definition B.36 in Marcel's thesis and Laws 2.9L1 and 2.9L2 in the UTP book
+\begin{law}[var-var-comm]
+  \label{var-var-comm-law}
+  \begin{circus}
+    \circvar x : X \circspot \circvar y : Y \circspot A = \circvar y : Y \circspot \circvar x : X \circspot A
+  \end{circus}
+\end{law}
+
+% TODO: needs proof (should follow from Definition B.40 in Marcel's
+% thesis, and Law vrbI in ZRC or a generalisation of
+% Law[var-assign-intro] in Alvaro's thesis)
+\begin{law}[var-schema-intro]
+  \label{var-schema-intro-law}
+  If $x$ is not free in $A$ and $invardecls$ represents declarations
+  of undashed variables then,
+  \begin{circus}
+    A = (\circvar x : T \circspot \lschexpract [invardecls; x! : T | pred] \rschexpract \circseq A)
   \end{circus}
 \end{law}

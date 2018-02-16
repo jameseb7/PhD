@@ -336,17 +336,18 @@
     {} = {} \\
     \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
   \end{circus}
+  and there exists $classInfo : Class$ in $\ran cs$ such that,
   \begin{circus}
-    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
+    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \\
     {} = {} \\
-    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
-    \{ class!.methodEntry~m = k \},
+    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \\
+    \t1 \{ class = classInfo \land classInfo.methodEntry~m = k \},
   \end{circus}
   and, for any $x : ProgramAdress$,
   \begin{circus}
-    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \\
+    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \\
     {} = {} \\
-    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \circseq \{ pc = x \land \# frameStack = \# fs - 1 \},
+    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \circseq \{ pc = x \},
   \end{circus}
   and $m$ and $c$ do not match any of the conditions in
   Table~\ref{special-method-action-table} then,
@@ -376,11 +377,14 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
-      \t3 \circvar poppedArgs : \seq Word \circspot \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot \\
       \t3 \lschexpract \exists argsToPop? == e @ \\
       \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t3 getClassIDOf!(head~poppedArgs)?cid \\
-      \t3 {} \then InvokeOther(c, m, poppedArgs, \false) \circseq \\
+      \t3 {} \then \lschexpract InterpreterNewStackFrame[ \\
+      \t4 classInfo/class?, \\
+      \t4 m/methodID?, \\
+      \t4 poppedArgs/methodArgs?] \rschexpract)) \circseq \\
       \t3 Poll \circseq M \circseq pc := j + 1 \\
       \t2 {} \circelse pc = k \circthen M \\
       \t2 \cdots \\
@@ -435,16 +439,22 @@
   \setlength{\zedtab}{0.4cm}
   Given $i : ProgramAddress$, if
   \begin{circus}
-    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \\
+    \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\
-    \{ methodID? = m \land classID? = c \land cs? = cs \} \circseq \lschexpract ResolveMethod \rschexpract \circseq
-    \{ class!.methodEntry~m = k \},
+    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
+  \end{circus}
+  and there exists $classInfo : Class$ in $\ran cs$ such that,
+  \begin{circus}
+    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \\
+    {} = {} \\
+    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \\
+    \t1 \{ class = classInfo \land classInfo.methodEntry~m = k \},
   \end{circus}
   and, for any $x : ProgramAddress$,
   \begin{circus}
-    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \\
+    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \\
     {} = {} \\
-    \{ (last~(front~fs)).storedPC = x \land frameStack = fs \} \circseq M \circseq \{ pc = x \land \# frameStack = \# fs - 1 \},
+    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \circseq \{ pc = x \},
   \end{circus}
   and $m$ and $c$ do not match any of the conditions in
   Table~\ref{special-method-action-table} then,
@@ -484,7 +494,10 @@
       \t3 \circif cid = c_1 \circthen A_1 \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse cid = c_\ell \circthen {} \\
-      \t4 InvokeOther(c_\ell, m, poppedArgs, \false) \circseq \\
+      \t4 \lschexpract InterpreterNewStackFrame[ \\
+      \t5 classInfo/class?,
+      \t5 m/methodID?, \\
+      \t5 poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse cid = c_n \circthen A_n \\

@@ -2482,7 +2482,7 @@ a boolean value indicating that the method invocation is not from the
 \texttt{invokestatic} instruction.
 \begin{circusaction}
   HandleInvokespecial \circdef \\
-  \t1 \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
+  \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
   \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
   \t1 \circif ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \circthen {} \\
   \t2 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
