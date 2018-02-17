@@ -566,10 +566,9 @@ section.
     \t2 {} \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
     \t3 pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq \\
     \t3 pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
-    \t3 \lschexpract \exists argsToPop?  == methodArguments~m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    \t3 (\circvar class : Class \circspot \\
-    \t4 \lschexpract ResolveMethod[AperiodicEventHandlerClassID/classID?,APEHinit/methodID?] \rschexpract \circseq \\
-    \t4 \lschexpract InterpreterNewStackFrame[APEHinit/methodID?, poppedArgs/methodArgs?] \rschexpract)) \\
+    \t4 \lschexpract \exists argsToPop?  == methodArguments~m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t4 \lschexpract InterpreterNewStackFrame[\\
+    \t5 AperiodicEventHandler/class?, APEHinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \\
     \t3 Poll \circseq AperiodicEventHandler\_APEHinit \circseq pc := 6 \circseq Poll \circseq HandleReturnEPC \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 1 \circthen HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq \\
@@ -654,18 +653,15 @@ section.
     % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \circvar poppedArgs : \seq Word \circspot \\
-    \t3 \lschexpract \exists argsToPop?  == methodArguments~m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    \t3 getClassIDOf!(head~poppedArgs)?cid \then (\circvar class : Class \circspot \\
-    \t4 \lschexpract ResolveMethod[ConsoleInputClassID/classID?,read/methodID?] \rschexpract \circseq \\
-    \t4 \lschexpract InterpreterNewStackFrame[read/methodID?, poppedArgs/methodArgs?] \rschexpract)) \\
+    \t4 \lschexpract \exists argsToPop?  == methodArguments~m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[\\
+    \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract)) \\
     \t3 Poll \circseq ConsoleInput\_read \circseq pc := 23 \circseq Poll \circseq \circvar poppedArgs : \seq Word \circspot \\
-    \t3 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    \t3 (\circvar class : Class \circspot \lschexpract ResolveMethod[TPKClassID/classID?,f/methodID?] \rschexpract \circseq \\
-    \t4 \lschexpract InterpreterNewStackFrame[f/methodID?, poppedArgs/methodArgs?] \rschexpract)) \\
-    \t3 InvokeOther(TPKClassID, f, poppedArgs, \true) \circseq Poll \circseq TPK\_f \circseq pc := 24 \circseq Poll \circseq \\
-    \t3 HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq \\
-    \t3 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
-    \t3 InterpreterPop2EPC \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    \t4 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t4 \lschexpract InterpreterNewStackFrame[TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+    \t3 Poll \circseq TPK\_f \circseq pc := 24 \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq \\
+    \t3 HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \\
+    \t3 \circvar value1, value2 : Word \circspot InterpreterPop2EPC \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     % \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
@@ -777,16 +773,18 @@ procedures.
   \end{circus}
   \vspace{-1cm}
   \begin{circus}
-    TPK\_APEHinit \circdef HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq \\
-    \t1 Poll \circseq HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq \\
-    \t1 Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+    TPK\_APEHinit \circdef \{ currentClass = TPK \} \circseq \\
+    \t1 HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq \\
+    \t1 HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq Poll \circseq \\
+    \t1 HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
     \t2 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \lschexpract InterpreterNewStackFrame[\\
     \t3 AperiodicEventHandler/class?, APEHinit/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
     \t1 Poll \circseq AperiodicEventHandler\_APEHinit \circseq pc := 6 \circseq Poll \circseq HandleReturnEPC \\
   \end{circus}
   \vspace{-1cm}
   \begin{circus}
-    TPK\_handleAsyncEvent \circdef HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
+    TPK\_handleAsyncEvent \circdef \{ currentClass = TPK \} \circseq \\
+    \t1 HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
     \t1 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
     \t2 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \lschexpract InterpreterNewStackFrame[\\
     \t3 ConsoleConnection/class?, CCinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
@@ -841,16 +839,6 @@ procedures.
   \caption{The $Running$ action after all the methods are separated}
   \label{final-method-separation-example-figure}
 \end{figure}
-% \begin{figure}[p!]
-%   \scriptsize
-%   \setlength{\zedindent}{0cm}
-%   \setlength{\zedtab}{0.5cm}
-%   \setlength{\zedleftsep}{0.1cm}
-
-%   \caption{The $Running$ action after all the methods are separated}
-%   \label{final-method-separation-example-figure2}
-% \end{figure}
-
   
 As mentioned previously, these steps are then repeated, in the loop
 beginning at line~\ref{algorithm-method-loop} of
@@ -920,7 +908,7 @@ $pc$ values now redundant.
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
   \begin{circus}
-    TPK\_handleAsyncEvent \circdef \\
+    TPK\_handleAsyncEvent \circdef \{ currentClass = TPK \} \circseq \\
     \t1 HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq Poll \circseq  HandleAconst\_nullEPC \circseq Poll \circseq \\
     \t1 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
     \t1 \lschexpract InterpreterNewStackFrame[\\
