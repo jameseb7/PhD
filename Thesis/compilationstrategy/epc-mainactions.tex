@@ -1,61 +1,136 @@
-At this stage of the strategy, the only place that the program counter
-is used is when the first method is started, when it is used to select
-the method action to execute, which will then proceed without any need
-for the program counter value.
-This can be eliminated by replacing it with a choice over the method
-rather than the program counter.
-This must be performed in the two places that the $Running$ action
-occurs:~the $MainThread$ and $NotStarted$ actions.
-Since the main action of $Thr$ is a guarded choice of these actions
-depending on whether its thread parameter is the $main$ thread, these
-actions may be thought of as two alternative main actions for $Thr$.
+After all the control flow of each method has been introduced and each
+method has been separated into its own method action, the only
+remaining use of $pc$ is to select a method action when a method is
+executed in response to a request from the $Launcher$.
+This occurs in the $MainThread$ and $Started$ actions, where a call to
+$Running$ follows a call to $StartInterpreter$.
+To remove this final use of $pc$, we replace $Running$ with a call to
+a new action, $ExecuteMethod$, which chooses a method action based on
+a class and method identifier.
+This performed as specified in
+Algorithm~\ref{refine-main-actions-algorithm}.
 
-The context of the $Running$ action in both of these main actions is
-the same:~the frame stack has only one frame and the program counter
-is set to the entry point of a method.
-This means that the same rule can be used for both main actions by
-introducing an assumption that states that context.
-Additionally, we can use the fact that each method action will, when
-started with a frame stack containing a single frame, cause the frame
-stack to become empty.
-This allows us to eliminate the loop in $Running$, reducing it
-entirely to a choice of method action from the class and method
-identifier.
-The overall transformation of $Running$ in its context is described by
-Rule [\nameref{main-action-refinement-rule}].
-\begin{restatable}[Main Action Refinement]{crule}{MainActionRefinementRule}
-  \label{main-action-refinement-rule}
-  If $entry(c_i,m_i) = j_i$ for $i \in \{1, \dots, n\}$ and
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$Running$}
+    \label{algorithm-MainThread-expand-Running}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$Running$}
+    \label{algorithm-Started-expand-Running}
+    \State \ApplyTo{Rule~[\nameref{Running-refinement-rule}]}{$MainThread$}
+    \label{algorithm-MainThread-Running-refinement}
+    \State \ApplyTo{Rule~[\nameref{Running-refinement-rule}]}{$Started$}
+    \label{algorithm-Started-Running-refinement}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
+    \label{algorithm-ExecuteMethod-introduction}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
+    \label{algorithm-MainThread-copy-ExecuteMethod}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
+    \label{algorithm-Started-copy-ExecuteMethod}
+  \end{algorithmic}
+  \caption{RefineMainActions}
+  \label{refine-main-actions-algorithm}
+\end{algorithm}
+
+Algorithm~\ref{refine-main-actions-algorithm} differs from previous
+algorithms in that it does not operate purely upon the $Running$
+action.
+We instead refine the composition of $StartInterpreter$ and $Running$
+in $MainThread$ and $Started$.
+First, Law~[\nameref{copy-rule-law}] is applied on
+lines~\ref{algorithm-MainThread-expand-Running}
+and~\ref{algorithm-Started-expand-Running} to replace the call to
+$Running$ with its body in $MainThread$ and $Started$.
+Then, we apply Rule~[\nameref{Running-refinement-rule}], shown in
+Figure~\ref{Running-refinement-rule-figure}, on
+lines~\ref{algorithm-MainThread-Running-refinement}
+and~\ref{algorithm-Started-Running-refinement}..
+This refines the composition of $Started$ with the body of $Running$
+in $MainThread$ and $Started$.
+
+\begin{figure}[thp]
+\begin{restatable}[$Running$-refinement]{crule}{RunningRefinementRule}
+  \label{Running-refinement-rule}
+  If $(c_1,m_1), \ldots , (c_n,m_n)$ are all the
+  $ClassID \cross MethodID$ values such that
+  $classID = c_i \land methodID = m_i \implies \pre ResolveMethod$,
+  and for each $i \in \{1 \upto n\}$, there exists
+  $classInfo_i : Class$ and $entry_i : ProgramAddress$ such that,
   \begin{circus}
-    \{ \# frameStack = 1 \} \circseq M_i \\
+    \{ classID = c_i \land methodID = m_i \} \circseq ResolveMethod \\
     {} = {} \\
-    \{ \# frameStack = 1 \} \circseq M_i \circseq \{ frameStack = \emptyset \}
+    \{ classID = c_i \land methodID = m_i \} \circseq ResolveMethod \circseq \\
+    \t1 \{ class = classInfo_i \land classInfo_i.methodEntry~m_i = entry_i \},
   \end{circus}
-  \setlength{\zedindent}{0.25cm}
+  and, for each $i \in \{1 \upto n\}$,
+  \begin{circus}
+    \{ \# frameStack = 1\} \circseq M_i \\
+    {} = {} \\
+    \{ \# frameStack = 1\} \circseq M_i \circseq \{ framestack = \emptyset\},
+  \end{circus}
+  then,
   \begin{circus}
     \begin{array}{l}
-      \{ \# frameStack = 1 \\
-      \t1 {} \land pc = entry(cid, mid) \} \circseq \\
-      \circmu X \circspot \\
+      StartInterpreter \circseq \circmu X \circspot \\
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
-      \t2 \circif pc = j_1 \circthen M_1 \\
-      \t2 \cdots \\
-      \t2 {} \circelse pc = j_n \circthen M_n \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
       \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \{ \# frameStack = 1 \} \circseq \\
-      \circif (cid, mid) = (c_1, m_1) \circthen M_1 \\
-      \cdots \\
-      {} \circelse (cid, mid) = (c_n, m_n) \circthen M_n \\
-      \circfi \\
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \then {} \\
+      (\circval classID : ClassID; \\
+      \circval methodID : MethodID; \\
+      \circval methodArgs : \seq Word \circspot \\
+      \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t1 InterpreterNewStackFrame[\\
+      \t2 classInfo_1/class?] \circseq M_1 \\
+      {} \cdots {} \\
+      {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t1 InterpreterNewStackFrame[\\
+      \t2 classInfo_n/class?] \circseq M_n \\ 
+      \circfi)(c, m, a)
     \end{array}
   \end{circus}
 \end{restatable}
-Once this has been performed, the program counter value is no longer
-used to determine the control flow of the program, so a trivial data
-refinement can be performed to eliminate $pc$ from the state of the
-$Thr$ process.
+\caption{Rule~[\nameref{Running-refinement-rule}]}
+\label{Running-refinement-rule-figure}
+\end{figure}
+
+Rule~[\nameref{Running-refinement-rule}] collects all the class and
+method identifiers that are resolved by the data operation
+$ResolveMethod$.
+It expands the definiton of $StartInterpreter$, and introduces a
+choice over these class and method identifiers, comparing them to the
+identifiers communicated on the $executeMethod$ channel.
+Within each branch of the choice for a class identifier $c_i$ and
+method identifier $m_i$, a new stack frame is first created by the
+$InterpreterNewStackFrame$ operation, using the class information,
+$classInfo_i$, provided by $ResolveMethod$ for $c_i$ and $m_i$.
+The branch then behaves as the method action in $Running$ that
+corresponds to the method entry point, $entry_i$, associated with
+$m_i$ in $classInfo_i$.
+Note that the mapping from class and method identifiers to class
+information and method entries is not necessarily injective, since
+inherited methods will share the same class information and bytecode
+instructions.
+The choice over class and method identifiers is wrapped in a value
+parameter block, since it forms the body of the $ExecuteMethod$
+action.
+
+After Rule~[\nameref{Running-refinement-rule}] has been applied, the
+$ExecuteMethod$ action is introduced to the $Thr$ process using
+Law~[\nameref{action-intro-law}], on
+line~\ref{algorithm-ExecuteMethod-introduction} of
+Algorithm~\ref{refine-main-actions-algorithm}.
+The body of $ExecuteMethod$ introduced to $MainThread$ and
+$NotStarted$ by Rule~[\nameref{Running-refinement-rule}] is then
+replaced with a call to $ExecuteMethod$ by application of
+Law~[\nameref{copy-rule-law}], on
+lines~\ref{algorithm-MainThread-copy-ExecuteMethod}
+and~\ref{algorithm-Started-copy-ExecuteMethod}.
+This results in $MainThread$ and $Started$ having the form shown
+previously in Figure~\ref{refine-main-actions-example-figure}.
