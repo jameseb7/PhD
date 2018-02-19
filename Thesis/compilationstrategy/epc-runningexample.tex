@@ -862,39 +862,45 @@ $pc$ values now redundant.
 
 \begin{figure}[t!]
   \setlength{\zedindent}{0cm}
-  \setlength{\zedtab}{0.3cm}
-  \setlength{\zedleftsep}{0.1cm}
   \begin{circusaction}
-    ExecuteMethod \circdef \circval cid : ClassID; mid : MethodID \circspot \\
-    \t1 \circif (cid, mid) = (TPKClassID, APEHinit) \circthen TPK\_APEHinit \\
-    \t1 {} \circelse (cid, mid) = (TPKClassID, handleAsyncEvent) \circthen TPK\_handleAsyncEvent \\
-    \t1 {} \circelse (cid, mid) = (TPKClassID, f) \circthen TPK\_f \\
+    ExecuteMethod \circdef \\
+    \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+    \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \\
     \t1 {} \cdots {} \\
     \t1 \circfi
   \end{circusaction}
   \begin{circusaction}
-    MainThread \circdef initMainThread?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
-    \t1 \circblockbegin \circblockbegin
-    \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
-    executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
-    \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
-    \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrameEPC \rschexpract \circseq \\
-    ExecuteMethod(classID, methodID) \circseq X \circblockend \\
+    MainThread \circdef \\
+    \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
+    \t1 \circblockbegin
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq X \\
     {} \extchoice {} \\
     CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
     \circblockend
   \end{circusaction}
   \begin{circusaction}
-    NotStarted \circdef \\
-    \t1 \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
-    \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \then {} \\
-    \t1 addThreadMemory!thread!bsid \then {} \\
-    \t1 frameStackID, classID, methodID, methodArgs := Initialised~stack, cid, mid, args \circseq \\
-    \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrameEPC \rschexpract \circseq \\
-    \t1 Blocked \circseq ExecuteMethod(classID, methodID) \circseq CEEremoveThread!thread \then {} \\
-    \t1 CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
+    Started \circdef \\
+    \t1 \circblockbegin
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq \\
+    \t1 \circblockbegin
+    continue?t \prefixcolon (t = thread) \then Started \\
+    {} \extchoice {} \\
+    endThread?t \prefixcolon (t = thread) \then \Skip
+    \circblockend \\
+    {} \extchoice {} \\
+    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq Started \\
+    {} \extchoice {} \\
+    endThread?t \prefixcolon (t = thread) \then \Skip
+    \circblockend \circseq \\
+    \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
+    \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
   \end{circusaction}
-  \caption{The $ExecuteMethod$, $MainThread$, and $NotStarted$ actions
+  \caption{The $ExecuteMethod$, $MainThread$, and $Started$ actions
     after main action refinement}
   \label{refine-main-actions-example-figure}
 \end{figure}
