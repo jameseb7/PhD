@@ -30,13 +30,15 @@ of the sequence of actions for the method that establishes what the
 value of $currentClass$ is during the method's execution
 (line~\ref{algorithm-introduce-class-information}).
 This is performed by an application of
-Rule~[\nameref{introduce-class-information-rule}], shown below.
+Rule~[\nameref{introduce-class-information-rule}], shown in
+Figure~\ref{introduce-class-information-rule-figure}.
 The $currentClass$ is determined by finding the class information $c$
 in the range of $cs$ that contains a method $m$ with the same entry
 point, $i$, as the complete method being operated on.
 By recording this information in an assumption, we can use it in later
 stages of the compilation, when the value of the $pc$ is no longer
 available.
+\begin{figure}
 \begin{restatable}[introduce-class-information]{crule}{IntroduceClassInformationRule}
   \label{introduce-class-information-rule}
   Given $i : ProgramAddress$,
@@ -68,6 +70,9 @@ available.
     c \in \ran cs \land \exists  m : MethodID | m \in \dom c.methodEntry @ c.methodEntry~m = i.
   \end{displaymath}
 \end{restatable}
+\caption{Rule~[\nameref{introduce-class-information-rule}]}
+\label{introduce-class-information-rule-figure}
+\end{figure}
 
 For the methods that are complete, the sequence of actions for the
 method are placed in a separate action, which is introduced using

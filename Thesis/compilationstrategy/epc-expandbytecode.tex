@@ -3,7 +3,7 @@ provided in the $bc$ parameter to $Thr$ must be expanded to allow
 consideration of their semantics.
 This is achieved using the procedure shown in
 Algorithm~\ref{expand-bytecode-algorithm}.
-\begin{algorithm}
+\begin{algorithm}[thp]
   \begin{algorithmic}[1]
     \State \ApplyFor{Rule~[\nameref{pc-expansion-rule}]}{$bc$}
     \label{algorithm-introduce-choice-over-pc}
@@ -18,15 +18,17 @@ Algorithm~\ref{expand-bytecode-algorithm}.
   \caption{ExpandBytecode}
   \label{expand-bytecode-algorithm}
 \end{algorithm}
-It begins on line~\ref{algorithm-introduce-choice-over-pc} by
-applying Rule~[\nameref{pc-expansion-rule}], shown below.
+It begins on line~\ref{algorithm-introduce-choice-over-pc} by applying
+Rule~[\nameref{pc-expansion-rule}], shown in
+Figure~\ref{pc-expansion-rule-figure}.
 It introduces a choice over all the possible values of $pc$ in the
 domain of $bc$ at the $HandleInstruction$ action in $Running$.
 This does not affect the behaviour of $HandleInstruction$, because it
 behaves as $\Chaos$ when $pc$ is outside the domain of $bc$.
 We write $HandleInstruction$ with a $bc$ subscript to indicate that it
 makes use of $bc$, which is a parameter of the $Thr$ process in which
-$HandleInstruction$ occurs. 
+$HandleInstruction$ occurs.
+\begin{figure}[thp]
 \begin{restatable}[$pc$-expansion]{crule}{PCExpansionRule}
   \label{pc-expansion-rule}
   Given $bc : ProgramAddress \pfun Bytecode$,
@@ -34,18 +36,23 @@ $HandleInstruction$ occurs.
     HandleInstruction_{bc} = \circif {} \circelse_{i\in\dom bc} pc = i \then HandleInstruction_{bc} \circfi
   \end{circus}
 \end{restatable}
+\caption{Rule~[\nameref{pc-expansion-rule}]}
+\label{pc-expansion-rule-figure}
+\end{figure}
 The proof of this rule and others can be found in
 Appendix~\ref{compilation-rules-proofs-appendix}.
 After applying Rule~[\nameref{pc-expansion-rule}], we operate on the
 occurrence of $HandleInstruction$ at each branch of the conditional at
 line~\ref{algorithm-expand-bytecode-loop}.
-We apply Rule~[\nameref{HandleInstruction-refinement-rule}], shown
-below, on line~\ref{algorithm-HandleInstruction-refinement} to refine
-each occurrence to a more specific form that is easier to operate on
-during the rest of the strategy.
+We apply Rule~[\nameref{HandleInstruction-refinement-rule}], shown in
+Figure~\ref{HandleInstruction-refinement-rule-figure}, on
+line~\ref{algorithm-HandleInstruction-refinement} to refine each
+occurrence to a more specific form that is easier to operate on during
+the rest of the strategy.
 These new actions are determined from the bytecode instruction in $bc$
 at each $pc$ value by applying a syntactic function $handleAction$,
 which is defined by Table~\ref{handle-action-table}.
+\begin{figure}[thp]
 \begin{restatable}[$HandleInstruction$-refinement]{crule}{HandleInstructionRefinementRule}
   \label{HandleInstruction-refinement-rule}
   Given $bc : ProgramAddress \pfun Bytecode$ and
@@ -68,6 +75,9 @@ which is defined by Table~\ref{handle-action-table}.
   where $handleAction$ is a syntactic function defined by
   Table~\ref{handle-action-table}.
 \end{restatable}
+\caption{Rule~[\nameref{HandleInstruction-refinement-rule}]}
+\label{HandleInstruction-refinement-rule-figure}
+\end{figure}
 \begin{table}
   \centering
   \begin{tabular}{lp{8.5cm}}
