@@ -2162,7 +2162,7 @@ It then offers a choice of executing a method on the $main$ thread in
 response to a request from the $Launcher$, or switching to another
 thread.
 A request to start execution of a method is handled in the
-$StartIntepreter$ action, which creates the $StackFrame$ for the
+$StartInterpreter$ action, which creates the $StackFrame$ for the
 method.
 The process then behaves as the $Running$ action, executing bytecode
 instructions until the method has finished.
@@ -2190,8 +2190,8 @@ $Running$ is the main focus.
   \circblockend
 \end{circusaction}
 
-The $StartIntepreter$ action, used by $MainThread$, also handles
-special methods that execute nested methods.
+The $StartIntepreter$ action, used by $MainThread$, handles requests
+to execute a method from the $Launcher$.
 Its definition is shown below.
 It accepts communication on the $executeMethod$ channel, requiring the
 $ThreadID$ communicated to be the same as that of the current thread,
@@ -2208,13 +2208,11 @@ superinterfaces.
 The $Class$ information resulting from this is stored in $class$ and
 used to create a new $StackFrame$ on the $frameStack$ in
 $InterpreterNewStackFrame$.
-The $baseFrame$ value for this stack frame is set to $\true$, since it
-is being created in reponse to an external request.
 \begin{circusaction}
   StartInterpreter \circdef \\
   \t1  \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
   \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
-  \t1 \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \lschexpract \exists baseFrame? == \true @ InterpreterNewStackFrame \rschexpract
+  \t1 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract
 \end{circusaction}
 
 For threads other than $main$, the behaviour is described by the
