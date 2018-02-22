@@ -1,0 +1,937 @@
+\begin{crproof}[\nameref{Running-refinement-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      StartInterpreter \circseq \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $StartInterpreter$ \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract) \circseq \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{schema-pre-assump-intro-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \{ \pre ResolveMethod \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-subst-law}] and assumption of rule \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \{ \bigvee (c,m) \in \{ (c_1, m_1) \upto (c_n, m_n) \} @ classID = c \land methodID = m \} \circseq \\
+      \t1 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t1 \circif frameStack = \emptyset \circthen \Skip \\
+      \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq X \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-intro-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ (classID, methodID) = (c_1,m_1) \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ (classID, methodID) = (c_n,m_n) \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-subst-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ classID = c_1 \land methodID = m_1 \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ (classID = c_n \land methodID = m_n \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & assumption of rule \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ classID = c_1 \land methodID = m_1 \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ class = classInfo_1 \land classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ (classID = c_n \land methodID = m_n \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ class = classInfo_n \land classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ classID = c_1 \land methodID = m_1 \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \{ class = classInfo_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ (classID = c_n \land methodID = m_n \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \{ class = classInfo_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ classID = c_1 \land methodID = m_1 \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \{ class = classInfo_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ (classID = c_n \land methodID = m_n \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \{ class = classInfo_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-input-prefix-dist-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (\{ frameStack = \emptyset \} \circseq  classID, methodID, methodArgs := c, m, a) \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] and Law~[\nameref{input-prefix-seq-assoc-law}] \\
+    \begin{array}{l}
+      \{ frameStack = \emptyset \} \\
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (\{ frameStack = \emptyset \} \circseq  classID, methodID, methodArgs := c, m, a) \circseq \\
+      \t1 \{ frameStack = \emptyset \} \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-dist-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (\{ frameStack = \emptyset \} \circseq  classID, methodID, methodArgs := c, m, a) \circseq \\
+      \t1 \{ frameStack = \emptyset \} \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & schema calculus and Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (\{ frameStack = \emptyset \} \circseq  classID, methodID, methodArgs := c, m, a) \circseq \\
+      \t1 \{ frameStack = \emptyset \} \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ frameStack = \emptyset \} \circseq \{ classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ frameStack = \emptyset \} \circseq \{ classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (\{ frameStack = \emptyset \} \circseq  classID, methodID, methodArgs := c, m, a) \circseq \\
+      \t1 \{ frameStack = \emptyset \} \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ frameStack = \emptyset \land classInfo_1.methodEntry~m_1 = entry_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \{ frameStack = \emptyset \land classInfo_n.methodEntry~m_n = entry_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}], schema calculus and definition of $InterpreterNewStackFrame$ \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 \{ frameStack = \emptyset \} \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (\{ frameStack = \emptyset \} \circseq  classID, methodID, methodArgs := c, m, a) \circseq \\
+      \t1 \{ frameStack = \emptyset \} \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_1 \} \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \{ frameStack = \emptyset \} \circseq \\
+      \t2 \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_n \} \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_1 \} \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_n \} \circseq \circmu X \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq X \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{rec-unfold-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t5 \circif pc = entry_1 \circthen M_1 \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = entry_n \circthen M_n \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_n \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t5 \circif pc = entry_1 \circthen M_1 \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = entry_n \circthen M_n \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_1 \} \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t5 \circif pc = entry_1 \circthen M_1 \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = entry_n \circthen M_n \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_n \} \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t5 \circif pc = entry_1 \circthen M_1 \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = entry_n \circthen M_n \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_1 \} \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_n \} \circseq \{ frameStack \neq \emptyset \} \circseq \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_1 \} \circseq \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \land pc = entry_n \} \circseq \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq \{ pc = entry_1 \} \circseq \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq \{ pc = entry_n \} \circseq \\
+      \t2 \circif pc = entry_1 \circthen M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse pc = entry_n \circthen M_n \\
+      \t2 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse2-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq \{ pc = entry_1 \} \circseq M_1 \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq \{ pc = entry_n \} \circseq M_n \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_1 \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_n \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & assumption of rule \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_1 \circseq \{ framestack = \emptyset \} \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_n \circseq \{ framestack = \emptyset \} \circseq Poll \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{Poll-assumption-distribution-lemma}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_1 \circseq Poll \circseq \{ framestack = \emptyset \} \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_n \circseq Poll \circseq \{ framestack = \emptyset \} \circseq \circmu X \circspot \\
+      \t3 \circif frameStack = \emptyset \circthen \Skip \\
+      \t3 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t4 \circif pc = entry_1 \circthen M_1 \\
+      \t4 {} \cdots {} \\
+      \t4 {} \circelse pc = entry_n \circthen M_n \\
+      \t4 \circfi \circseq Poll \circseq X \\
+      \t3 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{rec-unfold-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_1 \circseq Poll \circseq \{ framestack = \emptyset \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t5 \circif pc = entry_1 \circthen M_1 \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = entry_n \circthen M_n \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
+      \t2 \circfi \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_n \circseq Poll \circseq \{ framestack = \emptyset \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \Skip \\
+      \t2 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t3 \circif pc = entry_1 \circthen M_1 \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse pc = entry_n \circthen M_n \\
+      \t3 \circfi \circseq Poll \circseq \circmu X \circspot \\
+      \t4 \circif frameStack = \emptyset \circthen \Skip \\
+      \t4 {} \circelse framestack \neq \emptyset \circthen {}  \\
+      \t5 \circif pc = entry_1 \circthen M_1 \\
+      \t5 {} \cdots {} \\
+      \t5 {} \circelse pc = entry_n \circthen M_n \\
+      \t5 \circfi \circseq Poll \circseq X \\
+      \t4 \circfi \\
+      \t2 \circfi \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_1 \circseq Poll \circseq \{ framestack = \emptyset \} \circseq \Skip \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq \\
+      \t2 \{ \# frameStack = 1 \} \circseq M_n \circseq Poll \circseq \{ framestack = \emptyset \} \circseq \Skip \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitr-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{input-prefix-seq-assoc-law}] \\
+    \begin{array}{l}
+      (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll \\
+      \t1 \circfi))
+    \end{array}\\
+    = & Law~[\nameref{input-prefix-var-ext-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
+      \t1 classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word \circspot \\
+      \t1 classID, methodID, methodArgs := c, m, a \circseq \\
+      \t1 (\circvar class : Class \circspot \\
+      \t2 \circif {(classID, methodID) = (c_1,m_1)} \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse (classID, methodID) = (c_n,m_n) \circthen \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll \\
+      \t2 \circfi))
+    \end{array}\\
+    =  & Law~[\nameref{alt-var-dist-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word \circspot \\
+      \t1 classID, methodID, methodArgs := c, m, a \circseq \\
+      \t2 \circif {(classID, methodID) = (c_1,m_1)} \circthen (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod \rschexpract \circseq
+      \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll) \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse (classID, methodID) = (c_n,m_n) \circthen (\circvar class : Class \circspot \\
+      \t3 \lschexpract ResolveMethod \rschexpract \circseq
+      \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll) \\
+      \t2 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-schema-intro-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word \circspot \\
+      \t1 classID, methodID, methodArgs := c, m, a \circseq \\
+      \t2 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll \\
+      \t2 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t1 \circvar methodID : MethodID \circspot methodID := m \circseq \\
+      \t1 \circvar methodArgs : \seq Word \circspot methodArgs := a \circseq \\
+      \t2 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \circseq Poll \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \circseq Poll \\
+      \t2 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{alt-seq-dist-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t1 \circvar methodID : MethodID \circspot methodID := m \circseq \\
+      \t1 \circvar methodArgs : \seq Word \circspot methodArgs := a \circseq \\
+      \t2 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \\
+      \t2 \circfi \circseq Poll)
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extr-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circvar classID : ClassID \circspot classID := c \circseq \\
+      \t1 \circvar methodID : MethodID \circspot methodID := m \circseq \\
+      \t1 \circvar methodArgs : \seq Word \circspot methodArgs := a \circseq \\
+      \t2 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \\
+      \t2 {} \cdots {} \\
+      \t2 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t3 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \\
+      \t2 \circfi) \circseq Poll
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \\
+      \t1 \circfi)(c, m, a) \circseq Poll
+    \end{array}\\
+  \end{argue}
+\end{crproof}

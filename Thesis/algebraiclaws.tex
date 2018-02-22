@@ -185,6 +185,25 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Proved in Isabelle
+\begin{law}[schema-pre-assump-intro]
+  \label{schema-pre-assump-intro-law}
+  \begin{circus}
+    \lschexpract S \rschexpract = \{ \pre S \} \circseq \lschexpract S \rschexpract
+  \end{circus}
+\end{law}
+
+% Proved in Isabelle (similar to Law C.53 in Marcel's thesis)
+\begin{law}[assump-schema-dist]
+  \label{assump-schema-dist-law}
+  If $g \land p \implies h'$
+  \begin{circus}
+    \{ g \} \circseq \lschexpract [ decl | p ] \rschexpract
+    \circrefines_A
+    \lschexpract [ decl | p ] \rschexpract \circseq \{ h \}
+  \end{circus}
+\end{law}
+
 % TODO: Needs Isabelle proof (similar to Law 18.4 in Programming from Specifications)
 \begin{law}[alt-branch-elim]
   \label{alt-branch-elim-law}
@@ -324,17 +343,6 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.53 in Marcel's thesis
-\begin{law}[assump-schema-dist]
-  \label{assump-schema-dist-law}
-  If $g \land p \implies g'$
-  \begin{circus}
-    \{ g \} \circseq \lschexpract [ decl | p ] \rschexpract
-    \circrefines_A
-    \lschexpract [ decl | p ] \rschexpract \circseq \{ g \}
-  \end{circus}
-\end{law}
-
 % Law C.67 in Marcel's thesis
 \begin{law}[true-guard]
   \label{true-guard-law}
@@ -386,6 +394,15 @@ proofs of our compilation rules.
   \item $\pre [ decls | P_1 ] \implies \pre [ decls | P_2 ]$
   \item $(\pre [ decls | P_1 ] \land P_2) \implies P_1$
   \end{itemize}
+\end{law}
+
+% From Law C.101 in Marcel's thesis
+\begin{law}[input-prefix-seq-assoc]
+  \label{input-prefix-seq-assoc-law}
+  If $v$ is not free in $B$ then,
+  \begin{circus}
+    c?v \then (A \circseq B) = (c?v \then A) \circseq B
+  \end{circus}
 \end{law}
 
 % Law C.110 in Marcel's thesis
@@ -494,6 +511,17 @@ proofs of our compilation rules.
     A
     =
     \circvar x : T \circspot x := e \circseq A
+  \end{circus}
+\end{law}
+
+% Law[var-prefix-ext] in Alvaro's thesis
+\begin{law}[input-prefix-var-ext]
+  \label{input-prefix-var-ext-law}
+  If $x$ and $y$ are distinct then,
+  \begin{circus}
+    \circvar x : T \circspot c?y \then A
+    =
+    c?y \then (\circvar x : T \circspot A)
   \end{circus}
 \end{law}
 
@@ -634,6 +662,18 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% From Exercise 2.6.4(2) in the UTP book with
+% F(X) = A \circseq X
+% G(X) = X \circseq B
+% H(X) = A \circseq X
+% \begin{law}[rec-action-intro]
+%   \label{rec-action-intro-law}
+%   For any action $B$,
+%   \begin{circus}
+%     (\circmu X \circspot A \circseq X) \circrefines_A (\circmu X \circspot A \circseq X) \circseq B
+%   \end{circus}
+% \end{law}
+
 % TODO: needs proof (should follow from Definition B.40 in Marcel's
 % thesis, and Law vrbI in ZRC or a generalisation of
 % Law[var-assign-intro] in Alvaro's thesis)
@@ -643,5 +683,17 @@ proofs of our compilation rules.
   of undashed variables then,
   \begin{circus}
     A = (\circvar x : T \circspot \lschexpract [invardecls; x! : T | pred] \rschexpract \circseq A)
+  \end{circus}
+\end{law}
+
+% TODO: needs proof (similar to Law[alt-var-dist-both] in Alvaro's
+% thesis)
+\begin{law}[alt-var-dist]
+  \label{alt-var-dist-law}
+  If, for all $i$, $x$ is free in $g_i$ then, 
+  \begin{circus}
+    \circif \circelse_i g_i \circthen \circvar x : T \circspot A_i \circfi
+    =
+    \circvar x : T \circspot \circif \circelse_i g_i \circthen A_i \circfi 
   \end{circus}
 \end{law}
