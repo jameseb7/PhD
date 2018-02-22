@@ -878,7 +878,7 @@ $pc$ values now redundant.
     MainThread \circdef \\
     \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
     \t1 \circblockbegin
-    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq X \\
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq Poll \circseq X \\
     {} \extchoice {} \\
     CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
     \circblockend
@@ -886,7 +886,7 @@ $pc$ values now redundant.
   \begin{circusaction}
     Started \circdef \\
     \t1 \circblockbegin
-    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq \\
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq Poll \circseq \\
     \t1 \circblockbegin
     continue?t \prefixcolon (t = thread) \then Started \\
     {} \extchoice {} \\

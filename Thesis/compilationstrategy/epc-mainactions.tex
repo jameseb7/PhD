@@ -1,4 +1,4 @@
-After all the control flow of each method has been introduced and each
+After the control flow of each method has been introduced and each
 method has been separated into its own method action, the only
 remaining use of $pc$ is to select a method action when a method is
 executed in response to a request from the $Launcher$.
@@ -70,6 +70,7 @@ in $MainThread$ and $Started$.
   then,
   \begin{circus}
     \begin{array}{l}
+      \{ frameStack = \emptyset \} \circseq \\
       StartInterpreter \circseq \circmu X \circspot \\
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
@@ -92,13 +93,24 @@ in $MainThread$ and $Started$.
       {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
       \t1 InterpreterNewStackFrame[\\
       \t2 classInfo_n/class?] \circseq M_n \\ 
-      \circfi)(c, m, a)
+      \circfi)(c, m, a) \circseq Poll
     \end{array}
   \end{circus}
 \end{restatable}
 \caption{Rule~[\nameref{Running-refinement-rule}]}
 \label{Running-refinement-rule-figure}
 \end{figure}
+
+When we apply Rule~[\nameref{Running-refinement-rule}], we first
+introduce an assumption stating that the $frameStack$ is nonempty
+before execution of $StartInterpreter$.
+This is true in both the places that the rule is applied, since the
+$frameStack$ is initially empty and no stack frames have been created
+at the point when $MainThread$ and $Started$ occur.
+The $Running$ action causes the $stackFrame$ to be empty after its
+execution, so the $stackFrame$ is also empty when the $MainThread$ and
+$Started$ actions loop to allow $StartInterpreter$ to be executed
+again.
 
 Rule~[\nameref{Running-refinement-rule}] collects all the class and
 method identifiers that are resolved by the data operation
@@ -126,8 +138,8 @@ $ExecuteMethod$ action is introduced to the $Thr$ process using
 Law~[\nameref{action-intro-law}], on
 line~\ref{algorithm-ExecuteMethod-introduction} of
 Algorithm~\ref{refine-main-actions-algorithm}.
-The body of $ExecuteMethod$ introduced to $MainThread$ and
-$NotStarted$ by Rule~[\nameref{Running-refinement-rule}] is then
+The body of $ExecuteMethod$, introduced to $MainThread$ and
+$NotStarted$ by Rule~[\nameref{Running-refinement-rule}], is then
 replaced with a call to $ExecuteMethod$ by application of
 Law~[\nameref{copy-rule-law}], on
 lines~\ref{algorithm-MainThread-copy-ExecuteMethod}
