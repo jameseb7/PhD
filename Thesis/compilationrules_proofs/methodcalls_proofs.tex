@@ -379,7 +379,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -401,7 +401,7 @@
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 Invoke(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -416,7 +416,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -452,7 +452,7 @@
       \t3 {} \extchoice InvokeRead(classID, method, static) \\
       \t3 {} \extchoice InvokeOther(classID, method, args, static))(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -467,7 +467,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -506,7 +506,7 @@
       \t3 {} \extchoice InvokeRead(classID, method, static) \\
       \t3 {} \extchoice InvokeOther(classID, method, args, static)) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -521,7 +521,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -560,7 +560,7 @@
       \t3 {} \extchoice InvokeRead(c, m, s) \\
       \t3 {} \extchoice InvokeOther(c, m, poppedArgs, s)) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -575,7 +575,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -610,7 +610,7 @@
       \t3 {} \extchoice InvokeRead(c, m, s) \\
       \t3 {} \extchoice InvokeOther(c, m, poppedArgs, s)) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -625,7 +625,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -666,7 +666,7 @@
       \circblockend \circseq \\
       \t2 Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -681,7 +681,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -706,7 +706,7 @@
       \t1 {} \extchoice \Stop \extchoice \Stop \extchoice \Stop \extchoice InvokeOther(c, m, poppedArgs, s)
       \circblockend \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -721,7 +721,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -743,7 +743,7 @@
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -758,7 +758,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -775,12 +775,12 @@
       \circif frameStack = \emptyset \circthen \Skip \\
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
-      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot
+      \t1 {} \circelse pc = i \circthen A \circseq  \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -795,7 +795,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -829,7 +829,7 @@
       \t3 currentClass' = currentClass \land frameStackID' = frameStackID] \rschexpract \circseq \\
       \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -844,7 +844,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -862,7 +862,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract [ \Delta InterpreterState; poppedArgs! : \seq Word |  \\
       
       \t3 (\exists \Delta StackFrame @ \\
@@ -879,7 +879,7 @@
       \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
       \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -894,7 +894,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -912,12 +912,12 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
       \t2 InvokeOther(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -932,7 +932,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq  \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -950,7 +950,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
       \t2 (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
@@ -972,7 +972,7 @@
       \t3 {} \circelse \lnot (static = \true \iff methodID \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi)(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -987,7 +987,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1005,7 +1005,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
       \t2 (\lcircguard ((c, suspendClass) \notin subclassRel~cs \lor m \neq suspendID) \\
@@ -1026,7 +1026,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1041,7 +1041,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1059,7 +1059,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
       \t2 (\circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?, c/classID?, m/methodID?] \rschexpract \circseq \\
@@ -1068,7 +1068,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1083,7 +1083,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1101,7 +1101,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq
@@ -1111,7 +1111,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1126,7 +1126,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1144,7 +1144,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1156,7 +1156,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1171,7 +1171,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1189,7 +1189,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1\} \circseq \\
@@ -1201,7 +1201,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1216,7 +1216,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1234,7 +1234,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1246,7 +1246,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1261,7 +1261,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1279,7 +1279,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1291,7 +1291,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1306,7 +1306,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1324,7 +1324,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1337,7 +1337,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1352,7 +1352,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1370,7 +1370,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1383,7 +1383,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1398,7 +1398,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1416,7 +1416,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1429,7 +1429,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1444,7 +1444,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1462,7 +1462,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
@@ -1473,7 +1473,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1488,7 +1488,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1506,7 +1506,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1517,7 +1517,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1532,7 +1532,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1550,7 +1550,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1562,7 +1562,7 @@
       \t3 {} \circelse \lnot (s = \true \iff m \in class.staticMethods) \circthen \Chaos \\
       \t3 \circfi) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1577,7 +1577,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1595,7 +1595,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1604,7 +1604,7 @@
       \t3 \{ s = \true \iff m \in class.staticMethods \} \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1619,7 +1619,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1637,7 +1637,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1645,7 +1645,7 @@
       \t4 {} \land class = classInfo \land classInfo.methodEntry~m = k \} \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1660,7 +1660,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1678,7 +1678,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1686,7 +1686,7 @@
       \t3 \{class = classInfo\} \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1701,7 +1701,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1719,7 +1719,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1728,7 +1728,7 @@
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t2 Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1743,7 +1743,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1761,7 +1761,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1769,7 +1769,7 @@
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t2 Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1784,7 +1784,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1802,7 +1802,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1817,7 +1817,7 @@
       \t4 currentClass' = classInfo \\
       \t4 frameStackID' = frameStackID] \rschexpract) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1832,7 +1832,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1850,7 +1850,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -1865,7 +1865,7 @@
       \t4 frameStackID' = frameStackID] \rschexpract) \circseq \\
       \t2 \{ (last~(front~frameStack)).storedPC = j + 1 \land pc = k \} \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1880,7 +1880,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1898,14 +1898,14 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t2 \{ (last~(front~frameStack)).storedPC = j + 1 \land pc = k \} \circseq Poll \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1920,7 +1920,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1938,14 +1938,14 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \land pc = k \} \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -1960,7 +1960,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -1978,14 +1978,14 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t2 Poll \circseq \{ (last~(front~frameStack)).storedPC = j + 1 \} \circseq \{ pc = k \} \circseq \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -2000,7 +2000,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2018,7 +2018,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -2030,7 +2030,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2048,7 +2048,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -2060,7 +2060,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2078,7 +2078,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -2090,7 +2090,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2108,7 +2108,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \\
       \t3 \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
@@ -2120,7 +2120,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2138,7 +2138,7 @@
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
       \t1 {} \circelse pc = i \circthen A \circseq  \\
-      \t2 \circvar poppedArgs : \seq Word \circspot \{ pc = j \} \circseq \\
+      \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t2 (\circvar class : Class \circspot \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
@@ -2149,37 +2149,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
-      \t4 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t5 \lschexpract InterpreterNewStackFrame[\\
-      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-      \t4 Poll \circseq M \circseq pc := j + 1 \\
-      \t3 {} \circelse pc = k \circthen M \\
-      \t3 \cdots \\
-      \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\
-      \circfi
-    \end{array}\\
-    = & Law~[\nameref{var-seq-extl-law}] \\
-    \begin{array}{l}
-      \circif frameStack = \emptyset \circthen \Skip \\
-      {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t1 \circif \cdots \\
-      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
-      \t2 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t3 (\circvar class : Class \circspot
-      \lschexpract ResolveMethod[c/classID?,m/methodID?] \rschexpract \circseq \\
-      \t4 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
-      \t2 Poll \circseq \circseq M \circseq pc := j + 1 \\
-      \t1 {} \circelse pc = k \circthen M \\
-      \t1 \cdots \\
-      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t2 \circif frameStack = \emptyset \circthen \Skip \\
-      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2196,7 +2166,7 @@
       \circif frameStack = \emptyset \circthen \Skip \\
       {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t1 \circif \cdots \\
-      \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t1 {} \circelse pc = i \circthen A \circseq \\
       \t2 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
@@ -2207,7 +2177,7 @@
       \t2 \circif frameStack = \emptyset \circthen \Skip \\
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
-      \t3 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t3 {} \circelse pc = i \circthen A \circseq \\
       \t4 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
@@ -2225,7 +2195,7 @@
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
+      \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 (\circvar poppedArgs : \seq Word \circspot
       \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
@@ -2339,6 +2309,59 @@
       \t1 \circif cid = c_1 \circthen Invoke(c_1, m, poppedArgs, \false) \\
       \t1 {} \cdots {} \\
       \t1 {} \circelse cid = c_n \circthen Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \{ pc = i \} \circseq \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then \\
+      \t1 \circif cid = c_1 \circthen Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & schema calculus and Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then \\
+      \t1 \circif cid = c_1 \circthen Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-input-prefix-dist-law}] \\
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 \circif cid = c_1 \circthen Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-dist-law}] \\
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then (\{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 \circif cid = c_1 \circthen \{ (last~frameStack).storedPC = j + 1 \} \circseq Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen \{ (last~frameStack).storedPC = j + 1 \} \circseq Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 \circfi)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract) \circseq \\
+      \t1 getClassIDOf!(head~poppedArgs)?cid \then {} \\
+      \t1 \circif cid = c_1 \circthen \{ (last~frameStack).storedPC = j + 1 \} \circseq Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse cid = c_n \circthen \{ (last~frameStack).storedPC = j + 1 \} \circseq Invoke(c_n, m, poppedArgs, \false) \\
       \t1 \circfi
     \end{array}\\
   \end{argue}
