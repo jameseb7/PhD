@@ -73,7 +73,7 @@ $pc$ from the interpreter.
 The $pc$ component is then removed from the state in
 line~\ref{algorithm-remove-pc-from-state} of the algorithm.
 
-\begin{algorithm}[t]
+\begin{algorithm}[tp!]
   \begin{algorithmic}[1]
     \State \Call{ExpandBytecode}{} \label{algorithm-expand-bytecode}
     \State \Call{IntroduceSequentialComposition}{} \label{algorithm-introduce-forward-sequence}
