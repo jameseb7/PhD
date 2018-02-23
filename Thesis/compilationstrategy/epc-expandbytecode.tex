@@ -55,8 +55,7 @@ which is defined by Table~\ref{handle-action-table}.
 \begin{figure}[thp]
 \begin{restatable}[$HandleInstruction$-refinement]{crule}{HandleInstructionRefinementRule}
   \label{HandleInstruction-refinement-rule}
-  Given $bc : ProgramAddress \pfun Bytecode$ and
-  $i : ProgramAddress$, if $i \in \dom bc$ then,
+  Given $i : ProgramAddress$, if $i \in \dom bc$ then,
   \begin{circus}
     \begin{array}{l}
       \circif {} \cdots {} \\
@@ -167,9 +166,9 @@ This transformation is standard in the context of a call to a
 parametrised action.
 
 Finally, the schema $InterpreterAstore$ is replaced with a schema
-$InterpreterAstoreEPC$, which does not affect $pc$, since the updates to
-$pc$ are extracted from the $Handle{*}$ actions by
-Rule~[\nameref{HandleInstruction-refinement-rule}].
+$InterpreterAstoreEPC$, which does not affect $pc$, since
+Rule~[\nameref{HandleInstruction-refinement-rule}] extracts the
+updates to $pc$ from the $Handle{*}$ actions.
 The $pc$ updates are not removed in the case of the actions for
 handling method invocation and return, where the $pc$ updates are
 closely connected to the operations on the stack and require special

@@ -2,7 +2,7 @@ We explain the strategy in detail with an example, the Java code for
 which is shown in Figure~\ref{example-code-figure}.
 \begin{figure}[tp]
   \begin{center}
-  \begin{minipage}{12cm}
+  \begin{minipage}{14cm}
   \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,keywordstyle=\bf\footnotesize,language=Java,numbers=left,numberstyle=\tiny,stepnumber=1, numbersep=5pt,escapeinside={(*@}{@*)}]
 public class TPK extends AperiodicEventHandler {
 
@@ -97,7 +97,7 @@ Figure~\ref{example-model-figure}.
 \begin{figure}[p]
   \begin{center}
   \setlength{\linewidth}{12cm}
-  \begin{tabular}{p{9cm}p{4.5cm}}
+  \begin{tabular}{p{9.5cm}p{4.5cm}}
     \scriptsize
     \setlength{\zedindent}{0cm}
     \setlength{\zedtab}{0.3cm}
@@ -341,8 +341,8 @@ Section~\ref{expand-bytecode-subsection}, where we define the
     % \t2 {} \circelse pc = 4 \circthen HandleAloadEPC(4) \circseq pc := 5 \\
     % \t2 {} \circelse pc = 5 \circthen HandleInvokespecialEPC(8) \\
     \t2 {} \circelse pc = 6 \circthen HandleReturnEPC \\
-    \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
-    \t3 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq \{ pc = 10 \} \circseq HandleInvokespecialEPC(29) \\
+    \t2 {} \circelse pc = 7 \circthen HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq Poll \circseq \\
+    \t3 HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq \{ pc = 10 \} \circseq HandleInvokespecialEPC(29) \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 8 \circthen HandleDupEPC \circseq pc := 9 \\
     % \t2 {} \circelse pc = 9 \circthen HandleAconst\_nullEPC \circseq pc := 10 \\
