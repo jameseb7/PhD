@@ -624,6 +624,7 @@ The assumption on the value of $pc$ is converted to an assumption on
 the $storedPC$ value of the current stack frame, and distributed into
 each of the branches of the choice, so it can be handled separately
 for each branch.
+
 \begin{figure}[thp]
 \begin{restatable}[refine-invokevirtual-multi]{crule}{RefineInvokeVirtualMultiRule}
   \label{refine-invokevirtual-multi-rule}
@@ -719,7 +720,7 @@ Before method call resolution this appears in the choice in $Running$
 as shown below.
 \begin{circusaction}
   \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} HandleInvokestatic(46) \\
+  \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} \circseq HandleInvokestatic(46) \\
   \t2 {} \cdots {} \\
 \end{circusaction}
 The $pc$ value $23$ is between the $methodEntry$ and $methodEnd$
