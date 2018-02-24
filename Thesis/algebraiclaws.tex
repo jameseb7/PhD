@@ -605,7 +605,7 @@ proofs of our compilation rules.
       \t1 \circspot A \\
       \t1 \circend
     \end{array}
-    \circrefines_P
+    =
     \begin{array}{l}
       \circprocess P \circdef \circbegin \\
       \t1 {} \cdots {} \\
@@ -695,5 +695,66 @@ proofs of our compilation rules.
     \circif \circelse_i g_i \circthen \circvar x : T \circspot A_i \circfi
     =
     \circvar x : T \circspot \circif \circelse_i g_i \circthen A_i \circfi 
+  \end{circus}
+\end{law}
+
+% From Definition 4.3 and Theorem 4.1 in Marcel's thesis
+\begin{minipage}{\textwidth}
+  \begin{law}[forwards-data-refinement]
+    \label{forwards-data-refinement-law}
+  If, for processes $P1$ and $P2$, and action local state $L$, there
+  exists a relation $CI$, between $P1.State$, $P2.State$, and $L$, such that,
+  \begin{circus}
+    \forall P2.State; L @ (\exists P1.State @ CI),
+  \end{circus}
+  and
+  \begin{circus}
+    \forall P1.State; P2.State; P2.State'; L @ CI \land P2.Act \implies (\exists P1.State'; L' @ P1.Act \land CI' ),
+  \end{circus}
+  then,
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P1 \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate P1.State \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot P1.Act \\
+      \t1 \circend
+    \end{array}
+    \circrefines_P
+    \begin{array}{l}
+      \circprocess P2 \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate P2.State \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot P2.Act \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+\end{law}
+\end{minipage}
+
+% From Definition B.51 in Marcel's Thesis
+\begin{law}[process-param-elim]
+  \label{process-param-elim-law}
+  If $x$ is not referenced in the body of $P$, then
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P \circdef x : T \circspot \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+    =
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
   \end{circus}
 \end{law}

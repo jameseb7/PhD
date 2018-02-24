@@ -1,0 +1,124 @@
+After $MainThread$ and $Started$ have been refined, $pc$ is no longer
+used by $Thr$, and so we can remove it from the state of $Thr$, as
+specified in Algorithm~\ref{pc-elimination-algorithm}.
+This algorithm operates over the $Thr$ process as a whole, since $pc$
+must be removed from every action in $Thr$ simultaneously.
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$InterpreterStateEPC$, $CI$}
+    \label{algorithm-pc-data-refinement}
+    \State \Apply{Law~[\nameref{seq-unitl-law}]}
+    \label{algorithm-eliminate-Skips}
+    \State \ApplyFor{Law~[\nameref{process-param-elim-law}]}{$bc$}
+    \label{algorithm-eliminate-bc-parameter}
+  \end{algorithmic}
+  \caption{RemovePCFromState}
+  \label{pc-elimination-algorithm}
+\end{algorithm}
+
+Algorithm~\ref{pc-elimination-algorithm} begins with the application
+of Law~[\nameref{forwards-data-refinement-law}] at
+line~\ref{algorithm-pc-data-refinement}.
+This law describes standard \Circus{} data refinement between
+processes, in which a coupling invariant is defined to describe the
+relationship between the old state of the process and the new state of
+the process.
+We characterise the refinement by providing the new process state and
+the coupling invariant.
+
+For our refinement, the new state is $InterpreterStateEPC$, shown
+below.
+It is similar to $InterpreterState$, but the $pc$ component is
+removed.
+The $frameStack$ also has a different type, being a sequence of
+$StackFrameEPC$ structures, which are similar to $StackFrame$, but
+without the $storedPC$ component, since that is only used for storing
+a value from $pc$.
+The invariant of $InterpreterStateEPC$ is the same as for
+$InterpreterState$, but without the requirement that the
+$currentClass$ and stack frame $frameClass$ values be consistent with
+the $pc$ value.
+\begin{schema}{InterpreterStateEPC}
+  frameStackID : Stack \\
+  frameStack : \seq StackFrameEPC \\
+  % pc : ProgramAddress \\
+  currentClass : Class
+\where
+  frameStackID = Uninitialised \implies frameStack = \emptyset \\
+  % definition of currentClass (only important if the frame stack is nonempty)
+  frameStack \neq \emptyset \implies currentClass = (last~frameStack).frameClass
+  % need to ensure pc is consistent with currentClass
+  % currentClass = (\mu c : \ran cs | \\
+  % \t1 (\exists_1 m : MethodID | m \in \dom c.methodEntry @  \\
+  % \t2 pc \in c.methodEntry~m \upto c.methodEnd~m)) \\
+  % \forall f : \ran frameStack @ f.frameClass = (\mu c :\ran cs | \\
+  % \t1 (\exists_1 m : MethodID | m \in \dom c.methodEntry @  \\
+  % \t2 f.storedPC \in c.methodEntry~m \upto c.methodEnd~m))
+\end{schema}
+
+% \begin{schema}{StackFrameEPC}
+%   localVariables : \seq Word \\
+%   operandStack : \seq Word \\
+%   % storedPC : ProgramAddress \\
+%   frameClass : Class \\
+%   stackSize : \nat
+% \where
+%   \# operandStack \leq stackSize
+% \end{schema}
+
+The coupling invariant, $CI$, for the refinement from
+$InterpreterState$ to $InterpreterStateEPC$ is shown below, with the
+state schemas decorated with ${}_0$ and ${}_1$ to distinguish their
+components.
+$CI$ equates the $frameStackID$ and $currentClass$ components of the
+two schemas, since they are unaffected.
+The $frameStack$ components are declared to have the same domain, and
+each $StackFrame$ in $frameStack$ is mapped onto a $StackFrameEPC$
+with the same $localVariables$, $operandStack$, $frameClass$, and
+$stackSize$ values.
+The $pc$ and $storedPC$ values of $InterpreterState$ are discarded,
+since they are not present in $InterpreterStateEPC$
+\begin{schema}{CI}
+  InterpreterState_0 \\
+  InterpreterStateEPC_1
+\where
+  frameStackID_0 = frameStackID_1 \\
+  currentClass_0 = currentClass_1 \\
+  \dom frameStack_0 = \dom frameStack_1 \\
+  \forall i : \dom frameStack_0 @ \\
+  \t1 (frameStack_0~i).localVariables = (frameStack_1~i).localVariables \land \\
+  \t1 (frameStack_0~i).operandStack = (frameStack_1~i).operandStack \land \\
+  \t1 (frameStack_0~i).frameClass = (frameStack_1~i).frameClass \land \\
+  \t1 (frameStack_0~i).stackSize = (frameStack_1~i).stackSize
+\end{schema}
+
+This data refinement has the effect of removing $pc$ from each of the
+data operations in $Thr$.
+This effect is minimal for most data operations, since their $pc$
+updates have already been extracted. 
+However, $InterpreterStackFrameInvoke$ no longer stores the current
+$pc$ value in the $storedPC$ component of the topmost stack frame, and
+$InterpreterNewStackFrame$ does not set the $pc$ value.
+Additionally, the method return operations $InterpreterAreturn$ and
+$IntepreterReturn$ do not set set the value of $pc$ using the
+$storedPC$ value of the previous stack frame.
+
+The other main effect of the data refinement is that each of the $pc$
+assignments introduced between bytecode instructions during the
+strategy are refined to $\Skip$.
+These $\Skip$ actions are then eliminated by applying
+Law~[\nameref{seq-unitl-law}] wherever possible, at
+line~\ref{algorithm-eliminate-Skips} of
+Algorithm~\ref{pc-elimination-algorithm}.
+
+Finally, we eliminate the $bc$ parameter to the process, since it is
+also no longer needed, using an application of
+Law~[\nameref{process-param-elim-law}], at
+line~\ref{algorithm-eliminate-bc-parameter}.
+This completes the refinement of $Thr(bc,cs,t)$ into
+$ThrCF_{bc,cs}(cs,t)$, referenced in
+Theorem~\ref{thread-splitting-thm}, which has its control flow
+introduced and does not include $pc$ in its state.
+The next stage of the strategy operates on $ThrCF_{bc,cs}(cs,t)$ to
+eliminate the $frameStack$.
