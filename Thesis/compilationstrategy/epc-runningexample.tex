@@ -49,6 +49,8 @@ We have simplified the algorithm by removing the reading into an
 array, since our bytecode subset does not include array operations.
 Adding arrays makes the example much longer, while not giving any
 interesting insight into our compilation strategy.
+As previously explained, extending the bytecode set considered to deal
+with arrays is not difficult.
 
 We have also written the example as an SCJ program, with the algorithm
 as the body of an aperiodic event handler, \texttt{TPK}, one or more
@@ -65,24 +67,23 @@ obtained from the \texttt{ConsoleConnection}
 and~\ref{example-OutputStream-line}).
 
 After the input and output streams have been obtained, we enter a for
-loop (line~\ref{example-for-loop-line}) in which an integer is read from the
-\texttt{InputStream}, a static method \texttt{f()} is applied to it,
-and the result is output if it is less than 400, otherwise 0 is
-output.
+loop (line~\ref{example-for-loop-line}) in which an integer is read
+from the \texttt{InputStream}, a static method \texttt{f()} is applied
+to it, and the result is output if it is less than 400, otherwise, 0
+is output.
 The method \texttt{f()} takes an integer as input, multiplies it by 3
 and adds 5 to it.
 
-The \texttt{TPK} class is part of a larger program that includes many
-other classes, including a \texttt{Safelet}, a
-\texttt{MissionSequencer}, a \texttt{Mission}, and the classes that
-make up the SCJ API.
+The \texttt{TPK} class is part of a larger program that includes other
+classes, including a \texttt{Safelet}, a \texttt{MissionSequencer}, a
+\texttt{Mission}, and the classes that make up the SCJ API.
 % Considering these classes in our example would make the example much
 % larger and more complex, while not introducing any more interesting
 % aspects for the strategy to consider.
 We omit a presentation of these classes, though it should be noted
 that they are part of the complete example.
-They need to go through similar refinement to that we illustrate for
-the $TPK$ class.
+For compilation, they need to go through a similar refinement to that
+we illustrate for the $TPK$ class.
 This adds little complexity to the strategy since the bytecode array
 is acted upon consistently for all classes, and the current class of a
 given bytecode instruction can always be determined from its address
@@ -91,7 +92,7 @@ in the array.
 The Java code must be run through a Java compiler to generate the
 corresponding bytecode, which then defines the $bc$ and $cs$ constants
 of our model.
-The $bc$ and $cs$ values for our example are shown in
+Their values for our example are shown in
 Figure~\ref{example-model-figure}.
 
 \begin{figure}[p]
@@ -299,7 +300,7 @@ Figure~\ref{bytecode-expansion-example-figure}.
 \end{figure}
 This step copies $HandleInstruction$ into $Running$, and converts it
 to a choice of actions based on the value of the program counter,
-mirroring the contents of the $bc$ map for each value.
+$pc$, mirroring the contents of the $bc$ map for each value.
 
 The actions that make up $HandleInstruction$ are also replaced with
 actions that incorporate instruction parameters from the $bc$ map, and
@@ -317,11 +318,10 @@ the bytecode instructions in the $bc$ map, as that involves use of the
 $pc$ value, which we seek to remove in this stage.
 This also has the benefit of fully incorporating $bc$ into the $Thr$
 process, ensuring all the information required to introduce C code
-constructs is available directly in \Circus{}, which makes stating
-compilation laws simpler.
-This is described in more detail in
-Section~\ref{expand-bytecode-subsection}, where we define the
-\Call{ExpandBytecode}{} procedure.
+constructs is available directly in \Circus{}.
+This makes stating compilation laws simpler, and is described in more
+detail in Section~\ref{expand-bytecode-subsection}, where we define
+the \Call{ExpandBytecode}{} procedure.
 
 \begin{figure}[t!]
   \setlength{\zedindent}{0cm}
@@ -441,24 +441,25 @@ define the \Call{IntroduceSequentialComposition}{} procedure.
 Handling the remaining constructs requires consideration of
 dependencies between methods to ensure method calls can be resolved
 correctly.
-We say a method call is \emph{resolved} when the action handling
-method invocation bytecode has been placed in sequential composition
-with a call to a \Circus{} action containing the body of the method
-being invoked, which is then followed by the sequence of instructions
-that occur after the invocation bytecode instruction in the calling
-method.
+We say a method call is \emph{resolved} when the method invocation
+bytecode has been placed in sequential composition with a call to a
+\Circus{} action containing the body of the method being invoked,
+which is then followed by the sequence of instructions that occurs
+after the invocation bytecode instruction in the calling method.
 After a method call has been resolved, it no longer breaks up the
 sequence of instructions it occurs in.
+%TODO: clarify this
 
 Since we have the bytecode instructions of all the methods needed, we
 can always resolve the call of a complete method, provided that method
 has already been split into its own \Circus{} action.
-To ensure a called method is complete, we first perform loop and
-conditional introduction upon the method.
+To obtain a complete method, we first perform loop and conditional
+introduction upon the method.
 Since introducing loops and conditionals requires unbroken sequences
-of instructions that form the bodies of loops and branches of
+of instructions that form the bodies of the loops and the branches of
 conditionals, introduction of loops and conditionals can only be
 performed on methods that have no unresolved method calls.
+
 In our example, \texttt{handleAsyncEvent()} is the only method that
 needs loops and conditionals introducing but, since it also contains
 method calls that break up the body of a loop, we must wait until its
@@ -477,7 +478,7 @@ line~\ref{algorithm-introduce-loops-and-conditionals} of the
 algorithm.
 To introduce loops and conditionals we consider the control flow graph
 of the method again, though it is now much simpler than the control
-flow graph used for sequence introduction since straight sequences of
+flow graph used for sequence introduction, since straight sequences of
 instructions have already been combined together.
 Patterns representing conditionals and loops are then identified using
 the control flow graph and the corresponding constructs are
@@ -763,9 +764,10 @@ pool index $46$ corresponds to the method identifier for the method
 The sequence of instructions corresponding to this method is in an
 action $TPK\_f$, created in the previous step, on
 line~\ref{algorithm-separate-complete-methods}.
+
 The semantics for the invocation instruction is expanded to
 instantiate the data operations it contains.
-These are then sequenced with the method action $TPK\_F$, with the
+These are then sequenced with the method action $TPK\_f$, with the
 $Poll$ action inbetween (to allow thread switches before the first
 instruction of the called method).
 The instructions following the method call are sequenced after it,
@@ -994,6 +996,7 @@ $pc$ values now redundant.
 
 The next step is then to eliminate these redundant paths and remove
 the dependency on $pc$ to select the method action.
+%TODO: make sure "at line" is used consistently
 This occurs at line~\ref{algorithm-refine-main-actions} of
 Algorithm~\ref{epc-algorithm}, in which the $Started$ and $MainThread$
 actions are refined to replace the $Running$ action with an
