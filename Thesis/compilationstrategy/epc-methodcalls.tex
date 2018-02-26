@@ -27,12 +27,11 @@ For methods that are complete, the sequence of actions for the method
 are placed in a separate action, which is introduced using
 Law~[\nameref{action-intro-law}] on
 line~\ref{algorithm-introduce-method-action}.
-We form the name of this action from the name of the class to which
-the method belongs and the name of the method, concatenated together
-with an underscore.
-This is similar to how icecap forms method names, although the name
-used for the action does not have an effect upon the correctness of
-the strategy, provided it is unique.
+The name used for the action does not have an effect upon the
+correctness of the strategy, provided it is unique.
+We adopt the icecap convention and form the name of this action from
+the name of the class to which the method belongs and the name of the
+method, concatenated together with an underscore.
 Once the method action has been introduced, the sequence of actions at
 the method's entry point in the $Running$ action is replaced with a
 reference to the newly introduced action by applying
@@ -45,11 +44,11 @@ loop on line~\ref{algorithm-method-loop} of
 Algorithm~\ref{epc-algorithm}.
 This can be seen in
 Figure~\ref{forward-sequence-introduction-example-figure}.
-The method is complete in this case because it consists of a straight
-sequence of instructions ending with $HandleAreturnEPC$, which
-represents the \texttt{areturn} instruction.
-The sequence of instructions at $pc = 43$ is copied into the action $TPK\_f$,
-which can be seen in
+This method is complete because it consists of a straight sequence of
+instructions ending with $HandleAreturnEPC$, which represents the
+\texttt{areturn} instruction.
+The sequence of instructions at $pc = 43$ is copied into the action
+$TPK\_f$, which can be seen in
 Figure~\ref{method-call-resolution-example-figure}.
 The $pc = 43$ branch is replaced with a call to $TPK\_f$.
 
@@ -170,6 +169,9 @@ performing this transformation, one for each
 instruction:~Rule~[\nameref{refine-invokestatic-rule}],
 Rule~[\nameref{refine-invokespecial-rule}] and
 Rule~[\nameref{refine-invokevirtual-single-rule}].
+They produce slightly different sequences of actions due to the
+differences in the semantics of the method invocation instructions,
+described in Section~\ref{cee-interpreter-subsection}.
 % TODO: move this to the loops and conditionals section if used
 % previously
 These rules are applied in a try block, beginning on
@@ -203,7 +205,7 @@ expansion (Section~\ref{expand-bytecode-subsection}).
   \begin{circus}
     \begin{array}{l}
       \{ pc = i \} \circseq \\
-      \t1 HandleInvokestaticEPC(cpi)
+      HandleInvokestaticEPC(cpi)
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -229,6 +231,7 @@ $HandleInvokeStaticEPC(cpi)$ to an action that pops the method's
 arguments from the stack using the $InterpreterStackFrameInvoke$
 operation and then behaves as the $Invoke$ action described in
 Section~\ref{cee-interpreter-section}.
+
 The method handled by $Invoke$ is identified by a class identifier,
 $c$, and a method identifier, $m$.
 These identifiers are determined from the $cpi$ parameter passed to
@@ -246,14 +249,14 @@ call is static, which is $\true$ in the case of \texttt{invokestatic}.
 
 Rule~[\nameref{refine-invokespecial-rule}] and
 Rule~[\nameref{refine-invokevirtual-single-rule}] are similar to
-Rule~[\nameref{refine-invokestatic-rule}], but they produce slightly
-different sequences of actions due to the differences in the semantics
-of the method invocation instructions, described in
-Section~\ref{cee-interpreter-subsection}.
+Rule~[\nameref{refine-invokestatic-rule}].
 They provide for popping an additional \texttt{this} argument from the
 stack and pass a $\false$ boolean value to $Invoke$.
 Rule~[\nameref{refine-invokevirtual-single-rule}] also leaves a
-communication on the $getClassIDOf$ channel in place.
+communication on the $getClassIDOf$ channel in place, since refinement
+of a single process cannot eliminate channel communications from the
+trace.
+% TODO: is this the right reason for leaving the communication in?
 The communication is eliminated later in the strategy, during the
 \emph{Data Refinement of Objects} stage, described in
 Section~\ref{data-refinement-of-objects-section}.
@@ -282,9 +285,9 @@ The assumption on the value of $pc$ is also eliminated, since it is no
 longer needed.
 This is also the case for the other method resolution rules applied in
 the try block on line~\ref{algorithm-try-block2-start}.
-The actions that define behaviour of the special method are identified
-by the syntactic function $specialMethodAction$, which is defined by
-Table~\ref{special-method-action-table}.
+The actions that define the behaviour of the special method are
+identified by the syntactic function $specialMethodAction$, which is
+defined by Table~\ref{special-method-action-table}.
 It determines which behaviour should be used based on the class and
 method identifiers passed to $Invoke$ and the boolean value indicating
 whether the method is static.
@@ -463,8 +466,9 @@ invocation, as with previous compilation rules in this stage.
 The second proviso of the rule ensures that the entry point, $k$, is
 that given in the class information provided by $ResolveMethod$ for
 the class identifier $c$ and method identifier $m$.
-The action containing the behaviour of the method is the action $M$ at
-the $pc = k$ branch of the choice in $Running$.
+
+The action containing the behaviour of the method is $M$, at the
+$pc = k$ branch of the choice in $Running$.
 The third proviso requires that the execution of $M$ must result in
 the top stack frame being popped and the $pc$ being set to the value
 stored in the next stack frame.
@@ -541,6 +545,7 @@ hold after an infinite loop.
 \caption{Rule~[\nameref{resolve-normal-method-rule}]}
 \label{resolve-normal-method-rule-figure}
 \end{figure}
+
 Rule~[\nameref{resolve-normal-method-rule}] applies only to those
 class and method identifiers that are not handled by
 Rule~[\nameref{resolve-special-method-rule}].
@@ -583,22 +588,22 @@ for each branch.
   \begin{circus}
     \begin{array}{l}
       \{ pc = j \} \circseq \\
-      \t1 HandleInvokevirtualEPC(cpi)
+      HandleInvokevirtualEPC(cpi)
     \end{array}
     \circrefines_A
     \begin{array}{l}
       \circvar poppedArgs : \seq Word \circspot \\
-      \t1 \lschexpract \exists argsToPop? == methodArguments~m @ \\
-      \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 getClassIDOf!(head~poppedArgs)?cid \then {} \\
-      \t1 \circif cid = c_1 \circthen \\
-      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t2 Invoke(c_1, m, poppedArgs, \false) \\
-      \t1 {} \cdots {} \\
-      \t1 {} \circelse cid = c_n \circthen \\
-      \t2 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t2 Invoke(c_n, m, poppedArgs, \false) \\
-      \t1 \circfi
+      \lschexpract \exists argsToPop? == methodArguments~m @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      getClassIDOf!(head~poppedArgs)?cid \then {} \\
+      \circif cid = c_1 \circthen \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 Invoke(c_1, m, poppedArgs, \false) \\
+      {} \cdots {} \\
+      {} \circelse cid = c_n \circthen \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 Invoke(c_n, m, poppedArgs, \false) \\
+      \circfi
     \end{array}
   \end{circus}
   where $m : MethodID$ and $c_1, \ldots, c_n : ClassID$ are such that
@@ -680,21 +685,21 @@ $constantPool$, yielding a $MethodRef$ containing the class identifier
 $TPKClassID$ and method identifier $f$.
 Since the instruction being handled is an \texttt{invokestatic}
 instruction, there is only a single target, which is the method
-referred to by these identifiers.
+referenced by these identifiers.
 That method is the \texttt{f()} method of \texttt{TPK}, whose entry
 point is at $pc = 43$.
 There is a straight sequence of instructions at this entry point,
 ending with an \texttt{areturn} instruction. 
-Thus, it has already been sequenced together at the point when method
-resolution occurs for the first time, and separated into a method
-action $TPK\_f$, which can be seen in
+Thus, it has already been sequenced together when method resolution
+occurs for the first time, and separated into a method action
+$TPK\_f$, which can be seen in
 Figure~\ref{method-call-resolution-example-figure}.
 This method call can thus be resolved.
 
 The $HandleInvokestatic(46)$ action is refined using
 Rule~[\nameref{refine-invokestatic-rule}].
-After applying the rule, the sequence of actions starting at $pc = 23$
-has the following form.
+After applying this rule, the sequence of actions starting at
+$pc = 23$ has the following form.
 \begin{circusaction}
   \t2 {} \cdots {} \\
   \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} \circseq \circvar poppedArgs : \seq Word \circspot \\
@@ -731,7 +736,7 @@ at $pc = 24$, to yield the code in
 Figure~\ref{method-call-resolution-example-figure}.
 
 As mentioned previously, the resolution of methods calls and
-introduction of loops and conditionals is performed in a loop until all
-the methods have been separated into their own action.
-After that, the remaining use of the program counter in the main
-actions of $Thr$ is eliminated as described in the next section.
+introduction of loops and conditionals is performed in a loop until
+all the methods have been separated into their own actions.
+After that, the remaining uses of the program counter in the main
+actions of $Thr$ are eliminated as described in the next section.
