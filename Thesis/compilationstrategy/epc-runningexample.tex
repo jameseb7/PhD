@@ -723,7 +723,7 @@ section.
   \end{circus}
   \vspace{-1cm}
   \begin{circus}
-    TPK\_f \circdef \{ currentClass = TPK \} \circseq HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq \\
+    TPK\_f \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq \\
     \t1 HandleAloadEPC(0) \circseq pc := 45 \circseq Poll \circseq HandleIaddEPC \circseq pc := 46 \circseq Poll \circseq \\
     \t1 HandleAloadEPC(0) \circseq pc := 47 \circseq Poll \circseq HandleIaddEPC \circseq pc := 48 \circseq Poll \circseq \\
     \t1 HandleIconstEPC(5) \circseq pc := 49 \circseq Poll \circseq HandleIaddEPC \circseq pc := 50 \circseq Poll \circseq \\
@@ -797,7 +797,7 @@ procedures.
   \end{circus}
   \vspace{-1cm}
   \begin{circus}
-    TPK\_APEHinit \circdef \{ currentClass = TPK \} \circseq \\
+    TPK\_APEHinit \circdef \\
     \t1 HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq \\
     \t1 HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq Poll \circseq \\
     \t1 HandleAloadEPC(4) \circseq pc := 5 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
@@ -808,7 +808,7 @@ procedures.
   \end{circus}
   \vspace{-1cm}
   \begin{circus}
-    TPK\_handleAsyncEvent \circdef \{ currentClass = TPK \} \circseq \\
+    TPK\_handleAsyncEvent \circdef \\
     \t1 HandleNewEPC(27) \circseq pc := 8 \circseq Poll \circseq HandleDupEPC \circseq pc := 9 \circseq \\
     % \t1 Poll \circseq HandleAconst\_nullEPC \circseq pc := 10 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
     % \t2 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
@@ -942,7 +942,7 @@ $pc$ values now redundant.
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
   \begin{circus}
-    TPK\_handleAsyncEvent \circdef \{ currentClass = TPK \} \circseq \\
+    TPK\_handleAsyncEvent \circdef \\
     \t1 HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq Poll \circseq  HandleAconst\_nullEPC \circseq Poll \circseq \\
     \t1 (\circvar poppedArgs : \seq Word \circspot \\
     \t2 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\

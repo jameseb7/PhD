@@ -7,8 +7,6 @@ Algorithm~\ref{separate-complete-methods-algorithm}.
   \begin{algorithmic}[1]
     \For{$m \gets methods$} \label{algorithm-method-separation-loop}
     \If{\Call{MethodIsComplete}{$m$}} \label{algorithm-check-method-completeness}
-    \State \ApplyFor{Rule~[\nameref{introduce-class-information-rule}]}{$m$}
-    \label{algorithm-introduce-class-information}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$} \label{algorithm-introduce-method-action}
     \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$} \label{algorithm-copy-method-action}
     \EndIf
@@ -25,57 +23,8 @@ complete, on line~\ref{algorithm-check-method-completeness}.
 This involves a simple syntactic check that each conditional branch
 ends in a return instruction or a recursion.
 
-If a method is complete, we first introduce an assumption at the start
-of the sequence of actions for the method that establishes what the
-value of $currentClass$ is during the method's execution
-(line~\ref{algorithm-introduce-class-information}).
-This is performed by an application of
-Rule~[\nameref{introduce-class-information-rule}], shown in
-Figure~\ref{introduce-class-information-rule-figure}.
-The $currentClass$ is determined by finding the class information $c$
-in the range of $cs$ that contains a method $m$ with the same entry
-point, $i$, as the complete method being operated on.
-By recording this information in an assumption, we can use it in later
-stages of the compilation, when the value of the $pc$ is no longer
-available.
-\begin{figure}
-\begin{restatable}[introduce-class-information]{crule}{IntroduceClassInformationRule}
-  \label{introduce-class-information-rule}
-  Given $i : ProgramAddress$,
-  \begin{circus}
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen A \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circmu X \circspot \\
-      \t1 \circif frameStack = \emptyset \circthen \Skip \\
-      \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 \circif \cdots \\
-      \t2 {} \circelse pc = i \circthen \{currentClass = c\} \circseq A \\
-      \t2 {} \cdots {} \\
-      \t2 \circfi \circseq Poll \circseq X \\
-      \t1 \circfi
-    \end{array}
-  \end{circus}
-  where $c : Class$ is such that
-  \begin{displaymath}
-    c \in \ran cs \land \exists  m : MethodID | m \in \dom c.methodEntry @ c.methodEntry~m = i.
-  \end{displaymath}
-\end{restatable}
-\caption{Rule~[\nameref{introduce-class-information-rule}]}
-\label{introduce-class-information-rule-figure}
-\end{figure}
-
-For the methods that are complete, the sequence of actions for the
-method are placed in a separate action, which is introduced using
+For methods that are complete, the sequence of actions for the method
+are placed in a separate action, which is introduced using
 Law~[\nameref{action-intro-law}] on
 line~\ref{algorithm-introduce-method-action}.
 We form the name of this action from the name of the class to which
