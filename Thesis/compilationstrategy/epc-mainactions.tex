@@ -1,12 +1,12 @@
 After the control flow of each method has been introduced and each
 method has been separated into its own method action, the only
-remaining use of $pc$ is to select a method action when a method is
+remaining uses of $pc$ are to select a method action when a method is
 executed in response to a request from the $Launcher$.
 This occurs in the $MainThread$ and $Started$ actions, where a call to
 $Running$ follows a call to $StartInterpreter$.
-To remove this final use of $pc$, we replace $Running$ with a call to
-a new action, $ExecuteMethod$, which chooses a method action based on
-a class and method identifier.
+To remove these final uses of $pc$, we replace $Running$ with a call
+to a new action, $ExecuteMethod$, which chooses a method action based
+on a class and method identifier.
 This performed as specified in
 Algorithm~\ref{refine-main-actions-algorithm}.
 
@@ -43,12 +43,12 @@ $Running$ with its body in $MainThread$ and $Started$.
 Then, we apply Rule~[\nameref{Running-refinement-rule}], shown in
 Figure~\ref{Running-refinement-rule-figure}, on
 lines~\ref{algorithm-MainThread-Running-refinement}
-and~\ref{algorithm-Started-Running-refinement}..
+and~\ref{algorithm-Started-Running-refinement}.
 This refines the composition of $Started$ with the body of $Running$
 in $MainThread$ and $Started$.
 
 \begin{figure}[thp]
-\begin{restatable}[$Running$-refinement]{crule}{RunningRefinementRule}
+\begin{restatable}[$StartInterpreter$-$Running$-refinement]{crule}{RunningRefinementRule}
   \label{Running-refinement-rule}
   If $(c_1,m_1), \ldots , (c_n,m_n)$ are all the
   $ClassID \cross MethodID$ values such that
@@ -118,6 +118,7 @@ $ResolveMethod$.
 It expands the definiton of $StartInterpreter$, and introduces a
 choice over these class and method identifiers, comparing them to the
 identifiers communicated on the $executeMethod$ channel.
+
 Within each branch of the choice for a class identifier $c_i$ and
 method identifier $m_i$, a new stack frame is first created by the
 $InterpreterNewStackFrame$ operation, using the class information,
@@ -134,11 +135,11 @@ parameter block, since it forms the body of the $ExecuteMethod$
 action.
 
 After Rule~[\nameref{Running-refinement-rule}] has been applied, the
-$ExecuteMethod$ action is introduced to the $Thr$ process using
+$ExecuteMethod$ action is introduced in the $Thr$ process using
 Law~[\nameref{action-intro-law}], on
 line~\ref{algorithm-ExecuteMethod-introduction} of
 Algorithm~\ref{refine-main-actions-algorithm}.
-The body of $ExecuteMethod$, introduced to $MainThread$ and
+The body of $ExecuteMethod$, introduced in $MainThread$ and
 $NotStarted$ by Rule~[\nameref{Running-refinement-rule}], is then
 replaced with a call to $ExecuteMethod$ by application of
 Law~[\nameref{copy-rule-law}], on

@@ -20,12 +20,17 @@ must be removed from every action in $Thr$ simultaneously.
 Algorithm~\ref{pc-elimination-algorithm} begins with the application
 of Law~[\nameref{forwards-data-refinement-law}] at
 line~\ref{algorithm-pc-data-refinement}.
-This law describes standard \Circus{} data refinement between
+This law describes a standard \Circus{} data refinement between
 processes, in which a coupling invariant is defined to describe the
 relationship between the old state of the process and the new state of
 the process.
 We characterise the refinement by providing the new process state and
 the coupling invariant.
+In this case, the relation defined by the coupling invariant is a
+function, so the actions of the new process can be calculated from the
+actions of the old process.
+Thus, the new state and coupling invariant are sufficient to uniquely
+characterise the data refinement.
 
 For our refinement, the new state is $InterpreterStateEPC$, shown
 below.
@@ -68,8 +73,8 @@ the $pc$ value.
 % \end{schema}
 
 The coupling invariant, $CI$, for the refinement from
-$InterpreterState$ to $InterpreterStateEPC$ is shown below, with the
-state schemas decorated with ${}_0$ and ${}_1$ to distinguish their
+$InterpreterState$ to $InterpreterStateEPC$ is shown below, with
+$InterpreterStateEPC$ decorated with ${}_1$ to distinguish its
 components.
 $CI$ equates the $frameStackID$ and $currentClass$ components of the
 two schemas, since they are unaffected.
@@ -78,19 +83,19 @@ each $StackFrame$ in $frameStack$ is mapped onto a $StackFrameEPC$
 with the same $localVariables$, $operandStack$, $frameClass$, and
 $stackSize$ values.
 The $pc$ and $storedPC$ values of $InterpreterState$ are discarded,
-since they are not present in $InterpreterStateEPC$
+since they are not present in $InterpreterStateEPC$.
 \begin{schema}{CI}
-  InterpreterState_0 \\
+  InterpreterState \\
   InterpreterStateEPC_1
 \where
-  frameStackID_0 = frameStackID_1 \\
-  currentClass_0 = currentClass_1 \\
-  \dom frameStack_0 = \dom frameStack_1 \\
-  \forall i : \dom frameStack_0 @ \\
-  \t1 (frameStack_0~i).localVariables = (frameStack_1~i).localVariables \land \\
-  \t1 (frameStack_0~i).operandStack = (frameStack_1~i).operandStack \land \\
-  \t1 (frameStack_0~i).frameClass = (frameStack_1~i).frameClass \land \\
-  \t1 (frameStack_0~i).stackSize = (frameStack_1~i).stackSize
+  frameStackID = frameStackID_1 \\
+  currentClass = currentClass_1 \\
+  \dom frameStack = \dom frameStack_1 \\
+  \forall i : \dom frameStack @ \\
+  \t1 (frameStack~i).localVariables = (frameStack_1~i).localVariables \land \\
+  \t1 (frameStack~i).operandStack = (frameStack_1~i).operandStack \land \\
+  \t1 (frameStack~i).frameClass = (frameStack_1~i).frameClass \land \\
+  \t1 (frameStack~i).stackSize = (frameStack_1~i).stackSize
 \end{schema}
 
 This data refinement has the effect of removing $pc$ from each of the
@@ -104,9 +109,13 @@ Additionally, the method return operations $InterpreterAreturn$ and
 $IntepreterReturn$ do not set set the value of $pc$ using the
 $storedPC$ value of the previous stack frame.
 
-The other main effect of the data refinement is that each of the $pc$
-assignments introduced between bytecode instructions during the
-strategy are refined to $\Skip$.
+The $pc$ assignments introduced between bytecode instructions during
+the strategy are also affected by the data refinement.
+The data refinement removes $pc$ from the assignments, leaving only
+their effect on the other components of the state.
+Since the assignments leave all other state components unchanged, the
+data-refined $pc$ assignments have no effect, making them equivalent
+to $\Skip$.
 These $\Skip$ actions are then eliminated by applying
 Law~[\nameref{seq-unitl-law}] wherever possible, at
 line~\ref{algorithm-eliminate-Skips} of
