@@ -7,6 +7,7 @@
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage[loadonly]{enumitem}
 
 \lstset{language=C}
 
@@ -16,15 +17,46 @@
 
 \newtheorem{rul}{Rule}
 
-% \useoutertheme{miniframes}
+\usetheme[compress]{Dresden}
+% \setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertshortauthor
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertshorttitle
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} \hspace*{2ex}
+  \end{beamercolorbox}}%
+  \vskip0pt%
+} 
+\usecolortheme{rose}
 
-\title{Algebraic Compilation\\of Safety-Critical Java Bytecode}
+\renewlist{itemize}{itemize}{4}
+\setlist[itemize]{label=\usebeamerfont*{itemize item}%
+  \usebeamercolor[fg]{itemize item}
+  \usebeamertemplate{itemize item},
+  leftmargin=1cm,
+  labelindent=\parindent,
+  itemsep=1pt}
+\setlist[itemize,1]{leftmargin=0.3cm}
+\setlist[itemize,2]{before*=\small}
+
+% \renewcommand{\insertsectionnumber}{}
+% \renewcommand{\sectionname}{}
+
+
+\title[Algebraic Compilation of Safety-Critical Java Bytecode]{Algebraic Compilation\\of Safety-Critical Java Bytecode}
 \author{James Baxter}
-\date{Thesis Seminar\\19 March 2018}
+\date[2018-03-20]{Thesis Seminar\\20 March 2018}
 
 \begin{document}
 
-\frame{\titlepage}
+\frame[plain]{\titlepage}
 
 \section{Introduction}
 \stepcounter{subsection}
@@ -51,91 +83,120 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Contributions}
+  \frametitle{Compiler Correctness}
   \begin{itemize}
-  \item Formal model of an SCJVM interpreter
-  \item Compilation strategy
+  \item Our aim: verification of compilation from SCJ bytecode to C
     \begin{itemize}
-    \item Acts on Java bytecode in the interpreter
-    \item Outputs a shallow embedding of C code
-    \item Specification of how to apply compilation rules
+    \item following the approach of icecap
     \end{itemize}
-  \item Compilation rules
+  \item Two main approaches to compiler verification:
     \begin{itemize}
-    \item Provable formal rules
-    \item Act on the interpreter model
+    \item commuting diagram approach
+    \item algebraic approach 
     \end{itemize}
   \end{itemize}
 \end{frame}
 
-\section{Preliminaries}
-\stepcounter{subsection}
-
 \begin{frame}
-  \frametitle{Safety-Critical Java}
+  \frametitle{Commuting diagram approach}
   \begin{itemize}
-  \item An SCJ program is made up of missions, which are executed sequentially, in an order determined by a \texttt{MissionSequencer}.
-  \item A class implementing the \texttt{Safelet} interface initialises the program and supplies the \texttt{MissionSequencer}.
-  \item Each mission is made up of event handlers of various types.
-  \item Memory is allocated in memory areas with different lifetimes.
-  \item Annotations allow for checking that dangling references cannot occur.
+  \item Define functions for source and target semantics
+  \item Also define an \emph{encode function}, which maps source meanings to target meanings
+  \item Compilation is correct if this diagram commutes:
   \end{itemize}
-  \includegraphics[width=\textwidth]{phases.pdf}
+  \begin{center}
+    \begin{tikzpicture}
+      \node[align=center] (S) at (0cm,3cm) {source\\language};
+      \node[align=center] (T) at (4cm,3cm) {target\\language};
+      \node[align=center] (M) at (0cm,0cm) {source\\meanings};
+      \node[align=center] (U) at (4cm,0cm) {target\\meanings};
+      
+      \path (S) edge[->] node[align=center, above] {compile}           (T);
+      \path (S) edge[->] node[align=right, left]   {source\\semantics} (M);
+      \path (T) edge[->] node[align=left, right]   {target\\semantics} (U);
+      \path (M) edge[->] node[align=center, above] {encode}            (U);
+    \end{tikzpicture}
+  \end{center}
 \end{frame}
 
-% \begin{frame}
-%   \frametitle{Safety-Critical Java}
-%   \begin{columns}
-%     \begin{column}{.5\textwidth}
-%       \begin{itemize}
-%       \item Memory is allocated in memory areas with different lifetimes:
-%         \begin{itemize}
-%         \item immortal memory
-%         \item mission memory
-%         \item per-release memory
-%         \item temporary private memory
-%         \end{itemize}
-%       \item Annotations allow for checking that dangling references cannot occur.
-%       \end{itemize}
-%     \end{column}
-%     \begin{column}{.5\textwidth}
-%       \includegraphics[width=\textwidth]{../../pictures/Stacks-Areas.pdf}
-%     \end{column}
-%   \end{columns}
-% \end{frame}
+\begin{frame}
+  \frametitle{Algebraic Approach}
+  \begin{itemize}
+  \item Define source and target in same specification language
+  \item Correct compilation is described by \emph{refinement}
+  \end{itemize}
+  \begin{tikzpicture}
+    \draw (0cm,0cm) |- (10cm,5cm) |- (0cm,0cm);
+    \draw (5cm,4.2cm) node[align=center] {Source Language\\+\\Specification Constructs};
+
+    \draw (2cm,2cm)   circle[radius=1.5cm]               node[align=center] {Source Program\\(in Source\\Language)};
+    \draw (8cm,2cm)   circle[radius=1.5cm] ++(0cm,0.7cm) node[align=center] {Target\\Machine};
+    \draw (8cm,1.5cm) circle[radius=0.7]                 node[align=center] {Target\\Code};
+
+    \path (3.5cm,2cm) edge[-latex] 
+              node[align=center, above] {\LARGE $\sqsubseteq$} 
+              node[align=center, below] {Refinement\\Strategy\\(Compilation)}  
+          (6.5cm,2cm);
+  \end{tikzpicture}
+\end{frame}
 
 \begin{frame}
+  \frametitle{Our Approach}
+  \begin{itemize}
+  \item Reverse of standard algebraic approach
+  \item Java bytecode semantics is defined in terms of its VM
+  \item C code defined by shallow embedding in the specification language
+  \end{itemize}
+  \begin{tikzpicture}
+    \draw (0cm,0cm) rectangle (10cm,4.5cm);
+    \draw (5cm,4.2cm) node[align=center] {\Circus{}};
+
+    \draw (8cm,2cm)   circle[radius=1.5cm]               node[align=center] {C code};
+    \draw (2cm,2cm)   circle[radius=1.5cm] ++(0cm,0.7cm) node[align=center] {SCJVM\\Model};
+    \draw (2cm,1.4cm) circle[radius=0.8]                 node[align=center] {\small Java \\\small bytecode};
+
+    \path (3.5cm,2cm) edge[-latex] 
+              node[align=center, above] {\LARGE $\sqsubseteq$} 
+              node[align=center, below] {Refinement\\Strategy\\(Compilation)}  
+          (6.5cm,2cm);
+  \end{tikzpicture}
+\end{frame}
+
+\begin{frame}[shrink,squeeze]
   \frametitle{\Circus{}}
+  \scriptsize
   \begin{itemize}
   \item Based on CSP and the Z notation
   \item CSP to specify processes that communicate over channels
   \item Z to specify state and data operations
-  \item \Circus{} specifications are made up of processes with encapsulated
-    state that may be made up of multiple actions.
+  \item Processes have encapsulated state and may be made up of
+    multiple actions.
   \item Channels represent the interface of a process.
   \item Processes may be composed in parallel.
   \item Notation for refinement
   \end{itemize}
-  
-  \begin{columns}[c]
+  %\vspace{-0.5cm}
+  \begin{columns}[T]
     \tiny
     \setlength{\zedindent}{0cm}
     \setlength{\zedleftsep}{0.1cm}
     \setlength{\zedtab}{0.5cm}
+    \setlength{\abovedisplayskip}{0cm}
+    \setlength{\abovedisplayshortskip}{0cm}
+    \setlength{\belowdisplayskip}{0cm}
+    \setlength{\belowdisplayshortskip}{0cm}
     \column{0.5\textwidth}
   \begin{circus}
     \circchannel getInstruction : ProgramAddress \\
     \circchannel getInstructionRet : Bytecode \\
   \end{circus}
-  \vspace{-1.3cm}
+  \vspace{-0.6cm}
   \begin{circus}
     \t2 \vdots
   \end{circus}
-  \vspace{-1cm}
   \begin{circus}
     \circprocess Interpreter \circdef \circbegin
   \end{circus}
-  \vspace{-1cm}
   \begin{schema}{InterpreterState}
     frameStack : \seq StackFrame \\
     pc : ProgramAddress \\
@@ -146,42 +207,99 @@
   \t1 currentClass = \\
   \t2 (last~frameStack).frameClass
   \end{schema}
-  \vspace{-1cm}
   \begin{circusaction}
     \circstate InterpreterState
   \end{circusaction}
   \vfill
   \column{0.5\textwidth}
-  \vspace{-0.5cm}
   \begin{schema}{InterpreterInit}
     InterpreterState~'
   \where
     frameStack' = \emptyset
   \end{schema}
-  \vspace{-1cm}
+  \vspace{-0.4cm}
   \begin{circusaction}
     \t2\vdots
   \end{circusaction}
-  \vspace{-1cm}
   \begin{circusaction}
     Loop \circdef \\
-    \t1 (frameStack \neq \emptyset) \circguard HandleInstruction \\
-    \t1 {} \extchoice (frameStack = \emptyset) \circguard StartInterpreter \circseq \\
+    \t1 \left(\begin{array}{l}
+          \lcircguard frameStack \neq \emptyset \rcircguard \circguard HandleInstruction \\
+          {} \extchoice {} \\
+          \lcircguard frameStack = \emptyset \rcircguard \circguard StartInterpreter
+        \end{array}\right) \circseq \\
     \t1 Loop
   \end{circusaction}
-  \vspace{-0.8cm}
   \begin{circusaction}
     \circspot \lschexpract InterpreterInit \rschexpract \circseq Loop
   \end{circusaction}
-  \vspace{-1cm}
   \begin{circus}
     \circend
   \end{circus}
   \vfill
 \end{columns}
 \end{frame}
+
+\begin{frame}
+  \frametitle{Contributions}
+  \begin{itemize}
+  \item Formal model of an interpreting SCJVM
+  \item Compilation strategy
+    \begin{itemize}
+    \item Acts on Java bytecode in the interpreter
+    \item Outputs a shallow embedding of C code
+    \item Specification of how to apply compilation rules
+    \end{itemize}
+  \item Compilation rules
+    \begin{itemize}
+    \item Formal rules, with proofs of correctness
+    \item Stated using refinement
+    \item Act on the interpreter model
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Safety-Critical Java}
+  \begin{itemize}
+  \item An SCJ program is made up of missions, which are executed sequentially, in an order determined by a \texttt{MissionSequencer}.
+  \item A class implementing the \texttt{Safelet} interface initialises the program and supplies the \texttt{MissionSequencer}.
+  \item Each mission is made up of event handlers of various types:
+    \begin{itemize}
+      \item aperiodic handlers, which execute in response to release
+        requests;
+      \item periodic handlers, which execute repeatedly at set
+        time periods;
+      \item one-shot handlers, which execute once after a set time period.
+      \end{itemize}
+  % \item Memory is allocated in memory areas with different lifetimes.
+  % \item Annotations allow for checking that dangling references cannot occur.
+  \end{itemize}
+  \includegraphics[width=\textwidth]{phases.pdf}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Safety-Critical Java}
+  \begin{columns}
+    \begin{column}{.5\textwidth}
+      \begin{itemize}
+      \item Memory is allocated in memory areas with different lifetimes:
+        \begin{itemize}
+        \item immortal memory
+        \item mission memory
+        \item per-release memory
+        \item temporary private memory
+        \end{itemize}
+      \item Annotations allow for checking that dangling references cannot occur.
+      \end{itemize}
+    \end{column}
+    \begin{column}{.5\textwidth}
+      \includegraphics[width=\textwidth]{Stacks-Areas.pdf}
+    \end{column}
+  \end{columns}
+\end{frame}
   
-\section{Interpreter Model}
+\section{Overview of Model}
 \stepcounter{subsection}
 
 \begin{frame}
@@ -232,16 +350,16 @@
     \path (App boundary) rectangle node[pos=0.5] (App) {} (width |- height);
 
     \path (quart |- API boundary) rectangle node[pos=0.4] (SCJVM) {} (quart |- App boundary);
-    \draw[onslide=<2-3>{color=blue}, onslide=<4>{color=cyan}] (VM Services left |- VM part bottom) rectangle (VM Services right |- VM part top);
-    \draw[onslide=<3-4>{color=red}, , onslide=<2>{color=blue}] (CEE left |- VM part bottom) rectangle (CEE right |- VM part top);
+    \draw[onslide=<2->{color=red}] (VM Services left |- VM part bottom) rectangle (VM Services right |- VM part top);
+    \draw[onslide=<2->{color=red}] (CEE left |- VM part bottom) rectangle (CEE right |- VM part top);
     \coordinate (CEE) at (CEE xpos |- CEE ypos);
     \coordinate (VM Services) at (VM Services xpos |- VM Services ypos);
 
     \node[align=center] at (App)   {SCJ Application};
     \node[align=center] at (API)   {SCJ Infrastructure\\and API};
-    \node[align=center, onslide=<2-4>{color=blue}] at (SCJVM) {SCJ Virtual Machine};
-    \node[align=center, onslide=<3-4>{color=red}, onslide=<2>{color=blue}] at (CEE)   {Core Execution Environment};
-    \node[align=center, onslide=<2-3>{color=blue}, onslide=<4>{color=cyan}] at (VM Services)  {SCJVM Services};
+    \node[align=center, onslide=<2->{color=red}] at (SCJVM) {SCJ Virtual Machine};
+    \node[align=center, onslide=<2->{color=red}] at (CEE)   {Core Execution Environment};
+    \node[align=center, onslide=<2->{color=red}] at (VM Services)  {SCJVM Services};
     \node[align=center] at (OS)    {Operating System/Hardware Abstraction Layer};
 
     \foreach \x in {1,...,3}
@@ -253,13 +371,13 @@
     ($(CEE right) + (VM part bottom)!0.07!(VM part top) - (CEE part sep)$);
 
     \foreach \x in {1,...,3}
-    \draw[onslide=<3-4>{color=red}, onslide=<2>{color=blue}] ($(CEE part \x start) + (CEE part sep)$)
+    \draw[onslide=<2->{color=red}] ($(CEE part \x start) + (CEE part sep)$)
     rectangle node[pos=0.5] (CEE part \x) {}
     (CEE part \x end |- CEE part top);
 
-    \node[align=center, onslide=<3-4>{color=red}, onslide=<2>{color=blue}] at (CEE part 1) {\scriptsize Object \\ \scriptsize Manager};
-    \node[align=center, onslide=<3-4>{color=red}, onslide=<2>{color=blue}] at (CEE part 2) {\scriptsize Interpreter};
-    \node[align=center, onslide=<3-4>{color=red}, onslide=<2>{color=blue}] at (CEE part 3) {\scriptsize Launcher};
+    \node[align=center, onslide=<2->{color=red}] at (CEE part 1) {\scriptsize Object \\ \scriptsize Manager};
+    \node[align=center, onslide=<2->{color=red}] at (CEE part 2) {\scriptsize Interpreter};
+    \node[align=center, onslide=<2->{color=red}] at (CEE part 3) {\scriptsize Launcher};
 
     \foreach \x in {1,...,3}
     \pgfmathsetmacro{\a}{0.333*(\x - 1)}
@@ -270,33 +388,112 @@
     ($(VM Services right) + (VM part bottom)!0.07!(VM part top) - (VM Service sep)$);
 
     \foreach \x in {1,...,3}
-    \draw[onslide=<4>{color=cyan}, onslide=<2-3>{color=blue}] ($(VM Service \x start) + (VM Service sep)$)
+    \draw[onslide=<2->{color=red}] ($(VM Service \x start) + (VM Service sep)$)
     rectangle node[pos=0.5] (VM Service \x) {}
     (VM Service \x end |- VM Service top);
 
-    \node[align=center, onslide=<4>{color=cyan}, onslide=<2-3>{color=blue}] at (VM Service 1) {\scriptsize Memory \\ \scriptsize Manager};
-    \node[align=center, onslide=<4>{color=cyan}, onslide=<2-3>{color=blue}] at (VM Service 2) {\scriptsize Scheduler};
-    \node[align=center, onslide=<4>{color=cyan}, onslide=<2-3>{color=blue}] at (VM Service 3) {\scriptsize Real-time \\ \scriptsize Clock};
+    \node[align=center, onslide=<2->{color=red}] at (VM Service 1) {\scriptsize Memory \\ \scriptsize Manager};
+    \node[align=center, onslide=<2->{color=red}] at (VM Service 2) {\scriptsize Scheduler};
+    \node[align=center, onslide=<2->{color=red}] at (VM Service 3) {\scriptsize Real-time \\ \scriptsize Clock};
+  \end{tikzpicture}
+\end{frame}
+
+%TODO: Do we need to discuss SCJVM Services?
+\section{SCJVM Services}
+\stepcounter{subsection}
+
+\begin{frame}
+  \frametitle{Memory Manager}
+  \begin{itemize}
+  \item Deals with \emph{backing stores} --- low level blocks of
+    memory that underlie memory areas
+  \item The \emph{root
+      backing store} covers the whole of backing store memory.
+  \item Backing stores may have backing stores nested within them.
+  \item Operations on backing stores:
+    \begin{itemize}
+    \item obtaining information on a backing store: total size, free size etc.\
+    \item allocating one backing store within another
+    \item allocating memory for an object in a backing store
+    \item locating the backing store of a particular object
+    \item clearing a backing store
+    \item resizing a backing store
+    \end{itemize}
+  \item The Memory Manager also deals with allocating stacks, which
+    are stored in a separate area from backing stores.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[shrink]
+  \frametitle{Scheduler}
+  \begin{itemize}
+  \item The SCJVM schedules \emph{threads} --- abstract lines of
+  execution used to implement SCJ's event handlers.
+  \item Threads transition between different states:~$created$, $started$,
+    $blocked$ and $current$.
+  \item Threads eligible to execute are scheduled using priority queues.
+    \begin{itemize}
+    \item The thread at the front of the highest-priority queue is $current$.
+    \end{itemize}
+  \item Locking on objects using priority-ceiling emulation.
+  \item The Scheduler also manages interrupts, scheduling them as if
+    they were threads.
+  \end{itemize}
+  \begin{tikzpicture}
+    \usetikzlibrary{positioning}
+    \node (free)    at (0,0)        {\small $free$};
+    \node (created) [right=of free] {created};
+    \node (started) [right=of created] {\small $started$};
+    \node (current) [right=of started] {\small $current$};
+    \node (blocked) [above=of current] {\small $blocked$};
+    
+    \draw[->] (free)    edge node[above] {\footnotesize \texttt{create}} (created);
+    \draw[->] (created) edge node[above] {\footnotesize \texttt{start}} (started);
+    \draw[->] (current) edge node[below] {\footnotesize \texttt{suspend}} (blocked);
+    \draw[->] (blocked) edge node {\footnotesize \texttt{resume}} (started);
+    \draw[->] (started) edge             (current);
+    \draw[->] (current) edge[bend left]  (started);
+
+    \draw[->] (current) edge[looseness=0.4, out=270, in=270] node[above] {\footnotesize \texttt{destroy}} (free);
+    \draw[->] (started) edge[looseness=0.5, out=270, in=270] (free);
+    \draw[->] (blocked) edge[looseness=0.5, out=180, in=90]  node[below] {\footnotesize \texttt{destroy}} (free);
   \end{tikzpicture}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Overview of model}
+  \frametitle{Real-time Clock}
+  \begin{itemize}
+  \item Provides a means to get the current time, as a millisecond-nanosecond pair
+  \item Time is kept via clock tick interrupts received from hardware
+  \item Allows an alarm to be set for a specific time, to send an
+    interrupt to the scheduler to indicate when that time has passed
+    \begin{itemize}
+      \item Used to coordinate one-shot and periodic event handlers
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\section{CEE Model}
+\stepcounter{subsection}
+
+\begin{frame}
+  \frametitle{Overview of CEE model}
   \begin{itemize}
   \item Core Execution Environment (CEE) has three components:
     \begin{itemize}
-    \item Object Manager
-      \begin{itemize}
-      \item manages object representation and memory areas
-      \end{itemize}
-    \item Interpreter 
-      \begin{itemize}
-      \item handles execution of individual bytecodes
-      \end{itemize}
     \item Launcher
-      \begin{itemize}
-      \item manages SCJVM startup and coordinates mission execution
-      \end{itemize}
+    \item Object Manager
+      % \begin{itemize}
+      % \item manages object representation and memory areas
+      % \end{itemize}
+    \item Interpreter 
+      % \begin{itemize}
+      % \item handles execution of individual bytecodes
+      % \end{itemize}
+    
+      % \begin{itemize}
+      % \item manages SCJVM startup and coordinates mission execution
+      % \end{itemize}
     \end{itemize}
   \item CEE parameters:
     \begin{itemize}
@@ -314,6 +511,29 @@
       \circprocess CEE(bc,cs,sid,initOrder) \circdef \\
       \t1 ObjMan(cs) \parallel Interpreter(bc,cs)  \parallel Launcher(sid,initOrder)
     \end{circus}}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Launcher}
+  \begin{itemize}
+  \item Manages SCJVM startup and coordinates mission execution
+  \item Operates by instructing the Interpreter to execute methods
+  \item Models part of the SCJ infrastructure
+  \item Unaffected by compilation strategy
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Object Manager}
+  \begin{itemize}
+  \item Manages the representation of objects
+  \item Each object is stored as a structure containing its class
+    information and a map from field identifiers to values.
+  \item Also tracks the current backing store in use by each thread
+    \begin{itemize}
+    \item Used to allocate space when creating a new object
+    \end{itemize}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}
@@ -386,45 +606,48 @@
   \end{tikzpicture}
 \end{frame}
 
-\section{C Code}
-\stepcounter{subsection}
-
 \begin{frame}
   \frametitle{C Code Representation}
   \begin{itemize}
   \item The C code is represented by processes representing C threads.
+    \begin{itemize}
+    \item Same structure as for Interpreter threads
+    \end{itemize}
   \item Each function is a separate action in the process.
   \item Function arguments are represented by action parameters.
   \item C variables are represented by \Circus{} variable blocks.
   \item \Circus{} recursion and conditionals represent C loops and conditionals.
   \item Objects are structs represented by Z schema bindings.
+    \begin{itemize}
+    \item Managed by a Struct Manager, which replaces the Object Manager
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
 \section{Compilation Strategy}
 \stepcounter{subsection}
 
-\begin{frame}
-  \frametitle{Overview of Compilation Strategy}
-  \begin{tikzpicture}
-    \draw (0cm,0.4cm) rectangle (10cm,4.5cm);
-    \draw (5cm,4.2cm) node[align=center] {\scriptsize Specification Language (\Circus{})};
+% \begin{frame}
+%   \frametitle{Overview of Compilation Strategy}
+%   \begin{tikzpicture}
+%     \draw (0cm,0.4cm) rectangle (10cm,4.5cm);
+%     \draw (5cm,4.2cm) node[align=center] {\scriptsize Specification Language (\Circus{})};
 
-    \draw (2cm,2.8cm)   circle[radius=1.5cm] ++(0cm,0.6cm) node[align=center] {\scriptsize Core\\\scriptsize Execution\\\scriptsize Environment};
-    \draw (2cm,1.95cm)     circle[radius=0.6cm]               node[align=center] {\scriptsize Bytecode};
-    \draw (8cm,2.8cm)   circle[radius=1.5cm]               node[align=center] {\scriptsize C Code};
+%     \draw (2cm,2.8cm)   circle[radius=1.5cm] ++(0cm,0.6cm) node[align=center] {\scriptsize Core\\\scriptsize Execution\\\scriptsize Environment};
+%     \draw (2cm,1.95cm)     circle[radius=0.6cm]               node[align=center] {\scriptsize Bytecode};
+%     \draw (8cm,2.8cm)   circle[radius=1.5cm]               node[align=center] {\scriptsize C Code};
 
-    \draw (1cm,0.5cm) rectangle (3cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
-    \draw (7cm,0.5cm) rectangle (9cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
+%     \draw (1cm,0.5cm) rectangle (3cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
+%     \draw (7cm,0.5cm) rectangle (9cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
 
-    \path (3.5cm,2.8cm) edge[-latex]
-    node[align=center, above] {\Large $\sqsubseteq$}
-    node[align=center, below] {\scriptsize Refinement\\\scriptsize Strategy\\\scriptsize (Compilation)}
-    (6.5cm,2.8cm);
+%     \path (3.5cm,2.8cm) edge[-latex]
+%     node[align=center, above] {\Large $\sqsubseteq$}
+%     node[align=center, below] {\scriptsize Refinement\\\scriptsize Strategy\\\scriptsize (Compilation)}
+%     (6.5cm,2.8cm);
 
-    % \draw[-latex] (3cm,0.9cm) -- (7cm,0.9cm);
-  \end{tikzpicture}
-\end{frame}
+%     % \draw[-latex] (3cm,0.9cm) -- (7cm,0.9cm);
+%   \end{tikzpicture}
+% \end{frame}
 
 \begin{frame}
   \frametitle{Overview of Compilation Strategy}
@@ -445,7 +668,11 @@
   \setlength{\zedleftsep}{0cm}
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
-  \begin{columns}[c]
+  \setlength{\abovedisplayskip}{0cm}
+  \setlength{\abovedisplayshortskip}{0cm}
+  \setlength{\belowdisplayskip}{0cm}
+  \setlength{\belowdisplayshortskip}{0cm}
+  \begin{columns}[T]
     \column{.3\textwidth}
     \begin{axdef}
       bc : ProgramAddress \pfun Bytecode
@@ -505,7 +732,7 @@
       \t1 staticFields == \{\} \\
       \rblot
     \end{axdef}
-    \vspace{-0.5cm}
+    
     \begin{axdef}
       cs : ClassID \pfun Class
     \where
@@ -551,79 +778,92 @@
 
     \path (0,0) --
     node[pos=0.00] (Initxpos) {}
-    node[pos=0.25] (Interpreterxpos) {}
-    node[pos=0.55] (Executexpos) {}
-    node[pos=0.8] (ExecuteAndPollxpos) {}
+    node[pos=0.25] (MainThreadxpos) {}
+    node[pos=0.25] (NotStartedxpos) {}
+    node[pos=0.50] (Startedxpos) {}
+    node[pos=0.75] (Runningxpos) {}
+    node[pos=1.00] (Blockedxpos) {}
     (width);
 
     \path (0,0) --
-    node[pos=0] (threadypos) {}
+    node[pos=-1]  (threadBlockedypos) {}
+    node[pos=0]   (threadypos) {}
     node[pos=0.5] (Initypos) {}
-    node[pos=1] (mainypos) {}
-    node[pos=2] (mainBlockedypos) {}
+    node[pos=1]   (mainypos) {}
+    node[pos=2]   (mainBlockedypos) {}
     (height);
 
     \path (Initxpos |- Initypos) node (Init) {$Init$} ++(-1cm,0cm) node (start) {};
-    \node at (Interpreterxpos |- mainypos) (IMn) {$MainThread$};
-    \node at (Executexpos |- mainypos) (MRn) {\color{red} $Running$};
-    \node at (Interpreterxpos |- mainBlockedypos) (MBl) {$Blocked$};
-    \node at (ExecuteAndPollxpos |- mainypos) (MB2) {$Blocked$};
-    \node at (Interpreterxpos |- threadypos) (NSt) {$NotStarted$};
-    \node at (Executexpos |- threadypos) (TBl) {$Blocked$};
-    \node at (ExecuteAndPollxpos |- threadypos) (TRn) {\color{red} $Running$};
+    \node at (MainThreadxpos |- mainypos) (IMn) {$MainThread$};
+    \node at (Runningxpos |- mainypos) (MRn) {\color{red} $Running$};
+    \node at (MainThreadxpos |- mainBlockedypos) (MBl) {$Blocked$};
+    \node at (Blockedxpos |- mainypos) (MB2) {$Blocked$};
+    \node at (NotStartedxpos |- threadypos) (NSt) {$NotStarted$};
+    \node at (Startedxpos |- threadypos) (Sta) {$Started$};
+    \node at (Startedxpos |- threadBlockedypos) (TBl) {$Blocked$};
+    \node at (Runningxpos |- threadypos) (TRn) {\color{red} $Running$};
+    \node at (Blockedxpos |- threadypos) (TB2) {$Blocked$};
 
     \draw[-latex] (start) to (Init);
     \draw[-latex] (Init) to[out=90,in=180,looseness=0.5] (IMn);
     \draw[-latex] (Init) to[out=270,in=180,looseness=0.5] (NSt);
-    \draw[-latex] (IMn) to[bend left,looseness=0.7] (MRn);
-    \draw[-latex] (MRn) to[bend left,looseness=0.7] (IMn);
+    \draw[-latex] (IMn) to[bend left,looseness=0.5] (MRn);
+    \draw[-latex] (MRn) to[bend left,looseness=0.5] (IMn);
     \draw[-latex] (MRn) to[bend left,looseness=0.7] (MB2);
     \draw[-latex] (MB2) to[bend left,looseness=0.7] (MRn);
     \draw[-latex] (IMn) to[bend left,looseness=1.0] (MBl);
     \draw[-latex] (MBl) to[bend left,looseness=1.0] (IMn);
-    \draw[-latex] (NSt) to (TBl);
-    \draw[-latex] (TBl) to[bend left,looseness=0.7] (TRn);
-    \draw[-latex] (TRn) to[bend left,looseness=0.7] (TBl);
-    \draw[-latex] (TRn) to[bend left,looseness=0.7] (NSt);
-    \draw[-latex] (TRn) to[loop below] (TRn);
-    \draw[-latex] (MRn) to[loop above] (MRn);
+    \draw[-latex] (NSt) to[out=270,in=180,looseness=0.5] (TBl);
+    \draw[-latex] (TBl) to[bend left,looseness=0.7] (Sta);
+    \draw[-latex] (Sta) to[bend left,looseness=0.7] (TBl);
+    \draw[-latex] (Sta) to (NSt);
+    \draw[-latex] (Sta) to[bend left,looseness=0.7] (TRn);
+    \draw[-latex] (TRn) to[bend left,looseness=0.7] (Sta);
+    \draw[-latex] (TB2) to[bend left,looseness=0.7] (TRn);
+    \draw[-latex] (TRn) to[bend left,looseness=0.7] (TB2);
   \end{tikzpicture}
 \end{frame}
 
 \begin{frame}
   \frametitle{Elimination of Program Counter}
   \tiny
+  \setlength{\abovedisplayskip}{0cm}
+  \setlength{\abovedisplayshortskip}{0cm}
+  \setlength{\belowdisplayskip}{0cm}
+  \setlength{\belowdisplayshortskip}{0cm}
+  \vspace{-0.2cm}
   \begin{circus}
-    Running \circdef \\
-    \t1 \circif frameStack = \emptyset \circthen \Skip \\
-    \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-    \t2 {} \circif pc = 0 \circthen HandleAload(0) \circseq pc := 1 \\
-    \t2 {} \circelse pc = 1 \circthen HandleAload(1) \circseq pc := 2 \\
-    \t2 {} \circelse pc = 2 \circthen HandleAload(2) \circseq pc := 3 \\
-    \t2 {} \circelse pc = 3 \circthen HandleAload(3) \circseq pc := 4 \\
-    \t2 {} \circelse pc = 4 \circthen HandleAload(4) \circseq pc := 5 \\
-    \t2 {} \circelse pc = 5 \circthen HandleInvokespecial(12) \\
-    \t2 {} \circelse pc = 6 \circthen HandleAload(0) \circseq pc := 7 \\
-    \t2 {} \circelse pc = 7 \circthen HandleAload(5) \circseq pc := 8 \\
-    \t2 {} \circelse pc = 8 \circthen HandlePutfield(15) \circseq pc := 9 \\
-    \t2 {} \circelse pc = 9 \circthen HandleAload(0) \circseq pc := 10 \\
-    \t2 {} \circelse pc = 10 \circthen HandleAload(6) \circseq pc := 11 \\
-    \t2 {} \circelse pc = 11 \circthen HandlePutfield(17) \circseq pc := 12 \\
-    \t2 {} \circelse pc = 12 \circthen HandleReturn \\
-    \t2 {} \circelse pc = 13 \circthen HandleAload(0) \circseq pc := 14 \\
-    \t2 {} \circelse pc = 14 \circthen HandleGetfield(15) \circseq pc := 15 \\
-    \t2 {} \circelse pc = 15 \circthen HandleInvokevirtual(33) \\
-    \t2 {} \circelse pc = 16 \circthen HandleAstore(1) \circseq pc := 17 \\
-    \t2 {} \circelse pc = 17 \circthen HandleAload(0) \circseq pc := 18 \\
-    \t2 {} \circelse pc = 18 \circthen HandleGetfield(17) \circseq pc := 19 \\
-    \t2 {} \circelse pc = 19 \circthen HandleAload(1) \circseq pc := 20 \\
-    \t2 {} \circelse pc = 20 \circthen HandleInvokevirtual(39) \\
-    \t2 {} \circelse pc = 21 \circthen pc := 23 \\
-    \t2 {} \circelse pc = 22 \circthen HandleAstore(1) \circseq pc := 23 \\
-    \t2 {} \circelse pc = 23 \circthen HandleReturn \\
-    \t2 \dots \\
-    \t2 {} \circfi \circseq Poll \circseq Running \\
-    \t1 \circfi
+    Running \circdef \begin{array}[t]{l}
+                       \circif frameStack = \emptyset \circthen \Skip \\
+                       {} \circelse frameStack \neq \emptyset \circthen {} \\
+                       \t1 {} \circif pc = 0 \circthen HandleAload(0) \circseq pc := 1 \\
+                       \t1 {} \circelse pc = 1 \circthen HandleAload(1) \circseq pc := 2 \\
+                       \t1 {} \circelse pc = 2 \circthen HandleAload(2) \circseq pc := 3 \\
+                       \t1 {} \circelse pc = 3 \circthen HandleAload(3) \circseq pc := 4 \\
+                       \t1 {} \circelse pc = 4 \circthen HandleAload(4) \circseq pc := 5 \\
+                       \t1 {} \circelse pc = 5 \circthen HandleInvokespecial(12) \\
+                       \t1 {} \circelse pc = 6 \circthen HandleAload(0) \circseq pc := 7 \\
+                       \t1 {} \circelse pc = 7 \circthen HandleAload(5) \circseq pc := 8 \\
+                       \t1 {} \circelse pc = 8 \circthen HandlePutfield(15) \circseq pc := 9 \\
+                       \t1 {} \circelse pc = 9 \circthen HandleAload(0) \circseq pc := 10 \\
+                       \t1 {} \circelse pc = 10 \circthen HandleAload(6) \circseq pc := 11 \\
+                       \t1 {} \circelse pc = 11 \circthen HandlePutfield(17) \circseq pc := 12 \\
+                       \t1 {} \circelse pc = 12 \circthen HandleReturn \\
+                       \t1 {} \circelse pc = 13 \circthen HandleAload(0) \circseq pc := 14 \\
+                       \t1 {} \circelse pc = 14 \circthen HandleGetfield(15) \circseq pc := 15 \\
+                       \t1 {} \circelse pc = 15 \circthen HandleInvokevirtual(33) \\
+                       \t1 {} \circelse pc = 16 \circthen HandleAstore(1) \circseq pc := 17 \\
+                       \t1 {} \circelse pc = 17 \circthen HandleAload(0) \circseq pc := 18 \\
+                       \t1 {} \circelse pc = 18 \circthen HandleGetfield(17) \circseq pc := 19 \\
+                       \t1 {} \circelse pc = 19 \circthen HandleAload(1) \circseq pc := 20 \\
+                       \t1 {} \circelse pc = 20 \circthen HandleInvokevirtual(39) \\
+                       \t1 {} \circelse pc = 21 \circthen pc := 23 \\
+                       \t1 {} \circelse pc = 22 \circthen HandleAstore(1) \circseq pc := 23 \\
+                       \t1 {} \circelse pc = 23 \circthen HandleReturn \\
+                       \t1 \dots \\
+                       \t1 {} \circfi \circseq Poll \circseq Running \\
+                       \circfi
+                     \end{array}
   \end{circus}
 \end{frame}
 
@@ -638,7 +878,7 @@
     \setlength{\belowdisplayskip}{0.1cm}
     If $i \neq j$ and
     \begin{circus}
-      \{frameStack \neq \emptyset\} \circseq A {} \quad = \quad 
+      \{frameStack \neq \emptyset\} \circseq A {} \;\; = \;\; 
       \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
     \end{circus}
     then,
@@ -775,20 +1015,29 @@
   \setlength{\zedleftsep}{0cm}
   \setlength{\zedindent}{0cm}
   \begin{circus}
-    InputHandler\_Init \circdef HandleAload(0) \circseq Poll \circseq HandleAload(1) \circseq \\
+    InputHandler\_init \circdef HandleAload(0) \circseq Poll \circseq HandleAload(1) \circseq \\
     \t1 Poll \circseq HandleAload(2) \circseq Poll \circseq HandleAload(3) \circseq Poll \circseq \\
-    \t1 HandleAload(4) \circseq Poll \circseq HandleInvokespecial(12) \circseq Poll \circseq \\
-    \t1 PeriodicEventHandler\_Init \circseq Poll \circseq HandleAload(0) \circseq Poll \circseq \\
+    \t1 HandleAload(4) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+    \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t2 \lschexpract InterpreterNewStackFrame[ \\
+    \t3 PeriodicEventHandler/class?,  init/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+    \t1 PeriodicEventHandler\_init \circseq Poll \circseq HandleAload(0) \circseq Poll \circseq \\
     \t1 HandleAload(5) \circseq Poll \circseq HandlePutfield(15) \circseq Poll \circseq \\
     \t1 HandleAload(0) \circseq Poll \circseq HandleAload(6) \circseq Poll \circseq \\
     \t1 HandlePutfield(17) \circseq Poll \circseq HandleReturn
   \end{circus}
   \begin{circus}
-    InputHandler\_HandleAsyncEvent \circdef HandleAload(0) \circseq Poll \circseq \\
-    \t1 HandleGetfield(15) \circseq Poll \circseq HandleInvokevirtual(33) \circseq Poll \circseq \\
-    \t1 InputStream\_Read \circseq Poll \circseq HandleAstore(1) \circseq Poll \circseq \\
+    InputHandler\_handleAsyncEvent \circdef HandleAload(0) \circseq Poll \circseq \\
+    \t1 HandleGetfield(15) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+    \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t2 \lschexpract InterpreterNewStackFrame[ \\
+    \t3 Inputter/class?,  read/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+    \t1 Inputter\_read \circseq Poll \circseq HandleAstore(1) \circseq Poll \circseq \\
     \t1 HandleAload(0) \circseq Poll \circseq HandleGetfield(17) \circseq Poll \circseq \\
-    \t1 HandleAload(1) \circseq Poll \circseq HandleInvokevirtual(39) \circseq Poll \circseq \\
+    \t1 HandleAload(1) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+      \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[ \\
+      \t3 Buffer/class?,  put/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
     \t1 Buffer\_Put \circseq Poll \circseq Poll \circseq HandleReturn
   \end{circus}
 \end{frame}
@@ -808,24 +1057,24 @@
   \setlength{\zedleftsep}{0cm}
   \setlength{\zedindent}{0cm}
   \begin{circus}
-    InputHandler\_Init \circdef \circval var0, var1, var2, var3, var4, var5, var6 : Word  \circspot \\
+    InputHandler\_init \circdef \circval var0, var1, var2, var3, var4, var5, var6 : Word  \circspot \\
     \t1 \circvar stack0, stack1, stack2, stack3, stack4 : Word \circspot \\
     \t1 stack0 := var0 \circseq Poll \circseq stack1 := var1 \circseq Poll \circseq stack2 := var2 \circseq \\
     \t1 Poll \circseq stack3 := var3 \circseq Poll \circseq stack4 := var4 \circseq Poll \circseq Poll \\
-    \t1 PeriodicEventHandler\_Init(stack0, stack1, stack2, stack3, stack4) \circseq \\
+    \t1 PeriodicEventHandler\_init(stack0, stack1, stack2, stack3, stack4) \circseq \\
     \t1 stack0 := var0 \circseq Poll \circseq stack1 := var5 \circseq Poll \circseq \\
     \t1 putField!stack0!input!stack1 \then \Skip \circseq Poll \circseq stack0 := var0 \circseq \\
     \t1 Poll \circseq stack1 := var6 \circseq Poll \circseq \\
     \t1 putField!stack0!buffer!stack1 \then \Skip \circseq Poll
   \end{circus}
   \begin{circus}
-    InputHandler\_HandleAsyncEvent \circdef \circval var0 : Word \circspot \\
+    InputHandler\_handleAsyncEvent \circdef \circval var0 : Word \circspot \\
     \t1 \circvar var1, stack0, stack1 : Word \circspot stack0 := var0 \circseq Poll \circseq \\
     \t1 getField!stack0!input \then getFieldRet?value \then stack0 := value \circseq \\
-    \t1 Poll \circseq Poll \circseq InputStream\_Read(stack0, stack0) \circseq Poll \circseq var1 := stack0 \circseq \\
+    \t1 Poll \circseq Poll \circseq Inputter\_read(stack0, stack0) \circseq Poll \circseq var1 := stack0 \circseq \\
     \t1 Poll \circseq stack0 := var0 \circseq Poll \circseq \\
     \t1 getField!stack0!buffer \then getFieldRet?value \then stack0 := value \circseq \\
-    \t1 Poll \circseq stack1 := var1 \circseq Poll \circseq Poll \circseq Buffer\_Put(stack0, stack1) \circseq \\
+    \t1 Poll \circseq stack1 := var1 \circseq Poll \circseq Poll \circseq Buffer\_put(stack0, stack1) \circseq \\
     \t1 Poll \circseq Poll
   \end{circus}
 \end{frame}
@@ -844,11 +1093,11 @@
   \setlength{\zedleftsep}{0cm}
   \setlength{\zedindent}{0cm}
   \begin{circus}
-    InputHandler\_Init \circdef \circval var0, var1, var2, var3, var4, var5, var6 : Word  \circspot \\
+    InputHandler\_init \circdef \circval var0, var1, var2, var3, var4, var5, var6 : Word  \circspot \\
     \t1 \circvar stack0, stack1, stack2, stack3, stack4 : Word \circspot \\
     \t1 stack0 := var0 \circseq Poll \circseq stack1 := var1 \circseq Poll \circseq stack2 := var2 \circseq Poll \circseq \\
     \t1 stack3 := var3 \circseq Poll \circseq stack4 := var4 \circseq Poll \circseq Poll \circseq \\
-    \t1 PeriodicEventHandler\_Init(stack0, stack1, stack2, stack3, stack4) \circseq \\
+    \t1 PeriodicEventHandler\_init(stack0, stack1, stack2, stack3, stack4) \circseq \\
     \t1 stack0 := var0 \circseq Poll \circseq stack1 := var5 \circseq Poll \circseq \\
     \t1 {\color{red} getObject?stack0 \then getObjectRet?struct \then {}} \\
     \t1 {\color{red} putObject!stack0!(updateInputHandler\_input~struct~stack1)  \then {}  \Skip} \circseq \\
@@ -857,14 +1106,14 @@
     \t1 {\color{red} putObject!stack0!(updateInputHandler\_buffer~struct~stack1) \then \Skip} \circseq Poll
   \end{circus}
   \begin{circus}
-    InputHandler\_HandleAsyncEvent \circdef \circval var0 : Word \circspot \\
+    InputHandler\_handleAsyncEvent \circdef \circval var0 : Word \circspot \\
     \t1 \circvar var1, stack0, stack1 : Word \circspot \\
     \t1 stack0 := var0 \circseq Poll \circseq {\color{red} getObject!stack0 \then getObjectRet?struct \then {}} \\
     \t1 {\color{red} stack0 := (castInputHandler~struct).input} \circseq Poll \circseq Poll \circseq \\
-    \t1 InputStream\_Read(stack0, stack0) \circseq Poll \circseq var1 := stack0 \circseq \\
+    \t1 InputStream\_read(stack0, stack0) \circseq Poll \circseq var1 := stack0 \circseq \\
     \t1 Poll \circseq stack0 := var0 \circseq Poll \circseq {\color{red} getObject!stack0 \then {}} \\
     \t1 {\color{red} getObjectRet?struct \then stack0 := (castInputHandler~struct).buffer} \circseq \\
-    \t1 Poll \circseq stack1 := var1 \circseq Poll \circseq Poll \circseq Buffer\_Put(stack0, stack1) \circseq Poll \circseq Poll
+    \t1 Poll \circseq stack1 := var1 \circseq Poll \circseq Poll \circseq Buffer\_put(stack0, stack1) \circseq Poll \circseq Poll
   \end{circus}
 \end{frame}
 
