@@ -24,6 +24,8 @@
 %\usepackage{cleveref}
 \usepackage{thmtools}
 \usepackage{thm-restate}
+\usepackage{supertabular}
+\usepackage{afterpage}
 
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
@@ -142,7 +144,10 @@ prefoothook={\qedsymbol\relax}
 %TC:group theorem 1 displaymath
 %TC:group zproof 0 displaymath 
 %TC:group algorithm 0 float
+%TC:group argue 0 displaymath
 
+
+  
 \begin{document}
 \maketitle
 
@@ -207,7 +212,6 @@ prefoothook={\qedsymbol\relax}
 
 \appendix
 
-%TC:ignore
 \chapter{Full SCJVM Services Model}
 \label{full-scjvm-services-model}
 \FullModeltrue
@@ -270,6 +274,7 @@ prefoothook={\qedsymbol\relax}
 \chapter{Algebraic Laws}
 \input{algebraiclaws.tex}
 
+%TC:ignore
 \chapter{Z/Eves Theorems and Proofs}
 \label{zeves-proofs}
 

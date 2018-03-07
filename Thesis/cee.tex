@@ -1142,12 +1142,30 @@ that are most of interest in creating the compilation strategy.
 The bytecode instructions in our subset are described in
 Table~\ref{bytecode-subset-table}.
 
-\begin{table}
-  \centering
-  \begin{tabular}{llp{8.5cm}}
+\afterpage{\centering
+  \rowcolors{1}{lightgray}{white}
+  %\renewcommand{\arraystretch}{1.5}
+
+  \tablehead{%
     \hline
+    \hiderowcolors
     Instruction & Parameter & Description \\
+    \showrowcolors
     \hline
+  }
+    
+  \tabletail{\hline
+    \hiderowcolors
+    {\small \sl continued on next page} & & \\
+    \showrowcolors
+  }
+
+  \tablelasttail{\hline}
+  
+  \bottomcaption{The instructions in our bytecode subset}
+  \label{bytecode-subset-table}
+  
+  \begin{supertabular}{llp{8cm}}
     \texttt{aconst\_null} & (none) & 
     Pushes a null object reference onto the operand stack.
     \\
@@ -1200,9 +1218,11 @@ Table~\ref{bytecode-subset-table}.
     \\
     \texttt{invokespecial} & constant pool index &
     Gets the method and class identifier at the given constant pool
-    index and invokes the specified method of the specified class,
-    popping the method's arguments, including a \texttt{this} object
-    reference, from the operand stack.
+    index and invokes the specified method of the specified class (or,
+    if the specified class is a superclass of the current class, the
+    direct superclass of the current class), popping the method's
+    arguments, including a \texttt{this} object reference, from the
+    operand stack.
     \\
     \texttt{invokestatic} & constant pool index &
     Gets the method and class identifier at the given constant pool
@@ -1233,11 +1253,9 @@ Table~\ref{bytecode-subset-table}.
     \texttt{return} & (none) &
     Returns from a method with no return value.
     \\
-    \hline
-  \end{tabular}
-  \caption{The instructions in our bytecode subset}
-  \label{bytecode-subset-table}
-\end{table}
+  \end{supertabular}
+  \vspace{\textfloatsep}
+}
 
 Java bytecode instructions operate over a state that records
 information on all loaded classes, a stack frame, and the object data
@@ -1921,21 +1939,27 @@ compilation, but is required for managing allocation of objects, so
 that they can be allocated in the correct backing store.
 
 The definition of the $NewObject$ action is shown below.
-It allocates space for an object by communicating with the memory
-manager in much the same way as $AllocateStaticFields$, except that
-the thread and class identifiers for the object are communicated via
-the $newObject$ channel, and the size required for the object is
-obtained from the class information via a $sizeOfObject$ function.
+It determines the $class$ information for the new object using the
+data operation $GetObjectClassInfo$, which looks up the class
+identifier communicated on the $newObject$ channel in the $cs$ map, and
+replaces its $fields$ with the union of its $fields$ and those of its
+superclasses, to account for field inheritance.
+The space for the object is then allocated by communicating with the
+memory manager in much the same way as in $AllocateStaticFields$,
+except that the size required for the object is computed from the
+$class$ information returned by $GetObjectClassInfo$, via a
+$sizeOfObject$ function.
 After a successful allocation, the object is added to the $objects$
 map with its fields initialised to $null$, in $ObjManObjectInit$, and
 the object's identifier is returned via $newObjectRet$.
 \begin{circusaction}
-  NewObject \circdef \circvar objectID : ObjectID \circspot \\
-  \t1 newObject?thread?classID \then {} \\
-  \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~(cs~classID)) \then {} \\
-  \t1  MMallocateMemoryRet?objectID \then {} \\
-  \t2 ((MMreport?r \prefixcolon (r = MMokay) \then \lschexpract \exists class? == cs~classID @ ObjManObjectInit \rschexpract \circseq \\
-  \t3 newObjectRet!objectID \then \Skip) \\
+  NewObject \circdef \circvar thread : ThreadID; classID : ClassID \circspot \\
+  \t1 \circvar objectID : ObjectID; class : Class \circspot \\
+  \t1 newObject?t?c \then thread, classID := t, c \circseq \lschexpract GetObjectClassInfo \rschexpract \circseq \\
+  \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~class) \then {} \\
+  \t1 MMallocateMemoryRet?objectID \then {} \\
+  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract ObjManObjectInit \rschexpract \circseq \\
+  \t3 newObjectRet!objectID \then \Skip \\
   \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) 
 \end{circusaction}
 
@@ -2467,34 +2491,40 @@ invocation of the method after this has been determined is handled by
 a common $Invoke$ action.
 This can be seen in the definition of the $HandleInvokespecial$ action
 below.
-The method identifier $mid$ is extracted from the instruction's
+The class identifier, $cid$, is extracted from the instruction's
+parameter and checked in a data operation $CheckSuperclass$, which
+replaces it with the identifier of the direct superclass of
+$currentClass$ if it is a proper superclass of $currentClass$, in line
+with the semantics specified for the JVM. 
+The method identifier $mid$ is also extracted from the instruction's
 parameter, and the data operation $InterpreterStackFrameInvoke$ is
 used to store the return $pc$ address and pop the arguments of the
 method into $poppedArgs$.
 The number of arguments popped, $argsToPop?$, is the $methodArguments$
 value for $mid$, plus one for the \texttt{this} identifier passed to
 the method.
-The class identifier is then extracted from the instruction's
-parameter and passed into $Invoke$ along with $mid$, $poppedArgs$, and
-a boolean value indicating that the method invocation is not from the
-\texttt{invokestatic} instruction.
+The $cid$ and $mid$ identifiers are the passed into $Invoke$ along
+with $poppedArgs$, and a boolean value indicating that the
+method invocation is not from the \texttt{invokestatic} instruction.
 \begin{circusaction}
   HandleInvokespecial \circdef \\
-  \t1 \circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
   \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
+  \t1 \circvar cid : ClassID; mid : MethodID; poppedArgs : \seq Word \circspot \\
   \t1 \circif ((invokespecial\inv)~(bc~pc)) \in methodRefIndices~currentClass \circthen {} \\
+  \t2 cid := classOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \lschexpract CheckSuperclass \rschexpract \circseq \\
   \t2 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
   \t2 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t2 Invoke(classOf~currentClass~((invokespecial\inv)~(bc~pc)), mid, poppedArgs, \false) \\
-  \t1 {} \circelse ((invokespecial\inv)~(bc~pc)) \notin methodRefIndices~currentClass \circthen \Chaos
+  \t2 Invoke(cid, mid, poppedArgs, \false) \\
+  \t1 {} \circelse ((invokespecial\inv)~(bc~pc)) \notin methodRefIndices~currentClass \circthen \Chaos \\
+  \t1 \circfi
 \end{circusaction}
 % TODO: is all this information necessary?
 The $HandleInvokestatic$ and $HandleInvokevirtual$ actions are
-similar, except that $argsToPop?$ does not include the extra
-\texttt{this} argument in $HandleInvokeStatic$, and
-$HandleInvokevirtual$ obtains the class identifier from the
-\texttt{this} identifier via the $getClassIDOf$ channel rather than
-from the instruction's parameter.
+similar, except that neither includes $CheckSuperclass$, $argsToPop?$
+does not include the extra \texttt{this} argument in
+$HandleInvokeStatic$, and $HandleInvokevirtual$ obtains the class
+identifier from the \texttt{this} identifier via the $getClassIDOf$
+channel rather than from the instruction's parameter.
 
 The $Invoke$ action, shown in part below, has the form of an external
 choice over actions for each of the special methods supported by the
