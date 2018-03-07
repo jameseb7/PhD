@@ -58,6 +58,11 @@
 
 \frame[plain]{\titlepage}
 
+\begin{frame}
+\frametitle{Outline}
+\tableofcontents
+\end{frame}
+
 \section{Introduction}
 \stepcounter{subsection}
 
@@ -140,6 +145,7 @@
   \end{tikzpicture}
 \end{frame}
 
+% Remember to say why this approach is taken
 \begin{frame}
   \frametitle{Our Approach}
   \begin{itemize}
@@ -398,9 +404,8 @@
   \end{tikzpicture}
 \end{frame}
 
-%TODO: Do we need to discuss SCJVM Services?
-\section{SCJVM Services}
-\stepcounter{subsection}
+\subsection{SCJVM Services}
+%\stepcounter{subsection}
 
 \begin{frame}
   \frametitle{Memory Manager}
@@ -410,35 +415,35 @@
   \item The \emph{root
       backing store} covers the whole of backing store memory.
   \item Backing stores may have backing stores nested within them.
-  \item Operations on backing stores:
-    \begin{itemize}
-    \item obtaining information on a backing store: total size, free size etc.\
-    \item allocating one backing store within another
-    \item allocating memory for an object in a backing store
-    \item locating the backing store of a particular object
-    \item clearing a backing store
-    \item resizing a backing store
-    \end{itemize}
+  \item Operations on backing stores:~clearing, resizing, allocating
+    memory and backing stores, locating the backing store of an object
+    % \begin{itemize}
+    % \item obtaining information on a backing store: total size, free size etc.\
+    % \item allocating one backing store within another
+    % \item allocating memory for an object in a backing store
+    % \item locating the backing store of a particular object
+    % \item clearing a backing store
+    % \item resizing a backing store
+    % \end{itemize}
   \item The Memory Manager also deals with allocating stacks, which
     are stored in a separate area from backing stores.
   \end{itemize}
 \end{frame}
 
-\begin{frame}[shrink]
+\begin{frame}
   \frametitle{Scheduler}
   \begin{itemize}
   \item The SCJVM schedules \emph{threads} --- abstract lines of
   execution used to implement SCJ's event handlers.
-  \item Threads transition between different states:~$created$, $started$,
-    $blocked$ and $current$.
+  % \item Threads transition between different states.
   \item Threads eligible to execute are scheduled using priority queues.
     \begin{itemize}
     \item The thread at the front of the highest-priority queue is $current$.
     \end{itemize}
   \item Locking on objects using priority-ceiling emulation.
-  \item The Scheduler also manages interrupts, scheduling them as if
-    they were threads.
+  \item Interrupts are scheduled as if they were threads.
   \end{itemize}
+  
   \begin{tikzpicture}
     \usetikzlibrary{positioning}
     \node (free)    at (0,0)        {\small $free$};
@@ -463,18 +468,14 @@
 \begin{frame}
   \frametitle{Real-time Clock}
   \begin{itemize}
-  \item Provides a means to get the current time, as a millisecond-nanosecond pair
-  \item Time is kept via clock tick interrupts received from hardware
-  \item Allows an alarm to be set for a specific time, to send an
-    interrupt to the scheduler to indicate when that time has passed
-    \begin{itemize}
-      \item Used to coordinate one-shot and periodic event handlers
-    \end{itemize}
+  \item Supplies the current time, as a millisecond-nanosecond pair
+  \item Time kept via clock tick interrupts from hardware
+  \item Allows an alarm to be set to send an interrupt at a specific time
   \end{itemize}
 \end{frame}
 
-\section{CEE Model}
-\stepcounter{subsection}
+\subsection{CEE Model}
+%\stepcounter{subsection}
 
 \begin{frame}
   \frametitle{Overview of CEE model}
@@ -542,14 +543,14 @@
   \item Each thread is represented by a separate \Circus{} process.
   \item The state of each thread's process contains the program counter
     and frame stack.
-  \item The Interpreter is a parallel composition of these threads.
-  { \setlength{\zedindent}{0cm}
-    \setlength{\zedleftsep}{0cm}
-    \setlength{\abovedisplayskip}{0.1cm}
-    \setlength{\belowdisplayskip}{0.1cm}
-  \begin{circus}
-    \circprocess Interpreter(bc,cs) \circdef \Parallel t : TID \setminus \{ idle \} \circspot Thr(bc, cs, t)
-  \end{circus}}
+  \item {The Interpreter is a parallel composition of these threads.
+      \setlength{\zedindent}{0cm}
+      \setlength{\zedleftsep}{0cm}
+      \setlength{\abovedisplayskip}{0.1cm}
+      \setlength{\belowdisplayskip}{0.1cm}
+      \begin{circus}
+        \circprocess Interpreter(bc,cs) \circdef \Parallel t : TID \setminus \{ idle \} \circspot Thr(bc, cs, t)
+      \end{circus}}
   \item The thread processes proceed through a sequence of different
     actions as the scheduler starts and switches between them.
   \end{itemize}
@@ -609,18 +610,21 @@
 \begin{frame}
   \frametitle{C Code Representation}
   \begin{itemize}
-  \item The C code is represented by processes representing C threads.
-    \begin{itemize}
-    \item Same structure as for Interpreter threads
-    \end{itemize}
+  \item {\setlength{\zedindent}{0cm}
+      \setlength{\zedleftsep}{0cm}
+      \setlength{\abovedisplayskip}{0.1cm}
+      \setlength{\belowdisplayskip}{0.1cm}
+      \setlength{\abovedisplayshortskip}{0.1cm}
+      \setlength{\belowdisplayshortskip}{0.1cm}
+      The C code is represented by processes representing C threads.
+      \begin{circus}
+        \circprocess CProg_{bc,cs} \circdef \Parallel t : ThreadID \setminus \{ idle \} \circspot CThr_{bc,cs}(t)
+      \end{circus}}
   \item Each function is a separate action in the process.
   \item Function arguments are represented by action parameters.
   \item C variables are represented by \Circus{} variable blocks.
   \item \Circus{} recursion and conditionals represent C loops and conditionals.
   \item Objects are structs represented by Z schema bindings.
-    \begin{itemize}
-    \item Managed by a Struct Manager, which replaces the Object Manager
-    \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -662,6 +666,37 @@
   \end{itemize}
 \end{frame}
 
+\begin{frame}[fragile,shrink]
+  \frametitle{Example Program}
+\begin{lstlisting}[language=Java]
+public class InputHandler extends PeriodicEventHandler {
+    
+  private InputStream input;
+  private Buffer buffer;
+  
+  public InputHandler(PriorityParameters priority,
+                      PeriodicParameters release,
+                      StorageParameters storage,
+                      ConfigurationParameters config,
+                      InputStream input, Buffer buffer) {
+    super(priority, release, storage, config);
+	
+    this.input = input;
+    this.buffer = buffer;
+  }
+
+  public void handleAsyncEvent() {
+    try {
+      int value = input.read();
+      buffer.put(value);
+    } catch (IOException e) {
+    }
+  }
+  
+}
+\end{lstlisting}
+\end{frame}
+
 \begin{frame}
   \frametitle{Example Program}
   \tiny
@@ -699,7 +734,7 @@
       \t1 18 \mapsto getfield~17, \\
       \t1 19 \mapsto aload~1, \\
       \t1 20 \mapsto invokevirtual~39, \\
-      \t1 21 \mapsto goto~4, \\
+      \t1 21 \mapsto goto~2, \\
       \t1 22 \mapsto astore~1, \\
       \t1 23 \mapsto return \\
       \t1 \dots \\
@@ -740,6 +775,8 @@
     \end{axdef}
   \end{columns}
 \end{frame}
+
+\subsection{Elimination of Program Counter}
 
 \begin{frame}
   \frametitle{Elimination of Program Counter}
@@ -825,7 +862,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Elimination of Program Counter}
+  \frametitle{Bytecode Expansion}
   \tiny
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\abovedisplayshortskip}{0cm}
@@ -868,7 +905,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Elimination of Program Counter}
+  \frametitle{Compilation Rules}
   \small
   \begin{rul}[Sequence introduction]
     \label{sequence-introduction-rule}
@@ -913,7 +950,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Elimination of Program Counter}
+  \frametitle{Method Separation}
   \centering
   \begin{tikzpicture}
     \node at (11cm,0) (width) {};
@@ -1011,7 +1048,7 @@
 \end{frame}
 
 \begin{frame}[shrink]
-  \frametitle{Elimination of Program Counter}
+  \frametitle{Resulting Code}
   \setlength{\zedleftsep}{0cm}
   \setlength{\zedindent}{0cm}
   \begin{circus}
@@ -1042,6 +1079,8 @@
   \end{circus}
 \end{frame}
 
+\subsection{Elimination of Frame Stack}
+
 \begin{frame}
   \frametitle{Elimination of Frame Stack}
   \begin{itemize}
@@ -1053,7 +1092,7 @@
 \end{frame}
 
 \begin{frame}[shrink]
-  \frametitle{Elimination of Frame Stack}
+  \frametitle{Resulting Code}
   \setlength{\zedleftsep}{0cm}
   \setlength{\zedindent}{0cm}
   \begin{circus}
@@ -1078,6 +1117,8 @@
     \t1 Poll \circseq Poll
   \end{circus}
 \end{frame}
+
+\subsection{Data Refinement of Memory}
 
 \begin{frame}
   \frametitle{Data Refinement of Memory}
@@ -1118,7 +1159,7 @@
 \end{frame}
 
 \begin{frame}[fragile,shrink]
-  \frametitle{C code}
+  \frametitle{Resulting C code}
 \begin{lstlisting}
 void InputHandler_init(uint32_t var0, var1, var2, var3, var4, var5, var6) {
   uint32_t stack0, stack1, stack2, stack3, stack4;
