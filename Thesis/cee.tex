@@ -2282,7 +2282,7 @@ The final action in the choice allows a request to terminate the
 thread to be accepted on the $endThread$ channel.
 When the termination of the thread is requested, the thread's memory
 is removed using the $removeThreadMemory$ channel and the scheduler is
-signalled on the $CEEremoveThread$ channel.
+signalled on the $SendThread$ channel.
 This causes the scheduler to switch to a different thread, so a thread
 switch is accepted on the $CEEswitchThread$ channel.
 After that, the process again behaves as $NotStarted$, allowing the
@@ -2300,7 +2300,7 @@ thread to be restarted.
   {} \extchoice {} \\
   endThread?t \prefixcolon (t = thread) \then \Skip
   \circblockend \circseq \\
-  \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
+  \t1 removeThreadMemory!thread \then SendThread \\
   \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
 \end{circusaction}
 
