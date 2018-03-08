@@ -248,7 +248,8 @@
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
-      \{ pc = i \} \circseq HandleInvokespecialEPC(cpi)
+      \{ pc = i \} \circseq \\
+      HandleInvokespecialEPC(cpi)
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -262,7 +263,11 @@
   \begin{displaymath}
     \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
     \t1 cpi \in methodRefIndices~c_0 \land \\
-    \t1 c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 (\exists c_1 : ClassID | c_0.constantPool~cpi = MethodRef~(c_1,m) @ \\
+    \t2 (((thisClassID~c_0,c_1) \in subclassRel~cs \land c_1 \neq thisClassID~c_0) \\
+    \t3 {} \implies c = superClassID~c_0) \land \\
+    \t2 (((thisClassID~c_0,c_1) \notin subclassRel~cs \lor c_1 = thisClassID~c_0) \\
+    \t3 {} \implies c = c_1)) \land \\
     \t1 i \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
   \end{displaymath}
 \end{restatable}
@@ -274,7 +279,8 @@
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
-      \{ pc = i \} \circseq HandleInvokevirtualEPC(cpi)
+      \{ pc = i \} \circseq \\
+      HandleInvokevirtualEPC(cpi)
     \end{array}
     \circrefines_A
     \begin{array}{l}
