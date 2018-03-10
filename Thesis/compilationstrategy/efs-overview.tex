@@ -1,0 +1,59 @@
+The second stage of the compilation strategy eliminates the
+$frameStack$ from the state of each thread's process,
+$ThrCF_{bc,cs}(cs,t)$. 
+The information stored in the stack frames on $frameStack$ are
+transferred into variables representing the local variables and
+operand stack slots for each method.
+The operations representing the bytecode instructions are refined to
+operations over these variables.
+This stage may be summarised by the following theorem
+%
+\begin{thm}
+  \begin{circus}
+    ThrCF_{bc,cs}(cs,t) \circrefines ThrLV_{bc,cs}(t)
+  \end{circus}
+\end{thm}
+%
+
+In this stage, we operate mainly on the method actions introduced in
+the previous stage.
+Algorithm~\ref{efs-algorithm} describes the strategy for transforming
+the method actions to introduce variables and eliminate the
+$frameStack$.
+\begin{algorithm}[tp!]
+  \begin{algorithmic}[1]
+    % do we need to remove currentClass (and frameStackID) first?
+    %\State \Call{RemoveCurrentClassFromState}
+    %\label{algorithm-remove-currentClass}
+    \State \Call{RemoveLauncherReturns}{}
+    \label{algorithm-remove-launcher-returns}
+    \State \Call{LocaliseStackFrames}{}
+    \label{algorithm-localise-stack-frames}
+    \State \Call{IntroduceVariables}{}
+    \label{algorithm-introduce-variables}
+    \State \Call{RemoveFrameStackFromState}{}
+    \label{algorithm-remove-frameStack}
+  \end{algorithmic}
+  \caption{Elimination of Frame Stack}
+  \label{efs-algorithm}
+\end{algorithm}
+It begins on line~\ref{algorithm-remove-launcher-returns}, by refining
+the return instructions that occur at the end of each method to remove
+the $CheckLauncherReturn$ actions that occur in those instructions,
+resolving the check of whether $frameStack$ is empty.
+This removes the only remaining use of $frameStack$ as a whole,
+enabling us to consider the stack frames for each method individually.
+We introduce a variable in each method that contains its stack frame
+on line~\ref{algorithm-localise-stack-frames} of the algorithm, and
+convert the operations of the method to operate over the new variable
+rather than the global $frameStack$.
+Then, on line~\ref{algorithm-introduce-variables}, we perform local
+data refinements to convert the stack frame for each method into
+variables representing the local variables and operand stack slots of
+the method.
+Finally, we eliminate the, now unused, $frameStack$ from the state of
+the process, on line~\ref{algorithm-remove-frameStack}.
+
+Next, we discuss each of these steps in more detail, explaining them
+with reference to the running example introduced in
+Section~\ref{overview-subsection}.
