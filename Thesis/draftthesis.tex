@@ -43,8 +43,13 @@
 \CountDefsfalse
 
 \newif\ifFullModel
+
+%TC:macro \IfFullModel [ignore]
+%TC:macro \IfNotFullModel [text]
 \FullModelfalse
-\newcommand{\ifnFullModel}{\ifFullModel\else}
+
+\newcommand{\IfFullModel}[1]{\ifFullModel #1 \fi}
+\newcommand{\IfNotFullModel}[1]{\ifFullModel \else #1 \fi}
 
 \newcommand{\directsubclass}{\prec_{\mathrm{d}}}
 \newcommand{\directsubclassid}[1]{\prec_{\mathrm{D},#1}}
@@ -214,6 +219,9 @@ prefoothook={\qedsymbol\relax}
 
 \chapter{Full SCJVM Services Model}
 \label{full-scjvm-services-model}
+
+%TC:macro \IfFullModel [text]
+%TC:macro \IfNotFullModel [ignore]
 \FullModeltrue
 
 \section{Memory Manager}
@@ -275,6 +283,7 @@ prefoothook={\qedsymbol\relax}
 \input{algebraiclaws.tex}
 
 %TC:ignore
+
 \chapter{Z/Eves Theorems and Proofs}
 \label{zeves-proofs}
 
@@ -304,10 +313,10 @@ prefoothook={\qedsymbol\relax}
 
 \input{../../SCJ-VM/James/memorymanager_proofs.zed}
 
+%TC:endignore
+
 \chapter{Compilation Rules Proofs}
 \label{compilation-rules-proofs-appendix}
 \input{compilationrules_proofs.tex}
-
-%TC:endignore
 
 \end{document}
