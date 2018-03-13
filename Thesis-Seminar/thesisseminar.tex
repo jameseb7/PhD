@@ -412,13 +412,15 @@
 \begin{frame}
   \frametitle{Memory Manager}
   \begin{itemize}
-  \item Deals with \emph{backing stores} --- low level blocks of
-    memory that underlie memory areas
-  \item The \emph{root
-      backing store} covers the whole of backing store memory.
-  \item Backing stores may have backing stores nested within them.
-  \item Operations on backing stores:~clearing, resizing, allocating
-    memory and backing stores, locating the backing store of an object
+  \item Deals with \emph{backing stores}
+    \begin{itemize}
+    \item low-level blocks of memory that underlie memory areas
+    \end{itemize}
+  % \item The \emph{root
+  %     backing store} covers the whole of backing store memory.
+  \item Backing stores may be nested.
+  \item Operations on backing stores:\newline
+    clearing, resizing, allocating, locating an object's backing store
     % \begin{itemize}
     % \item obtaining information on a backing store: total size, free size etc.\
     % \item allocating one backing store within another
@@ -427,29 +429,102 @@
     % \item clearing a backing store
     % \item resizing a backing store
     % \end{itemize}
-  \item The Memory Manager also deals with allocating stacks, which
-    are stored in a separate area from backing stores.
+  \item Also manages stacks, separately from backing stores
   \end{itemize}
+  \vfill
+  \begin{tikzpicture}
+    \scriptsize
+    \coordinate (width)  at (9,0);
+    \coordinate (height) at (0,2);
+
+    \path (0,0) --
+    coordinate[pos=0.00] (stack bot)
+    coordinate[pos=0.01] (stack1 bot)
+    coordinate[pos=0.05] (MM bot)
+    coordinate[pos=0.10] (PRM bot)
+    coordinate[pos=0.15] (NPM bot)
+    coordinate[pos=0.20] (stack1 top)
+    coordinate[pos=0.21] (stack2 bot)
+    coordinate[pos=0.40] (stack2 top)
+    coordinate[pos=0.41] (stack3 bot)
+    coordinate[pos=0.60] (stack3 top)
+    coordinate[pos=0.85] (NPM top)
+    coordinate[pos=0.90] (PRM top)
+    coordinate[pos=0.95] (MM top)
+    coordinate[pos=1.00] (stack top)
+    (height);
+
+    \path (0,0) --
+    coordinate[pos=0.34] (RBS mid)
+    coordinate[pos=0.35] (MM left)
+    coordinate[pos=0.50] (MM mid)
+    coordinate[pos=0.51] (PRM1 left)
+    coordinate[pos=0.675] (PRM1 mid)
+    coordinate[pos=0.68] (NPM left)
+    coordinate[pos=0.80] (NPM right)
+    coordinate[pos=0.81] (PRM1 right)
+    coordinate[pos=0.82] (PRM2 left)
+    coordinate[pos=0.98] (PRM2 right)
+    coordinate[pos=0.99] (MM right)
+    coordinate[pos=1.01] (stack left)
+    coordinate[pos=1.015] (stacks left)
+    coordinate[pos=1.195] (stacks right)
+    coordinate[pos=1.20] (stack right)
+    (width);
+    
+    \draw (0,0) rectangle (width |- height);
+    \draw[dotted] (RBS mid |- 0,0) rectangle (RBS mid |- height);
+    \path (0,0) rectangle (MM left |- height) 
+    node[pos=0.5,align=center] {Root Backing\\Store\\(Immortal Memory)};
+    
+    \draw (MM left |- MM bot) rectangle (MM right |- MM top);
+    \draw[dotted] (MM mid |- MM bot) -- (MM mid |- MM top);
+    \path (MM left |- MM bot) rectangle (PRM1 left |- MM top)
+    node[pos=0.5,align=center] {Mission\\Memory};
+    
+    \draw (PRM1 left |- PRM bot) rectangle (PRM1 right |- PRM top);
+    \draw[dotted] (PRM1 mid |- PRM bot) -- (PRM1 mid |- PRM top);
+    \path (PRM1 left |- PRM bot) rectangle (NPM left |- PRM top)
+    node[pos=0.5,align=center] {Per-release\\Memory};
+
+    \draw (PRM2 left |- PRM bot) rectangle (PRM2 right |- PRM top);
+    \path (PRM2 left |- PRM bot) rectangle (PRM2 right |- PRM top)
+    node[pos=0.5,align=center] {Per-release\\Memory};
+    
+    % \draw (6.5,0.3) rectangle (11.5,1.4);
+    % \node[align=center] at (9,1.2) {Per-release Memory};
+      
+    \draw (NPM left |- NPM bot) rectangle (NPM right |- NPM top)
+    node[pos=0.5,align=center]{Private\\Memory};
+
+    \draw (stack left |- stack bot) rectangle (stack right |- stack top);
+    \path (stack left |- stack3 top) rectangle (stack right |- stack top)
+    node[pos=0.5,align=center]{Stack\\Space};
+
+    \draw (stacks left |- stack1 bot) rectangle (stacks right |- stack1 top);
+    \draw (stacks left |- stack2 bot) rectangle (stacks right |- stack2 top);
+    \draw (stacks left |- stack3 bot) rectangle (stacks right |- stack3 top);
+    
+  \end{tikzpicture}
 \end{frame}
 
 \begin{frame}
   \frametitle{Scheduler}
   \begin{itemize}
-  \item The SCJVM schedules \emph{threads} --- abstract lines of
-  execution used to implement SCJ's event handlers.
+  \item The SCJVM schedules abstract \emph{threads}.
   % \item Threads transition between different states.
-  \item Threads eligible to execute are scheduled using priority queues.
+  \item Scheduled using priority queues
     \begin{itemize}
-    \item The thread at the front of the highest-priority queue is $current$.
+    \item $current$ is front of the highest-priority queue.
     \end{itemize}
-  \item Locking on objects using priority-ceiling emulation.
-  \item Interrupts are scheduled as if they were threads.
+  \item Implements priority-ceiling emulation
+  \item Interrupts scheduled as threads
   \end{itemize}
   
   \begin{tikzpicture}
     \usetikzlibrary{positioning}
     \node (free)    at (0,0)        {\small $free$};
-    \node (created) [right=of free] {created};
+    \node (created) [right=of free] {\small $created$};
     \node (started) [right=of created] {\small $started$};
     \node (current) [right=of started] {\small $current$};
     \node (blocked) [above=of current] {\small $blocked$};
@@ -470,9 +545,13 @@
 \begin{frame}
   \frametitle{Real-time Clock}
   \begin{itemize}
-  \item Supplies the current time, as a millisecond-nanosecond pair
-  \item Time kept via clock tick interrupts from hardware
-  \item Allows an alarm to be set to send an interrupt at a specific time
+  \item Supplies the current time
+  \item Receives clock tick interrupts from hardware
+  \item Allows an alarm to be set for a specific time
+    \begin{itemize}
+    \item sends an interrupt to the Scheduler
+    \item drives event handler execution
+    \end{itemize}
   \end{itemize}
 \end{frame}
 
@@ -530,9 +609,8 @@
   \frametitle{Object Manager}
   \begin{itemize}
   \item Manages the representation of objects
-  \item Each object is stored as a structure containing its class
-    information and a map from field identifiers to values.
-  \item Also tracks the current backing store in use by each thread
+  \item Objects stored as structures containing class information and field values
+  \item Also tracks the current backing store for each thread
     \begin{itemize}
     \item Used to allocate space when creating a new object
     \end{itemize}
@@ -543,8 +621,7 @@
   \frametitle{Interpreter}
   \begin{itemize}
   \item Each thread is represented by a separate \Circus{} process.
-  \item The state of each thread's process contains the program counter
-    and frame stack.
+  \item Process' state contains its program counter and frame stack.
   \item {The Interpreter is a parallel composition of these threads.
       \setlength{\zedindent}{0cm}
       \setlength{\zedleftsep}{0cm}
@@ -553,8 +630,13 @@
       \begin{circus}
         \circprocess Interpreter(bc,cs) \circdef \Parallel t : TID \setminus \{ idle \} \circspot Thr(bc, cs, t)
       \end{circus}}
-  \item The thread processes proceed through a sequence of different
-    actions as the scheduler starts and switches between them.
+  \item The thread processes proceed through several different states
+    \begin{itemize}
+      \item roughly corresponding to the Scheduler thread states
+    \end{itemize}
+    % different
+    % actions.
+    %as the scheduler starts and switches between them.
   \end{itemize}
   \centering
   \begin{tikzpicture}
