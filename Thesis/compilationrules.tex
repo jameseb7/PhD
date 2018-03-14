@@ -519,3 +519,51 @@
 \subsection{Refine Main Actions}
 
 \RunningRefinementRule*
+
+\section{Elimination of Frame Stack}
+
+\RefineHandleReturnEPCEmptyFrameStackRule*
+
+\begin{restatable}[refine-$HandleReturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleReturnEPCNonemptyFrameStackRule}
+  \label{refine-HandleReturnEPC-nonempty-frameStack-rule}
+  \begin{circus}
+    \begin{array}{l}
+      HandleReturnEPC \circseq \\
+      \{ frameStack \neq \emptyset \}
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \lschexpract InterpreterReturnEPC \rschexpract
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$HandleAreturnEPC$-empty-$frameStack$]{crule}{RefineHandleAreturnEPCEmptyFrameStackRule}
+  \label{refine-HandleAreturnEPC-empty-frameStack-rule}
+  \begin{circus}
+    \begin{array}{l}
+      HandleAreturnEPC \circseq \\
+      \{ frameStack = \emptyset \}
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circvar returnValue : Word \circspot \\
+      \lschexpract InterpreterAreturn2 \rschexpract \circseq \\
+      executeMethodRet!thread!returnValue \then \Skip
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$HandleAreturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleAreturnEPCNonemptyFrameStackRule}
+  \label{refine-HandleAreturnEPC-nonempty-frameStack-rule}
+  \begin{circus}
+    \begin{array}{l}
+      HandleAreturnEPC \circseq \\
+      \{ frameStack \neq \emptyset \}
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \lschexpract InterpreterAreturn1 \rschexpract
+    \end{array}
+  \end{circus}
+\end{restatable}
