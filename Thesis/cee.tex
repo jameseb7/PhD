@@ -389,7 +389,23 @@ accept the information directly, without the added structure of these
 objects.
 We also provide separate channels for initialisation of one-shot event
 handlers, depending on whether they are initialised with an absolute
-or relative start time. 
+or relative start time.
+
+Note that we only provide constructors for
+\texttt{AperiodicEventHandler}, \texttt{PeriodicEventHandler}, and
+\texttt{OneShotEventHandler}, and we do not include the forms of the
+constructors that allow for a deadline miss handler to be set.
+This is because the differing types of event handlers do not affect
+the compilation strategy, so it is only necessary to implement the
+event handlers needed to evaluate the strategy.
+The infrastructure for the event handlers is contained in the
+Launcher, which is not affected by the compilation strategy. 
+A formal account of the execution model for the event handlers is
+available elsewhere~\cite{cavalcanti2013, luckcuck2016, zeyda2011}.
+Similarly, deadline handlers are a special case of event handlers and
+their release when a deadline is missed is not affected by the
+compilation strategy. 
+We do not require deadline miss handlers to evaluate the strategy.
 
 The channels marked with a \S{} expose SCJVM scheduler operations to
 the code executed in the interpreter. 
@@ -560,8 +576,8 @@ It contains the identifiers of three objects:
 \begin{itemize}
 \item $safelet$, the instance of the class implementing the
   \texttt{Safelet} interface for the program;
-\item $missionSequencer$, the mission sequencer
-  returned by the safelet's \texttt{getSequencer()} method; and
+\item $missionSequencer$, the mission sequencer returned by the
+  \texttt{getSequencer()} method of the safelet; and
 \item $currentMission$, the mission that is currently executing.
 \end{itemize}
 Methods of these objects are called at various points throughout SCJVM
@@ -572,9 +588,8 @@ startup and mission execution.
 
 The second part of the $Launcher$'s state is described by the
 $MemoryAreaManager$ schema below.
-It contains the identifiers of the memory-area objects for the
-immortal memory, $immortalMemory$, and mission memory,
-$missionMemory$.
+It contains the memory-area object identifiers for the immortal
+memory, $immortalMemory$, and mission memory, $missionMemory$.
 There is a map, $backingStores$, that relates these identifiers and
 the identifiers of the other memory-area objects, to the identifiers
 of the backing stores they represent.
@@ -653,10 +668,10 @@ They are later updated as the corresponding objects are created during
 SCJVM execution.
 Similarly, each of the maps and sets is initialised to the empty set.
 \begin{schema}{LauncherInit}
-	LauncherState~'
+  LauncherState~'
 \where
-  \{ safelet', missionSequencer', currentMission', immortalMemory', missionMemory', \\
-  \t1 clockHandler \} \\
+  \{ safelet', missionSequencer', currentMission', immortalMemory', \\
+  \t1 missionMemory', clockHandler' \} \\
   \t1 {} \subseteq \{ null \} \\
   backingStores' = \emptyset \\
   perReleaseMemories' = \emptyset \\
@@ -688,7 +703,7 @@ Thus, $RunNextMission$ is only executed once.
 The definition of $Startup$ is shown below.
 It performs a number of actions in sequence, following the startup procedure for an SCJVM:
 \begin{itemize}
-\item creating the main thread's stack and passing on the
+\item creating the main thread's stack and communicating it on the
   $initMainThread$ channel, in $MakeMainStack$;
 \item executing the class initialisers in the order given in
   $initOrder$, in $RunClassInitialisers$;
@@ -697,31 +712,31 @@ It performs a number of actions in sequence, following the startup procedure for
   $CreateImmortalMemory$;
 \item creating the \texttt{Safelet} object and storing it in
   $safelet$, in $CreateSafelet$;
-\item calling the \texttt{immortalMemorySize()} and
-  \texttt{globalBackingStoreSize()} methods of the $safelet$, and
-  checking that the size of the root backing store matches those
-  values, in $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
+\item calling the safelet's \texttt{immortalMemorySize()} and
+  \texttt{globalBackingStoreSize()} methods, and checking that the
+  size of the root backing store matches the returned values,
+  in $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
 \item calling the \texttt{initializeApplication()} method of the
   $safelet$, in $InitializeApplication$;
 \item creating the clock interrupt handler object, storing it in
   $clockHandler$, and registering it with the scheduler, in
   $MakeClockHandler$;
-\item calling the $safelet$'s \texttt{getSequencer()} method and
+\item calling the \texttt{getSequencer()} method of the $safelet$ and
   storing the returned value in $missionSequencer$, in $GetSequencer$;
   and
-\item creating the $missionMemory$ object with its corresponding
-  backing store, in $CreateMissionMemory$.
+\item creating the $missionMemory$ object and its backing store, in
+  $CreateMissionMemory$.
 \end{itemize}
 \begin{circusaction}
-  Startup \circdef MakeMainStack \circseq RunClassInitialisers \circseq CreateImmortalMemory \circseq CreateSafelet \circseq \\
-  \t1 CheckImmortalMemory \circseq CheckRemainingBackingStore \circseq InitializeApplication \circseq \\
-  \t1 MakeClockHandler \circseq GetSequencer \circseq CreateMissionMemory
+  Startup \circdef MakeMainStack \circseq RunClassInitialisers \circseq CreateImmortalMemory \circseq \\
+  \t1 CreateSafelet \circseq CheckImmortalMemory \circseq CheckRemainingBackingStore \circseq \\
+  \t1 InitializeApplication \circseq MakeClockHandler \circseq GetSequencer \circseq CreateMissionMemory
 \end{circusaction}
 
 $RunNextMission$ begins with calling the \texttt{getNextMission()}
 method of $missionSequencer$, in the action $GetNextMission$.
 The returned mission is stored in $currentMission$.
-Its \texttt{missionMemorySize()} method is then executed, and the
+Then, its \texttt{missionMemorySize()} method is executed, and the
 backing store of $missionMemory$ is resized to match, in
 $ResizeMissionMemory$.
 Next, in $InitializeMission$, the mission's \texttt{initialize()}
@@ -740,8 +755,8 @@ indefinitely.
   \t1 InitialiseAndStartThreads \circseq WaitForExecution
 \end{circusaction}
 
-During these actions, methods are executed using the channels
-$executeMethod$ and $executeMethodRet$, discussed earlier.
+During these actions, methods are executed using the $executeMethod$
+and $executeMethodRet$ channels, discussed earlier.
 The identifiers of the methods, which may be standard methods from the
 SCJ API, or implementation-defined API methods required by the
 launcher, are represented by constants in the model.
@@ -759,17 +774,19 @@ A similar action, without the final choice accepting
 $executeMethodRet$, is used to handle special methods in
 $WaitForExecution$.
 \begin{circusaction}
-  HandleSpecialMethodsMainLoop \circdef \circval memoryEntries : ThreadID \fun \nat; \circres retVal : Word \circspot \\
-  \t1 (\Extchoice t : ThreadID \circspot \\
-  \t2 EnterMemory(t) \circseq \\
-  \t2 HandleSpecialMethodsMainLoop(memoryEntries \oplus \{ t \mapsto memoryEntries~t + 1 \}, retVal)) \\
+  HandleSpecialMethodsMainLoop \circdef \\
+  \circval memoryEntries : ThreadID \fun \nat; \circres retVal : Word \circspot \\
+  \t1 (\Extchoice t : ThreadID \circspot EnterMemory(t) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop(\\
+  \t3 memoryEntries \oplus \{ t \mapsto memoryEntries~t + 1 \}, retVal)) \\
   \t1 {} \extchoice {} \\
-  \t1 (\Extchoice t : ThreadID \circspot \\
-  \t2 \lcircguard memoryEntries~t > 0 \rcircguard \circguard ExitMemory(t) \circseq \\
-  \t2 HandleSpecialMethodsMainLoop(memoryEntries \oplus \{ t \mapsto memoryEntries~t - 1 \}, retVal)) \\
+  \t1 (\Extchoice t : ThreadID \circspot \lcircguard memoryEntries~t > 0 \rcircguard \circguard ExitMemory(t) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop(\\
+  \t3 memoryEntries \oplus \{ t \mapsto memoryEntries~t - 1 \}, retVal)) \\
   \t1 {} \extchoice {} \\
-  \t1 ((Register \extchoice Suspend \extchoice Resume \extchoice InitAperiodicEventHandler \extchoice InitPeriodicEventHandler \\
-  \t2 {} \extchoice InitOneShotEventHandlerRel \extchoice InitOneShotEventHandlerAbs) \circseq \\
+  \t1 ((Register \extchoice Suspend \extchoice Resume \extchoice InitAperiodicEventHandler \\
+  \t2 {} \extchoice InitPeriodicEventHandler \extchoice InitOneShotEventHandlerRel \\
+  \t2 {} \extchoice InitOneShotEventHandlerAbs) \circseq \\
   \t2 HandleSpecialMethodsMainLoop(memoryEntries, retVal)) \\
   \t1 {} \extchoice {} \\
   \t1 (\lcircguard \forall t : ThreadID @ memoryEntries~t = 0 \rcircguard \circguard {} \\
@@ -875,7 +892,7 @@ In this interleaving, the state is partitioned such that the
 $AlarmManager$, the $SchedulableManager$ and the $perReleaseMemories$
 map are controlled by $ExecuteThreads$, with all other state
 components controlled by the special-method handling action.
-The $ExecuteThreads$ action takes a parameter, $missionStart$, which
+$ExecuteThreads$ takes a parameter, $missionStart$, which
 is the start time of the mission received from the real-time clock in
 $WaitForExecution$.
 \begin{circusaction}
@@ -924,7 +941,8 @@ again.
   \circblockbegin
   runThread?tid?oid \prefixcolon (oid = clockHandler)?mid \prefixcolon (mid = handle) \\
   {} \then \circvar threads : \finset ThreadID \circspot \lschexpract PopAlarm \rschexpract \circseq \\
-  (\Semi thread : threads \circspot triggerAlarm!thread \then \Skip) \circseq endThread!tid \then \Skip
+  (\Semi thread : threads \circspot triggerAlarm!thread \then \Skip) \circseq \\
+  endThread!tid \then \Skip
   \circblockend
   \circblockend \circseq \\
   \t1 \circmu X \circspot \\
@@ -959,6 +977,18 @@ actions again.
 The $HandleThread$ action, which is executed for each object in
 parallel with $HandleAlarms$, is composed of a choice of actions to
 handle each type of event handler.
+As mentioned previously, we handle only aperiodic, periodic and
+one-shot handlers without deadline miss handlers.
+This model could be extended to include deadline miss handlers,
+\texttt{AperiodicLongEventHandlers} (which take an additional
+parameter when they are released), and features from SCJ level 2
+without affecting the correctness of the compilation strategy.
+However, since a formal account of those features already
+exists~\cite{cavalcanti2013, luckcuck2016, zeyda2011}, we include in
+our model only those features necessary to support evaluation of the
+compilation strategy.
+
+
 As an example of such an action, we present the
 $OneShotEventHandlerRel$ action, which models the execution of a
 one-shot event handler that is initialised with a relative release
@@ -990,8 +1020,8 @@ both relative and absolute release times.
   \t1 {} \then OneShotHandlerExecution(oseh)
 \end{circusaction}
 
-$OneShotHandlerExecution$, shown below, takes the $oseh$ parameter
-from $OneShotHandlerExecution$.
+$OneShotHandlerExecution$, shown below, takes the $oseh$ object
+identifier passed to it from $OneShotEventHandlerRel$ as a parameter.
 It accepts communication on the $runThread$ channel, receiving a
 thread, which is required to be the same as that associated with
 $oseh$ in $schedulableThreads$, an object identifier, which is
@@ -1019,8 +1049,10 @@ the event handler.
   % wait for release to trigger
   \t1 SuspendThread \circseq triggerAlarm?t \prefixcolon (t = thread) \then ResumeThread(thread) \circseq \\
   \t1 \circif thread \in \dom perReleaseMemories \circthen {} \\
-  \t2 enterBackingStore!thread!(perReleaseMemories~thread) \then getClassIDOf!oseh?cid \\
-  \t2 {} \then executeMethod!thread!cid!handleAsyncEvent!(\langle oseh \rangle) \then executeMethodRet?void \\
+  \t2 enterBackingStore!thread!(perReleaseMemories~thread) \\
+  \t2 {} \then getClassIDOf!oseh?cid \\
+  \t2 {} \then executeMethod!thread!cid!handleAsyncEvent!(\langle oseh \rangle) \\
+  \t2 {} \then executeMethodRet?void \\
   \t2 {} \then exitBackingStore!thread \then endThread!thread \then \Skip \\
   \t1 {} \circelse thread \notin \dom perReleaseMemories \circthen \Chaos \\
   \t1 \circfi
@@ -1052,8 +1084,8 @@ Table~\ref{cee-channel-table}.
 % and bytecode instructions, $bc$, which are explained later in this
 % section, become parameters of $CEE$.
 \begin{circus}
-  CEE(cs,bc,sid,initOrder) \circdef ObjMan(cs) \parallel
-  Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
+  CEE(cs,bc,sid,initOrder) \circdef \\
+  \t1 ObjMan(cs) \parallel Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
 \end{circus}
 $CEE$ is parametrised by values that characterise a particular
 program:~$bc$, recording the bytecode instructions, $cs$, recording
