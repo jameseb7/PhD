@@ -391,21 +391,22 @@ We also provide separate channels for initialisation of one-shot event
 handlers, depending on whether they are initialised with an absolute
 or relative start time.
 
-Note that we only provide constructors for
-\texttt{AperiodicEventHandler}, \texttt{PeriodicEventHandler}, and
-\texttt{OneShotEventHandler}, and we do not include the forms of the
-constructors that allow for a deadline miss handler to be set.
-This is because the differing types of event handlers do not affect
-the compilation strategy, so it is only necessary to implement the
-event handlers needed to evaluate the strategy.
-The infrastructure for the event handlers is contained in the
-Launcher, which is not affected by the compilation strategy. 
-A formal account of the execution model for the event handlers is
-available elsewhere~\cite{cavalcanti2013, luckcuck2016, zeyda2011}.
-Similarly, deadline handlers are a special case of event handlers and
-their release when a deadline is missed is not affected by the
-compilation strategy. 
-We do not require deadline miss handlers to evaluate the strategy.
+We only consider constructors for \texttt{AperiodicEventHandler},
+\texttt{PeriodicEventHandler}, and \texttt{OneShotEventHandler}.% , and
+% we do not include the forms of the constructors that allow for a
+% deadline miss handler to be set.
+We also do not consider deadline miss handlers.
+This is because none of these features affect the compilation
+strategy, so they are not needed to evaluate it.
+% The infrastructure for the event handlers is contained in the
+% Launcher, which is not affected by the compilation strategy. 
+A complete formal account of the execution model for the event
+handlers is available elsewhere~\cite{cavalcanti2013, luckcuck2016,
+  zeyda2011}.
+% Similarly, deadline handlers are a special case of event handlers and
+% their release when a deadline is missed is not affected by the
+% compilation strategy. 
+% We do not require deadline miss handlers to evaluate the strategy.
 
 The channels marked with a \S{} expose SCJVM scheduler operations to
 the code executed in the interpreter. 
@@ -980,14 +981,13 @@ handle each type of event handler.
 As mentioned previously, we handle only aperiodic, periodic and
 one-shot handlers without deadline miss handlers.
 This model could be extended to include deadline miss handlers,
-\texttt{AperiodicLongEventHandlers} (which take an additional
+\texttt{AperiodicLongEventHandler}s (which take an additional
 parameter when they are released), and features from SCJ level 2
 without affecting the correctness of the compilation strategy.
 However, since a formal account of those features already
 exists~\cite{cavalcanti2013, luckcuck2016, zeyda2011}, we include in
 our model only those features necessary to support evaluation of the
 compilation strategy.
-
 
 As an example of such an action, we present the
 $OneShotEventHandlerRel$ action, which models the execution of a
