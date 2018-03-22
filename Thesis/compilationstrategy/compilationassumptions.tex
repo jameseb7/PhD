@@ -43,7 +43,7 @@ MISRA-C.
     \caption{sequential composition}
     \label{sequence-figure}
   \end{subfigure}
-  \begin{subfigure}{0.23\textwidth}
+  \begin{subfigure}{0.22\textwidth}
     \begin{center}
       \begin{tikzpicture}
         \useasboundingbox (-1,-1) rectangle (0,2);
@@ -79,7 +79,7 @@ MISRA-C.
     \caption{\texttt{if}-\texttt{else} conditional}
     \label{if-else-figure}
   \end{subfigure}
-  \begin{subfigure}{0.23\textwidth}
+  \begin{subfigure}{0.25\textwidth}
     \begin{center}
       \begin{tikzpicture}
         \useasboundingbox (-1,0) rectangle (1,3);
@@ -96,7 +96,7 @@ MISRA-C.
     \label{divergent-figure}
   \end{subfigure} 
   \\
-  \begin{subfigure}{0.33\textwidth}
+  \begin{subfigure}{0.32\textwidth}
     \begin{center}
       \begin{tikzpicture}
         \useasboundingbox (-1,-1) rectangle (1,2);
@@ -113,7 +113,7 @@ MISRA-C.
     \caption{\texttt{while} loop}
     \label{while-figure}
   \end{subfigure}
-  \begin{subfigure}{0.33\textwidth}
+  \begin{subfigure}{0.32\textwidth}
     \begin{center}
       \begin{tikzpicture}
         \useasboundingbox (-1,0) rectangle (1,3);
@@ -128,7 +128,7 @@ MISRA-C.
     \caption{\texttt{do}-\texttt{while} loop}
     \label{do-while-figure}
   \end{subfigure}
-  \begin{subfigure}{0.33\textwidth}
+  \begin{subfigure}{0.32\textwidth}
     \begin{center}
       \begin{tikzpicture}
         \useasboundingbox (-1,0) rectangle (1,3);
@@ -464,6 +464,15 @@ structured graphs shown in Figure~\ref{structured-cfg-figures}
 Before applying the strategy, it must be ensured that the control flow
 graph for each method is well-structured according to this definition.
 
+We also require that integer operations will only be used where
+integer overflow cannot occur.
+This is due to the fact that we follow icecap's approach and compile
+addition in Java bytecode to addition in C, making the assumption that
+the addition does not overflow, since overflow is undefined behaviour
+in C.
+The Java code should be written in a style consistent with MISRA-C,
+where behaviours that are undefined in C must not be relied on.
+
 Finally, we require that no method in the program recurses, either
 directly or indirectly.
 This is because recursion is not recommended in safety-critical
@@ -472,7 +481,6 @@ stack overflow, and it is not allowed in MISRA-C for that reason.
 Imposing this requirement allows us to handle methods individually
 when introducing their control flow, without considering circular
 dependencies between them.
-
 
 We now proceed to describe each of the stages of the strategy in
 detail, beginning with the \emph{Elimination of Program Counter} stage
