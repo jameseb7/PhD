@@ -567,3 +567,381 @@
     \end{array}
   \end{circus}
 \end{restatable}
+
+\HandleReturnEPCStackFrameIntroductionRule*
+
+% TODO: need rules for the areturn cases here
+
+\RefinePutfieldSFRule*
+
+\begin{restatable}[refine-$GetfieldSF$]{crule}{RefineGetfieldSFRule}
+  \label{refine-GetfieldSF-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      GetfieldSF(cpi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circvar oid : ObjectID \circspot \\
+      \t1 \lschexpract InterpreterPop[ \\
+      \t2 oid!/value!, \\
+      \t2 stackFrame/last~frameStack, \\
+      \t2 stackFrame'/last~frameStack'] \rschexpract \circseq \\
+      \t1 getField!oid!cid!fid! \\
+      \t1 {} \then getFieldRet?value \\
+      \t1 {} \then \lschexpract InterpreterPush[ \\
+      \t2 stackFrame/last~frameStack, \\
+      \t2 stackFrame'/last~frameStack'] \rschexpract)
+    \end{array}
+  \end{circus}
+  where
+  \begin{circus}
+    cpi \in fieldRefIndices~c \land \\
+    c.constantPool~cpi = FieldRef~(cid, fid)
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$PutstaticSF$]{crule}{RefinePutstaticSFRule}
+  \label{refine-PutstaticSF-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      PutstaticSF(cpi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circvar value : Word \circspot \\
+      \t1 \lschexpract InterpreterPop[ \\
+      \t2 stackFrame/last~frameStack, \\
+      \t2 stackFrame'/last~frameStack'] \rschexpract \circseq \\
+      \t1 putStatic!cid!fid!value \then \Skip)
+    \end{array}
+  \end{circus}
+  where
+  \begin{circus}
+    cpi \in fieldRefIndices~c \land \\
+    c.constantPool~cpi = FieldRef~(cid, fid)
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$GetstaticSF$]{crule}{RefineGetstaticSFRule}
+  \label{refine-GetstaticSF-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      GetstaticSF(cpi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      getStatic!cid!fid \\
+      {} \then getStaticRet?value \\
+      {} \then \lschexpract InterpreterPush[ \\
+      \t1 stackFrame/last~frameStack, \\
+      \t1 stackFrame'/last~frameStack'] \rschexpract)
+    \end{array}
+  \end{circus}
+  where
+  \begin{circus}
+    cpi \in fieldRefIndices~c \land \\
+    c.constantPool~cpi = FieldRef~(cid, fid)
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$NewSF$]{crule}{RefineNewSFRule}
+  \label{refine-NewSF-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      NewSF(cpi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      newObject!thread!cid \\
+      {} \then newObjectRet?oid \\
+      {} \then \lschexpract InterpreterPush[ \\
+      \t1 oid/value?, \\
+      \t1 stackFrame/last~frameStack, \\
+      \t1 stackFrame'/last~frameStack'] \rschexpract)
+    \end{array}
+  \end{circus}
+  where
+  \begin{circus}
+    cpi \in ClassRefIndices~c \land \\
+    c.constantPool~cpi = ClassRef~cid
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$HandleAconst\_nullSF$-simulation]{crule}{HandleAconstNullSFSimulationRule}
+  \label{HandleAconst_nullSF-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      HandleAconst\_nullSF
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      stack{<}k+1{>} := null
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$HandleDupSF$-simulation]{crule}{HandleDupSFSimulationRule}
+  \label{HandleDupSF-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      HandleDupSF
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      stack{<}k+1{>} := stack{<}k{>}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\HandleAloadSFSimulationRule*
+
+\begin{restatable}[$HandleAstoreSF$-simulation]{crule}{HandleAstoreSFSimulationRule}
+  \label{HandleAstoreSF-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      HandleAstoreSF(lvi)
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      var{<}lvi{>} := stack{<}k{>} 
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$HandleIaddSF$-simulation]{crule}{HandleIaddSFSimulationRule}
+  \label{HandleIaddSF-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      HandleIaddSF
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      stack{<}k-1{>} := stack{<}k-1{>} + stack{<}k{>} 
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$HandleIconstSF$-simulation]{crule}{HandleIconstSFSimulationRule}
+  \label{HandleIconstSF-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      HandleIconstSF(n)
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      stack{<}k+1{>} := n 
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$HandleInegSF$-simulation]{crule}{HandleInegSFSimulationRule}
+  \label{HandleInegSF-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      HandleInegSF
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      stack{<}k{>} := \negate stack{<}k{>} 
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\InterpreterPopEPCSimulationRule*
+
+\begin{restatable}[$InterpreterPushEPC$-simulation]{crule}{InterpreterPushEPCSimulationRule}
+  \label{InterpreterPushEPC-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      \lschexpract InterpreterPushEPC[ \\
+      \t1 stackFrame/last~frameStack, \\
+      \t1 stackFrame'/last~frameStack']\rschexpract
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      stack{<}k+1{>} := value
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$InterpreterPop2EPC$-simulation]{crule}{InterpreterPop2EPCSimulationRule}
+  \label{InterpreterPop2EPC-simulation-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      \lschexpract InterpreterPopEPC[ \\
+      \t1 stackFrame/last~frameStack, \\
+      \t1 stackFrame'/last~frameStack']\rschexpract
+    \end{array}
+    \circsimulates
+    \begin{array}{l}
+      value1 := stack{<}k-1{>} \circseq \\
+      value2 := stack{<}k{>}      
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\InvokeSFSimulationRule*
+
+\StackFrameInitSimulationRule*
+
+\EliminateValueOneValueTwoConditional*
+
+\begin{restatable}[eliminate-$oid$-$getField$]{crule}{EliminateOidGetField}
+  \label{eliminate-oid-getField-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar oid : ObjectID \circspot \\
+      \t1 oid := stack{<}k{>} \circseq \\
+      \t1 getfield!oid!cid!fid \\
+      \t1 {} \then getFieldRet?value \\
+      \t1 {} \then stack{<}k{>} := value)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      getfield!stack{<}k{>}!cid!fid \\
+      \t1 {} \then getFieldRet?value \\
+      \t1 {} \then stack{<}k{>} := value
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[eliminate-$oid$-$value$-$putField$]{crule}{EliminateOidValuePutField}
+  \label{eliminate-oid-value-putField-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar oid : ObjectID; value : Word \circspot \\
+      \t1 value := stack{<}k{>} \circseq \\
+      \t1 oid := stack{<}k-1{>} \circseq \\
+      \t1 putField!oid!cid!fid!value \\
+      \t1 {} \then \Skip)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      putField!stack{<}k-1{>}!cid!fid!stack{<}k{>} \\
+      {} \then \Skip
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[eliminate-$value$-$putStatic$]{crule}{EliminateValuePutStatic}
+  \label{eliminate-value-putStatic-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar value : Word \circspot \\
+      \t1 value := stack{<}k{>} \circseq \\
+      \t1 putStatic!cid!fid!value \then \Skip)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      putStatic!cid!fid!stack{<}k{>} \then \Skip
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\MethodParameterIntroductionRule*
+
+\begin{restatable}[$getClassIDOf$-method-parameter-introduction]{crule}{GetClassIDOfMethodParameterIntroductionRule}
+  \label{getClassIDOf-method-parameter-introduction-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+      getClassIDOf!(head~poppedArgs)!cid \then {} \\
+      (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
+      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+      var1 := poppedArgs~1 \circseq \\
+      \t1 \vdots \\
+      var{<}n{>} := poppedArgs~1 \circseq \\
+      \t1 {} \cdots {}))
+      % Remember: Poll starts the \cdots
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      getClassIDOf!arg_1!cid \then {} \\
+      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+      \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+      \t1 {} \cdots {})(arg_1, \ldots, arg_n)
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$getClassIDOf$-multi-method-parameter-introduction]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
+  \label{getClassIDOf-multi-method-parameter-introduction-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+      getClassIDOf!(head~poppedArgs)!cid \then {} \\
+      \circif cid = c_1 \circthen {} \\
+      \t1 (\circvar var1, \ldots, var{<}\ell_1{>} : Word \circspot \\
+      \t1 \circvar stack1, \ldots, stack{<}s_1{>} : Word \circspot \\
+      \t1 var1 := poppedArgs~1 \circseq \\
+      \t2 \vdots \\
+      \t1 var{<}n{>} := poppedArgs~1 \circseq \\
+      \t2 {} \cdots {}))
+      % Remember: Poll starts the \cdots
+      \t1 {} \vdots {} \\
+      {} \circelse cid = c_m \circthen {} \\
+      \t1 (\circvar var1, \ldots, var{<}\ell_m{>} : Word \circspot \\
+      \t1 \circvar stack1, \ldots, stack{<}s_m{>} : Word \circspot \\
+      \t1 var1 := poppedArgs~1 \circseq \\
+      \t2 \vdots \\
+      \t1 var{<}n{>} := poppedArgs~1 \circseq \\
+      \t2 {} \cdots {}))
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      getClassIDOf!arg_1!cid \then {} \\
+      \circif cid = c_1 \circthen {} \\
+      \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+      \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_1{>}) : Word \circspot \\
+      \t1 \circvar stack1, \ldots, stack{<}s_1{>} : Word \circspot \\
+      \t2 {} \cdots {})(arg_1, \ldots, arg_n))
+      % Remember: Poll starts the \cdots
+      \t1 {} \vdots {} \\
+      {} \circelse cid = c_m \circthen {} \\
+      \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+      \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_m{>}) : Word \circspot \\
+      \t1 \circvar stack1, \ldots, stack{<}s_m{>} : Word \circspot \\
+      \t2 {} \cdots {})(arg_1, \ldots, arg_n))
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[toplevel-method-parameter-introduction]{crule}{ToplevelMethodParameterIntroductionRule}
+  \label{toplevel-method-parameter-introduction-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+      (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
+      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+      var1 := poppedArgs~1 \circseq \\
+      \t1 \vdots \\
+      var{<}n{>} := poppedArgs~1 \circseq \\
+      \t1 {} \cdots {})) \\
+      % Remember: Poll starts the \cdots
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+      \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+      \t1 {} \cdots {})(arg_1, \ldots, arg_n) \\
+    \end{array}
+  \end{circus}
+\end{restatable}

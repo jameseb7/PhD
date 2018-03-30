@@ -295,9 +295,9 @@ it.
       & $newObject$ & $ThreadID \cross ClassID$ & I/L & OM  \\
       & $newObjectRet$ & $ObjectID$ & OM & I/L  \\
       \ddag & $getClassIDOf$ & $ObjectID \cross ClassID$ & I/L & OM  \\
-      \ddag & $getField$ & $ObjectID \cross FieldID$ & I & OM \\
+      \ddag & $getField$ & $ObjectID \cross ClassID \cross FieldID$ & I & OM \\
       \ddag & $getFieldRet$ & $Word$ & OM & I \\
-      \ddag & $putField$ & $ObjectID \cross FieldID \cross Word$ & I & OM \\
+      \ddag & $putField$ & $ObjectID \cross ClassID \cross FieldID \cross Word$ & I & OM \\
       \ddag & $getStatic$ & $ClassID \cross FieldID$ & I & OM \\
       \ddag & $getStaticRet$ & $Word$ & OM & I \\
       \ddag & $putStatic$ & $ClassID \cross FieldID \cross Word$ & I & OM \\
@@ -2493,22 +2493,25 @@ $ObjMan$ is needed.
 This can be seen in the definition of $HandleGetfield$, shown below,
 where the object identifier, $oid$, is popped from the $operandStack$
 of the current $StackFrame$ using the data operation $IntepreterPop$,
-and the field identifier is extracted from the parameter to the
-bytecode instruction.
+and the class identifier, $cid$, and the field identifier, $fid$ are
+extracted from the parameter to the bytecode instruction.
 Note that $pc$ and $pc'$ are hidden in $InterpreterPop$, so that it
 does not change the value of $pc$, which is updated by
 $InterpreterPush$. 
-The object and field identifiers are passed to $ObjMan$ via the
+The object, field and class identifiers are passed to $ObjMan$ via the
 $getField$ channel.
 The field's value is returned via the $getFieldRet$ channel and pushed
 onto the $operandStack$ of the current $StackFrame$ by the data
 operation $InterpreterPush$.
 \begin{circusaction}
-  HandleGetfield \circdef \\
-  \t1 \lcircguard pc \in\dom bc \land bc~pc \in \ran getfield \land (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \rcircguard \circguard \\
-  \t1 \circvar oid : ObjectID \circspot \lschexpract InterpreterPop[oid!/value!] \hide (pc, pc') \rschexpract \circseq \\
-  \t1 getField!oid!(fieldOf~currentClass~((getfield\inv)~(bc~pc))) \\
-  \t1 {} \then getFieldRet?value \then \lschexpract InterpreterPush \rschexpract
+  HandleGetfield \circdef \lcircguard pc \in \dom bc \land bc~pc \in \ran getfield \rcircguard \circguard \\
+  \t1 \circif (getfield\inv)~(bc~pc) \in fieldRefIndices~currentClass \circthen {} \\
+  \t2 \circvar oid : ObjectID \circspot \lschexpract InterpreterPop[oid!/value!] \hide (pc, pc') \rschexpract \circseq \\
+  \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~((getfield\inv)~(bc~pc)) \circseq \\
+  \t2 \circvar cid : ClassID \circspot cid := (classOf~currentClass~((getfield\inv)~(bc~pc))) \circseq \\
+  \t2 getField!oid!cid!fid \then getFieldRet?value \then \lschexpract InterpreterPush \rschexpract \\
+  \t1 {} \circelse (getfield\inv)~(bc~pc) \notin fieldRefIndices~currentClass \circthen \Chaos \\
+  \t1 \circfi
 \end{circusaction}
 The $HandleNew$, $HandlePutfield$, $HandleGetstatic$ and
 $HandlePutstatic$ actions are similar.
