@@ -980,16 +980,12 @@ parallel with $HandleAlarms$, is composed of a choice of actions to
 handle each type of event handler.
 As mentioned previously, we handle only aperiodic, periodic and
 one-shot handlers without deadline miss handlers.
-This model could be extended to include deadline miss handlers,
-\texttt{AperiodicLongEventHandler}s (which take an additional
-parameter when they are released), and features from SCJ level 2
-without affecting the correctness of the compilation strategy.
-However, since a formal account of those features already
-exists~\cite{cavalcanti2013, luckcuck2016, zeyda2011}, we include in
-our model only those features necessary to support evaluation of the
-compilation strategy.
+Extensions to provide for additional event handler types would only
+require modifying the actions of this choice, and so would not affect
+the compilation strategy as the change would be restricted to the
+$Launcher$.
 
-As an example of such an action, we present the
+As an example of one of the actions in this choice, we present the
 $OneShotEventHandlerRel$ action, which models the execution of a
 one-shot event handler that is initialised with a relative release
 time.

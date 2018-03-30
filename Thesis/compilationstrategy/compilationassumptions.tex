@@ -464,8 +464,8 @@ structured graphs shown in Figure~\ref{structured-cfg-figures}
 Before applying the strategy, it must be ensured that the control flow
 graph for each method is well-structured according to this definition.
 
-We also require that integer operations will only be used where
-integer overflow cannot occur.
+We also require that integer operations are used only where integer
+overflow cannot occur.
 This is due to the fact that we follow icecap's approach and compile
 addition in Java bytecode to addition in C, making the assumption that
 the addition does not overflow, since overflow is undefined behaviour
