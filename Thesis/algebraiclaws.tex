@@ -619,6 +619,16 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% From definition B.40 in Marcel's thesis
+\begin{law}[schema-action-fixed-var-intro]
+  \label{schema-action-fixed-var-intro-law}
+  If $x$ and $x'$ are not in the declared variables of $S$ but $x$ is
+  in scope then,
+  \begin{circus}
+    \lschexpract S \rschexpract = \lschexpract S \land x' = x \rschexpract
+  \end{circus}
+\end{law}
+
 % From Exercise 2.6.4(2) in the UTP book with
 % F(X) = \{g\} \circseq f(X)
 % G(X) = X \circseq \{g\}
