@@ -262,6 +262,18 @@ This is because the identifiers in Java class files include the type
 information and the correct operation of method overloading relies on
 it.
 
+We also declare a set, $initialisationMethodIDs$, of method
+identifiers, which contains those method identifiers that refer to
+instance initialisation methods (i.e.\ constructors, recognisable as
+having the name \texttt{\textless{}init\textgreater{}} in Java class
+files).
+This information is used by the \texttt{invokespecial} instruction,
+which determines the target of non-initialisation superclass methods
+in a different way to that of other methods.
+\begin{axdef}
+	initialisationMethodIDs : \power MethodID
+\end{axdef}
+
 \begin{table}[thp]
   \begin{center}
     \begin{tabular}{@{}llp{6cm}ll}
@@ -2523,10 +2535,11 @@ a common $Invoke$ action.
 This can be seen in the definition of the $HandleInvokespecial$ action
 below.
 The class identifier, $cid$, is extracted from the instruction's
-parameter and checked in a data operation $CheckSuperclass$, which
-replaces it with the identifier of the direct superclass of
-$currentClass$ if it is a proper superclass of $currentClass$, in line
-with the semantics specified for the JVM. 
+parameter and checked in a data operation $CheckSuperclass$.
+$CheckSuperclass$ replaces $cid$ with the identifier of the direct
+superclass of $currentClass$ if it is a proper superclass of
+$currentClass$ and $mid$ does not refer to an initialisation method,
+in line with the semantics specified for the JVM. 
 The method identifier $mid$ is also extracted from the instruction's
 parameter, and the data operation $InterpreterStackFrameInvoke$ is
 used to store the return $pc$ address and pop the arguments of the
@@ -2535,8 +2548,8 @@ The number of arguments popped, $argsToPop?$, is the $methodArguments$
 value for $mid$, plus one for the \texttt{this} identifier passed to
 the method.
 The $cid$ and $mid$ identifiers are the passed into $Invoke$ along
-with $poppedArgs$, and a boolean value indicating that the
-method invocation is not from the \texttt{invokestatic} instruction.
+with $poppedArgs$, and a boolean value indicating that the method
+invocation is not from the \texttt{invokestatic} instruction.
 \begin{circusaction}
   HandleInvokespecial \circdef \\
   \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
