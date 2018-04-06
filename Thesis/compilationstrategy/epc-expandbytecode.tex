@@ -92,7 +92,8 @@ which is defined by Table~\ref{handle-action-table}.
     $ineg$ & $HandleInegEPC \circseq pc := i+1$ \\
     $goto~ofst$ & $pc := i+ofst$ \\
     $if\_icmple~ofst$ & $\circvar value1, value2 : Word \circspot$ \endgraf
-                         \t1 $\lschexpract InterpreterPop2EPC \rschexpract \circseq$ \endgraf
+                        \t1 $\lschexpract InterpreterPopEPC \rschexpract \circseq$ \endgraf
+                        \t1 $\lschexpract InterpreterPopEPC \rschexpract \circseq$ \endgraf
                          \t1 $pc := \IF value1 \leq value2 \THEN i+ofst \ELSE i+1$ \\
     $areturn$ & $HandleAreturnEPC$ \\
     $return$ & $HandleReturnEPC$ \\
