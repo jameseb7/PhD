@@ -42,9 +42,6 @@ the $CheckLauncherReturn$ actions that occur in those instructions,
 resolving the check of whether $frameStack$ is empty.
 This removes the only remaining use of $frameStack$ as a whole,
 enabling us to consider the stack frames for each method individually.
-% We then remove $currentClass$ and $frameStackID$ from the state, so
-% that the remainder of the stage can operate solely on $frameStack$, on
-% line~\ref{algorithm-remove-currentClass}.
 We introduce a variable in each method that contains its stack
 frame on line~\ref{algorithm-localise-stack-frames} of the algorithm,
 and convert the operations of the method to operate over the new
@@ -56,6 +53,13 @@ the method.
 Finally, we eliminate the, now unused, $frameStack$ from the state of
 the process, on line~\ref{algorithm-remove-frameStack}.
 
-Next, we discuss each of these steps in more detail, explaining them
-with reference to the running example introduced in
+We discuss each of these steps in more detail in separate sections,
+explaining them with reference to the running example introduced in
 Section~\ref{overview-subsection}.
+The removal of launcher returns is discussed first, in
+Section~\ref{remove-launcher-returns-subsection}.
+Then, the localisation of stack frames is discussed in
+Section~\ref{localise-stack-frames-subsection}, followed by variable
+introduction in Section~\ref{introduce-variables-subsection}.
+Finally we discuss the remove of $frameStack$ from the state of the
+process, in Section~\ref{remove-frameStack-from-state-subsection}.

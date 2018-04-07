@@ -1,0 +1,436 @@
+After the elimination of program counter stage, each conditional
+branch in a method ends with a return instruction or an infinite loop.
+This can be seen in
+Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}, presented
+earlier, where $TPK\_handleAsyncEvent$ ends with a $HandleReturnEPC$
+action.
+In the first step of this stage, at
+line~\ref{algorithm-remove-launcher-returns} of
+Algorithm~\ref{efs-algorithm}, such actions are moved outside the
+method and their definitions are expanded so that their communication
+with the $Launcher$ can be handled.
+This is performed as described in
+Algorithm~\ref{remove-launcher-returns-algorithm}, which defines the
+procedure \Call{RemoveLauncherReturns}{}.
+\begin{algorithm}[ht]
+  \begin{algorithmic}[1]
+    \For{$m \gets methods$}
+    \State \ApplyTo{Law~[\nameref{rec-action-intro-law}]}{$m$}
+    \label{algorithm-introduce-infinite-loop-returns}
+    \State \ApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$m$}
+    \label{algorithm-distribute-returns}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \label{algorithm-eliminate-returns-copy-method-in}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \label{algorithm-eliminate-returns-copy-method-out}
+    \EndFor
+    \State \Call{IntroduceFrameStackAssumptions}{}
+    \label{algorithm-introduce-frameStack-assumptions}
+    \For{$x \gets$ \Call{ReturnInstructions}{}}
+    \Try
+    \label{algorithm-eliminate-returns-try-begin}
+    \State \ApplyFor{Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}]}{$x$}
+    \State \ApplyFor{Rule~[\nameref{refine-HandleReturnEPC-nonempty-frameStack-rule}]}{$x$}
+    \State \ApplyFor{Rule~[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]}{$x$}
+    \State \ApplyFor{Rule~[\nameref{refine-HandleAreturnEPC-nonempty-frameStack-rule}]}{$x$}
+    \EndTry
+    \label{algorithm-eliminate-returns-try-end}
+    \EndFor
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
+    \label{algorithm-copy-ExecuteMethod-in-MainThread}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
+    \label{algorithm-copy-ExecuteMethod-in-Started}
+    \State \ApplyTo{Rule~[\nameref{ExecuteMethod-refinement-rule}]}{$MainThread$}
+    \label{algorithm-ExecuteMethod-refinement-MainThread}
+    \State \ApplyTo{Rule~[\nameref{ExecuteMethod-refinement-rule}]}{$Started$}
+    \label{algorithm-ExecuteMethod-refinement-Started}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
+    \label{algorithm-remove-ExecuteMethod}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
+    \label{algorithm-reintroduce-ExecuteMethod}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
+    \label{algorithm-copy-ExecuteMethod-out-MainThread}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
+    \label{algorithm-copy-ExecuteMethod-out-Started}
+  \end{algorithmic}
+  \caption{RemoveLauncherReturns}
+  \label{remove-launcher-returns-algorithm}
+\end{algorithm}
+
+First, we observe that any method can be made into a form where it has
+a single return instruction at the end of the method.
+This can be achieved by adding return instructions after infinite
+loops using Law~[\nameref{rec-action-intro-law}] and disributing them
+outside conditionals using Law~[\nameref{alt-seq-dist-law}].
+These laws are applied, if necessary, on
+lines~\ref{algorithm-introduce-infinite-loop-returns}
+and~\ref{algorithm-distribute-returns} of
+Algorithm~\ref{remove-launcher-returns-algorithm}.
+
+When the method has a single return instruction at the end, its
+definition is expanded at every point it is called using
+Law~[\nameref{copy-rule-law}]. 
+The method action is then redefined to exclude the return instruction,
+and the sequence of instructions is copied back out.
+This is performed on
+lines~\ref{algorithm-eliminate-returns-copy-method-in}
+to~\ref{algorithm-eliminate-returns-copy-method-out}.
+
+We then introduce assumptions that state whether the $frameStack$ is
+empty or not.
+These are introduced by extracting an assumption from the state
+initialisation schema $InterpreterInit$, in the main action of $ThrCF$
+(which has the same form as in $Thr$), stating that the $frameStack$
+is empty.
+This assumption is then distributed through each action using standard
+laws, with most actions not affecting the depth of the $frameStack$,
+$InterpreterNewStackFrame$ increasing its depth by one, and the return
+instructions decreasing its depth by one.
+The result is that the return instructions following the method
+actions in $ExecuteMethod$ have an assumption $frameStack = \emptyset$
+following them, and the return instructions occuring in the middle of
+other methods have an assumption $frameStack \neq \emptyset$.
+% This can be seen in
+% Figure~\ref{efs-return-assumption-distribution-figure}.
+This introduction of assumptions is indicated in
+Algorithm~\ref{remove-launcher-returns-algorithm} by the call to an
+\Call{IntroduceFrameStackAssumptions}{} procedure on
+line~\ref{algorithm-introduce-frameStack-assumptions}.
+
+% \begin{figure}[t!]
+%   \centering
+%   \setlength{\zedtab}{0.4cm}
+%   \setlength{\zedindent}{0pt}
+%   \setlength{\zedleftsep}{0pt}
+%   \setlength{\abovedisplayskip}{0pt}
+%   \setlength{\belowdisplayskip}{0pt}
+%   \setlength{\abovedisplayshortskip}{0pt}
+%   \setlength{\belowdisplayshortskip}{0pt}
+%   \begin{circusaction}
+%     ExecuteMethod \circdef \\
+%     \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+%     \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
+%     \t2 InterpreterNewStackFrame[TPK/class?] \circseq \\
+%     \t2 TPK\_APEHinit \circseq HandleReturnEPC \circseq \{ framestack = \emptyset \} \\
+%     \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
+%     \t2 InterpreterNewStackFrame[TPK/class?] \circseq \\
+%     \t2 TPK\_handleAsyncEvent \circseq HandleReturnEPC \circseq \{ framestack = \emptyset \} \\
+%     \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
+%     \t2 InterpreterNewStackFrame[TPK/class?] \circseq \\
+%     \t2 TPK\_f \circseq HandleAreturnEPC \circseq \{ framestack = \emptyset \} \\
+%     \t1 {} \cdots {} \\
+%     \t1 \circfi
+%   \end{circusaction}
+
+%   \begin{circusaction}
+%     TPK\_handleAsyncEvent \circdef \\
+%     \t1 HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq Poll \circseq  HandleAconst\_nullEPC \circseq Poll \circseq \\
+%     \t1 (\circvar poppedArgs : \seq Word \circspot \\
+%     \t2 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     \t2 \lschexpract InterpreterNewStackFrame[\\
+%     \t3 ConsoleConnection/class?, CCinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+%     \t1 ConsoleConnection\_CCinit \circseq HandleReturnEPC \circseq \{ frameStack \neq \emptyset \} \circseq Poll \circseq \\
+%     %\t1 HandleAstoreEPC(1) \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+%     \t1 {} \cdots {} \\
+%     % \t1 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+%     % \t2 ConsoleConnection/class?, openInputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+%     % \t1 Poll \circseq ConsoleConnection\_openInputStream \circseq Poll \circseq  HandleAstoreEPC(2) \circseq Poll \circseq \\
+%     % \t1 HandleAloadEPC(1) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+%     % \t1 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[\\
+%     % \t2 ConsoleConnection/class?, openOutputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+%     % \t1 Poll \circseq ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq \\
+%     %\t1 {} \cdots {} \\
+%     % \t1 Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq Poll \circseq \circmu Y \circspot \\
+%     % \t2 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
+%     % \t2 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+%     % \t2 \circif value1 \leq value2 \circthen \\
+%     % \t3 {} \cdots {}  \\
+%     % Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
+%     % \t3 (\circvar poppedArgs : \seq Word \circspot \\
+%     % \t4 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+%     % \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+%     % \t3 Poll \circseq ConsoleInput\_read \circseq Poll \circseq \\
+%     \t3 (\circvar poppedArgs : \seq Word \circspot \\
+%     \t4 \lschexpract \exists argsToPop? == m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     \t4 \lschexpract InterpreterNewStackFrame[\\
+%     \t5 TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+%     \t3 Poll \circseq TPK\_f \circseq HandleAreturnEPC \circseq \{ frameStack \neq \emptyset \} \circseq Poll \circseq \\
+%     % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
+%     \t3 {} \cdots {} \\
+%     % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+%     % \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleAloadEPC(5) \circseq Poll \circseq \\
+%     % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+%     % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+%     % \t4 Poll \circseq ConsoleOutput\_write \\
+%     % \t3 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq \\
+%     % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+%     % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+%     % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+%     % \t4 Poll \circseq ConsoleOutput\_write \\
+%     % \t3 \circfi \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(1) \circseq Poll \circseq HandleIaddEPC \circseq \\
+%     \t3 Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq Y \\
+%     \t2 {} \circelse value1 > value2 \circthen \Skip \\
+%     \t2 \circfi \circseq Poll
+%   \end{circusaction}
+%   \caption{The $ExecuteMethod$ and $TPK\_handleAsyncEvent$ actions
+%     after introduction of $frameStack$ assumptions}
+%   \label{efs-return-assumption-distribution-figure}
+% \end{figure}
+
+After assumptions on the state of the $frameStack$ have been
+introduced,we can handle the return actions at each point where they
+occur, using the rules in the try block at
+lines~\ref{algorithm-eliminate-returns-try-begin}
+to~\ref{algorithm-eliminate-returns-try-end} of the algorithm.
+An example of one of these rules is
+Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}], shown
+in Figure~\ref{refine-HandleReturnEPC-empty-frameStack-rule-figure}.
+This rule replaces an occurrence of $HandleReturnEPC$ that causes the
+$frameStack$ to be empty with a call to the data operation
+$InterpreterReturnEPC$ followed by a communication with the $Launcher$
+on the $executeMethodRet$ channel.
+The value communicated on $executeMethodRet$ is $returnValue$,
+introduced in a variable block.
+This is essentially expanding the definition of $HandleReturnEPC$ and
+resolving the choice over whether $frameStack$ is empty.
+
+\begin{figure}[tp!]
+  \begin{restatable}[refine-$HandleReturnEPC$-empty-$frameStack$]{crule}{RefineHandleReturnEPCEmptyFrameStackRule}
+  \label{refine-HandleReturnEPC-empty-frameStack-rule}
+  \begin{circus}
+    \begin{array}{l}
+      HandleReturnEPC \circseq \\
+      \{ frameStack = \emptyset \}
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circvar returnValue : Word \circspot \\
+      \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
+      executeMethodRet!thread!returnValue \then \Skip
+    \end{array}
+  \end{circus}
+\end{restatable}
+\caption{Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}]}
+\label{refine-HandleReturnEPC-empty-frameStack-rule-figure}
+\end{figure}
+
+The other rules in the try block are similar, handling the cases for
+the $frameStack$ being left nonempty and the $HandleAreturnEPC$
+action.
+They can be found in Appendix~\ref{compilation-rules-appendix}.
+In the cases when the $frameStack$ is not empty after execution of the
+return instruction, the communication on $executeMethodRet$ and the
+variable block for $returnValue$ are removed, since they are not used.
+
+After the return instructions have been refined, the $ExecuteMethod$
+action contains a choice over method actions that end with a variable
+block and communication on $executeMethodRet$.
+The variable blocks are expanded to cover the whole of the
+$ExecuteMethod$ action, and the communications on $executeMethodRet$
+are distributed outside the action.
+This is performed by first replacing $ExecuteMethod$ with its
+definition, via an application of Law~[\nameref{copy-rule-law}] on
+lines~\ref{algorithm-copy-ExecuteMethod-in-MainThread}
+and~\ref{algorithm-copy-ExecuteMethod-in-Started}, then applying
+Rule~[\nameref{ExecuteMethod-refinement-rule}], shown in
+Figure~\ref{ExecuteMethod-refinement-rule-figure}, on
+lines~\ref{algorithm-ExecuteMethod-refinement-MainThread}
+and~\ref{algorithm-ExecuteMethod-refinement-Started}.
+
+\begin{figure}[thp]
+  \begin{restatable}[$ExecuteMethod$-refinement]{crule}{ExecuteMethodRefinementRule}
+    \label{ExecuteMethod-refinement-rule}
+    If, for all $i$, $returnValue$ is not free in $A_i$, then
+    \setlength{\zedindent}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      (\circval classID : ClassID; \\
+      \circval methodID : MethodID; \\
+      \circval methodArgs : \seq Word \circspot \\
+      \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t1 A_1 \circseq \circvar returnValue : Word \circspot  B_1 \circseq \\
+      \t1 executeMethodRet!thread!returnValue \\
+      \t1 {} \then \Skip \\
+      {} \cdots {} \\
+      {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t1 A_n \circseq \circvar returnValue : Word \circspot B_n \circseq \\
+      \t1 executeMethodRet!thread!returnValue \\
+      \t1 {} \then \Skip \\
+      \circfi)(c, m, a)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circvar retVal : Word \circspot \\
+       (\circval classID : ClassID; \\
+      \circval methodID : MethodID; \\
+      \circval methodArgs : \seq Word; \\
+      \circres returnValue : Word \circspot \\
+      \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t1 A_1 \circseq B_1 \\
+      {} \cdots {} \\
+      {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t1 A_n \circseq B_n \\
+      \circfi)(c, m, a, retVal) \circseq \\
+      executeMethodRet!thread!retVal \\
+      {} \then \Skip 
+    \end{array}
+  \end{circus}
+\end{restatable}
+\caption{Rule~[\nameref{ExecuteMethod-refinement-rule}]}
+\label{ExecuteMethod-refinement-rule-figure}
+\end{figure}
+
+After Rule~[\nameref{ExecuteMethod-refinement-rule}] has been applied,
+$ExecuteMethod$ is redefined to be the actions inside the parametrised
+block on the left-hand side of
+Rule~[\nameref{ExecuteMethod-refinement-rule}].
+This is achieved by using Law~[\nameref{action-intro-law}], on
+lines~\ref{algorithm-remove-ExecuteMethod}
+and~\ref{algorithm-reintroduce-ExecuteMethod}, to remove the old
+definition for $ExecuteMethod$ and introduce the new one.
+The actions are then copied back out using the new definition by
+application of Law~[\nameref{copy-rule-law}] on
+lines~\ref{algorithm-copy-ExecuteMethod-out-MainThread}
+and~\ref{algorithm-copy-ExecuteMethod-out-Started}.
+For our example, this results in the $ExecuteMethod$, $MainThread$ and
+$Started$ actions shown in
+Figure~\ref{efs-eliminate-returns-example-figure1}.
+The refinement of the return actions in methods causes
+$TPK\_handleAsyncEvent$ to have the form shown in
+Figure~\ref{efs-eliminate-returns-example-figure1}.
+
+\begin{figure}[tp!]
+  \centering
+  \setlength{\zedtab}{0.4cm}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedleftsep}{0pt}
+  \setlength{\abovedisplayskip}{0pt}
+  \setlength{\belowdisplayskip}{0pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \begin{circusaction}
+    ExecuteMethod \circdef \\
+    \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+    \t1 \circres returnValue : Word \circspot \\
+    \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \circseq \\
+    \t2 \lschexpract InterpreterReturnEPC \rschexpract  \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \circseq \\
+    \t2 \lschexpract InterpreterReturnEPC \rschexpract \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \circseq \\
+    \t2 \lschexpract InterpreterAreturnEPC \rschexpract \\
+    \t1 {} \cdots {} \\
+    \t1 \circfi
+  \end{circusaction}
+
+  \begin{circusaction}
+    MainThread \circdef \\
+    \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
+    \t1 \circblockbegin
+    \circvar retVal : Word \circspot
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
+    \t1 ExecuteMethod(c, m, a, retVal) \circseq
+    executeMethodRet!thread!retVal \then Poll \circseq  X \\
+    {} \extchoice {} \\
+    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
+    \circblockend
+  \end{circusaction}
+  
+  \begin{circusaction}
+    Started \circdef \\
+    \t1 \circblockbegin
+    \circvar retVal : Word \circspot executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
+    \t1 ExecuteMethod(c, m, a, retVal) \circseq executeMethodRet!thread!retVal \then Poll \circseq \\
+    \t1 \circblockbegin
+    continue?t \prefixcolon (t = thread) \then Started \\
+    {} \extchoice {} \\
+    endThread?t \prefixcolon (t = thread) \then \Skip
+    \circblockend \\
+    {} \extchoice {} \\
+    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq Started \\
+    {} \extchoice {} \\
+    endThread?t \prefixcolon (t = thread) \then \Skip
+    \circblockend \circseq \\
+    \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
+    \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
+  \end{circusaction}
+  \caption{$ExecuteMethod$, $MainThread$ and $Started$ after
+    $Launcher$ return elimination}
+  \label{efs-eliminate-returns-example-figure1}
+\end{figure}
+
+\begin{figure}[tp!]
+  \centering
+  \setlength{\zedtab}{0.4cm}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedleftsep}{0pt}
+  \setlength{\abovedisplayskip}{0pt}
+  \setlength{\belowdisplayskip}{0pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \begin{circusaction}
+    TPK\_handleAsyncEvent \circdef \\
+    \t1 HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq Poll \circseq  HandleAconst\_nullEPC \circseq Poll \circseq \\
+    \t1 (\circvar poppedArgs : \seq Word \circspot \\
+    \t2 \lschexpract \exists argsToPop? == 2 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t2 \lschexpract InterpreterNewStackFrame[\\
+    \t3 ConsoleConnection/class?, CCinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_CCinit \circseq \lschexpract InterpreterReturnEPC \rschexpract \circseq Poll \circseq \\
+    %\t1 HandleAstoreEPC(1) \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t1 {} \cdots {} \\
+    % \t1 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t2 ConsoleConnection/class?, openInputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    % \t1 Poll \circseq ConsoleConnection\_openInputStream \circseq Poll \circseq  HandleAstoreEPC(2) \circseq Poll \circseq \\
+    % \t1 HandleAloadEPC(1) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+    % \t1 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[\\
+    % \t2 ConsoleConnection/class?, openOutputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    % \t1 Poll \circseq ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq \\
+    %\t1 {} \cdots {} \\
+    % \t1 Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq Poll \circseq \circmu Y \circspot \\
+    % \t2 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
+    % \t2 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t2 \circif value1 \leq value2 \circthen \\
+    % \t3 {} \cdots {}  \\
+    % Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
+    % \t3 (\circvar poppedArgs : \seq Word \circspot \\
+    % \t4 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    % \t3 Poll \circseq ConsoleInput\_read \circseq Poll \circseq \\
+    \t3 (\circvar poppedArgs : \seq Word \circspot \\
+    \t4 \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t4 \lschexpract InterpreterNewStackFrame[\\
+    \t5 TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    \t3 Poll \circseq TPK\_f \circseq \lschexpract InterpreterAreturn1 \rschexpract \circseq Poll \circseq \\
+    % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
+    \t3 {} \cdots {} \\
+    % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleAloadEPC(5) \circseq Poll \circseq \\
+    % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+    % \t4 Poll \circseq ConsoleOutput\_write \\
+    % \t3 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq \\
+    % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+    % \t4 Poll \circseq ConsoleOutput\_write \\
+    % \t3 \circfi \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(1) \circseq Poll \circseq HandleIaddEPC \circseq \\
+    \t3 Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq Y \\
+    \t2 {} \circelse value1 > value2 \circthen \Skip \\
+    \t2 \circfi \circseq Poll 
+  \end{circusaction}
+  \caption{$TPK\_handleAsyncEvent$ after $Launcher$ return
+    elimination}
+  \label{efs-eliminate-returns-example-figure2}
+\end{figure}

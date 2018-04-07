@@ -1,0 +1,257 @@
+After the $CheckLauncherReturn$ actions have been handled, the process
+no longer has any actions that use the whole $frameStack$.
+We can therefore refine each method to only operate on a local stack
+frame variable.
+% However, we must first remove $frameStackID$ and $currentClass$ from
+% the state.
+% The $frameStackID$ is used in the intepreter model to guard whether
+% the $frameStack$ is allowed to be non-empty, but it should not be
+% present in the C code.
+% Similarly, $currentClass$ is provided as a convenient way of accessing
+% the $frameClass$ of the topmost stack frame, but we need direct access
+% to the stack frame to perform the refinements in the remainder of this
+% stage.
+% We thus perform a data refinement on the process to remove them from
+% the state.
+This is performed as described in
+Algorithm~\ref{localise-stack-frames-algorithm}, which defines the
+procedure \Call{LocaliseStackFrames}{}.
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$InterpreterStateFS$, $FrameStackCI$}
+    \label{algorithm-remove-currentClass-data-refinement}
+    \State $iterationOrder \gets$ \Call{MethodDependencyOrder}{$methods$}
+    \label{algorithm-method-dependency-order-call}
+    \For{$m \gets iterationOrder$}
+    \label{algorithm-localise-stack-frames-loop}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \label{algorithm-localise-stack-frames-copy-in}
+    \State \ApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$m$}
+    \EndFor
+  \end{algorithmic}
+  \caption{LocaliseStackFrames}
+  \label{localise-stack-frames-algorithm}
+\end{algorithm}
+
+Since we must be able to operate directly on the $frameStack$ when
+introducing stack frame variables, we first apply a data refinement to
+remove $currentClass$ from the state.
+We defined $currentClass$ in the model as a convenience when accessing
+the $frameClass$ of the topmost stack frame, which is no longer
+necessary when we have separate variables for each stack frame.
+We also remove $frameStackID$ at this stage, since its only purpose is
+to guard whether frameStack is permitted to be non-empty, which holds
+from the form of the model.
+The data refinement is applied on
+line~\ref{algorithm-remove-currentClass-data-refinement} of
+Algorithm~\ref{localise-stack-frames-algorithm}, and transforms the
+state to $InterpreterStateFS$, shown below, which only contains
+$frameStack$.
+\begin{schema}{InterpreterStateFS}
+  frameStack : StackFrameEPC
+\end{schema}
+
+The relationship between $InterpreterStateEPC$ and
+$InterpreterStateFS$ is described by the coupling invariant
+$FrameStackCI$, shown below.
+It ensures $frameStack$ is unaffected by the refinement and replaces
+occurrences of $currentClass$ with $(last~frameStack).frameClass$.
+The $frameStackID$ is hidden from the new state.
+\begin{schema}{FrameStackCI}
+  InterpreterStateEPC \\
+  InterpreterStateFS_1
+\where
+  frameStack = frameStack_1 \\
+  currentClass = (last~frameStack_1).frameClass
+\end{schema}
+
+$FrameStackCI$ describes a functional data refinement, so the new
+actions can be calculated in each case.
+None of the actions in the process read from $frameStackID$, so it can
+be safely hidden and the operations to set the $frameStackID$ are
+reduced to $\Skip$.
+As mentioned above, $(last~frameStack).frameClass$ is inserted
+wherever $currentClass$ occurs in the old actions.
+We can then proceed with introducing stack frame variables.
+
+When introducing the variables to represent stack frames, we must
+begin with those stack frames at the greatest depth on the stack.
+This ensures uses of the $frameStack$ within a nested method do not
+interfere with replacing uses of the $frameStack$ in an outer method.
+The order in which we introduce stack frame variables to the methods
+is specified by a procedure \Call{MethodDependencyOrder}{$methods$},
+which constructs a sequence indicating the order in which the method
+actions should be handled.
+This sequence is constructed by first adding to the sequence any
+methods that contain no method calls, then adding any methods that
+only call methods already in the sequence, and repeating until all
+methods are in the sequence.
+Since we do not allow recursion, this will always terminate.
+We construct this sequence, $iterationOrder$, on
+line~\ref{algorithm-method-dependency-order-call} of
+Algorithm~\ref{localise-stack-frames-algorithm}.
+
+We then loop, introducing a stack frame variable for each method in
+the order specified by $iterationOrder$, in the for loop on
+line~\ref{algorithm-localise-stack-frames-loop}.
+Within the for loop, for a method $m$, we expand all occurrences of
+$m$ using Law~[\nameref{copy-rule-law}], on
+line~{algorithm-localise-stack-frames-copy-in}.
+A new variable, $stackFrame$, is then introduced using
+Law~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}], shown in
+Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
+
+\begin{figure}[thp]
+\begin{restatable}[$InterpreterReturn$-$stackFrame$-introduction]{crule}{HandleReturnEPCStackFrameIntroductionRule}
+  \label{HandleReturnEPC-stackFrame-introduction-rule}
+  %\setlength{\zedtab}{0.4cm}
+  %\setlength{\zedindent}{0pt}
+  %\setlength{\zedleftsep}{0pt}
+  If the actions in $A$ operate solely on $last~frameStack$ and do not
+  change the length of $frameStack$, then
+  \begin{circus}
+    \begin{array}{l}
+      InterpreterNewStackFrame[ \\
+      \t1 c/class?, \\
+      \t1 m/methodID?, \\
+      \t1 args/methodArgs?] \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \t1 \lschexpract [stackFrame' : StackFrameEPC | \\
+      \t2 args \subseteq stackFrame'.localVariables \land \\
+      \t2 \# stackFrame'.localVariables = \ell \land \\
+      \t2 stackFrame'.operandStack = \langle\rangle \land \\
+      \t2 stackFrame'.frameClass = c \land \\
+      \t2 stackFrame'.stackSize = s] \rschexpract \circseq \\
+      \t1 A[stackFrame/last~frameStack, \\
+      \t2 stackFrame'/last~frameStack'])
+    \end{array}
+  \end{circus}
+  where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
+\end{restatable}
+\caption{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}
+\label{HandleReturnEPC-stackFrame-introduction-rule-figure}
+\end{figure}
+
+Law~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]
+introduces a variable $stackFrame$, of type $StackFrameEPC$, over the
+body of a method that ends with an $InterpreterReturn$ operation.
+The $stackFrame$ variable is initialised in the same way as for the
+stack frame created by $InterpreterNewStackFrame$, and each reference
+to $last~frameStack$ in the body of the method is replaced with a
+reference to $stackFrame$.
+Replacing the references to $last~frameStack$ requires that the size
+of $frameStack$ does not change during the method.
+However, this requirement is met since method calls are the only
+operation that changes the size of $frameStack$ and we replace
+references to the $frameStack$ in nested methods first, by the
+definition of $iterationOrder$.
+
+In our example, a $stackFrame$ variable will be introduced for
+$TPK\_f$ first, since it does not call any other methods.
+$TPK\_handleAsyncEvent$ only has its $stackFrame$ variable introduced
+after $stackFrame$ variables have been introduced for all methods
+called in $TPK\_handleAsyncEvent$.
+When the $stackFrame$ variable for $TPK\_handleAsyncEvent$ has been
+introduced, it has the form shown in
+Figure~\ref{efs-localise-stack-frames-example-figure}.
+
+For brevity, we define new actions, which we refer to as $Handle*SF$
+actions.
+The $Handle*SF$ actions are similar to the $Handle*EPC$ actions,
+except they have every reference to $last~frameStack$ (or
+$last~frameStack'$) replaced with a reference to $stackFrame$ (or
+$stackFrame'$), and have undergone the data refinement described
+above.
+We name them by replacing $EPC$ in the names of the $Handle*EPC$
+actions with $SF$.
+Similarly, we define an $InvokeSF$ operation that performs the
+operation of $InterpreterStackFrameInvoke$ over $stackFrame$ instead
+of $last~frameStack$.
+
+
+\begin{figure}[tp!]
+  \centering
+  \setlength{\zedtab}{0.4cm}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedleftsep}{0pt}
+  \setlength{\abovedisplayskip}{0pt}
+  \setlength{\belowdisplayskip}{0pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \begin{circusaction}
+    \t1 \circvar stackFrame : StackFrameEPC \circspot \\
+    \t1 \lschexpract [stackFrame' : StackFrameEPC \\
+    \t2 poppedArgs? : \seq Word | \\
+    \t2 poppedArgs? \subseteq stackFrame'.localVariables \land \\
+    \t2 \# stackFrame'.localVariables = 6 \land \\
+    \t2 stackFrame'.operandStack = \langle\rangle \land \\
+    \t2 stackFrame'.frameClass = TPK \land \\
+    \t2 stackFrame'.stackSize = 3] \rschexpract \circseq \\
+    \t1 Poll \circseq HandleNewSF(27) \circseq Poll \circseq HandleDupSF \circseq Poll \circseq  HandleAconst\_nullSF \circseq Poll \circseq \\
+    % \t1 (\circvar poppedArgs : \seq Word \circspot \\
+    % \t2 \lschexpract \exists argsToPop? == m + 1 @ InvokeSF \rschexpract \circseq \\
+    % \t2 \lschexpract InterpreterNewStackFrame[\\
+    % \t3 ConsoleConnection/class?, CCinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
+    % \t1 ConsoleConnection\_CCinit \circseq \lschexpract InterpreterReturnEPC \rschexpract \circseq Poll \circseq \\
+    %\t1 HandleAstoreEPC(1) \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t1 {} \cdots {} \\
+    % \t1 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t2 ConsoleConnection/class?, openInputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    % \t1 Poll \circseq ConsoleConnection\_openInputStream \circseq Poll \circseq  HandleAstoreEPC(2) \circseq Poll \circseq \\
+    % \t1 HandleAloadEPC(1) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
+    % \t1 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[\\
+    % \t2 ConsoleConnection/class?, openOutputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    % \t1 Poll \circseq ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq \\
+    %\t1 {} \cdots {} \\
+    % \t1 Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq Poll \circseq \circmu Y \circspot \\
+    % \t2 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
+    % \t2 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t2 \circif value1 \leq value2 \circthen \\
+    % \t3 {} \cdots {}  \\
+    % Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
+    % \t3 (\circvar poppedArgs : \seq Word \circspot \\
+    % \t4 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+    % \t3 Poll \circseq ConsoleInput\_read \circseq Poll \circseq \\
+    \t3 (\circvar poppedArgs : \seq Word \circspot \\
+    \t4 \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq \\
+    \t4 \circvar stackFrame : StackFrameEPC \circspot \\
+    \t4 \lschexpract [stackFrame' : StackFrameEPC \\
+    \t5 poppedArgs? : \seq Word | \\
+    \t5 poppedArgs? \subseteq stackFrame'.localVariables \land \\
+    \t5 \# stackFrame'.localVariables = 1 \land \\
+    \t5 stackFrame'.operandStack = \langle\rangle \land \\
+    \t5 stackFrame'.frameClass = TPK \land \\
+    \t5 stackFrame'.stackSize = 2] \rschexpract \circseq \\
+    \t4 Poll \circseq \cdots ) \\
+    % TPK\_f \circseq \lschexpract InterpreterAreturn1 \rschexpract \circseq Poll \circseq \\
+    % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
+    \t3 {} \cdots {} \\
+    % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    % \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleAloadEPC(5) \circseq Poll \circseq \\
+    % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+    % \t4 Poll \circseq ConsoleOutput\_write \\
+    % \t3 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq \\
+    % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
+    % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
+    % \t4 Poll \circseq ConsoleOutput\_write \\
+    % \t3 \circfi \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(1) \circseq Poll \circseq HandleIaddEPC \circseq \\
+    \t3 Poll \circseq HandleAstoreSF(4) \circseq Poll \circseq Y \\
+    \t2 {} \circelse value1 > value2 \circthen \Skip \\
+    \t2 \circfi \circseq Poll
+  \end{circusaction}
+  \caption{$TPK\_handleAsyncEvent$ after its $stackFrame$ variable is
+    introduced}
+  \label{efs-localise-stack-frames-example-figure}
+\end{figure}

@@ -1,0 +1,31 @@
+After this, all actions have been refined to use individual variables
+and the $frameStack$ is no longer used.
+We can thus eliminate the $frameStack$ from the state. 
+This is performed as described in
+Algorithm~\ref{remove-frameStack-from-state-algorithm}, which defines
+the \Call{RemoveFrameStackFromState}{} procedure.
+
+\begin{algorithm}
+  \begin{algorithmic}
+    \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$[]$, $FrameStackEliminationCI$}
+    \label{algorithm-remove-frameStack-data-refinement}
+    \State \ApplyFor{Law~[\nameref{process-param-elim-law}]}{$cs$}
+    \label{algorithm-cs-elimination}
+  \end{algorithmic}
+  \caption{RemoveFrameStackFromState}
+  \label{remove-frameStack-from-state-algorithm}
+\end{algorithm}
+
+First, on line~\ref{algorithm-remove-frameStack-data-refinement}, we
+perform a data refinement to remove the $frameStack$ from the state.
+The new state after the data refinement is the empty schema, and the
+coupling invariant, $FrameStackEliminationCI$, maps all $frameStack$
+values onto the empty state.
+Since $frameStack$ is no longer used in the process, the only action
+affected is the state initialisation, which becomes $Skip$.
+After this, on line~\ref{algorithm-cs-elimination}, we eliminate the
+$cs$ parameter from the process, since it is no longer used.
+The result is the process $ThrLV_{bc,cs}(t)$, mentioned in
+Theorem~\ref{efs-thm}.
+The only thing remaining to be done is to refine the representation of
+objects, which is performed in the next stage of the strategy.

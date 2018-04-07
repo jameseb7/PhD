@@ -1,0 +1,552 @@
+Following the introduction of local $stackFrame$ variables, we perform
+local data refinements to introduce the local variables and stack
+slots for each $stackFrame$, on
+line~\ref{algorithm-introduce-variables} of
+Algorithm~\ref{efs-algorithm}.
+This is performed as described in
+Algorithm~\ref{introduce-variables-algorithm}, which defines the
+\Call{IntroduceVariables}{} procedure.
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \Call{IntroduceFrameClassAssumptions}{}
+    \label{algorithm-introduce-frameClass-assumptions}
+    \State \Apply{Rule~[\nameref{refine-PutfieldSF-rule}]}
+    \label{algorithm-apply-refine-PutfieldSF}
+    \State \Apply{Rule~[\nameref{refine-GetfieldSF-rule}]}
+    \State \Apply{Rule~[\nameref{refine-PutstaticSF-rule}]}
+    \State \Apply{Rule~[\nameref{refine-GetstaticSF-rule}]}
+    \State \Apply{Rule~[\nameref{refine-NewSF-rule}]}
+    \label{algorithm-apply-refine-NewSF}
+    % introduce operand stack assumptions
+    \State \Call{IntroduceOperandStackAssumptions}{}
+    \label{algorithm-introduce-operandStack-assumptions}
+    \For{$m \gets methods$}
+    \label{algorithm-introduce-variables-loop}
+    \State \ApplyToFor{Law~[\nameref{forwards-data-refinement-law}]}{$m$}{$CI{<}m{>}$}
+    \label{algorithm-local-data-refinement}
+    \EndFor
+    \State \Apply{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}
+    \label{algorithm-apply-eliminate-value1-value2-conditional-rule}
+    \State \Apply{Rule~[\nameref{eliminate-oid-getField-rule}]}
+    \State \Apply{Rule~[\nameref{eliminate-oid-value-putField-rule}]}
+    \State \Apply{Rule~[\nameref{eliminate-value-putStatic-rule}]}
+    \label{algorithm-apply-eliminate-value-putStatic-rule}
+    \State \Apply{Rule~[\nameref{method-parameter-introduction-rule}]}
+    \label{algorithm-method-parameter-introduction}
+    \State \Apply{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}
+    \State \Apply{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}
+    \State \Apply{Rule~[\nameref{toplevel-method-parameter-introduction-rule}]}
+    \label{algorithm-toplevel-method-parameter-introduction}
+    % introduce and copy out method actions
+    \For{$m \gets methods$}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \label{algorithm-efs-eliminate-old-method-action}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \label{algorithm-local-variables-copy-method-out}
+    \EndFor
+  \end{algorithmic}
+  \caption{IntroduceVariables}
+  \label{introduce-variables-algorithm}
+\end{algorithm}
+
+Algorithm~\ref{introduce-variables-algorithm} begins by refining field
+access operations to remove their reliance on the $frameClass$
+component of the $stackFrame$, which is removed in the data
+refinement.
+This is done by first introducing and distributing assumptions stating
+the value of $frameClass$, indicated by the procedure
+\Call{IntroduceFrameClassAssumptions}{} on
+line~\ref{algorithm-introduce-frameClass-assumptions}.
+This introduces assumptions from the schema actions initialising
+$stackFrame$, using Law~[\nameref{schema-assump-intro-law}], and
+distributing it using standard refinement laws.
+This is straightforward as none of the operations affect the value of
+$frameClass$.
+We can then apply Rules~[\nameref{refine-PutfieldSF-rule}],
+[\nameref{refine-GetfieldSF-rule}],
+[\nameref{refine-PutstaticSF-rule}],
+[\nameref{refine-GetstaticSF-rule}] and~[\nameref{refine-NewSF-rule}]
+wherever possible to refine the field accesses, on
+lines~\ref{algorithm-apply-refine-PutfieldSF}
+to~\ref{algorithm-apply-refine-NewSF}.
+
+We show Rule~[\nameref{refine-PutfieldSF-rule}] in
+Figure~\ref{refine-PutfieldSF-rule-figure}.
+It refines a $PutfieldSF(cpi)$ instruction preceded by an assumption
+stating the value of the $frameClass$ component of $stackFrame$.
+After the application of the rule, the definition of $PutfieldSF$ has
+been expanded and the class identifier, $cid$, and field identifier,
+$fid$, at the constant pool index $cpi$ are substituted in place of
+the accesses to the constant pool.
+This removes the reference to the $constantPool$ of the $frameClass$,
+and hence the reference to the $frameClass$.
+Rule~[\nameref{refine-GetfieldSF-rule}],
+Rule~[\nameref{refine-PutstaticSF-rule}],
+Rule~[\nameref{refine-GetstaticSF-rule}] and
+Rule~[\nameref{refine-NewSF-rule}] are similar so we omit them
+here.
+They can be found, along with the other compilation rules, in
+Appendix~\ref{compilation-rules-appendix}.
+
+\begin{figure}
+  \centering
+  % \setlength{\zedtab}{0.4cm}
+  % \setlength{\zedindent}{0pt}
+  % \setlength{\zedleftsep}{0pt}
+  % \setlength{\abovedisplayskip}{0pt}
+  % \setlength{\belowdisplayskip}{0pt}
+  % \setlength{\abovedisplayshortskip}{0pt}
+  % \setlength{\belowdisplayshortskip}{0pt}
+  \begin{restatable}[refine-$PutfieldSF$]{crule}{RefinePutfieldSFRule}
+    \label{refine-PutfieldSF-rule}
+    \begin{circus}
+      \begin{array}{l}
+        \{stackFrame.frameClass = c\} \circseq \\
+        PutfieldSF(cpi)
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        (\circvar oid : ObjectID; value : Word \circspot \\
+        \t1 \lschexpract InterpreterPop[ \\
+        \t2 stackFrame/last~frameStack, \\
+        \t2 stackFrame'/last~frameStack'] \rschexpract \circseq \\
+        \t1 \lschexpract InterpreterPop[ \\
+        \t2 oid!/value!, \\
+        \t2 stackFrame/last~frameStack, \\
+        \t2 stackFrame'/last~frameStack'] \rschexpract \circseq \\
+        \t1 putField!oid!cid!fid!value \then \Skip)
+      \end{array}
+    \end{circus}
+    where
+    \begin{circus}
+      cpi \in fieldRefIndices~c \land \\
+      c.constantPool~cpi = FieldRef~(cid, fid)
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{refine-PutfieldSF-rule}]}
+  \label{refine-PutfieldSF-rule-figure}
+\end{figure}
+
+When refining the $stackFrame$ operations to operations over variables
+representing the operand stack, we must know what the size of the
+operand stack at each point where the operations occur.
+This is necessary to determine which stack slot variables the refined
+operations should operate on.
+We ensure that this information is available, by introducing and
+distributing assumptions on the size of the $operandStack$ component
+of $stackFrame$.
+
+An assumption that $operandStack$ is empty can be generated from the
+$stackFrame$ initialisation operation (introduced by rules such as
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]), using
+Law~[\nameref{schema-assump-intro-law}].
+This assumption is distributed through each method using standard
+algebraic laws, with the size of $operandStack$ updated after each
+data operation on $stackFrame$.
+Of course, this requires that the size of the $operandStack$ is the
+same at the end of a loop as at the beginning of the loop, and also
+the same at the end of each branch of a conditional.
+These requirements are, however, ensured by bytecode verification so
+we are always able to distribute well-defined assumptions about the
+$operandStack$ size.
+We perform the introduction of $operandStack$ size assumptions in this
+way in the procedure \Call{IntroduceOperandStackAssumptions}{}, on
+line~\ref{algorithm-introduce-operandStack-assumptions}.
+
+After an $operandStack$ assumption has been introduced before each
+data operation, the data operations can be refined to operate over
+individual variables representing local variable and operand stack
+slots.
+This is performed using a local data refinement.
+The new state for the data refinement contains the local variables,
+which are all of type $Word$, and are named with $var$ followed by an
+integer beginning at $1$ and going up to the total number of local
+variables for the method, $\ell$.
+It also contains operand stack slots, named with $stack$ followed by
+an integer from $1$ up to the maximum stack size for the method, $s$.
+The coupling invariant for the data refinement of a method $m$ is then
+given by the template $CI{<}m{>}$, shown below.
+
+% I don't think this is functional...does that matter?
+\begin{schema}{CI{<}m{>}}
+  stackFrame : StackFrameEPC \\
+  var1, \ldots, var{<}\ell{>} : Word \\
+  stack1, \ldots, stack{<}s{>} : Word
+\where
+  \# stackFrame.localVariables = {<}\ell{>} \\
+  stackFrame.localVariables~1 = var1 \\
+  \t1 \vdots \\
+  stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>} \\
+  stackFrame.stackSize = {<}s{>} \\
+  \# stackFrame.operandStack \leq {<}s{>} \\
+  \# stackFrame.operandStack \geq 1 \implies \\
+  \t1 stackFrame.operandStack~1 = stack1 \\
+  \t1 \vdots \\
+  \# stackFrame.operandStack \geq {<}s{>} \implies \\
+  \t1 stackFrame.operandStack~{<}s{>} = stack{<}s{>}
+\end{schema}
+
+$CI{<}m{>}$ relates each of the values in the $localVariables$
+sequence in $stackFrame$ to the corresponding local variables, $var1$
+to $var{<}\ell{>}$.
+It also relates each value in $operandStack$ to the corresponding
+stack slots, $stack1$ to $stack{<}s{>}$, but only if $operandStack$ is
+long enough to contain such a value.
+The values of the stack slots outside the length of the $operandStack$
+at each point in the program are left nondeterministic, since they are
+not used until they have been intialised with the correct value.
+This nondeterminism allows us to avoid introducing unnecessary
+assignments to initialise the stack slots and return them to a default
+value when they are no longer used, which would be required if we
+specified a value for unused stack slots in the coupling invariant.
+
+However, the nondeterminism in $CI{<}m{>}$ means that it is not a
+function, since there are multiple possible states for the operand
+stack slots that correspond to a non-full $operandStack$.
+This means that we cannot directly compute the actions resulting from
+the refinement (since there are multiple possibilities), so we must
+specify how each of the data operations is refined.
+We therefore state compilation rules in terms of \Circus{} simulation
+between actions, which is the relation that captures an individual
+data refinement, with the data refinement itself made up of simulation
+of all the actions over the state.
+
+Most of the bytecode instructions at this stage in the strategy have
+their semantics stated in terms of a data operation over $stackFrame$,
+in the form of a $Handle*SF$ action.
+We state the simulations for such instructions as simulations of the
+sequential composition of the $Handle*SF$ action with an
+$operandStack$ size assumption, which can be viewed as adding an extra
+precondition to the action.
+An example of such a simulation is
+Rule~[\nameref{HandleAloadSF-simulation-rule}], shown in
+Figure~\ref{HandleAloadSF-simulation-rule-figure}.
+It sates that $HandleAloadSF(lvi)$, with an assumption that the size
+of $operandStack$ is $k$, is simulated by an assignment
+$stack{<}k+1{>} := var{<}lvi{>}$.
+This rule applies, for example, to the $HandleAloadSF(1)$ action
+deriving from the $aload~1$ instruction at $pc = 12$ in
+$TPK\_handleAsyncEvent$, which is refined to $stack1 := var1$, since
+the stack is empty at that point.
+
+\begin{figure}[thp]
+  \begin{restatable}[$HandleAloadSF$-simulation]{crule}{HandleAloadSFSimulationRule}
+    \label{HandleAloadSF-simulation-rule}
+    \begin{circus}
+      \begin{array}{l}
+        \{\# stackFrame.operandStack = k\} \circseq \\
+        HandleAloadSF(lvi)
+      \end{array}
+      \circsimulates
+      \begin{array}{l}
+        stack{<}k+1{>} := var{<}lvi{>}
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{HandleAloadSF-simulation-rule}]}
+  \label{HandleAloadSF-simulation-rule-figure}
+\end{figure}
+
+The instructions that manipulate objects by communicating with the
+object manager have already had their definitions expanded earlier in
+this stage.
+Their communication with the object manager need not be changed by the
+data refinement.
+However, the data operations used by these operations to pop or push
+the values communicated from or to the operand stack must be refined.
+An example of the simulation of such an operation is
+Rule~[\nameref{InterpreterPopEPC-simulation-rule}], shown in
+Figure~\ref{InterpreterPopEPC-simulation-rule-figure}.
+This establishes a simulation between $InterpreterPopEPC$, modified to
+act over $stackFrame$, and an assignment of a stack slot value to the
+variable $value$, which is in scope in the contexts where
+$InterpreterPopEPC$ is used.
+
+\begin{figure}[thp]
+  \begin{restatable}[$InterpreterPopEPC$-simulation]{crule}{InterpreterPopEPCSimulationRule}
+    \label{InterpreterPopEPC-simulation-rule}
+    \begin{circus}
+      \begin{array}{l}
+        \{\# stackFrame.operandStack = k\} \circseq \\
+        \lschexpract InterpreterPopEPC[ \\
+        \t1 stackFrame/last~frameStack, \\
+        \t1 stackFrame'/last~frameStack']\rschexpract
+      \end{array}
+      \circsimulates
+      \begin{array}{l}
+        value := stack{<}k{>}
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{InterpreterPopEPC-simulation-rule}]}
+  \label{InterpreterPopEPC-simulation-rule-figure}
+\end{figure}
+
+Method invocations also use data operations to pop the method's
+arguments from the stack and pass them to the method, which must be
+refined in the data refinement.
+The $InvokeSF$ operation, which pops the method's arguments from the
+stack, is simulated by an assignment of a sequence of operand stack
+values to the $poppedArgs$ variables, as stated in
+Rule~[\nameref{InvokeSF-simulation-rule}], shown in
+Figure~\ref{InvokeSF-simulation-rule-figure}.
+
+\begin{figure}[thp]
+  \begin{restatable}[$InvokeSF$-simulation]{crule}{InvokeSFSimulationRule}
+    \label{InvokeSF-simulation-rule}
+    \begin{circus}
+      \begin{array}{l}
+        \{\# stackFrame.operandStack = k\} \circseq \\
+        \lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract
+      \end{array}
+      \circsimulates
+      \begin{array}{l}
+        poppedArgs := \\
+        \t1 \langle stack{<}k-m+1{>}, \ldots , stack{<}k{>} \rangle
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{InvokeSF-simulation-rule}]}
+  \label{InvokeSF-simulation-rule-figure}
+\end{figure}
+
+The passing of the arguments to the invoked method has already been
+refined in the introduction of the $stackFrame$ variable, but the
+schema initialising $stackFrame$ must be further refined to initialise
+the local variables.
+The simulation of the $stackFrame$ intialisation schema is stated by
+Rule~[\nameref{stackFrame-init-simulation-rule}], shown in
+Figure~\ref{stackFrame-init-simulation-rule-figure}.
+It is simulated by a sequence of assignments setting the local
+variables to the values of the arguments.
+The initialisation sets $operandStack$ to be empty, so there is no
+need to assign values to the stack slot variables; they can be left
+arbitrary.
+
+\begin{figure}[thp]
+  \begin{restatable}[$stackFrame$-init-simulation]{crule}{StackFrameInitSimulationRule}
+    \label{stackFrame-init-simulation-rule}
+    \begin{circus}
+      \begin{array}{l}
+        \lschexpract [stackFrame' : StackFrameEPC | \\
+        \t1 args \subseteq stackFrame'.localVariables \land \\
+        \t1 \# stackFrame'.localVariables = \ell \land \\
+        \t1 stackFrame'.operandStack = \langle\rangle \land \\
+        \t1 stackFrame'.frameClass = c \land \\
+        \t1 stackFrame'.stackSize = s] \rschexpract
+      \end{array}
+      \circsimulates
+      \begin{array}{l}
+        var{<}1{>} := args~1 \circseq \\
+        \t1 \vdots \\
+        var{<}\# args{>} := args~(\# args)
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{stackFrame-init-simulation-rule}]}
+  \label{stackFrame-init-simulation-rule-figure}
+\end{figure}
+
+The simulation rules we have omitted here can be found with the rest
+of the compilation rules in Appendix~\ref{compilation-rules-appendix}.
+These, together with the standard laws for distributing simulations
+through \Circus{} constructs, are sufficient to unambiguously define
+the local data refinement to be applied to each method.
+We apply this data refinement on
+line~\ref{algorithm-local-data-refinement}, inside a for loop in which
+we iterate over each method.
+Unlike the introduction of the $stackFrame$ variables, the order in
+which the methods are iterated over does not matter in this case,
+since each has its own $stackFrame$ variable that undergoes local
+refinement.
+
+After the data refinement of each method, we can eliminate the
+additional variables used in the data operations that pop values from
+the stack.
+Those that push values to the stack are pushing values received from a
+channel, which require a separate assignment operation and so cannot
+be eliminated.
+The additional variables are eliminated using the rules applied on
+lines~\ref{algorithm-apply-eliminate-value1-value2-conditional-rule}
+to~\ref{algorithm-apply-eliminate-value-putStatic-rule}.
+In particular,
+Rule~[\nameref{eliminate-value1-value2-conditional-rule}], shown in
+Figure~\ref{eliminate-value1-value2-conditional-rule-figure}, applies
+to the $TPK\_handleAsyncEvent$ action in our example.
+It removes the need for additional $value1$ and $value2$ variables,
+replacing the references to them in the conditional with the stack
+slot variables whose values they store.
+
+\begin{figure}
+  \begin{restatable}[eliminate-$value1$-$value2$-conditional]{crule}{EliminateValueOneValueTwoConditional}
+    \label{eliminate-value1-value2-conditional-rule}
+    \begin{circus}
+      \begin{array}{l}
+        (\circvar value1, value2 : Word \circspot \\
+        \t1 value1 := stack{<}k{>} \circseq \\
+        \t1 value2 := stack{<}k+1{>} \circseq \\
+        \t1 \circif value1 \leq value2 \circthen {} \\
+        \t2 {} \cdots {} \\
+        \t1 {} \circelse value1 > value2 \circthen {} \\
+        \t2 {} \cdots {} \\
+        \t1 \circfi)
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        \circif stack{<}k{>} \leq stack{<}k+1{>} \circthen {} \\
+        \t1 {} \cdots {} \\
+        {} \circelse stack{<}k{>} > stack{<}k+1{>} \circthen {} \\
+        \t1 {} \cdots {} \\
+        \circfi)
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}
+  \label{eliminate-value1-value2-conditional-rule-figure}
+\end{figure}
+
+We can then split the sequence of instructions for each method back
+out into a separate action.
+This happens inside a separate for loop, since all the method data
+refinements must be completed before the methods can be separated out.
+To do this, we must first convert the values passed into the method
+into parameters, by applying
+Rule~[\nameref{method-parameter-introduction-rule}], show in
+Figure~\ref{method-parameter-introduction-rule-figure}.
+This rule eliminates the $poppedArgs$ variable and transforms the
+arguments passed via it into value parameters.
+There are similar rules to handle the cases of virtual methods, where
+there is an additional $getClassIDOf$
+communication:~Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]
+and
+Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}].
+We also provide
+Rule~[\nameref{toplevel-method-parameter-introduction-rule}] to handle
+the introduction of parameters to the method actions in
+$ExecuteMethod$, where the arguments are not popped from the stack but
+obtained from the parameter to $ExecuteMethod$.
+These rules are applied, where necessary, on
+lines~\ref{algorithm-method-parameter-introduction}
+to~\ref{algorithm-toplevel-method-parameter-introduction} of
+Algorithm~\ref{introduce-variables-algorithm}.
+
+\begin{figure}[thp]
+  \begin{restatable}[method-parameter-introduction]{crule}{MethodParameterIntroductionRule}
+    \label{method-parameter-introduction-rule}
+    \begin{circus}
+      \begin{array}{l}
+        (\circvar poppedArgs : \seq Word \circspot \\
+        poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+        (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
+        \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+        var1 := poppedArgs~1 \circseq \\
+        \t1 \vdots \\
+        var{<}n{>} := poppedArgs~1 \circseq \\
+        \t1 {} \cdots {})) \\
+        % Remember: Poll starts the \cdots
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+        \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+        \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+        \t1 {} \cdots {})(arg_1, \ldots, arg_n) \\
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{method-parameter-introduction-rule}]}
+  \label{method-parameter-introduction-rule-figure}
+\end{figure}
+
+After these transformations of the methods have been completed, the
+sequence of actions that forms each method is the sequence of actions
+within the newly introduced parametrised block, which is the same at
+each place where the method occurs.
+We thus eliminate the method's old action via an application of
+Law~[\nameref{action-intro-law}] and introduce a new action via a
+second application of Law~[\nameref{action-intro-law}].
+The new action is the sequence of actions in the parametrised block
+that forms the body of the method.
+The method is then replaced with a reference to the new action at each
+placed where it occurs, using Law~[\nameref{copy-rule-law}].
+These steps occur on
+lines~\ref{algorithm-efs-eliminate-old-method-action}
+to~\ref{algorithm-local-variables-copy-method-out}, inside a for loop
+that iterates over each method.
+
+When the variables have been introduced to our example, the
+$TPK\_handleAsyncEvent$ action has the form shown in
+Figure~\ref{efs-localise-stack-frames-example-figure}.
+This code is fairly close to the corresponding C code, and we show the
+whole method, with each statement on a separate line, to emphasise
+that.
+Note that there are still communications with the object manager to
+determine the class of an object, even when the object's class is not
+used because it can be determined uniquely.
+Eliminating such communications requires a wider view of the model
+that includes the object manager, so we defer it until the next stage
+of the compilation strategy.
+
+\begin{figure}[tp!]
+  \centering
+  \setlength{\zedtab}{0.5cm}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedleftsep}{0pt}
+  \setlength{\abovedisplayskip}{0pt}
+  \setlength{\belowdisplayskip}{0pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \begin{circusaction}
+    TPK\_handleAsyncEvent \circdef \circval var1 : Word \circspot \\
+    \t1 \circvar var2, var3, var4, var5, var6 : Word \circspot \\
+    \t1 \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
+    \t1 newObject!thread!ConsoleConnectionClassID \\
+    \t2 {} \then newObjectRet!oid \then stack1 := oid \circseq Poll \circseq \\
+    \t1 stack2 := stack1 \circseq Poll \circseq \\
+    \t1 stack3 := null \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_CCinit(stack2, stack3) \circseq Poll \circseq \\
+    \t1 var1 := stack1 \circseq Poll \circseq \\
+    \t1 stack1 := var1 \circseq Poll \circseq \\
+    \t1 getClassIDOf!stack1?cid \\
+    \t2 {} \then ConsoleConnection\_openInputStream(stack1, stack1) \circseq Poll \circseq \\
+    \t1 var2 := stack1 \circseq Poll \circseq \\
+    \t1 stack1 := var1 \circseq Poll \circseq \\
+    \t1 getClassIDOf!stack1?cid \\
+    \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
+    \t1 var3 := stack1 \circseq Poll \circseq \\
+    \t1 stack1 := 0 \circseq Poll \circseq \\
+    \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 \circmu Y \circspot \\
+    \t2 stack1 := var4 \circseq Poll \circseq \\
+    \t2 stack2 := 10 \circseq Poll \circseq \\
+    \t2 \circif stack1 \leq stack2 \circthen Poll \circseq \\
+    \t3 stack1 := var2 \circseq Poll \circseq \\
+    \t3 getClassIDOf!stack1?cid \\
+    \t4 {} \then ConsoleInput\_read(stack1, stack1) \circseq Poll \circseq \\
+    \t3 TPK\_f(stack1, stack1) \circseq Poll \circseq \\
+    \t3 var5 := stack1 \circseq Poll \circseq \\
+    \t3 stack1 := var5 \circseq Poll \circseq \\
+    \t3 stack2 := 400 \circseq Poll \circseq \\
+    \t3 \circif stack1 \leq stack2 \circthen Poll \circseq \\
+    \t4 stack1 := var3 \circseq Poll \circseq \\
+    \t4 stack2 := var5 \circseq Poll \circseq \\
+    \t4 getClassIDOf!stack1?cid \\
+    \t5 {} \then ConsoleOutput\_write(stack1, stack2) \\
+    \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
+    \t4 stack1 := var3 \circseq Poll \circseq \\
+    \t4 stack2 := 0 \circseq Poll \circseq \\
+    \t4 getClassIDOf!stack1?cid \\
+    \t5 {} \then ConsoleOutput\_write(stack1, stack2) \\
+    \t3 \circfi \circseq Poll \circseq \\
+    \t3 stack1 := var4 \circseq Poll \circseq \\
+    \t3 stack2 := 1 \circseq Poll \circseq \\
+    \t3 stack1 := stack1 + stack2 \circseq Poll \circseq \\
+    \t3 var4 := stack1 \circseq Poll \circseq Y \\
+    \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
+    \t2 \circfi \circseq Poll
+  \end{circusaction}
+  \caption{$TPK\_handleAsyncEvent$ after its variables have been introduced}
+  \label{efs-introduce-variables-example-figure}
+\end{figure}
