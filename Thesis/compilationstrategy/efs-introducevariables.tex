@@ -11,12 +11,12 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
   \begin{algorithmic}[1]
     \State \Call{IntroduceFrameClassAssumptions}{}
     \label{algorithm-introduce-frameClass-assumptions}
-    \State \Apply{Rule~[\nameref{refine-PutfieldSF-rule}]}
+    \State \ApplyTo{Rule~[\nameref{refine-PutfieldSF-rule}]}{all occurrences of $PutfieldSF$}
     \label{algorithm-apply-refine-PutfieldSF}
-    \State \Apply{Rule~[\nameref{refine-GetfieldSF-rule}]}
-    \State \Apply{Rule~[\nameref{refine-PutstaticSF-rule}]}
-    \State \Apply{Rule~[\nameref{refine-GetstaticSF-rule}]}
-    \State \Apply{Rule~[\nameref{refine-NewSF-rule}]}
+    \State \ApplyTo{Rule~[\nameref{refine-GetfieldSF-rule}]}{all occurrences of $GetfieldSF$}
+    \State \ApplyTo{Rule~[\nameref{refine-PutstaticSF-rule}]}{all occurrences of $PutstaticSF$}
+    \State \ApplyTo{Rule~[\nameref{refine-GetstaticSF-rule}]}{all occurrences of $GetstaticSF$}
+    \State \ApplyTo{Rule~[\nameref{refine-NewSF-rule}]}{all occurrences of $NewSF$}
     \label{algorithm-apply-refine-NewSF}
     % introduce operand stack assumptions
     \State \Call{IntroduceOperandStackAssumptions}{}
@@ -26,23 +26,23 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
     \State \ApplyToFor{Law~[\nameref{forwards-data-refinement-law}]}{$m$}{$CI{<}m{>}$}
     \label{algorithm-local-data-refinement}
     \EndFor
-    \State \Apply{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}
+    \State \Apply{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}{wherever applicable}
     \label{algorithm-apply-eliminate-value1-value2-conditional-rule}
-    \State \Apply{Rule~[\nameref{eliminate-oid-getField-rule}]}
-    \State \Apply{Rule~[\nameref{eliminate-oid-value-putField-rule}]}
-    \State \Apply{Rule~[\nameref{eliminate-value-putStatic-rule}]}
+    \State \Apply{Rule~[\nameref{eliminate-oid-getField-rule}]}{wherever applicable}
+    \State \Apply{Rule~[\nameref{eliminate-oid-value-putField-rule}]}{wherever applicable}
+    \State \Apply{Rule~[\nameref{eliminate-value-putStatic-rule}]}{wherever applicable}
     \label{algorithm-apply-eliminate-value-putStatic-rule}
-    \State \Apply{Rule~[\nameref{method-parameter-introduction-rule}]}
+    \State \ApplyTo{Rule~[\nameref{method-parameter-introduction-rule}]}{each applicable method call}
     \label{algorithm-method-parameter-introduction}
-    \State \Apply{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}
-    \State \Apply{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}
-    \State \Apply{Rule~[\nameref{toplevel-method-parameter-introduction-rule}]}
+    \State \ApplyTo{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}{each applicable method call}
+    \State \ApplyTo{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}{each applicable method call}
+    \State \ApplyTo{Rule~[\nameref{toplevel-method-parameter-introduction-rule}]}{each applicable method call}
     \label{algorithm-toplevel-method-parameter-introduction}
     % introduce and copy out method actions
     \For{$m \gets methods$}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$m$}
     \label{algorithm-efs-eliminate-old-method-action}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$, with the actions in the corresponding parametrised block}
     \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
     \label{algorithm-local-variables-copy-method-out}
     \EndFor

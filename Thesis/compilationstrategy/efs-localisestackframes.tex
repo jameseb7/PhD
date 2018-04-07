@@ -27,7 +27,8 @@ procedure \Call{LocaliseStackFrames}{}.
     \label{algorithm-localise-stack-frames-loop}
     \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
     \label{algorithm-localise-stack-frames-copy-in}
-    \State \ApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$m$}
+    \State \ApplyTo{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{the actions of $m$}
+    % TODO: add areturn handling rules
     \EndFor
   \end{algorithmic}
   \caption{LocaliseStackFrames}

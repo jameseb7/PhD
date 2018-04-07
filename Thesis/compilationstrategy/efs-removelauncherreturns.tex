@@ -15,15 +15,15 @@ procedure \Call{RemoveLauncherReturns}{}.
 \begin{algorithm}[ht]
   \begin{algorithmic}[1]
     \For{$m \gets methods$}
-    \State \ApplyTo{Law~[\nameref{rec-action-intro-law}]}{$m$}
+    \State \ApplyToFor{Law~[\nameref{rec-action-intro-law}]}{$m$, wherever an infinite loop is not followed by a return}{a return action that matches those in other branches of $m$}
     \label{algorithm-introduce-infinite-loop-returns}
-    \State \ApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$m$}
+    \State \ApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$m$, until a single return action is at the end of $m$}
     \label{algorithm-distribute-returns}
-    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{all occurrences of $m$}
     \label{algorithm-eliminate-returns-copy-method-in}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$}
-    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$, with return actions excluded}
+    \State \ApplyReverseFor{Law~[\nameref{copy-rule-law}]}{all occurrences of $m$}
     \label{algorithm-eliminate-returns-copy-method-out}
     \EndFor
     \State \Call{IntroduceFrameStackAssumptions}{}
@@ -31,10 +31,10 @@ procedure \Call{RemoveLauncherReturns}{}.
     \For{$x \gets$ \Call{ReturnInstructions}{}}
     \Try
     \label{algorithm-eliminate-returns-try-begin}
-    \State \ApplyFor{Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}]}{$x$}
-    \State \ApplyFor{Rule~[\nameref{refine-HandleReturnEPC-nonempty-frameStack-rule}]}{$x$}
-    \State \ApplyFor{Rule~[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]}{$x$}
-    \State \ApplyFor{Rule~[\nameref{refine-HandleAreturnEPC-nonempty-frameStack-rule}]}{$x$}
+    \State \ApplyTo{Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}]}{$x$}
+    \State \ApplyTo{Rule~[\nameref{refine-HandleReturnEPC-nonempty-frameStack-rule}]}{$x$}
+    \State \ApplyTo{Rule~[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]}{$x$}
+    \State \ApplyTo{Rule~[\nameref{refine-HandleAreturnEPC-nonempty-frameStack-rule}]}{$x$}
     \EndTry
     \label{algorithm-eliminate-returns-try-end}
     \EndFor
@@ -46,13 +46,13 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-ExecuteMethod-refinement-MainThread}
     \State \ApplyTo{Rule~[\nameref{ExecuteMethod-refinement-rule}]}{$Started$}
     \label{algorithm-ExecuteMethod-refinement-Started}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
     \label{algorithm-remove-ExecuteMethod}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
     \label{algorithm-reintroduce-ExecuteMethod}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
+    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
     \label{algorithm-copy-ExecuteMethod-out-MainThread}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
+    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
     \label{algorithm-copy-ExecuteMethod-out-Started}
   \end{algorithmic}
   \caption{RemoveLauncherReturns}
