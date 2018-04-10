@@ -230,7 +230,7 @@ proofs of our compilation rules.
 % Definition B.28 in Marcel's thesis
 \begin{law}[copy-rule]
   \label{copy-rule-law}
-  If $N$ is the name of an action in the current process then,
+  Give an action name $N$, if $N$ names an action in the current process then,
   \begin{circus}
     N(e) = B(N)(e)
   \end{circus}
@@ -595,7 +595,8 @@ proofs of our compilation rules.
 % From the definition of process refinement (Definition 3.2 in Marcel's thesis)
 \begin{law}[action-intro]
   \label{action-intro-law}
-  If $N$ is not referenced in the body of $P$ then,
+  Given an action name $N$ and action body $B$, if $N$ is not
+  referenced in the body of $P$ then,
   \begin{circus}
     \begin{array}{l}
       \circprocess P \circdef \circbegin \\
