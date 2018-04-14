@@ -15,8 +15,10 @@ procedure \Call{RemoveLauncherReturns}{}.
 \begin{algorithm}[ht]
   \begin{algorithmic}[1]
     \For{$methodName \gets $ \Call{MethodActionNames}{$cs$}}
+    \label{algorithm-method-single-return-loop}
     \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
     \State $returnAction \gets$ \Call{ReturnAction}{$methodBody$}
+    \label{algorithm-determine-return-action}
     \State \ExhaustivelyApplyToFor{Law~[\nameref{rec-action-intro-law}]}{$methodBody$}{$returnAction$}
     \label{algorithm-introduce-infinite-loop-returns}
     \State \ExhaustivelyApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$methodBody$}
@@ -24,23 +26,21 @@ procedure \Call{RemoveLauncherReturns}{}.
     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-eliminate-returns-copy-method-in}
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
-    \State \Match{$methodBody$}{($A \circseq returnAction$)}
+    \label{algorithm-remove-returns-eliminate-method-action}
+    \Match{$methodBody$}{($A \circseq returnAction$)}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, $A$}
+    \label{algorithm-remove-returns-introduce-method-action}
     \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-eliminate-returns-copy-method-out}
     \EndFor
     \State \Call{IntroduceFrameStackAssumptions}{}
     \label{algorithm-introduce-frameStack-assumptions}
-    % \For{$x \gets$ \Call{ReturnInstructions}{}}
-    % \Try
-    % \label{algorithm-eliminate-returns-try-begin}
     \State \ExhaustivelyApply{Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}]}
+    \label{algorithm-eliminate-returns-try-begin}
     \State \ExhaustivelyApply{Rule~[\nameref{refine-HandleReturnEPC-nonempty-frameStack-rule}]}
     \State \ExhaustivelyApply{Rule~[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]}
     \State \ExhaustivelyApply{Rule~[\nameref{refine-HandleAreturnEPC-nonempty-frameStack-rule}]}
-    % \EndTry
-    % \label{algorithm-eliminate-returns-try-end}
-    % \EndFor
+    \label{algorithm-eliminate-returns-try-end}
     \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$MainThread$}}{$ExecuteMethod$}
     \label{algorithm-copy-ExecuteMethod-in-MainThread}
     \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$Started$}}{$ExecuteMethod$}
@@ -51,7 +51,7 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-ExecuteMethod-refinement-Started}
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$, \Call{ActionBody}{$ExecuteMethod$}}
     \label{algorithm-remove-ExecuteMethod}
-    \State \MatchIn{$\begin{array}{l}(\circvar retVal : Word \circspot (A)(c, m, a, retVal) \circseq \\\t1 executeMethodRet!thread!retVal \then \Skip)\end{array}$}{\Call{ActionBody}{Started}}
+    \MatchIn{$\begin{array}[t]{l}(\circvar retVal : Word \circspot (A)(c, m, a, retVal) \circseq \\\t1 executeMethodRet!thread!retVal \then \Skip)\end{array}$}{\Call{ActionBody}{Started}}
   \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$, $A$}
     \label{algorithm-reintroduce-ExecuteMethod}
     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
@@ -62,52 +62,58 @@ procedure \Call{RemoveLauncherReturns}{}.
   \caption{RemoveLauncherReturns}
   \label{remove-launcher-returns-algorithm}
 \end{algorithm}
-\begin{algorithm}[ht]
-  \begin{algorithmic}[1]
-    \For{$branch \gets$ \Call{MethodBranches}{$M$}}
-    \If{\Matches{$branch$}{$B \circseq HandleReturnEPC$}}
-    \State \Return{$HandleReturnEPC$}
-    \ElsIf{\Matches{$branch$}{$B \circseq HandleAreturnEPC$}}
-    \State \Return{$HandleAreturnEPC$}
-    \EndIf
-    \EndFor
-    \State \Return{$HandleReturnEPC$}
-  \end{algorithmic}
-  \caption{MethodReturnAction($M$)}
-\end{algorithm}
-\begin{algorithm}[ht]
-  \begin{algorithmic}[1]
-    \State $branches \gets \langle\rangle$
-    \If{\Matches{$M$}{$(\circif {} \circelse i \in I \circspot g_i \circthen A_i \circfi)$}}
-    \For{$i \gets I$}
-    \State $branches \gets branches \cat$\Call{MethodBranches}{$A_i$}
-    \EndFor
-    \Else
-    \State $branches \gets \langle M \rangle$
-    \EndIf
-    \State \Return $branches$
-  \end{algorithmic}
-  \caption{MethodBranches($M$)}
-\end{algorithm}
 
-First, we observe that any method can be made into a form where it has
-a single return instruction at the end of the method.
-This can be achieved by adding return instructions after infinite
-loops using Law~[\nameref{rec-action-intro-law}] and disributing them
-outside conditionals using Law~[\nameref{alt-seq-dist-law}].
-These laws are applied, if necessary, on
+Algorithm~\ref{remove-launcher-returns-algorithm} begins by iterating
+over each of the method actions, in the for loop beginning on
+line~\ref{algorithm-method-single-return-loop}.
+This determines the name, $methodName$, for each method's action from
+the class information, $cs$, via a function
+\Call{MethodActionNames}{}.
+We take the method's body, $methodBody$, as the body of the action
+corresponding to $methodName$.
+
+The return actions that may occur at the end of method branches are
+either $HandleAreturnEPC$ or $HandleReturnEPC$.
+$HandleAreturnEPC$ only occurs in methods that return a value and,
+conversely, $HandleReturnEPC$ only occurs in methods that do not
+return a value.
+We can thus determine which return action a method uses by examining
+the syntax of $methodBody$ to see which action occurs at the end of
+the branches.
+A method in which all branches end in infinite loops is treated as
+using the return action $HandleReturnEPC$, since it does not produce a
+value.
+We determine the return action type, $returnAction$, for $methodBody$
+on line~\ref{algorithm-determine-return-action}, using a syntactic
+function \Call{ReturnAction}.
+
+Having determined the return action for a method, we convert the
+method to a form in which it has one occurence of that action at the
+end of its body.
+This is achieved by introducing occurrences of $returnAction$ after
+infinite loops in $methodBody$ using
+Law~[\nameref{rec-action-intro-law}] and distributing occurences of
+$returnAction$ outside conditionals using
+Law~[\nameref{alt-seq-dist-law}].
+These laws are applied on
 lines~\ref{algorithm-introduce-infinite-loop-returns}
 and~\ref{algorithm-distribute-returns} of
 Algorithm~\ref{remove-launcher-returns-algorithm}.
 
 When the method has a single return instruction at the end, its
-definition is expanded at every point it is called using
-Law~[\nameref{copy-rule-law}]. 
-The method action is then redefined to exclude the return instruction,
-and the sequence of instructions is copied back out.
-This is performed on
-lines~\ref{algorithm-eliminate-returns-copy-method-in}
-to~\ref{algorithm-eliminate-returns-copy-method-out}.
+definition is expanded at every point it is referenced using
+Law~[\nameref{copy-rule-law}] on
+line~\ref{algorithm-eliminate-returns-copy-method-in}. 
+We then redefine the method action by eliminating it on
+line~\ref{algorithm-remove-returns-eliminate-method-action} and
+reintroducing it with a new definition that excludes the return action
+at the end of the method.
+This is performed using Law~[\nameref{action-intro-law}], on
+lines~\ref{algorithm-remove-returns-eliminate-method-action}
+to~\ref{algorithm-remove-returns-introduce-method-action}.
+Law~[\nameref{copy-rule-law}] is then used to copy out the method into
+its action using the new definition, on
+line~\ref{algorithm-eliminate-returns-copy-method-out}.
 
 We then introduce assumptions that state whether the $frameStack$ is
 empty or not.
@@ -216,9 +222,10 @@ line~\ref{algorithm-introduce-frameStack-assumptions}.
 
 After assumptions on the state of the $frameStack$ have been
 introduced,we can handle the return actions at each point where they
-occur, using the rules in the try block at
+occur, applying the rules on
 lines~\ref{algorithm-eliminate-returns-try-begin}
-to~\ref{algorithm-eliminate-returns-try-end} of the algorithm.
+to~\ref{algorithm-eliminate-returns-try-end} of the algorithm wherever
+possible.
 An example of one of these rules is
 Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}], shown
 in Figure~\ref{refine-HandleReturnEPC-empty-frameStack-rule-figure}.
@@ -228,8 +235,8 @@ $InterpreterReturnEPC$ followed by a communication with the $Launcher$
 on the $executeMethodRet$ channel.
 The value communicated on $executeMethodRet$ is $returnValue$,
 introduced in a variable block.
-This is essentially expanding the definition of $HandleReturnEPC$ and
-resolving the choice over whether $frameStack$ is empty.
+This essentially expands the definition of $HandleReturnEPC$ and
+resolves the choice over whether $frameStack$ is empty.
 
 \begin{figure}[tp!]
   \begin{restatable}[refine-$HandleReturnEPC$-empty-$frameStack$]{crule}{RefineHandleReturnEPCEmptyFrameStackRule}
@@ -256,7 +263,8 @@ the $frameStack$ being left nonempty and the $HandleAreturnEPC$
 action.
 They can be found in Appendix~\ref{compilation-rules-appendix}.
 In the cases when the $frameStack$ is not empty after execution of the
-return instruction, the communication on $executeMethodRet$ and the
+return instruction, which occurs when a method is called from within
+another method, the communication on $executeMethodRet$ and the
 variable block for $returnValue$ are removed, since they are not used.
 
 After the return instructions have been refined, the $ExecuteMethod$
@@ -318,13 +326,13 @@ and~\ref{algorithm-ExecuteMethod-refinement-Started}.
 \end{figure}
 
 After Rule~[\nameref{ExecuteMethod-refinement-rule}] has been applied,
-$ExecuteMethod$ is redefined to be the actions inside the parametrised
+$ExecuteMethod$ is redefined as the actions inside the parametrised
 block on the left-hand side of
 Rule~[\nameref{ExecuteMethod-refinement-rule}].
-This is achieved by using Law~[\nameref{action-intro-law}], on
+This is performed using Law~[\nameref{action-intro-law}] on
 lines~\ref{algorithm-remove-ExecuteMethod}
-and~\ref{algorithm-reintroduce-ExecuteMethod}, to remove the old
-definition for $ExecuteMethod$ and introduce the new one.
+to~\ref{algorithm-reintroduce-ExecuteMethod}, eliminating the existing
+definition of $ExecuteMethod$ and introducing a new definition.
 The actions are then copied back out using the new definition by
 application of Law~[\nameref{copy-rule-law}] on
 lines~\ref{algorithm-copy-ExecuteMethod-out-MainThread}

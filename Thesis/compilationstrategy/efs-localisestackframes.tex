@@ -19,22 +19,41 @@ procedure \Call{LocaliseStackFrames}{}.
 
 \begin{algorithm}
   \begin{algorithmic}[1]
+    \arraycolsep=0cm
     \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$InterpreterStateFS$, $FrameStackCI$}
     \label{algorithm-remove-currentClass-data-refinement}
-    \State $iterationOrder \gets$ \Call{MethodDependencyOrder}{$methods$}
+    \State $iterationOrder \gets$ \Call{MethodDependencyOrder}{}
     \label{algorithm-method-dependency-order-call}
-    \For{$m \gets iterationOrder$}
+    \For{$methodName \gets iterationOrder$}
     \label{algorithm-localise-stack-frames-loop}
-    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-localise-stack-frames-copy-in}
-    \State \ApplyTo{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{the actions of $m$}
+    \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
+    \State $newMethodBody \gets
+      methodBody\begin{array}[t]{l}[stackFrame/last~frameStack, \\
+      stackFrame'/last~frameStack']
+    \end{array}$ 
+    \State \ExhaustivelyApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$methodBody$}
+    \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
     % TODO: add areturn handling rules
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{methodName, \Call{ActionBody}{methodName}}
+    \label{algorithm-localise-stack-frames-method-elimination}
+    \MatchThen{$(\circvar stackFrame : StackFrameEPC \circspot init \circseq newMethodBody)$}
+    \label{algorithm-localise-stack-frames-method-reintroduction-match}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$,
+      $\begin{array}[t]{l}
+         \circvar stackFrame : StackFrameEPC \circspot \\
+         \t4 init \circseq newMethodBody
+       \end{array}$}
+     \label{algorithm-localise-stack-frames-method-reintroduction}
+     \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+     \label{algorithm-localise-stack-frames-copy-out}
     \EndFor
   \end{algorithmic}
   \caption{LocaliseStackFrames}
   \label{localise-stack-frames-algorithm}
 \end{algorithm}
-
+ 
 Since we must be able to operate directly on the $frameStack$ when
 introducing stack frame variables, we first apply a data refinement to
 remove $currentClass$ from the state.
@@ -81,9 +100,9 @@ begin with those stack frames at the greatest depth on the stack.
 This ensures uses of the $frameStack$ within a nested method do not
 interfere with replacing uses of the $frameStack$ in an outer method.
 The order in which we introduce stack frame variables to the methods
-is specified by a procedure \Call{MethodDependencyOrder}{$methods$},
-which constructs a sequence indicating the order in which the method
-actions should be handled.
+is specified by a procedure \Call{MethodDependencyOrder}{}, which
+constructs a sequence of method action names indicating the order in
+which the method actions should be handled.
 This sequence is constructed by first adding to the sequence any
 methods that contain no method calls, then adding any methods that
 only call methods already in the sequence, and repeating until all
@@ -96,12 +115,15 @@ Algorithm~\ref{localise-stack-frames-algorithm}.
 We then loop, introducing a stack frame variable for each method in
 the order specified by $iterationOrder$, in the for loop on
 line~\ref{algorithm-localise-stack-frames-loop}.
-Within the for loop, for a method $m$, we expand all occurrences of
-$m$ using Law~[\nameref{copy-rule-law}], on
-line~{algorithm-localise-stack-frames-copy-in}.
-A new variable, $stackFrame$, is then introduced using
-Law~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}], shown in
-Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
+Within the for loop, for a method action name $methodName$, we expand
+all occurrences of $methodName$ using Law~[\nameref{copy-rule-law}],
+on line~\ref{algorithm-localise-stack-frames-copy-in}.
+A new variable, $stackFrame$, is then introduced via an application of
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}], shown
+in Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
+We apply this rule wherever possible for $methodBody$, the body of
+$methodName$, on
+line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 
 \begin{figure}[thp]
 \begin{restatable}[$InterpreterReturn$-$stackFrame$-introduction]{crule}{HandleReturnEPCStackFrameIntroductionRule}
@@ -109,8 +131,8 @@ Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
   %\setlength{\zedtab}{0.4cm}
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
-  If the actions in $A$ operate solely on $last~frameStack$ and do not
-  change the length of $frameStack$, then
+  Given a sequence of actions $A$, if $A$ operates solely on
+  $last~frameStack$ and do not change the length of $frameStack$, then
   \begin{circus}
     \begin{array}{l}
       InterpreterNewStackFrame[ \\
@@ -138,7 +160,7 @@ Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
 \label{HandleReturnEPC-stackFrame-introduction-rule-figure}
 \end{figure}
 
-Law~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]
 introduces a variable $stackFrame$, of type $StackFrameEPC$, over the
 body of a method that ends with an $InterpreterReturn$ operation.
 The $stackFrame$ variable is initialised in the same way as for the
@@ -152,6 +174,35 @@ operation that changes the size of $frameStack$ and we replace
 references to the $frameStack$ in nested methods first, by the
 definition of $iterationOrder$.
 
+After the stack frame has been introduced, we redefine the method
+action $methodName$ to correspond to the $stackFrame$ variable block
+introduced by
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}].
+This is done using Law~[\nameref{action-intro-law}] to eliminate the
+existing definition on
+line~\ref{algorithm-localise-stack-frames-method-elimination}, and
+introducing the new definition on
+lines~\ref{algorithm-localise-stack-frames-method-reintroduction-match}
+and~\ref{algorithm-localise-stack-frames-method-reintroduction}.
+The actions are then copied out using the new definitions on
+line~\ref{algorithm-localise-stack-frames-copy-out}.
+
+Note that the operations performed on
+lines~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
+and~\ref{algorithm-localise-stack-frames-method-reintroduction}
+specifically handle methods that do not return a value.
+We omit the handling of methods that do return a value. 
+Handling such methods would require rules similar to
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] for
+method bodies followed by $InterpreterAreturn1$ and
+$InterpreterAreturn2$, which would introduce a result parameter for
+the method.
+These rules would be applied in a way similar to
+line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}, and
+the introduction of the method action on
+line~\ref{algorithm-localise-stack-frames-method-reintroduction} would
+match a form of the method including the result parameter.
+
 In our example, a $stackFrame$ variable will be introduced for
 $TPK\_f$ first, since it does not call any other methods.
 $TPK\_handleAsyncEvent$ only has its $stackFrame$ variable introduced
@@ -163,6 +214,11 @@ Figure~\ref{efs-localise-stack-frames-example-figure}.
 
 For brevity, we define new actions, which we refer to as $Handle*SF$
 actions.
+These are not formally introduced as actions in the compilation
+strategy as they are an abbreviation used for presenting examples and
+stating compilation rules.
+They are refined to a different form later in the elimination of frame
+stack stage.
 The $Handle*SF$ actions are similar to the $Handle*EPC$ actions,
 except they have every reference to $last~frameStack$ (or
 $last~frameStack'$) replaced with a reference to $stackFrame$ (or
@@ -174,7 +230,7 @@ Similarly, we define an $InvokeSF$ operation that performs the
 operation of $InterpreterStackFrameInvoke$ over $stackFrame$ instead
 of $last~frameStack$.
 
-
+% TODO: fix this for algorithm changes
 \begin{figure}[tp!]
   \centering
   \setlength{\zedtab}{0.4cm}

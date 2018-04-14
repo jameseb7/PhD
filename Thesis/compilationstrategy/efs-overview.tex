@@ -6,11 +6,13 @@ transferred into variables representing the local variables and
 operand stack slots for each method.
 The operations representing the bytecode instructions are refined to
 operations over these variables.
-This stage may be summarised by the following theorem.
+This refines $ThrCF_{bc,cs}(cs,t)$ to the $CThr_{bc,cs}(t)$ process
+described in Section~\ref{cee-c-program-subsection}, so this stage may
+be summarised by the following theorem.
 %
 \begin{thm}[Elimination of Frame Stack]\label{efs-thm}
   \begin{circus}
-    ThrCF_{bc,cs}(cs,t) \circrefines ThrLV_{bc,cs}(t)
+    ThrCF_{bc,cs}(cs,t) \circrefines CThr_{bc,cs}(t)
   \end{circus}
 \end{thm}
 %

@@ -3,7 +3,7 @@
 \usepackage[table]{xcolor}
 \usepackage{array}
 \usepackage[in]{fullpage}
-\usepackage{hyperref}
+\usepackage[hidelinks]{hyperref}
 \usepackage{tikz}
 \usepackage{amsmath}
 \usepackage{amsthm}
@@ -133,23 +133,24 @@ prefoothook={\qedsymbol\relax}
 \renewcommand{\circblockend}{\end{array}\right)}
 
 \newcommand{\Apply}[1]{{\bf apply} {#1}}
-\newcommand{\ApplyFor}[2]{{\bf apply} {#1} {\bf for} {#2}}
+\newcommand{\ApplyFor}[2]{{\bf apply} {#1}(#2)}
 \newcommand{\ApplyTo}[2]{{\bf apply} {#1} {\bf to} {#2}}
-\newcommand{\ApplyToFor}[3]{{\bf apply} {#1} {\bf to} {#2} {\bf for} {#3}}
+\newcommand{\ApplyToFor}[3]{{\bf apply} {#1}(#3) {\bf to} {#2}}
 \newcommand{\ApplyReverse}[1]{{\bf apply} {#1} {\bf in reverse}}
-\newcommand{\ApplyReverseFor}[2]{{\bf apply} {#1} {\bf in reverse for} #2}
+\newcommand{\ApplyReverseFor}[2]{{\bf apply} {#1}(#2) {\bf in reverse}}
 \newcommand{\ApplyReverseTo}[2]{{\bf apply} {#1} {\bf in reverse to} {#2}}
-\newcommand{\ApplyReverseToFor}[3]{{\bf apply} {#1} {\bf in reverse to} {#2} {\bf for} {#3}}
-\newcommand{\ExhaustivelyApply}[1]{{\bf exhaustively apply} #1}
-\newcommand{\ExhaustivelyApplyFor}[2]{{\bf exhaustively apply} #1 {\bf for} #2}
-\newcommand{\ExhaustivelyApplyTo}[2]{{\bf exhaustively apply} #1 {\bf to} #2}
-\newcommand{\ExhaustivelyApplyToFor}[3]{{\bf exhaustively apply} #1 {\bf to} #2 {\bf for} #3}
-\newcommand{\ExhaustivelyApplyReverse}[1]{{\bf exhaustively apply} #1 {\bf in reverse}}
-\newcommand{\ExhaustivelyApplyReverseFor}[2]{{\bf exhaustively apply} #1 {\bf in reverse for} #2}
-\newcommand{\ExhaustivelyApplyReverseTo}[2]{{\bf exhaustively apply} #1 {\bf in reverse to} #2}
-\newcommand{\ExhaustivelyApplyReverseToFor}[3]{{\bf exhaustively apply} #1 {\bf in reverse to} #2 {\bf for} #3}
-\newcommand{\Match}[2]{{\bf match} #1 {\bf with} #2}
-\newcommand{\MatchIn}[2]{{\bf match} #1 {\bf in} #2}
+\newcommand{\ApplyReverseToFor}[3]{{\bf apply} {#1}(#3) {\bf in reverse to} {#2}}
+\newcommand{\ExhaustivelyApply}[1]{{\bf exhaustively apply} {#1}}
+\newcommand{\ExhaustivelyApplyFor}[2]{{\bf exhaustively apply} {#1}(#2)}
+\newcommand{\ExhaustivelyApplyTo}[2]{{\bf exhaustively apply} {#1} {\bf to} {#2}}
+\newcommand{\ExhaustivelyApplyToFor}[3]{{\bf exhaustively apply} {#1}(#3) {\bf to} {#2}}
+\newcommand{\ExhaustivelyApplyReverse}[1]{{\bf exhaustively apply} {#1} {\bf in reverse}}
+\newcommand{\ExhaustivelyApplyReverseFor}[2]{{\bf exhaustively apply} {#1}(#2) {\bf in reverse}}
+\newcommand{\ExhaustivelyApplyReverseTo}[2]{{\bf exhaustively apply} {#1} {\bf in reverse to} {#2}}
+\newcommand{\ExhaustivelyApplyReverseToFor}[3]{{\bf exhaustively apply} {#1}(#3) {\bf in reverse to} {#2}}
+\algloopdefx{Match}[2]{{\bf match} #1 {\bf with} #2 {\bf then}}
+\algloopdefx{MatchIn}[2]{{\bf match} #1 {\bf in} #2 {\bf then}}
+\algloopdefx{MatchThen}[1]{{\bf match} #1 {\bf then}}
 \newcommand{\Matches}[2]{#1 {\bf matches} #2}
 \algblockx[Try]{Try}{EndTry}
   {{\bf try}}

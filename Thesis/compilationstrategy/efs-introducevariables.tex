@@ -9,70 +9,128 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
 
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \State \Call{IntroduceFrameClassAssumptions}{}
+    \For{$methodName \gets$ \Call{MethodNames}{$cs$}}
+    \label{algortihm-introduce-variables-loop}
+    \State $methodBody \gets $ \Call{ActionBody}{$methodName$}
+    \State \Call{IntroduceFrameClassAssumptions}{$methodBody$}
     \label{algorithm-introduce-frameClass-assumptions}
-    \State \ApplyTo{Rule~[\nameref{refine-PutfieldSF-rule}]}{all occurrences of $PutfieldSF$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-PutfieldSF-rule}]}{$methodBody$}
     \label{algorithm-apply-refine-PutfieldSF}
-    \State \ApplyTo{Rule~[\nameref{refine-GetfieldSF-rule}]}{all occurrences of $GetfieldSF$}
-    \State \ApplyTo{Rule~[\nameref{refine-PutstaticSF-rule}]}{all occurrences of $PutstaticSF$}
-    \State \ApplyTo{Rule~[\nameref{refine-GetstaticSF-rule}]}{all occurrences of $GetstaticSF$}
-    \State \ApplyTo{Rule~[\nameref{refine-NewSF-rule}]}{all occurrences of $NewSF$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetfieldSF-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-PutstaticSF-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetstaticSF-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-NewSF-rule}]}{$methodBody$}
     \label{algorithm-apply-refine-NewSF}
     % introduce operand stack assumptions
-    \State \Call{IntroduceOperandStackAssumptions}{}
+    \State \Call{IntroduceOperandStackAssumptions}{$methodBody$}
     \label{algorithm-introduce-operandStack-assumptions}
-    \For{$m \gets methods$}
-    \label{algorithm-introduce-variables-loop}
-    \State \ApplyToFor{Law~[\nameref{forwards-data-refinement-law}]}{$m$}{$CI{<}m{>}$}
+    % \For{$methodName \gets $ \Call{MethodActionNames}{$cs$}}
+    % \label{algorithm-introduce-variables-loop}
+    % \MatchIn{$\begin{array}[t]{l}
+    %      (\circvar stackFrame : StackFrameEPC \circspot \\
+    %      \t1 \lschexpract [stackFrame' : StackFrameEPC | \\
+    %      \t2 args \subseteq stackFrame'.localVariables \land \\
+    %      \t2 \# stackFrame'.localVariables = \ell \land \\
+    %      \t2 stackFrame'.operandStack = \langle\rangle \land \\
+    %      \t2 stackFrame'.frameClass = c \land \\
+    %      \t2 stackFrame'.stackSize = s] \rschexpract \circseq A)
+    %    \end{array}$}{
+    % }
+    \State {\bf exhaustively apply}
     \label{algorithm-local-data-refinement}
-    \EndFor
-    \State \Apply{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}{wherever applicable}
+    \Statex $\t1${Law~[\nameref{forwards-data-refinement-law}]}
+    ({\arraycolsep=0cm
+      $\begin{array}[t]{l}
+         [var1, \ldots, var{<}\ell{>} : Word;\\
+          stack1, \ldots, stack{<}s{>} : Word]
+       \end{array}$,
+       $V{<}\ell{>}S{<}s{>}CI$})
+     \Statex $\t1${\bf to} {$methodBody$}
+    % \EndFor
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}{$methodBody$}
     \label{algorithm-apply-eliminate-value1-value2-conditional-rule}
-    \State \Apply{Rule~[\nameref{eliminate-oid-getField-rule}]}{wherever applicable}
-    \State \Apply{Rule~[\nameref{eliminate-oid-value-putField-rule}]}{wherever applicable}
-    \State \Apply{Rule~[\nameref{eliminate-value-putStatic-rule}]}{wherever applicable}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-getField-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-value-putField-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value-putStatic-rule}]}{$methodBody$}
     \label{algorithm-apply-eliminate-value-putStatic-rule}
-    \State \ApplyTo{Rule~[\nameref{method-parameter-introduction-rule}]}{each applicable method call}
+    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+    \label{algorithm-introduce-variables-copy-method-in}
+    \State \ExhaustivelyApply{Rule~[\nameref{method-parameter-introduction-rule}]}
     \label{algorithm-method-parameter-introduction}
-    \State \ApplyTo{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}{each applicable method call}
-    \State \ApplyTo{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}{each applicable method call}
-    \State \ApplyTo{Rule~[\nameref{toplevel-method-parameter-introduction-rule}]}{each applicable method call}
+    \State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}
+    \State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}
+    \State \ExhaustivelyApply{Rule~[\nameref{toplevel-method-parameter-introduction-rule}]}
     \label{algorithm-toplevel-method-parameter-introduction}
     % introduce and copy out method actions
-    \For{$m \gets methods$}
-    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$m$}
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$}
     \label{algorithm-efs-eliminate-old-method-action}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$, with the actions in the corresponding parametrised block}
-    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, \arraycolsep=0cm
+      $\begin{array}[t]{l}
+         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+         \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t2 {} \cdots {})(arg_1, \ldots, arg_n)
+       \end{array}$}
+     \label{algorithm-efs-introduce-new-method-action}
+    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-local-variables-copy-method-out}
+    \MatchIn{
+      $\circmu X \circspot A \circseq
+      \begin{array}[t]{l}
+        \circif b \circthen B \circseq X \\
+        {} \circelse \lnot b \circthen \Skip \\
+        \circfi
+      \end{array}$
+     }{\Call{ActionBody}{$methodName$}}
+     \State \ExhaustivelyApplyFor{Law~[\nameref{rec-rolling-rule-law}]}{
+       $(\lambda X \circspot A \circseq X)$,
+       $(\lambda X \circspot
+       \begin{array}[t]{l}
+         \circif b \circthen B \circseq X \\
+         {} \circelse \lnot b \circthen \Skip \\
+         \circfi
+       \end{array})$
+     }
+     \label{algorithm-move-loop-start}
     \EndFor
   \end{algorithmic}
   \caption{IntroduceVariables}
   \label{introduce-variables-algorithm}
 \end{algorithm}
 
-Algorithm~\ref{introduce-variables-algorithm} begins by refining field
-access operations to remove their reliance on the $frameClass$
-component of the $stackFrame$, which is removed in the data
-refinement.
+Algorithm~\ref{introduce-variables-algorithm} operates upon each of
+the method actions in turn on
+line~\ref{algortihm-introduce-variables-loop}, determining the names
+of the actions from $cs$ via the function \Call{MethodNames}{}.
+Within this loop we refer to the name of the method action under
+consideration as $methodName$ and its body as $methodBody$.
+Unlike the introduction of the $stackFrame$ variables, the order in
+which the methods are iterated over does not matter when introducing
+variables, since each has its own $stackFrame$ variable that undergoes
+local refinement.
+
+We first refine field access operations to remove their reliance on
+the $frameClass$ component of the $stackFrame$, which is removed in
+the data refinement.
 This is done by first introducing and distributing assumptions stating
 the value of $frameClass$, indicated by the procedure
-\Call{IntroduceFrameClassAssumptions}{} on
+\Call{IntroduceFrameClassAssumptions}{$methodBody$} on
 line~\ref{algorithm-introduce-frameClass-assumptions}.
-This introduces assumptions from the schema actions initialising
+This introduces an assumption from the schema action initialising
 $stackFrame$, using Law~[\nameref{schema-assump-intro-law}], and
-distributing it using standard refinement laws.
+distributes it using standard refinement laws.
 This is straightforward as none of the operations affect the value of
 $frameClass$.
 We can then apply Rules~[\nameref{refine-PutfieldSF-rule}],
 [\nameref{refine-GetfieldSF-rule}],
 [\nameref{refine-PutstaticSF-rule}],
 [\nameref{refine-GetstaticSF-rule}] and~[\nameref{refine-NewSF-rule}]
-wherever possible to refine the field accesses, on
-lines~\ref{algorithm-apply-refine-PutfieldSF}
+wherever possible to refine the field accesses and object creation
+actions, on lines~\ref{algorithm-apply-refine-PutfieldSF}
 to~\ref{algorithm-apply-refine-NewSF}.
 
-We show Rule~[\nameref{refine-PutfieldSF-rule}] in
+As an example of one of these rules, we show
+Rule~[\nameref{refine-PutfieldSF-rule}] in
 Figure~\ref{refine-PutfieldSF-rule-figure}.
 It refines a $PutfieldSF(cpi)$ instruction preceded by an assumption
 stating the value of the $frameClass$ component of $stackFrame$.
@@ -85,8 +143,7 @@ and hence the reference to the $frameClass$.
 Rule~[\nameref{refine-GetfieldSF-rule}],
 Rule~[\nameref{refine-PutstaticSF-rule}],
 Rule~[\nameref{refine-GetstaticSF-rule}] and
-Rule~[\nameref{refine-NewSF-rule}] are similar so we omit them
-here.
+Rule~[\nameref{refine-NewSF-rule}] are similar so we omit them here.
 They can be found, along with the other compilation rules, in
 Appendix~\ref{compilation-rules-appendix}.
 
@@ -129,11 +186,13 @@ Appendix~\ref{compilation-rules-appendix}.
   \label{refine-PutfieldSF-rule-figure}
 \end{figure}
 
-When refining the $stackFrame$ operations to operations over variables
-representing the operand stack, we must know what the size of the
-operand stack at each point where the operations occur.
-This is necessary to determine which stack slot variables the refined
-operations should operate on.
+After references to the $frameClass$ have been removed, we can perform
+a local data refinement on the body of the method to convert the
+$stackFrame$ variable to separate variables for the local variables
+and operand stack slots.
+During this data refinement, we must know the size of the operand
+stack at each point where the operations occur in order to determine
+which stack slot variables the refined operations should operate on.
 We ensure that this information is available, by introducing and
 distributing assumptions on the size of the $operandStack$ component
 of $stackFrame$.
@@ -152,25 +211,26 @@ These requirements are, however, ensured by bytecode verification so
 we are always able to distribute well-defined assumptions about the
 $operandStack$ size.
 We perform the introduction of $operandStack$ size assumptions in this
-way in the procedure \Call{IntroduceOperandStackAssumptions}{}, on
+way in the procedure
+\Call{IntroduceOperandStackAssumptions}{$methodBody$}, on
 line~\ref{algorithm-introduce-operandStack-assumptions}.
 
 After an $operandStack$ assumption has been introduced before each
-data operation, the data operations can be refined to operate over
-individual variables representing local variable and operand stack
-slots.
-This is performed using a local data refinement.
+data operation, the local data refinement is performed on
+line~\ref{algorithm-local-data-refinement}.
 The new state for the data refinement contains the local variables,
 which are all of type $Word$, and are named with $var$ followed by an
 integer beginning at $1$ and going up to the total number of local
 variables for the method, $\ell$.
 It also contains operand stack slots, named with $stack$ followed by
 an integer from $1$ up to the maximum stack size for the method, $s$.
-The coupling invariant for the data refinement of a method $m$ is then
-given by the template $CI{<}m{>}$, shown below.
+These values $\ell$ and $s$ are obtained from the $maxLocals$ and
+$maxStack$ information for the  method in $cs$.
+The coupling invariant for the data refinement of a method
+$m$ is then given by the template $V{<}\ell{>}S{<}s{>}CI$, shown below.
 
 % I don't think this is functional...does that matter?
-\begin{schema}{CI{<}m{>}}
+\begin{schema}{V{<}\ell{>}S{<}s{>}CI}
   stackFrame : StackFrameEPC \\
   var1, \ldots, var{<}\ell{>} : Word \\
   stack1, \ldots, stack{<}s{>} : Word
@@ -180,7 +240,6 @@ given by the template $CI{<}m{>}$, shown below.
   \t1 \vdots \\
   stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>} \\
   stackFrame.stackSize = {<}s{>} \\
-  \# stackFrame.operandStack \leq {<}s{>} \\
   \# stackFrame.operandStack \geq 1 \implies \\
   \t1 stackFrame.operandStack~1 = stack1 \\
   \t1 \vdots \\
@@ -188,10 +247,12 @@ given by the template $CI{<}m{>}$, shown below.
   \t1 stackFrame.operandStack~{<}s{>} = stack{<}s{>}
 \end{schema}
 
-$CI{<}m{>}$ relates each of the values in the $localVariables$
+$V{<}\ell{>}S{<}s{>}CI$ requires the number of local variables to be
+equal to $\ell$ relates each of the values in the $localVariables$
 sequence in $stackFrame$ to the corresponding local variables, $var1$
 to $var{<}\ell{>}$.
-It also relates each value in $operandStack$ to the corresponding
+It also requires the maximum operand stack size, $stackSize$, to be
+$s$ and relates each value in $operandStack$ to the corresponding
 stack slots, $stack1$ to $stack{<}s{>}$, but only if $operandStack$ is
 long enough to contain such a value.
 The values of the stack slots outside the length of the $operandStack$
@@ -202,9 +263,9 @@ assignments to initialise the stack slots and return them to a default
 value when they are no longer used, which would be required if we
 specified a value for unused stack slots in the coupling invariant.
 
-However, the nondeterminism in $CI{<}m{>}$ means that it is not a
-function, since there are multiple possible states for the operand
-stack slots that correspond to a non-full $operandStack$.
+However, the nondeterminism in $V{<}\ell{>}S{<}s{>}CI$ means that it
+is not a function, since there are multiple possible states for the
+operand stack slots that correspond to a non-full $operandStack$.
 This means that we cannot directly compute the actions resulting from
 the refinement (since there are multiple possibilities), so we must
 specify how each of the data operations is refined.
@@ -353,16 +414,9 @@ The simulation rules we have omitted here can be found with the rest
 of the compilation rules in Appendix~\ref{compilation-rules-appendix}.
 These, together with the standard laws for distributing simulations
 through \Circus{} constructs, are sufficient to unambiguously define
-the local data refinement to be applied to each method.
-We apply this data refinement on
-line~\ref{algorithm-local-data-refinement}, inside a for loop in which
-we iterate over each method.
-Unlike the introduction of the $stackFrame$ variables, the order in
-which the methods are iterated over does not matter in this case,
-since each has its own $stackFrame$ variable that undergoes local
-refinement.
+the local data refinement to be applied to the method.
 
-After the data refinement of each method, we can eliminate the
+After the data refinement has been applied, we eliminate the
 additional variables used in the data operations that pop values from
 the stack.
 Those that push values to the stack are pushing values received from a
@@ -407,30 +461,24 @@ slot variables whose values they store.
   \label{eliminate-value1-value2-conditional-rule-figure}
 \end{figure}
 
-We can then split the sequence of instructions for each method back
-out into a separate action.
-This happens inside a separate for loop, since all the method data
-refinements must be completed before the methods can be separated out.
-To do this, we must first convert the values passed into the method
-into parameters, by applying
-Rule~[\nameref{method-parameter-introduction-rule}], show in
-Figure~\ref{method-parameter-introduction-rule-figure}.
-This rule eliminates the $poppedArgs$ variable and transforms the
-arguments passed via it into value parameters.
-There are similar rules to handle the cases of virtual methods, where
-there is an additional $getClassIDOf$
-communication:~Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]
-and
-Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}].
-We also provide
-Rule~[\nameref{toplevel-method-parameter-introduction-rule}] to handle
-the introduction of parameters to the method actions in
-$ExecuteMethod$, where the arguments are not popped from the stack but
-obtained from the parameter to $ExecuteMethod$.
-These rules are applied, where necessary, on
+We then convert the method action to include value parameters
+representing the methods action.
+We do this by first replacing every reference to the method with its
+definition, using Law~[\nameref{copy-rule-law}], on
+line~\ref{algorithm-introduce-variables-copy-method-in}.
+The value parameters are then introduced at each point the method is
+called by applying the rules on
 lines~\ref{algorithm-method-parameter-introduction}
-to~\ref{algorithm-toplevel-method-parameter-introduction} of
-Algorithm~\ref{introduce-variables-algorithm}.
+to~\ref{algorithm-toplevel-method-parameter-introduction}.
+These rules handle the introduction of the value parameters in the
+different contexts in which a method action may be called.
+For example, Rule~[\nameref{method-parameter-introduction-rule}],
+shown in Figure~\ref{method-parameter-introduction-rule-figure},
+handles introduction of parameters where a method is called by an
+\texttt{invokespecial} or \texttt{invokestatic} instruction.
+It eliminates the $poppedArgs$ variable and transforms variables it is
+used to initialise into value parameters, with the values passed via
+$poppedArgs$ being passed to those parameters.
 
 \begin{figure}[thp]
   \begin{restatable}[method-parameter-introduction]{crule}{MethodParameterIntroductionRule}
@@ -460,21 +508,51 @@ Algorithm~\ref{introduce-variables-algorithm}.
   \label{method-parameter-introduction-rule-figure}
 \end{figure}
 
-After these transformations of the methods have been completed, the
-sequence of actions that forms each method is the sequence of actions
-within the newly introduced parametrised block, which is the same at
-each place where the method occurs.
-We thus eliminate the method's old action via an application of
-Law~[\nameref{action-intro-law}] and introduce a new action via a
-second application of Law~[\nameref{action-intro-law}].
-The new action is the sequence of actions in the parametrised block
-that forms the body of the method.
-The method is then replaced with a reference to the new action at each
-placed where it occurs, using Law~[\nameref{copy-rule-law}].
-These steps occur on
-lines~\ref{algorithm-efs-eliminate-old-method-action}
-to~\ref{algorithm-local-variables-copy-method-out}, inside a for loop
-that iterates over each method.
+We use
+Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}] and
+Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]
+where a method is called using an \texttt{invokevirtual} instruction,
+for single targets and multiple targets respectively.
+Rule~[\nameref{toplevel-method-parameter-introduction-rule}] is used
+for refining the call of a method in the $ExecuteMethod$ action, where
+the arguments are received from a parameter of $ExecuteMethod$ rather
+than being popped from the stack.
+These rules are similar to
+Rule~[\nameref{method-parameter-introduction-rule}].
+Note that more than one of these rules may apply for a particular
+method, so we do not apply them in a try block.
+
+As in the previous section, we only handle methods that do not return
+a value.
+Handling methods that do return a value would require another set of
+compilation rules, similar to the rules on
+lines~\ref{algorithm-method-parameter-introduction}
+to~\ref{algorithm-toplevel-method-parameter-introduction}, which would
+introduce the value parameters to the method alongside the existing
+result parameter.
+
+After parameters have been introduced at every place the method is
+called, the sequence of actions that forms the method is the newly
+introduced parametrised block, which is the same at each place where
+the method occurs.
+We thus redefine the method's action to this parametrised block,
+eliminating the old action on
+line~\ref{algorithm-efs-eliminate-old-method-action} and introducing
+the new action on
+line~\ref{algorithm-efs-introduce-new-method-action}.
+The each occurrence of the method is then replaced with a reference to
+the new action, using Law~[\nameref{copy-rule-law}], on
+line~\ref{algorithm-local-variables-copy-method-out}.
+
+The final transformation to be performed on the method is to remove
+any actions at the start of a loop before the loop condition is
+checked.
+Such actions cannot be represented in C without the use of the comma
+operator, which is not allowed in MISRA-C.
+The actions are moved, using Law~[\nameref{rec-rolling-rule-law}], so
+that they are before the start of the loop and at the end of the loop
+body.
+This is performed on line~\ref{algorithm-move-loop-start}.
 
 When the variables have been introduced to our example, the
 $TPK\_handleAsyncEvent$ action has the form shown in
@@ -482,12 +560,10 @@ Figure~\ref{efs-localise-stack-frames-example-figure}.
 This code is fairly close to the corresponding C code, and we show the
 whole method, with each statement on a separate line, to emphasise
 that.
-Note that there are still communications with the object manager to
-determine the class of an object, even when the object's class is not
-used because it can be determined uniquely.
-Eliminating such communications requires a wider view of the model
-that includes the object manager, so we defer it until the next stage
-of the compilation strategy.
+Note that the assignments to $stack1$ and $stack2$ before the start of
+the loop are replicated just before the end of the loop, since they
+have been moved by an application of
+Law~[\nameref{rec-rolling-rule-law}].
 
 \begin{figure}[tp!]
   \centering
@@ -500,10 +576,9 @@ of the compilation strategy.
   \setlength{\belowdisplayshortskip}{0pt}
   \begin{circusaction}
     TPK\_handleAsyncEvent \circdef \circval var1 : Word \circspot \\
-    \t1 \circvar var2, var3, var4, var5, var6 : Word \circspot \\
-    \t1 \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
+    \t1 \circvar var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
     \t1 newObject!thread!ConsoleConnectionClassID \\
-    \t2 {} \then newObjectRet!oid \then stack1 := oid \circseq Poll \circseq \\
+    \t2 {} \then  newObjectRet!oid \then stack1 := oid \circseq Poll \circseq \\
     \t1 stack2 := stack1 \circseq Poll \circseq \\
     \t1 stack3 := null \circseq Poll \circseq \\
     \t1 ConsoleConnection\_CCinit(stack2, stack3) \circseq Poll \circseq \\
@@ -518,13 +593,12 @@ of the compilation strategy.
     \t1 var3 := stack1 \circseq Poll \circseq \\
     \t1 stack1 := 0 \circseq Poll \circseq \\
     \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 stack1 := var4 \circseq Poll \circseq \\
+    \t1 stack2 := 10 \circseq Poll \circseq \\
     \t1 \circmu Y \circspot \\
-    \t2 stack1 := var4 \circseq Poll \circseq \\
-    \t2 stack2 := 10 \circseq Poll \circseq \\
     \t2 \circif stack1 \leq stack2 \circthen Poll \circseq \\
     \t3 stack1 := var2 \circseq Poll \circseq \\
-    \t3 getClassIDOf!stack1?cid \\
-    \t4 {} \then ConsoleInput\_read(stack1, stack1) \circseq Poll \circseq \\
+    \t3 getClassIDOf!stack1?cid \then ConsoleInput\_read(stack1, stack1) \circseq Poll \circseq \\
     \t3 TPK\_f(stack1, stack1) \circseq Poll \circseq \\
     \t3 var5 := stack1 \circseq Poll \circseq \\
     \t3 stack1 := var5 \circseq Poll \circseq \\
@@ -532,18 +606,18 @@ of the compilation strategy.
     \t3 \circif stack1 \leq stack2 \circthen Poll \circseq \\
     \t4 stack1 := var3 \circseq Poll \circseq \\
     \t4 stack2 := var5 \circseq Poll \circseq \\
-    \t4 getClassIDOf!stack1?cid \\
-    \t5 {} \then ConsoleOutput\_write(stack1, stack2) \\
+    \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
     \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
     \t4 stack1 := var3 \circseq Poll \circseq \\
     \t4 stack2 := 0 \circseq Poll \circseq \\
-    \t4 getClassIDOf!stack1?cid \\
-    \t5 {} \then ConsoleOutput\_write(stack1, stack2) \\
+    \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
     \t3 \circfi \circseq Poll \circseq \\
     \t3 stack1 := var4 \circseq Poll \circseq \\
     \t3 stack2 := 1 \circseq Poll \circseq \\
     \t3 stack1 := stack1 + stack2 \circseq Poll \circseq \\
-    \t3 var4 := stack1 \circseq Poll \circseq Y \\
+    \t3 var4 := stack1 \circseq Poll \\
+    \t3 stack1 := var4 \circseq Poll \circseq \\
+    \t3 stack2 := 10 \circseq Poll \circseq \circseq Y \\
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
   \end{circusaction}
