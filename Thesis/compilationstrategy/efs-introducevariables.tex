@@ -53,27 +53,11 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
     \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-value-putField-rule}]}{$methodBody$}
     \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value-putStatic-rule}]}{$methodBody$}
     \label{algorithm-apply-eliminate-value-putStatic-rule}
-    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-introduce-variables-copy-method-in}
     \State \ExhaustivelyApply{Rule~[\nameref{method-parameter-introduction-rule}]}
-    \label{algorithm-method-parameter-introduction}
+    \label{algorithm-poppedArgs-elimination}
     \State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}
     \State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}
-    \State \ExhaustivelyApply{Rule~[\nameref{toplevel-method-parameter-introduction-rule}]}
-    \label{algorithm-toplevel-method-parameter-introduction}
-    % introduce and copy out method actions
-    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$}
-    \label{algorithm-efs-eliminate-old-method-action}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, \arraycolsep=0cm
-      $\begin{array}[t]{l}
-         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-         \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-         \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-         \t2 {} \cdots {})(arg_1, \ldots, arg_n)
-       \end{array}$}
-     \label{algorithm-efs-introduce-new-method-action}
-    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-local-variables-copy-method-out}
+    \label{algorithm-multi-poppedArgs-elimination}
     \MatchIn{
       $\circmu X \circspot A \circseq
       \begin{array}[t]{l}
@@ -82,16 +66,40 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
         \circfi
       \end{array}$
      }{\Call{ActionBody}{$methodName$}}
-     \State \ExhaustivelyApplyFor{Law~[\nameref{rec-rolling-rule-law}]}{
+     \State \ExhaustivelyApplyFor{Law~[\nameref{rec-rolling-rule-law}]}{%
+       \arraycolsep=0cm
        $(\lambda X \circspot A \circseq X)$,
        $(\lambda X \circspot
        \begin{array}[t]{l}
          \circif b \circthen B \circseq X \\
          {} \circelse \lnot b \circthen \Skip \\
          \circfi
-       \end{array})$
+       \end{array})$%
      }
      \label{algorithm-move-loop-start}
+    % introduce and copy out method actions
+    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+    \label{algorithm-introduce-variables-copy-method-in}
+    \State \ApplyFor{Rule~[\nameref{argument-variable-elimination-rule}]}{}
+    \label{algorithm-argument-variable-elimination}
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$}
+    \label{algorithm-efs-eliminate-old-method-action}
+    \MatchThen{$\begin{array}[t]{l}
+         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+                  \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+                  \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot A)(arg_1, \ldots, arg_n)
+                \end{array}$}
+              \label{algorithm-efs-match-new-method-action}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, \arraycolsep=0cm
+      $\begin{array}[t]{l}
+         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+         \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t2 A)(arg_1, \ldots, arg_n)
+       \end{array}$}
+     \label{algorithm-efs-introduce-new-method-action}
+    \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+    \label{algorithm-local-variables-copy-method-out}
     \EndFor
   \end{algorithmic}
   \caption{IntroduceVariables}
@@ -461,46 +469,38 @@ slot variables whose values they store.
   \label{eliminate-value1-value2-conditional-rule-figure}
 \end{figure}
 
-We then convert the method action to include value parameters
-representing the methods action.
-We do this by first replacing every reference to the method with its
-definition, using Law~[\nameref{copy-rule-law}], on
-line~\ref{algorithm-introduce-variables-copy-method-in}.
-The value parameters are then introduced at each point the method is
-called by applying the rules on
-lines~\ref{algorithm-method-parameter-introduction}
-to~\ref{algorithm-toplevel-method-parameter-introduction}.
-These rules handle the introduction of the value parameters in the
-different contexts in which a method action may be called.
-For example, Rule~[\nameref{method-parameter-introduction-rule}],
-shown in Figure~\ref{method-parameter-introduction-rule-figure},
-handles introduction of parameters where a method is called by an
-\texttt{invokespecial} or \texttt{invokestatic} instruction.
-It eliminates the $poppedArgs$ variable and transforms variables it is
-used to initialise into value parameters, with the values passed via
-$poppedArgs$ being passed to those parameters.
+We also eliminate the intermediate $poppedArgs$ variable used when
+passing variables to a method.
+This is performed by the rules applied on
+lines~\ref{algorithm-poppedArgs-elimination}
+to~\ref{algorithm-multi-poppedArgs-elimination}, which are applied to
+every method call in $methodBody$.
+These rules eliminate the $poppedArgs$ variable and copies the values
+stored in it into the values passed to the value parameters of the
+called method.
+This can be seen in
+Rule~[\nameref{method-parameter-introduction-rule}], shown in
+Figure~\ref{method-parameter-introduction-rule-figure}, which
+eliminates the $poppedArgs$ variable around method calls arising from
+a \texttt{invokespecial} or \texttt{invokestatic} instruction.
+Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}] and
+Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]
+are similar, but account for the extra $getClassIDOf$ communication
+arising from \texttt{invokevirtual} instructions, handling single
+target and multiple target method calls respectively.
 
 \begin{figure}[thp]
-  \begin{restatable}[method-parameter-introduction]{crule}{MethodParameterIntroductionRule}
+  \begin{restatable}[$poppedArgs$-elimination]{crule}{MethodParameterIntroductionRule}
     \label{method-parameter-introduction-rule}
     \begin{circus}
       \begin{array}{l}
         (\circvar poppedArgs : \seq Word \circspot \\
         poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
-        (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
-        \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-        var1 := poppedArgs~1 \circseq \\
-        \t1 \vdots \\
-        var{<}n{>} := poppedArgs~1 \circseq \\
-        \t1 {} \cdots {})) \\
-        % Remember: Poll starts the \cdots
+        M(poppedArgs~1, \ldots, poppedArgs~n))
       \end{array}
       \circrefines_A
       \begin{array}{l}
-        (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-        \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-        \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-        \t1 {} \cdots {})(arg_1, \ldots, arg_n) \\
+        M(arg_1, \ldots, arg_n)
       \end{array}
     \end{circus}
   \end{restatable}
@@ -508,45 +508,10 @@ $poppedArgs$ being passed to those parameters.
   \label{method-parameter-introduction-rule-figure}
 \end{figure}
 
-We use
-Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}] and
-Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]
-where a method is called using an \texttt{invokevirtual} instruction,
-for single targets and multiple targets respectively.
-Rule~[\nameref{toplevel-method-parameter-introduction-rule}] is used
-for refining the call of a method in the $ExecuteMethod$ action, where
-the arguments are received from a parameter of $ExecuteMethod$ rather
-than being popped from the stack.
-These rules are similar to
-Rule~[\nameref{method-parameter-introduction-rule}].
-Note that more than one of these rules may apply for a particular
-method, so we do not apply them in a try block.
 
-As in the previous section, we only handle methods that do not return
-a value.
-Handling methods that do return a value would require another set of
-compilation rules, similar to the rules on
-lines~\ref{algorithm-method-parameter-introduction}
-to~\ref{algorithm-toplevel-method-parameter-introduction}, which would
-introduce the value parameters to the method alongside the existing
-result parameter.
 
-After parameters have been introduced at every place the method is
-called, the sequence of actions that forms the method is the newly
-introduced parametrised block, which is the same at each place where
-the method occurs.
-We thus redefine the method's action to this parametrised block,
-eliminating the old action on
-line~\ref{algorithm-efs-eliminate-old-method-action} and introducing
-the new action on
-line~\ref{algorithm-efs-introduce-new-method-action}.
-The each occurrence of the method is then replaced with a reference to
-the new action, using Law~[\nameref{copy-rule-law}], on
-line~\ref{algorithm-local-variables-copy-method-out}.
-
-The final transformation to be performed on the method is to remove
-any actions at the start of a loop before the loop condition is
-checked.
+We also move any actions that are at the start of a loop before the
+loop condition is checked.
 Such actions cannot be represented in C without the use of the comma
 operator, which is not allowed in MISRA-C.
 The actions are moved, using Law~[\nameref{rec-rolling-rule-law}], so
@@ -554,16 +519,91 @@ that they are before the start of the loop and at the end of the loop
 body.
 This is performed on line~\ref{algorithm-move-loop-start}.
 
+After these transformations of the method's body, we adjust the
+method's parameters so that the method's arguments are stored directly
+in the local variables of the method rather passed in additional
+argument parameters.
+This is performed by first replacing every call to $methodName$ with
+its definition using Law~[\nameref{copy-rule-law}], on
+line~\ref{algorithm-introduce-variables-copy-method-in}.
+Then, we apply Rule~[\nameref{argument-variable-elimination-rule}] on
+line~\ref{algorithm-argument-variable-elimination}.
+This rule eliminates the parameters $arg1, \ldots, arg{<}n{>}$,
+introduced in Section~\ref{localise-stack-frames-subsection},
+replacing them with the first $n$ local variables,
+$var1, \ldots, var{<}n{>}$.
+
+\begin{figure}[thp]
+  \begin{restatable}[argument-variable-elimination]{crule}{ArgumentVariableEliminationRule}
+    \label{argument-variable-elimination-rule}
+    \begin{circus}
+      \begin{array}{l}
+        (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+        \t1 \circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
+        \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+        \t2 
+        \t2 {} \cdots {})(arg_1, \ldots, arg_n)
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+         \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t2 {} \cdots {})(arg_1, \ldots, arg_n)
+      \end{array}
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{argument-variable-elimination-rule}]}
+  \label{argument-variable-elimination-rule-figure}
+\end{figure}
+
+As in the previous section, we only handle methods that do not return
+a value.
+Handling methods that do return a value would require another
+compilation rule, similar to
+Rule~[\nameref{argument-variable-elimination-rule}], which would
+account for the additional result parameter present in such methods.
+The result parameter would not be replaced with a local variable,
+since it is only used for returning the value and, as such, does not
+map onto a specific local variable.
+The rules on lines~\ref{algorithm-poppedArgs-elimination}
+to~\ref{algorithm-multi-poppedArgs-elimination} would also require
+separate versions to handle the storing of the returned value in the
+calling method.
+
+After the method's parameters have been transformed, we replace the
+definition of the $methodName$ action with the new method body, which
+is the parametrised block created by
+Rule~[\nameref{argument-variable-elimination-rule}].
+The old definition of $methodName$ is eliminated on
+line~\ref{algorithm-efs-eliminate-old-method-action} and the new
+action is obtained by matching the form of the parametrised block on
+line~\ref{algorithm-efs-match-new-method-action} and introducing it on
+line~\ref{algorithm-efs-introduce-new-method-action}.
+The occurrences of the method's body are then replaced with a
+reference to the new action on
+line~\ref{algorithm-local-variables-copy-method-out}.
+
 When the variables have been introduced to our example, the
 $TPK\_handleAsyncEvent$ action has the form shown in
 Figure~\ref{efs-localise-stack-frames-example-figure}.
-This code is fairly close to the corresponding C code, and we show the
-whole method, with each statement on a separate line, to emphasise
-that.
+This code is fairly close to the corresponding C code, shown for
+comparison in Figure~\ref{efs-introduce-variables-c-code-figure}.
 Note that the assignments to $stack1$ and $stack2$ before the start of
 the loop are replicated just before the end of the loop, since they
 have been moved by an application of
 Law~[\nameref{rec-rolling-rule-law}].
+The $Poll$ actions remain present in the \Circus{} code to indicate
+which actions must be atomic.
+As discussed in Section~\ref{cee-final-considerations-section}, this
+is a requirement on how the behaviour of the code is perceived
+externally and so the $Poll$ actions are not evident in the C code of
+the method.
+The $getClassIDOf$ communications are also omitted from the C code,
+since their results are not stored or otherwise used. 
+They are retained in cases where they are used to determine which
+variant of a method to call, though no such cases occur in
+$TPK\_handleAsyncEvent$.
 
 \begin{figure}[tp!]
   \centering
@@ -617,10 +657,67 @@ Law~[\nameref{rec-rolling-rule-law}].
     \t3 stack1 := stack1 + stack2 \circseq Poll \circseq \\
     \t3 var4 := stack1 \circseq Poll \\
     \t3 stack1 := var4 \circseq Poll \circseq \\
-    \t3 stack2 := 10 \circseq Poll \circseq \circseq Y \\
+    \t3 stack2 := 10 \circseq Poll \circseq Y \\
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
   \end{circusaction}
   \caption{$TPK\_handleAsyncEvent$ after its variables have been introduced}
   \label{efs-introduce-variables-example-figure}
+\end{figure}
+
+\begin{figure}[tp!]
+  \centering
+  \setlength{\zedtab}{0.5cm}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedleftsep}{0pt}
+  \setlength{\abovedisplayskip}{0pt}
+  \setlength{\belowdisplayskip}{0pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \begin{lstlisting}[basicstyle=\ttfamily,keywordstyle=\bf,language=C,numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,escapeinside={(*@}{@*)}]
+void TPK_handleAsyncEvent(int32_t var1) {
+  int32_t var2, var3, var4, var5, var6;
+  int32_t stack1, stack2, stack3;
+  stack1 = newObject(ConsoleConnectionClassID);
+  stack2 = stack1;
+  stack3 = 0;
+  ConsoleConnection_CCinit(stack2, stack3);
+  var1 = stack1;
+  stack1 = var1;
+  stack1 = ConsoleConnection_openInputStream(stack1);
+  var2 = stack1;
+  stack1 = var1;
+  stack1 = ConsoleConnection_openOutputStream(stack1);
+  var3 = stack1;
+  stack1 = 0;
+  var4 = stack1;
+  stack1 = var4;
+  stack2 = 10;
+  while (stack1 <= stack2) {
+    stack1 = var2;
+    stack1 = ConsoleInput_read(stack1);
+    stack1 = TPK_f(stack1);
+    var5 = stack1;
+    stack1 = var5;
+    stack2 = 400;
+    if (stack1 <= stack2) {  
+      stack1 = var3;
+      stack2 = var5;
+      ConsoleOutput_write(stack1, stack2);
+    } else {
+      stack1 = var3;
+      stack2 = 0;
+      ConsoleOutput_write(stack1, stack2);
+    }
+    stack1 = var4;
+    stack2 = 1;
+    stack1 = stack1 + stack2;
+    var4 = stack1;
+    stack1 = var4;
+    stack2 = 10;
+  }
+}
+\end{lstlisting}
+  \caption{The code corresponding to $TPK\_handleAsyncEvent$}
+  \label{efs-introduce-variables-c-code-figure}
 \end{figure}

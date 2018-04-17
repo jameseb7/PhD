@@ -522,6 +522,8 @@
 
 \section{Elimination of Frame Stack}
 
+\subsection{Remove Launcher Returns}
+
 \RefineHandleReturnEPCEmptyFrameStackRule*
 
 \begin{restatable}[refine-$HandleReturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleReturnEPCNonemptyFrameStackRule}
@@ -568,9 +570,50 @@
   \end{circus}
 \end{restatable}
 
+\subsection{Localise Stack Frames}
+
 \HandleReturnEPCStackFrameIntroductionRule*
 
-% TODO: need rules for the areturn cases here
+% \begin{restatable}[$InterpreterAreturn$-$stackFrame$-introduction]{crule}{HandleAreturnEPCStackFrameIntroductionRule}
+%   \label{HandleAreturnEPC-stackFrame-introduction-rule}
+%   %\setlength{\zedtab}{0.4cm}
+%   %\setlength{\zedindent}{0pt}
+%   %\setlength{\zedleftsep}{0pt}
+%   If the actions in $A$ operate solely on $last~frameStack$ and do not
+%   change the length of $frameStack$, then
+%   \begin{circus}
+%     \begin{array}{l}
+%       InterpreterNewStackFrame[ \\
+%       \t1 c/class?, \\
+%       \t1 m/methodID?, \\
+%       \t1 args/methodArgs?] \circseq \\
+%       A \circseq \lschexpract InterpreterAreturn1 \rschexpract
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       (\circvar retVal : Word \circspot \\
+%       \t1 (\circvar stackFrame : StackFrameEPC \circspot \\
+%       \t2 \lschexpract [stackFrame' : StackFrameEPC | \\
+%       \t3 args \subseteq stackFrame'.localVariables \land \\
+%       \t3 \# stackFrame'.localVariables = \ell \land \\
+%       \t3 stackFrame'.operandStack = \langle\rangle \land \\
+%       \t3 stackFrame'.frameClass = c \land \\
+%       \t3 stackFrame'.stackSize = s] \rschexpract \circseq \\
+%       \t2 A[stackFrame/last~frameStack, \\
+%       \t3 stackFrame'/last~frameStack'] \circseq \\
+%       \t2 \lschexpract InterpreterPopEPC[ \\
+%       \t3 stackFrame/last~frameStack, \\
+%       \t3 stackFrame'/last~frameStack', \\
+%       \t3 retVal!/value!] \rschexpract) \\
+%       \t1 \lschexpract InterpreterPushEPC[retVal?/value?]  \rschexpract)
+%     \end{array}
+%   \end{circus}
+%   where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
+% \end{restatable}
+
+% TODO: rules for the areturn cases here?
+
+\subsection{Introduce Variables}
 
 \RefinePutfieldSFRule*
 
@@ -853,33 +896,25 @@
 
 \MethodParameterIntroductionRule*
 
-\begin{restatable}[$getClassIDOf$-method-parameter-introduction]{crule}{GetClassIDOfMethodParameterIntroductionRule}
+\begin{restatable}[$getClassIDOf$-$poppedArgs$-elimination]{crule}{GetClassIDOfMethodParameterIntroductionRule}
   \label{getClassIDOf-method-parameter-introduction-rule}
   \begin{circus}
     \begin{array}{l}
       (\circvar poppedArgs : \seq Word \circspot \\
       poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
-      getClassIDOf!(head~poppedArgs)!cid \then {} \\
-      (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
-      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-      var1 := poppedArgs~1 \circseq \\
-      \t1 \vdots \\
-      var{<}n{>} := poppedArgs~1 \circseq \\
-      \t1 {} \cdots {}))
+      getClassIDOf!(head~poppedArgs)!cid \\
+      {} \then M(poppedArgs~1, \ldots, poppedArgs~n))
       % Remember: Poll starts the \cdots
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      getClassIDOf!arg_1!cid \then {} \\
-      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-      \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-      \t1 {} \cdots {})(arg_1, \ldots, arg_n)
+      getClassIDOf!arg_1!cid \\
+      {} \then M(arg_1, \ldots, arg_n))
     \end{array}
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[$getClassIDOf$-multi-method-parameter-introduction]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
+\begin{restatable}[$getClassIDOf$-multi-$poppedArgs$-elimination]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
   \label{getClassIDOf-multi-method-parameter-introduction-rule}
   \begin{circus}
     \begin{array}{l}
@@ -887,61 +922,47 @@
       poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
       getClassIDOf!(head~poppedArgs)!cid \then {} \\
       \circif cid = c_1 \circthen {} \\
-      \t1 (\circvar var1, \ldots, var{<}\ell_1{>} : Word \circspot \\
-      \t1 \circvar stack1, \ldots, stack{<}s_1{>} : Word \circspot \\
-      \t1 var1 := poppedArgs~1 \circseq \\
-      \t2 \vdots \\
-      \t1 var{<}n{>} := poppedArgs~1 \circseq \\
-      \t2 {} \cdots {}))
-      % Remember: Poll starts the \cdots
-      \t1 {} \vdots {} \\
-      {} \circelse cid = c_m \circthen {} \\
-      \t1 (\circvar var1, \ldots, var{<}\ell_m{>} : Word \circspot \\
-      \t1 \circvar stack1, \ldots, stack{<}s_m{>} : Word \circspot \\
-      \t1 var1 := poppedArgs~1 \circseq \\
-      \t2 \vdots \\
-      \t1 var{<}n{>} := poppedArgs~1 \circseq \\
-      \t2 {} \cdots {}))
+      \t1 M_1(poppedArgs~1, \ldots, poppedArgs~n) \\
+      {} \cdots {}
+      \circelse cid = c_m \circthen {} \\
+      \t1 M_m(poppedArgs~1, \ldots, poppedArgs~n) \\
+      \circfi
     \end{array}
     \circrefines_A
     \begin{array}{l}
       getClassIDOf!arg_1!cid \then {} \\
       \circif cid = c_1 \circthen {} \\
-      \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-      \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_1{>}) : Word \circspot \\
-      \t1 \circvar stack1, \ldots, stack{<}s_1{>} : Word \circspot \\
-      \t2 {} \cdots {})(arg_1, \ldots, arg_n))
-      % Remember: Poll starts the \cdots
-      \t1 {} \vdots {} \\
       {} \circelse cid = c_m \circthen {} \\
       \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
       \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_m{>}) : Word \circspot \\
       \t1 \circvar stack1, \ldots, stack{<}s_m{>} : Word \circspot \\
-      \t2 {} \cdots {})(arg_1, \ldots, arg_n))
+      \t2 {} \cdots {})(arg_1, \ldots, arg_n)) \\
+      {} \cdots {} \\
+      \circfi
     \end{array}
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[toplevel-method-parameter-introduction]{crule}{ToplevelMethodParameterIntroductionRule}
-  \label{toplevel-method-parameter-introduction-rule}
-  \begin{circus}
-    \begin{array}{l}
-      (\circvar poppedArgs : \seq Word \circspot \\
-      poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
-      (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
-      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-      var1 := poppedArgs~1 \circseq \\
-      \t1 \vdots \\
-      var{<}n{>} := poppedArgs~1 \circseq \\
-      \t1 {} \cdots {})) \\
-      % Remember: Poll starts the \cdots
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-      \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-      \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-      \t1 {} \cdots {})(arg_1, \ldots, arg_n) \\
-    \end{array}
-  \end{circus}
-\end{restatable}
+% \begin{restatable}[toplevel-$poppedArgs$-elimination]{crule}{ToplevelMethodParameterIntroductionRule}
+%   \label{toplevel-method-parameter-introduction-rule}
+%   \begin{circus}
+%     \begin{array}{l}
+%       (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
+%       \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+%       var1 := methodArgs~1 \circseq \\
+%       \t1 \vdots \\
+%       var{<}n{>} := methodArgs~n \circseq \\
+%       \t1 {} \cdots {})) \\
+%       % Remember: Poll starts the \cdots
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+%       \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+%       \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+%       \t1 {} \cdots {})(methodArgs~1, \ldots, methodArgs~n) \\
+%     \end{array}
+%   \end{circus}
+% \end{restatable}
+
+\ArgumentVariableEliminationRule*

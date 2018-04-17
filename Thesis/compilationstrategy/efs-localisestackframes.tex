@@ -2,17 +2,6 @@ After the $CheckLauncherReturn$ actions have been handled, the process
 no longer has any actions that use the whole $frameStack$.
 We can therefore refine each method to only operate on a local stack
 frame variable.
-% However, we must first remove $frameStackID$ and $currentClass$ from
-% the state.
-% The $frameStackID$ is used in the intepreter model to guard whether
-% the $frameStack$ is allowed to be non-empty, but it should not be
-% present in the C code.
-% Similarly, $currentClass$ is provided as a convenient way of accessing
-% the $frameClass$ of the topmost stack frame, but we need direct access
-% to the stack frame to perform the refinements in the remainder of this
-% stage.
-% We thus perform a data refinement on the process to remove them from
-% the state.
 This is performed as described in
 Algorithm~\ref{localise-stack-frames-algorithm}, which defines the
 procedure \Call{LocaliseStackFrames}{}.
@@ -30,23 +19,28 @@ procedure \Call{LocaliseStackFrames}{}.
     \label{algorithm-localise-stack-frames-copy-in}
     \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
     \State $newMethodBody \gets
-      methodBody\begin{array}[t]{l}[stackFrame/last~frameStack, \\
-      stackFrame'/last~frameStack']
-    \end{array}$ 
-    \State \ExhaustivelyApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$methodBody$}
+    methodBody\begin{array}[t]{l}[stackFrame/last~frameStack, \\
+                stackFrame'/last~frameStack']
+              \end{array}$
+    \State $numArgs \gets$ \Call{MethodArguments}{$methodName$}
+    \State \ExhaustivelyApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$methodBody$, $numArgs$}
     \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
     % TODO: add areturn handling rules
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{methodName, \Call{ActionBody}{methodName}}
     \label{algorithm-localise-stack-frames-method-elimination}
-    \MatchThen{$(\circvar stackFrame : StackFrameEPC \circspot init \circseq newMethodBody)$}
+    \MatchThen{$\begin{array}[t]{l}
+                  (\circval arg1, \ldots, arg{<}numArgs{>} : Word \circspot \\
+                  \t1 \circvar stackFrame : StackFrameEPC \circspot init \circseq newMethodBody)
+                \end{array}$}
     \label{algorithm-localise-stack-frames-method-reintroduction-match}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$,
       $\begin{array}[t]{l}
-         \circvar stackFrame : StackFrameEPC \circspot \\
-         \t4 init \circseq newMethodBody
+         \circval arg1, \ldots, arg{<}numArgs{>} : Word \circspot \\
+         \t1 \circvar stackFrame : StackFrameEPC \circspot \\
+         \t1 init \circseq newMethodBody
        \end{array}$}
      \label{algorithm-localise-stack-frames-method-reintroduction}
-     \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+     \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
      \label{algorithm-localise-stack-frames-copy-out}
     \EndFor
   \end{algorithmic}
@@ -121,17 +115,20 @@ on line~\ref{algorithm-localise-stack-frames-copy-in}.
 A new variable, $stackFrame$, is then introduced via an application of
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}], shown
 in Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
-We apply this rule wherever possible for $methodBody$, the body of
-$methodName$, on
+This rule is applied to two parameters:~$methodBody$, the body of
+$methodName$, and $numArgs$, the number of arguments to the method
+(which is encoded as part of the method identifier, and so can be
+determined during the strategy).
+We apply this rule wherever possible on
 line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 
 \begin{figure}[thp]
-\begin{restatable}[$InterpreterReturn$-$stackFrame$-introduction]{crule}{HandleReturnEPCStackFrameIntroductionRule}
+\begin{restatable}[$Return$-$stackFrame$-introduction]{crule}{HandleReturnEPCStackFrameIntroductionRule}
   \label{HandleReturnEPC-stackFrame-introduction-rule}
   %\setlength{\zedtab}{0.4cm}
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
-  Given a sequence of actions $A$, if $A$ operates solely on
+  Given a sequence of actions $A$ and $n : \nat$, if $A$ operates solely on
   $last~frameStack$ and do not change the length of $frameStack$, then
   \begin{circus}
     \begin{array}{l}
@@ -143,15 +140,19 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      (\circvar stackFrame : StackFrameEPC \circspot \\
-      \t1 \lschexpract [stackFrame' : StackFrameEPC | \\
-      \t2 args \subseteq stackFrame'.localVariables \land \\
+      (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+      \circvar stackFrame : StackFrameEPC \circspot \\
+      \t1 \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
+      \t1 stackFrame' : StackFrameEPC  | \\
+      \t2 \langle arg1?, \ldots, arg{<}n{>}? \rangle \\
+      \t3 {} \subseteq stackFrame'.localVariables \land \\
       \t2 \# stackFrame'.localVariables = \ell \land \\
       \t2 stackFrame'.operandStack = \langle\rangle \land \\
       \t2 stackFrame'.frameClass = c \land \\
       \t2 stackFrame'.stackSize = s] \rschexpract \circseq \\
       \t1 A[stackFrame/last~frameStack, \\
-      \t2 stackFrame'/last~frameStack'])
+      \t2 stackFrame'/last~frameStack'] \\
+      )(args~1, \ldots, args~n)
     \end{array}
   \end{circus}
   where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
@@ -174,9 +175,15 @@ operation that changes the size of $frameStack$ and we replace
 references to the $frameStack$ in nested methods first, by the
 definition of $iterationOrder$.
 
-After the stack frame has been introduced, we redefine the method
-action $methodName$ to correspond to the $stackFrame$ variable block
-introduced by
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] also
+introduces the arguments to the method as value parameters, with their
+values passed into the action initialising the $stackFrame$ variable.
+This ensures that the body of the method is completely independent of
+the context in which it is called, enabling us to separate the whole
+method body (including the initialisation of $stackFrame$) into its
+own action.
+We thus redefine the method action $methodName$ to correspond to the
+parametrised block introduced by
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}].
 This is done using Law~[\nameref{action-intro-law}] to eliminate the
 existing definition on
@@ -196,7 +203,8 @@ Handling such methods would require rules similar to
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] for
 method bodies followed by $InterpreterAreturn1$ and
 $InterpreterAreturn2$, which would introduce a result parameter for
-the method.
+the method in addition to the value parameters representing the
+method's arguments.
 These rules would be applied in a way similar to
 line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}, and
 the introduction of the method action on
@@ -241,21 +249,20 @@ of $last~frameStack$.
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
   \begin{circusaction}
+    TPK\_f \circdef \\
+    \t1 \circval arg1 : Word \circspot \\
     \t1 \circvar stackFrame : StackFrameEPC \circspot \\
-    \t1 \lschexpract [stackFrame' : StackFrameEPC \\
-    \t2 poppedArgs? : \seq Word | \\
-    \t2 poppedArgs? \subseteq stackFrame'.localVariables \land \\
+    \t1 \lschexpract [arg1? : Word; stackFrame' : StackFrameEPC | \\
+    \t2 \langle arg1? \rangle \subseteq stackFrame'.localVariables \land \\
     \t2 \# stackFrame'.localVariables = 6 \land \\
     \t2 stackFrame'.operandStack = \langle\rangle \land \\
     \t2 stackFrame'.frameClass = TPK \land \\
     \t2 stackFrame'.stackSize = 3] \rschexpract \circseq \\
     \t1 Poll \circseq HandleNewSF(27) \circseq Poll \circseq HandleDupSF \circseq Poll \circseq  HandleAconst\_nullSF \circseq Poll \circseq \\
-    % \t1 (\circvar poppedArgs : \seq Word \circspot \\
-    % \t2 \lschexpract \exists argsToPop? == m + 1 @ InvokeSF \rschexpract \circseq \\
-    % \t2 \lschexpract InterpreterNewStackFrame[\\
-    % \t3 ConsoleConnection/class?, CCinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
-    % \t1 ConsoleConnection\_CCinit \circseq \lschexpract InterpreterReturnEPC \rschexpract \circseq Poll \circseq \\
-    %\t1 HandleAstoreEPC(1) \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+    \t1 (\circvar poppedArgs : \seq Word \circspot \\
+    \t2 \lschexpract \exists argsToPop? == 2 @ InvokeSF \rschexpract \circseq \\
+    \t2 ConsoleConnection\_CCinit(poppedArgs~1, poppedArgs~2)) \circseq Poll \circseq \\
+    \t1 HandleAstoreSF(1) \circseq Poll \circseq HandleAloadSF(1) \circseq \\
     \t1 {} \cdots {} \\
     % \t1 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
     % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
@@ -267,31 +274,23 @@ of $last~frameStack$.
     % \t2 ConsoleConnection/class?, openOutputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
     % \t1 Poll \circseq ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq \\
     %\t1 {} \cdots {} \\
-    % \t1 Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq HandleAstoreEPC(4) \circseq Poll \circseq Poll \circseq \circmu Y \circspot \\
-    % \t2 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
-    % \t2 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t2 \circif value1 \leq value2 \circthen \\
-    % \t3 {} \cdots {}  \\
+    \t1 Poll \circseq HandleIconstSF(0) \circseq Poll \circseq HandleAstoreSF(4) \circseq Poll \circseq Poll \circseq \circmu Y \circspot \\
+    \t2 HandleAloadSF(4) \circseq Poll \circseq HandleIconstSF(10) \circseq Poll \circseq \\
+    \t2 \circvar value1, value2 : Word \circspot \\
+    \t3 \lschexpract InterpreterPop2[stackFrame/last~frameStack,stackFrame'/last~frameStack'] \rschexpract \circseq \\
+    \t2 \circif value1 \leq value2 \circthen {} \\
+    \t3 {} \cdots {}  \\
     % Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
     % \t3 (\circvar poppedArgs : \seq Word \circspot \\
     % \t4 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
     % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
     % \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
     % \t3 Poll \circseq ConsoleInput\_read \circseq Poll \circseq \\
-    \t3 (\circvar poppedArgs : \seq Word \circspot \\
-    \t4 \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq \\
-    \t4 \circvar stackFrame : StackFrameEPC \circspot \\
-    \t4 \lschexpract [stackFrame' : StackFrameEPC \\
-    \t5 poppedArgs? : \seq Word | \\
-    \t5 poppedArgs? \subseteq stackFrame'.localVariables \land \\
-    \t5 \# stackFrame'.localVariables = 1 \land \\
-    \t5 stackFrame'.operandStack = \langle\rangle \land \\
-    \t5 stackFrame'.frameClass = TPK \land \\
-    \t5 stackFrame'.stackSize = 2] \rschexpract \circseq \\
-    \t4 Poll \circseq \cdots ) \\
-    % TPK\_f \circseq \lschexpract InterpreterAreturn1 \rschexpract \circseq Poll \circseq \\
+    % \t3 (\circvar poppedArgs : \seq Word \circspot \\
+    % \t4 \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq \\
+    % \t4 TPK\_f()) \circseq \lschexpract InterpreterAreturn1 \rschexpract \circseq Poll \circseq \\
     % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
-    \t3 {} \cdots {} \\
+    % \t3 {} \cdots {} \\
     % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
     % \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleAloadEPC(5) \circseq Poll \circseq \\
     % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
