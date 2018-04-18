@@ -5,9 +5,12 @@ This is performed as described by
 Algorithm~\ref{separate-complete-methods-algorithm}.
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \For{$(methodEntry, methodName) \gets$ \Call{MethodEntriesAndActionNames}{$cs$}} \label{algorithm-method-separation-loop}
+    \State $methods \gets$ \Call{MethodEntriesAndActionNames}{$cs$}
+    \label{algorithm-get-method-entries-and-names}
+    \For{$(methodEntry, methodName) \gets methods$} \label{algorithm-method-separation-loop}
     \If{\Call{MethodIsComplete}{$methodEntry$}} \label{algorithm-check-method-completeness}
     \MatchIn{$\circif {} \cdots {} {} \circelse pc = methodEntry \circthen A {} \cdots {} \circfi$}{\Call{ActionBody}{$Running$}}
+    \label{algorithm-method-separation-match}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, $A$} \label{algorithm-introduce-method-action}
     \State \ApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$} \label{algorithm-copy-method-action}
     \EndIf
@@ -17,22 +20,34 @@ Algorithm~\ref{separate-complete-methods-algorithm}.
   \label{separate-complete-methods-algorithm}
 \end{algorithm}
 
-Algorithm~\ref{separate-complete-methods-algorithm} looks at each
-method separately, as specified by the loop on
-line~\ref{algorithm-method-separation-loop}, and determines if it is
-complete, on line~\ref{algorithm-check-method-completeness}.
-This involves a simple syntactic check that each conditional branch
-ends in a return instruction or a recursion.
-
-For methods that are complete, the sequence of actions for the method
-are placed in a separate action, which is introduced using
-Law~[\nameref{action-intro-law}] on
-line~\ref{algorithm-introduce-method-action}.
+Algorithm~\ref{separate-complete-methods-algorithm} considers each
+method separately.
+The method entry point addresses and names that should be used for
+each method's action are extracted from the class information $cs$ by
+the function \Call{MethodEntriesAndActionNames}{$cs$}, on
+line~\ref{algorithm-get-method-entries-and-names}. 
 The name used for the action does not have an effect upon the
 correctness of the strategy, provided it is unique.
 We adopt the icecap convention and form the name of this action from
 the name of the class to which the method belongs and the name of the
 method, concatenated together with an underscore.
+We then iterate over each method entry point, $methodEntry$, and
+method action name, $methodName$, as specified by the loop on
+line~\ref{algorithm-method-separation-loop}.
+
+For each method, we determine if the sequence of actions beginning at
+$methodEntry$ is complete, on
+line~\ref{algorithm-check-method-completeness}.
+This involves a simple syntactic check that each conditional branch
+ends in a return instruction or a recursion.
+For methods that are complete, the sequence of actions for the method
+are placed in a separate action, which is introduced using
+Law~[\nameref{action-intro-law}] on
+line~\ref{algorithm-introduce-method-action}.
+The body of the action to be introduced is obtained from the sequence
+of instructions at the $pc = methodEntry$ branch of the choice in
+$Running$, as specified by the pattern match on
+line~\ref{algorithm-method-separation-match}.
 Once the method action has been introduced, the sequence of actions at
 the method's entry point in the $Running$ action is replaced with a
 reference to the newly introduced action by applying
