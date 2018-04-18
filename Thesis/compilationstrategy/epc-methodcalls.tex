@@ -5,10 +5,11 @@ This is performed as described by
 Algorithm~\ref{separate-complete-methods-algorithm}.
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \For{$m \gets methods$} \label{algorithm-method-separation-loop}
-    \If{\Call{MethodIsComplete}{$m$}} \label{algorithm-check-method-completeness}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$m$} \label{algorithm-introduce-method-action}
-    \State \ApplyFor{Law~[\nameref{copy-rule-law}]}{$m$} \label{algorithm-copy-method-action}
+    \For{$(methodEntry, methodName) \gets$ \Call{MethodEntriesAndActionNames}{$cs$}} \label{algorithm-method-separation-loop}
+    \If{\Call{MethodIsComplete}{$methodEntry$}} \label{algorithm-check-method-completeness}
+    \MatchIn{$\circif {} \cdots {} {} \circelse pc = methodEntry \circthen A {} \cdots {} \circfi$}{\Call{ActionBody}{$Running$}}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, $A$} \label{algorithm-introduce-method-action}
+    \State \ApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$} \label{algorithm-copy-method-action}
     \EndIf
     \EndFor
   \end{algorithmic}
@@ -60,65 +61,73 @@ In this algorithm, while we indicate the parameters supplied to a rule
 with the word \textbf{for}, as in previous algorithms, we use the word
 \textbf{to} to indicate which part of the $Running$ action the rule is
 applied to.
-In all previous algorithms, the laws are applied to the whole action,
-and so we omit the \textbf{to} clause.
+In all previous algorithms, the laws are applied to the whole
+$Running$ action, and so we omit the \textbf{to} clause.
 \begin{algorithm}[th]
   \begin{algorithmic}[1]
-    \For{$m \gets methods$}
-    \label{algorithm-mci-method-loop} 
-    \For{$mc \gets$ \Call{UnresolvedMethodsCalls}{$m$}}
-    \label{algorithm-mci-method-call-loop}
-    \If{\Call{IsResolvable}{$mc$}}
+    \State $methodCalls \gets$ \Call{UnresolvedMethodCalls}{}
+    \label{algorithm-get-unresolved-method-calls}
+    \For{$methodCallAddress \gets methodCalls$ }
+      % $(methodEntry, methodEnd) \gets$ \Call{MethodEntriesAndEnds}{$cs$}}
+    \label{algorithm-mci-method-loop}
+    %\For{$pcValue \gets methodEntry \upto methodEnd$}
+      %$methodCall \gets$ \Call{UnresolvedMethodsCalls}{$methodEntry$}}
+    %\label{algorithm-mci-method-call-loop}
+    \State $methodCall \gets$ \Call{MethodCallAction}{$methodCallAddress$}
+    \label{algorithm-get-method-call-action}
+    \If{\Call{IsResolvable}{$methodCall$}}
     \label{algorithm-is-resolvable-check}
-    \If{\Call{HasSingleTarget}{$mc$}}
+    \If{\Call{HasSingleTarget}{$methodCall$}}
     \label{algorithm-multiple-targets-check}
     \Try
     \label{algorithm-try-block-begin}
-    \State \ApplyTo{Rule~[\nameref{refine-invokespecial-rule}]}{$mc$}
-    \State \ApplyTo{Rule~[\nameref{refine-invokestatic-rule}]}{$mc$}
-    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-single-rule}]}{$mc$}
+    \State \ApplyTo{Rule~[\nameref{refine-invokespecial-rule}]}{$methodCall$}
+    \State \ApplyTo{Rule~[\nameref{refine-invokestatic-rule}]}{$methodCall$}
+    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-single-rule}]}{$methodCall$}
     \EndTry
     \Try
     \label{algorithm-try-block2-start}
-    \State \ApplyTo{Rule~[\nameref{resolve-special-method-rule}]}{$mc$}
-    \State \ApplyTo{Rule~[\nameref{resolve-special-method-virtual-rule}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$mc$}
-    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-virtual-rule}]}{$mc$}
+    \State \ApplyTo{Rule~[\nameref{resolve-special-method-rule}]}{$methodCall$}
+    \State \ApplyTo{Rule~[\nameref{resolve-special-method-virtual-rule}]}{$methodCall$}
+    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$methodCallAddress$}
+    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-virtual-rule}]}{$methodCallAddress$}
     \EndTry
     \Else
-    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$mc$}
+    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$methodCall$}
     \label{algorithm-refine-invokevirtual-multi}
-    \For{$target \gets $\Call{Targets}{$mc$}}
+    \For{$target \gets $\Call{Targets}{$methodCall$}}
     \label{algorithm-targets-loop}
     \Try
-    \State \ApplyToFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$mc$}{$target$}
-    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$mc$, $target$}
+    \State \ApplyToFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$methodCall$}{$target$}
+    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$methodCall$, $target$}
     \EndTry
     \EndFor
-    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$mc$}
+    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$methodCall$}
     \label{algorithm-move-pc-assignments}
     \EndIf
-    \If{\Call{HasSimpleSequence}{$node$}}
+    \If{\Call{HasSimpleSequence}{$methodCallAddress$}}
     \label{algorithm-mci-sequence-introduction-start}
-    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$node$}
+    \State \ApplyFor{Rule~[\nameref{sequence-introduction-rule}]}{$methodCallAddress$}
     \EndIf
     \label{algorithm-mci-sequence-introduction-end}
     \EndIf
-    \EndFor
     \EndFor
   \end{algorithmic}
   \caption{ResolveMethodCalls}
   \label{resolve-method-calls-algorithm}
 \end{algorithm}
 
-The algorithm begins by checking each unresolved method call in each
-method, as specified by the loops on
-lines~\ref{algorithm-mci-method-loop}
-and~\ref{algorithm-mci-method-call-loop}.
-The list of unresolved method calls for a given method, $m$, is
-computed by \Call{UnresolvedMethodsCalls}{$m$}, which finds the $pc$
-values for which the sequence of instructions ends with a method
-invocation instruction with no $pc$ assignment following it.
+The algorithm operates on each unresolved method call present in the
+choice in $Running$, constructing a list of them on
+line~\ref{algorithm-get-unresolved-method-calls}.
+This list is obtained using a function \Call{UnresolvedMethodCalls}{},
+which finds all the branches in the choice in $Running$ that end with
+a method invocation instruction ($HandleInvokespecialEPC$,
+$HandleInvokestaticEPC$ or $HandleInvokevirtualEPC$).
+The presence of such a method call at the end of a sequence of actions
+indicates that method call has not yet been resolved, since it would
+be followed by a $pc$ assignment and possibly other actions if it had
+been resolved.
 An example of an unresolved method call can be seen in the $pc = 14$
 branch of Figure~\ref{forward-sequence-introduction-example-figure},
 reproduced in part below.
@@ -133,12 +142,20 @@ $36$.
 It is unresolved because it does not have any $pc$ assignment or other
 actions following it.
 
+We iterate over the set of method calls in the for loop beginning on
+line~\ref{algorithm-mci-method-loop}.
+The program address for the sequence of instructions ending in the
+unresolved method call is referred to as $methodCallAddress$, and the
+method call action at the end of the sequence is referred to as
+$methodCall$.
+
+
 For each method call that needs resolving, we check if it can be
 resolved at this point in the compilation strategy.
 This is performed on line~\ref{algorithm-is-resolvable-check}, where
-the boolean value \Call{IsResolvable}{$mc$} is checked.
+the boolean value \Call{IsResolvable}{$methodCall$} is checked.
 \Call{IsResolvable}{$mc$} is true if all the targets of the method
-call $mc$ are either special methods or non-special methods that are
+call $methodCall$ are either special methods or non-special methods that are
 already complete and have been separated into their own actions (as
 described in Algorithm~\ref{separate-complete-methods-algorithm}).
 
@@ -151,8 +168,8 @@ behaviours for each of the possible targets.
 The check of the number of targets is performed on
 line~\ref{algorithm-multiple-targets-check} of
 Algorithm~\ref{resolve-method-calls-algorithm}.
-This uses the condition \Call{HasSingleTarget}{$mc$}, which is true if
-the instruction to be handled is \texttt{invokespecial} or
+This uses the condition \Call{HasSingleTarget}{$methodCall$}, which is
+true if the instruction to be handled is \texttt{invokespecial} or
 \texttt{invokestatic}, or an \texttt{invokevirtual} instruction
 referencing a class with no subclasses (other than itself).
 It is false otherwise, that is, if the instruction is
@@ -257,9 +274,9 @@ communication on the $getClassIDOf$ channel in place, since refinement
 of a single process cannot eliminate channel communications from the
 trace.
 % TODO: is this the right reason for leaving the communication in?
-The communication is eliminated later in the strategy, during the
-\emph{Data Refinement of Objects} stage, described in
-Section~\ref{data-refinement-of-objects-section}.
+% The communication is eliminated later in the strategy, during the
+% \emph{Data Refinement of Objects} stage, described in
+% Section~\ref{data-refinement-of-objects-section}.
 
 After one of the above rules is applied, the method invocation is
 resolved by transforming the $Invoke$ action to the behaviour of the
@@ -640,8 +657,8 @@ This is performed in a way similar to the single method case, but we
 must operate of each branch of the choice separately.
 Thus, we iterate over each branch of the choice in the loop beginning
 on line~\ref{algorithm-targets-loop}, using the function
-\Call{Targets}{$mc$} to obtain a list of the possible targets of the
-method call $mc$.
+\Call{Targets}{$methodCall$} to obtain a list of the possible targets
+of the method call $methodCall$.
 For each target, we apply
 Rule~[\nameref{resolve-special-method-branch-rule}] or
 Rule~[\nameref{resolve-normal-method-branch-rule}].

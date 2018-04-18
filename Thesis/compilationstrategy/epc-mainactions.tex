@@ -12,19 +12,23 @@ Algorithm~\ref{refine-main-actions-algorithm}.
 
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$Running$}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$MainThread$}}{$Running$}
     \label{algorithm-MainThread-expand-Running}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$Running$}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$Started$}}{$Running$}
     \label{algorithm-Started-expand-Running}
-    \State \ApplyTo{Rule~[\nameref{Running-refinement-rule}]}{$MainThread$}
+    \State \ApplyTo{Rule~[\nameref{Running-refinement-rule}]}{\Call{ActionBody}{$MainThread$}}
     \label{algorithm-MainThread-Running-refinement}
-    \State \ApplyTo{Rule~[\nameref{Running-refinement-rule}]}{$Started$}
+    \State \ApplyTo{Rule~[\nameref{Running-refinement-rule}]}{\Call{ActionBody}{$Started$}}
     \label{algorithm-Started-Running-refinement}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$}
+    \MatchIn{$\begin{array}[t]{l}
+                executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+                \t1 {} \then (A)(c, m, a)
+              \end{array}$}{\Call{ActionBody}{$Started$}}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$, $A$}
     \label{algorithm-ExecuteMethod-introduction}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$MainThread$}}{$ExecuteMethod$}
     \label{algorithm-MainThread-copy-ExecuteMethod}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$Started$}}{$ExecuteMethod$}
     \label{algorithm-Started-copy-ExecuteMethod}
   \end{algorithmic}
   \caption{RefineMainActions}

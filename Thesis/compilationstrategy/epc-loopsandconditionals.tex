@@ -7,9 +7,14 @@ complete and has been separated into its own action.
 
 Introducing loops and conditionals is performed as described by
 Algorithm~\ref{introduce-loops-and-conditionals-algorithm}.
-This considers each method individually, as specified by the for loop
-on line~\ref{algorithm-introduce-loops-and-conditionals-method-loop}
-of the algorithm. 
+This considers each method individually, collecting the list of method
+entries from the $cs$ information on
+line~\ref{algorithm-loops-and-conditionals-get-method-entries}, and
+iterating over them in the for loop on
+line~\ref{algorithm-introduce-loops-and-conditionals-method-loop}.
+The program address that forms the entry point of the method under
+consideration in a given iteration of the loop is referred to as
+$methodEntry$.
 The condition on line~\ref{algorithm-no-unresolved-calls-condition}
 ensures that only those methods where all method calls have already
 been resolved undergo loop and conditional introduction.
@@ -23,10 +28,11 @@ other methods in the program.
 % TODO: discussion of accuracy of static recursion detection in
 % conclusions
 
-The \Call{HasNoUresolvedCalls}{$m$} procedure, used in the condition
-on line~\ref{algorithm-no-unresolved-calls-condition}, checks that no
-node in the control flow graph of $m$ ends in a method call, as a way
-of determining whether $m$ has unresolved calls.
+The \Call{HasNoUresolvedCalls}{$methodEntry$} procedure, used in the
+condition on line~\ref{algorithm-no-unresolved-calls-condition},
+checks that no node in the control flow graph beginning at
+$methodEntry$ ends in a method call, as a way of determining whether
+the method has unresolved calls.
 Since method resolution sequences a method call with the instructions
 following it, a method call with nothing following it is a call that
 has not yet been resolved.
@@ -34,11 +40,13 @@ has not yet been resolved.
 %TODO: possibly use try here
 \begin{algorithm}
   \begin{algorithmic}[1]
-    \For{$m \gets methods$}
+    \State $methodEntries \gets$ \Call{MethodEntries}{$cs$}
+    \label{algorithm-loops-and-conditionals-get-method-entries}
+    \For{$methodEntry \gets methodEntries$}
     \label{algorithm-introduce-loops-and-conditionals-method-loop}
-    \If{\Call{HasNoUresolvedCalls}{$m$}}
+    \If{\Call{HasNoUresolvedCalls}{$methodEntry$}}
     \label{algorithm-no-unresolved-calls-condition}
-    \State $cfg \gets$ \Call{MakeMethodControlFlowGraph}{$m$}
+    \State $cfg \gets$ \Call{MakeMethodControlFlowGraph}{$methodEntry$}
     \label{algorithm-make-control-flow-graph2}
     \State $iterationOrder \gets$ \Call{ReverseNodes}{$cfg$}
     \label{algorithm-compute-iteration-order}
@@ -80,11 +88,12 @@ conditionals are introduced in the correct order to properly form
 their bodies.
 This involves constructing a control-flow graph for the method, at
 line~\ref{algorithm-make-control-flow-graph2}.
-The control-flow graph for a method $m$ is created by the procedure
-\Call{MakeMethodControlFlowGraph}{$m$}.
+The control-flow graph for a method beginning at $methodEntry$ is
+created by the procedure
+\Call{MakeMethodControlFlowGraph}{$methodEntry$}.
 This is similar to the \Call{MakeControlFlowGraph}{} procedure used in
-the previous section, but it just constructs the graph
-for a single method, starting at the entry point of that method.
+the previous section, but it just constructs the graph for a single
+method, starting at the $methodEntry$.
 
 The graph for the \texttt{handleAsyncEvent()} method in our example
 (beginning at $pc=7$, its entry point) is shown in

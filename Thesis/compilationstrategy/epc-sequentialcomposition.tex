@@ -2,7 +2,7 @@
   \begin{algorithmic}[1]
     \State $cfg \gets$ \Call{MakeControlFlowGraph}{}
     \label{algorithm-make-control-flow-graph}
-    \For{$node \gets cfg$}
+    \For{$node \gets$ \Call{Nodes}{$cfg$}}
     \label{algorithm-sequence-cfg-loop}
     \While{\Call{HasSimpleSequence}{$node$}}
     \label{algorithm-forward-sequence-condition}
