@@ -1738,61 +1738,106 @@ same as the fields given in $class$.
   \dom fields = class.fields
 \end{schema}      
 
-The state of $ObjMan$ is described by the schema $ObjManState$, shown
-below.
-Its first component is a map, $objects$, from $ObjectID$s to $Object$
-records, storing the actual object data for the program.
-Its second component, $backingStoreMap$, associates backing stores
-with the identifiers of objects stored within them.
-The third component, $backingStoreStacks$, associates to each
-$ThreadID$ a sequence of $BackingStoreID$ values representing the
-backing stores entered by the thread.
-This is required to contain at least one value, since each thread that
-is ready to execute must have a backing store, and those that are not
-should not be in the domain of $backingStoreStacks$.
-$ObjManState$ also stores $rootBS$, a copy of the root backing store
-identifier.
-The final components of $ObjManState$ are used to store the static
-fields of classes.
-The $staticClassFieldsID$ component is of a free type
+The state of $ObjMan$ is separated into three parts.
+The first part, $BackingStoreManager$, shown below, describes the
+layout of the backing stores used to store objects, since the memory
+manager is agnostic to objects and threads.
+Its first component, $backingStoreMap$, maps each $BackingStoreID$ in
+use to an $ObjectID$ set recording which objects are contained in that
+backing store.
+The second component, $backingStoreStacks$, maps $ThreadID$s to
+sequences of $BackingStoreID$s, recording which backing stores a
+thread has entered.
+The sequences must be non-empty since a thread that is in use must
+have a backing store associated with it.
+The third and final component of $BackingStoreManager$ is $rootBS$,
+which stores the identifier of the root backing store.
+\begin{schema}{BackingStoreManager}
+	backingStoreMap : BackingStoreID \pfun \finset ObjectID \\
+	backingStoreStacks : ThreadID \pfun \seq_1 BackingStoreID \\
+	rootBS : BackingStoreID
+\where
+	\dom backingStoreMap = {} \\
+	\t1 \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} \\
+	rootBS \in \dom backingStoreMap
+\end{schema}
+The first conjunct of $BackingStoreManager$'s invariant requires the
+domain of $backingStoreMap$ to be the identifiers of backing stores in
+$backingStoreStacks$, since a backing store that is not in use is
+cleared and so should not have any objects in it.
+The second conjunct requires that $rootBS$ always be in the domain of
+$backingStoreMap$, since that represents immortal memory, which is
+never cleared.
+
+The second part of the state for $ObjMan$ is the schema $ObjectInfo$,
+shown below.
+This contains a map, $objects$, relating each $ObjectID$ in use to the
+$Object$ structure storing the information for the corresponding
+object.
+Its invariant relates the class information for each object to the
+classes in the $cs$ parameter of $ObjMan$.
+It requires that, for each object $obj$ in $objects$, the class
+identifier specified by the $this$ field of the class information for
+$obj$ must be the identifier of one of the classes in $cs$.
+The class information for $obj$ must be the information for the
+corresponding class in $cs$, with its $fields$ set replaced with the
+collected fields all superclasses of that class.
+This replacement of the fields in the invariant ensures field
+inheritance is properly handled.
+\begin{schema}{ObjectInfo}
+	objects : ObjectID \pfun Object
+\where
+	\forall obj : \ran objects @ \exists classID : ClassID @ \\
+	\t1 classID = (thisClassID~obj.class) \land classID \in \dom cs \land \\
+	\t1 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+	\t2 \theta Class = cs~classID \land \\
+	\t2 fields' = {} \\
+	\t3 \bigcup \{ cid : \dom cs | (classID,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+	\t2 obj.class = \theta Class~'
+\end{schema}
+      
+The third part of $ObjMan$'s state is described by the schema
+$StaticFieldsInfo$, shown below, which stores information about the
+static fields of classes.
+Its first component, $staticClassFieldsID$, is of a free type
 $StaticFieldsStructID$, and may be either $Uninitialised$ or
 $Initialised$ with an $ObjectID$ representing the space allocated for
 the static class fields.
 The values of the fields themselves are stored in the
-$staticClassFields$ map.
-\begin{schema}{ObjManState}
-  objects : ObjectID \pfun Object \\
-  backingStoreMap : BackingStoreID \pfun \finset ObjectID \\
-  backingStoreStacks : ThreadID \pfun \seq_1 BackingStoreID \\
-  rootBS : BackingStoreID \\
-  staticClassFieldsID : StaticFieldsStructID \\
-  staticClassFields : (ClassID \cross FieldID) \pfun Word
+$staticClassFields$ map, which relates pairs of class and field
+identifiers to $Word$ values.
+The invariant of $StaticFieldsInfo$ requires that $staticClassFields$
+be empty when $staticClassFieldsID$ is $Uninitialised$, and that it
+must contain every field specified by the $staticFields$ component for
+each class in $cs$ when $staticClassFieldsID$ is $Initialised$.
+\begin{schema}{StaticFieldsInfo}
+	staticClassFieldsID : StaticFieldsStructID \\
+	staticClassFields : (ClassID \cross FieldID) \pfun Word
 \where
-  backingStoreMap \partition \dom objects \cup toSet~staticClassFieldsID \\
-  \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} = \dom backingStoreMap \\
-  rootBS \in \dom backingStoreMap \\
-  staticClassFieldsID = Uninitialised \implies staticClassFields = \{\} \\
-  toSet~staticClassFieldsID \subseteq backingStoreMap~rootBS
+	staticClassFieldsID = Uninitialised \implies staticClassFields = \{\} \\
+	staticClassFieldsID \in \ran Initialised \implies {} \\
+	\t1 \dom staticClassFields = \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \}
 \end{schema}
+
+These three parts are conjoined together to form the schema
+$ObjManState$, shown below, which is the state for $ObjMan$.
+This has an additional invariant, relating the parts together.
 The first conjunct of the invariant requires that the domain of
 $objects$, plus $staticClassFieldsID$ if it is $Initialised$, is
 partitioned by the $ObjectID$ sets given by $backingStoreMap$, so that
 every object is allocated in exactly one backing store.
 This uses a function $toSet$ to convert $staticClassFieldsID$ to a set
 of $ObjectID$s.
-The second conjunct requires that the domain of $backingStoreMap$ be
-the identifiers of backing stores in $backingStoreStacks$, since a
-backing store that is not in use is cleared and so should not have any
-objects in it.
-The third conjunct requires that $rootBS$ always be in the domain of
-$backingStoreMap$, since that represents immortal memory, which is
-never cleared.
-Combined with the second conjunct, this implies that at least one
-thread must have entered the $rootBS$ at all times.
-The fourth conjunct ensures that $staticClassFields$ does not contain
-any fields until $staticClassFieldsID$ is $Initialised$.
-Finally, the fifth conjunct requires that $staticClassFieldsID$ must
-be in the root backing store.
+The second conjunct requires that the $staticClassFieldsID$, if it is
+$Initialised$, must be in the root backing store, $rootBS$.
+Combined with the invariant of, this implies that at least one thread
+must have entered the $rootBS$ at all times.
+\begin{schema}{ObjManState}
+	BackingStoreManager; ObjectInfo; StaticFieldsInfo
+\where
+	backingStoreMap \partition \dom objects \cup toSet~staticClassFieldsID \\
+	toSet~staticClassFieldsID \subseteq backingStoreMap~rootBS
+\end{schema}
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
 This operation takes the identifier of the root backing store as an
