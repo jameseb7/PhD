@@ -2026,14 +2026,18 @@ that they can be allocated in the correct backing store.
 The definition of the $NewObject$ action is shown below.
 It determines the $class$ information for the new object using the
 data operation $GetObjectClassInfo$, which looks up the class
-identifier communicated on the $newObject$ channel in the $cs$ map, and
-replaces its $fields$ with the union of its $fields$ and those of its
-superclasses, to account for field inheritance.
-The space for the object is then allocated by communicating with the
-memory manager in much the same way as in $AllocateStaticFields$,
-except that the size required for the object is computed from the
-$class$ information returned by $GetObjectClassInfo$, via a
-$sizeOfObject$ function.
+identifier communicated on the $newObject$ channel in the $cs$ map,
+and replaces its $fields$ with the union of its $fields$ and those of
+its superclasses, to account for field inheritance.
+The space for the object is then allocated in the action
+$AllocateObject$, also used by $AllocateStaticFields$, which
+communicates with the memory manager on the $MMallocateMemory$ and
+$MMallocateMemoryRet$ channels.
+The backing store used is the last backing store in
+$backingStoreStacks$ for $thread$ and size required for the object is
+computed from the $class$ information returned by
+$GetObjectClassInfo$, via a $sizeOfObject$ function.
+The idenitifier of the new object is stored in $objectID$.
 After a successful allocation, the object is added to the $objects$
 map with its fields initialised to $null$, in $ObjManObjectInit$, and
 the object's identifier is returned via $newObjectRet$.
@@ -2041,11 +2045,8 @@ the object's identifier is returned via $newObjectRet$.
   NewObject \circdef \circvar thread : ThreadID; classID : ClassID \circspot \\
   \t1 \circvar objectID : ObjectID; class : Class \circspot \\
   \t1 newObject?t?c \then thread, classID := t, c \circseq \lschexpract GetObjectClassInfo \rschexpract \circseq \\
-  \t1 MMallocateMemory!(last~(backingStoreStacks~thread))!(sizeOfObject~class) \then {} \\
-  \t1 MMallocateMemoryRet?objectID \then {} \\
-  \t2 (MMreport?r \prefixcolon (r = MMokay) \then \lschexpract ObjManObjectInit \rschexpract \circseq \\
-  \t3 newObjectRet!objectID \then \Skip \\
-  \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) 
+  \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+  \t1 \lschexpract ObjManObjectInit \rschexpract \circseq newObjectRet!objectID \then \Skip
 \end{circusaction}
 
 We omit the definitions of the other actions of $Loop$ here. 
