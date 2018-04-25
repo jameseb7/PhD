@@ -11,47 +11,33 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
   \begin{algorithmic}[1]
     \For{$methodName \gets$ \Call{MethodNames}{$cs$}}
     \label{algortihm-introduce-variables-loop}
-    \State $methodBody \gets $ \Call{ActionBody}{$methodName$}
-    \State \Call{IntroduceFrameClassAssumptions}{$methodBody$}
+    \State \Call{IntroduceFrameClassAssumptions}{{\Call{ActionBody}{$methodName$}}}
     \label{algorithm-introduce-frameClass-assumptions}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-PutfieldSF-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-PutfieldSF-rule}]}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-apply-refine-PutfieldSF}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetfieldSF-rule}]}{$methodBody$}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-PutstaticSF-rule}]}{$methodBody$}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetstaticSF-rule}]}{$methodBody$}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-NewSF-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetfieldSF-rule}]}{\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-PutstaticSF-rule}]}{\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetstaticSF-rule}]}{\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-NewSF-rule}]}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-apply-refine-NewSF}
     % introduce operand stack assumptions
-    \State \Call{IntroduceOperandStackAssumptions}{$methodBody$}
+    \State \Call{IntroduceOperandStackAssumptions}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-introduce-operandStack-assumptions}
-    % \For{$methodName \gets $ \Call{MethodActionNames}{$cs$}}
-    % \label{algorithm-introduce-variables-loop}
-    % \MatchIn{$\begin{array}[t]{l}
-    %      (\circvar stackFrame : StackFrameEPC \circspot \\
-    %      \t1 \lschexpract [stackFrame' : StackFrameEPC | \\
-    %      \t2 args \subseteq stackFrame'.localVariables \land \\
-    %      \t2 \# stackFrame'.localVariables = \ell \land \\
-    %      \t2 stackFrame'.operandStack = \langle\rangle \land \\
-    %      \t2 stackFrame'.frameClass = c \land \\
-    %      \t2 stackFrame'.stackSize = s] \rschexpract \circseq A)
-    %    \end{array}$}{
-    % }
-    \State {\bf exhaustively apply}
+    \State {\bf apply}
     \label{algorithm-local-data-refinement}
-    \Statex $\t1${Law~[\nameref{forwards-data-refinement-law}]}
+   {Law~[\nameref{forwards-data-refinement-law}]}
     ({\arraycolsep=0cm
       $\begin{array}[t]{l}
          [var1, \ldots, var{<}\ell{>} : Word;\\
           stack1, \ldots, stack{<}s{>} : Word]
        \end{array}$,
        $V{<}\ell{>}S{<}s{>}CI$})
-     \Statex $\t1${\bf to} {$methodBody$}
-    % \EndFor
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}{$methodBody$}
+     \Statex $\t1${\bf to} {\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-apply-eliminate-value1-value2-conditional-rule}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-getField-rule}]}{$methodBody$}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-value-putField-rule}]}{$methodBody$}
-    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value-putStatic-rule}]}{$methodBody$}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-getField-rule}]}{\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-value-putField-rule}]}{\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value-putStatic-rule}]}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-apply-eliminate-value-putStatic-rule}
     \State \ExhaustivelyApply{Rule~[\nameref{method-parameter-introduction-rule}]}
     \label{algorithm-poppedArgs-elimination}
@@ -77,29 +63,68 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
        \end{array})$%
      }
      \label{algorithm-move-loop-start}
-    % introduce and copy out method actions
-    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-introduce-variables-copy-method-in}
-    \State \ApplyFor{Rule~[\nameref{argument-variable-elimination-rule}]}{}
-    \label{algorithm-argument-variable-elimination}
-    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$}
-    \label{algorithm-efs-eliminate-old-method-action}
-    \MatchThen{$\begin{array}[t]{l}
+
+     
+     % convert local vars to parameters
+     \State \ApplyTo{Rule~[\nameref{var-parameter-conversion-rule}]}{\Call{ActionBody}{$methodName$}}
+     \label{algorithm-var-parameter-conversion}
+     % introduce new method action
+     \MatchIn{$%
+       \begin{array}[t]{l}
          (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-                  \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-                  \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot A)(arg_1, \ldots, arg_n)
-                \end{array}$}
-              \label{algorithm-efs-match-new-method-action}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, \arraycolsep=0cm
-      $\begin{array}[t]{l}
+         \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t1 A)(arg_1, \ldots, arg_n)
+       \end{array}$
+     }{\Call{ActionBody}{$methodName$}}
+     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, $%
+       \begin{array}[t]{l}
          (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-         \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-         \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-         \t2 A)(arg_1, \ldots, arg_n)
-       \end{array}$}
-     \label{algorithm-efs-introduce-new-method-action}
-    \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-local-variables-copy-method-out}
+         \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t1 A)(arg_1, \ldots, arg_n)
+       \end{array}$
+     }
+     \label{algorithm-introduce-variables-method-action-intro}
+     % copy out new method action
+     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName$}}{$methodName'$}
+     \label{algorithm-introduce-variables-copy-method-out}
+     % expand old method action
+     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+     \label{algorithm-introduce-variables-copy-method-in}
+     % remove old method method action
+     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, \Call{ActionBody}{$methodName$}}
+     \label{algorithm-introduce-variables-method-elim}
+     % rename new method action
+     \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
+     \label{algorithm-introduce-variables-rename-method}
+     % remove unnecessary parameters
+     \State \ApplyFor{Rule~[\nameref{argument-variable-elimination-rule}]}{$methodName$}
+     \label{algorithm-argument-variable-elimination}
+
+     
+     %\State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+    % \label{algorithm-introduce-variables-copy-method-in}
+    % \State \ApplyFor{Rule~[\nameref{argument-variable-elimination-rule}]}{}
+    % \label{algorithm-argument-variable-elimination}
+    % \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$}
+    % \label{algorithm-efs-eliminate-old-method-action}
+    % \MatchThen{$\begin{array}[t]{l}
+    %      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+    %               \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+    %               \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot A)(arg_1, \ldots, arg_n)
+    %             \end{array}$}
+    %           \label{algorithm-efs-match-new-method-action}
+    % \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, \arraycolsep=0cm
+    %   $\begin{array}[t]{l}
+    %      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+    %      \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+    %      \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+    %      \t2 A)(arg_1, \ldots, arg_n)
+    %    \end{array}$}
+    %  \label{algorithm-efs-introduce-new-method-action}
+    % \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+    % \label{algorithm-local-variables-copy-method-out}
     \EndFor
   \end{algorithmic}
   \caption{IntroduceVariables}
@@ -111,7 +136,7 @@ the method actions in turn on
 line~\ref{algortihm-introduce-variables-loop}, determining the names
 of the actions from $cs$ via the function \Call{MethodNames}{}.
 Within this loop we refer to the name of the method action under
-consideration as $methodName$ and its body as $methodBody$.
+consideration as $methodName$.
 Unlike the introduction of the $stackFrame$ variables, the order in
 which the methods are iterated over does not matter when introducing
 variables, since each has its own $stackFrame$ variable that undergoes
@@ -122,8 +147,9 @@ the $frameClass$ component of the $stackFrame$, which is removed in
 the data refinement.
 This is done by first introducing and distributing assumptions stating
 the value of $frameClass$, indicated by the procedure
-\Call{IntroduceFrameClassAssumptions}{$methodBody$} on
-line~\ref{algorithm-introduce-frameClass-assumptions}.
+\Call{IntroduceFrameClassAssumptions}{} on
+line~\ref{algorithm-introduce-frameClass-assumptions}, which is
+applied to the body of $methodName$.
 This introduces an assumption from the schema action initialising
 $stackFrame$, using Law~[\nameref{schema-assump-intro-law}], and
 distributes it using standard refinement laws.
@@ -220,7 +246,7 @@ we are always able to distribute well-defined assumptions about the
 $operandStack$ size.
 We perform the introduction of $operandStack$ size assumptions in this
 way in the procedure
-\Call{IntroduceOperandStackAssumptions}{$methodBody$}, on
+\Call{IntroduceOperandStackAssumptions}{}, on
 line~\ref{algorithm-introduce-operandStack-assumptions}.
 
 After an $operandStack$ assumption has been introduced before each
@@ -265,7 +291,7 @@ stack slots, $stack1$ to $stack{<}s{>}$, but only if $operandStack$ is
 long enough to contain such a value.
 The values of the stack slots outside the length of the $operandStack$
 at each point in the program are left nondeterministic, since they are
-not used until they have been intialised with the correct value.
+not used until they have been initialised with the correct value.
 This nondeterminism allows us to avoid introducing unnecessary
 assignments to initialise the stack slots and return them to a default
 value when they are no longer used, which would be required if we
@@ -385,7 +411,7 @@ The passing of the arguments to the invoked method has already been
 refined in the introduction of the $stackFrame$ variable, but the
 schema initialising $stackFrame$ must be further refined to initialise
 the local variables.
-The simulation of the $stackFrame$ intialisation schema is stated by
+The simulation of the $stackFrame$ initialisation schema is stated by
 Rule~[\nameref{stackFrame-init-simulation-rule}], shown in
 Figure~\ref{stackFrame-init-simulation-rule-figure}.
 It is simulated by a sequence of assignments setting the local
@@ -399,8 +425,9 @@ arbitrary.
     \label{stackFrame-init-simulation-rule}
     \begin{circus}
       \begin{array}{l}
-        \lschexpract [stackFrame' : StackFrameEPC | \\
-        \t1 args \subseteq stackFrame'.localVariables \land \\
+        \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
+        \t1 stackFrame' : StackFrameEPC | \\
+        \t1 \langle arg_1, \ldots, arg_n \rangle \subseteq stackFrame'.localVariables \land \\
         \t1 \# stackFrame'.localVariables = \ell \land \\
         \t1 stackFrame'.operandStack = \langle\rangle \land \\
         \t1 stackFrame'.frameClass = c \land \\
@@ -408,9 +435,9 @@ arbitrary.
       \end{array}
       \circsimulates
       \begin{array}{l}
-        var{<}1{>} := args~1 \circseq \\
+        var{<}1{>} := arg_1 \circseq \\
         \t1 \vdots \\
-        var{<}\# args{>} := args~(\# args)
+        var{<}n{>} := arg_n
       \end{array}
     \end{circus}
   \end{restatable}
@@ -442,7 +469,7 @@ replacing the references to them in the conditional with the stack
 slot variables whose values they store.
 
 \begin{figure}
-  \begin{restatable}[eliminate-$value1$-$value2$-conditional]{crule}{EliminateValueOneValueTwoConditional}
+  \begin{restatable}[cond-$value1$-$value2$-elim]{crule}{EliminateValueOneValueTwoConditional}
     \label{eliminate-value1-value2-conditional-rule}
     \begin{circus}
       \begin{array}{l}
@@ -474,7 +501,7 @@ passing variables to a method.
 This is performed by the rules applied on
 lines~\ref{algorithm-poppedArgs-elimination}
 to~\ref{algorithm-multi-poppedArgs-elimination}, which are applied to
-every method call in $methodBody$.
+every method call in the body of $methodName$.
 These rules eliminate the $poppedArgs$ variable and copies the values
 stored in it into the values passed to the value parameters of the
 called method.
@@ -490,7 +517,7 @@ arising from \texttt{invokevirtual} instructions, handling single
 target and multiple target method calls respectively.
 
 \begin{figure}[thp]
-  \begin{restatable}[$poppedArgs$-elimination]{crule}{MethodParameterIntroductionRule}
+  \begin{restatable}[$poppedArgs$-elim]{crule}{MethodParameterIntroductionRule}
     \label{method-parameter-introduction-rule}
     \begin{circus}
       \begin{array}{l}
@@ -508,8 +535,6 @@ target and multiple target method calls respectively.
   \label{method-parameter-introduction-rule-figure}
 \end{figure}
 
-
-
 We also move any actions that are at the start of a loop before the
 loop condition is checked.
 Such actions cannot be represented in C without the use of the comma
@@ -523,33 +548,82 @@ After these transformations of the method's body, we adjust the
 method's parameters so that the method's arguments are stored directly
 in the local variables of the method rather passed in additional
 argument parameters.
-This is performed by first replacing every call to $methodName$ with
-its definition using Law~[\nameref{copy-rule-law}], on
-line~\ref{algorithm-introduce-variables-copy-method-in}.
-Then, we apply Rule~[\nameref{argument-variable-elimination-rule}] on
-line~\ref{algorithm-argument-variable-elimination}.
-This rule eliminates the parameters $arg1, \ldots, arg{<}n{>}$,
-introduced in Section~\ref{localise-stack-frames-subsection},
-replacing them with the first $n$ local variables,
-$var1, \ldots, var{<}n{>}$.
+First, we make the first $n$ local variables into parameters using
+Rule~[\nameref{var-parameter-conversion-rule}], shown in
+Figure~\ref{var-parameter-conversion-rule-figure}.
+This matches the \Circus{} variable blocks representing local
+variables and stack slots, along with the assignments initialising the
+first $n$ local variables.
+The rule moves these assignments and, using the definition of value
+parameter, converts them into instantiations of value parameters.
+This is applied to the method's action on
+line~\ref{algorithm-var-parameter-conversion}.
+
+\begin{figure}[thp]
+  \begin{restatable}[$var$-parameter-conversion]{crule}{VarParameterConversionRule}
+    \label{var-parameter-conversion-rule}
+    \begin{circus}
+      \begin{array}{l}
+        (\circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
+        \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+        \t1 var1 := arg1 \circseq \\
+        \t1 \cdots \\
+        \t1 var{<}n{>} := arg{<}n{>} \circseq \\
+        \t1 A)
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        (\circval var1, \ldots var{<}n{>} : Word \circspot \\
+        \circvar var{<}n+1{>}, \ldots, var{<}\ell{>} : Word \circspot \\
+        \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+        \t1 A)(arg1, \ldots, arg{<}n{>})
+      \end{array}
+    \end{circus}
+  \end{restatable}  
+  \caption{Rule~[\nameref{var-parameter-conversion-rule}]}
+  \label{var-parameter-conversion-rule-figure}
+\end{figure}
+
+After local variables have been converted into arguments, we separate
+the new parametrised block into its own action, so that the redundant
+argument parameters $arg1, \ldots, arg{<}n{>}$ can be eliminated.
+This is performed by first introducing a temporary action
+$methodName'$ containing the parametrised block created by
+Rule~[\nameref{var-parameter-conversion-rule}], via an application of
+Law~[\nameref{action-intro-law}] on
+line~\ref{algorithm-introduce-variables-method-action-intro}.
+The parametrised block in the old method action, $methodName$, is then
+replaced with a reference to $methodName'$ on
+line~\ref{algorithm-introduce-variables-copy-method-out}.
+The old method action is then replaced with its definition everywhere
+it occurs, on line~\ref{algorithm-introduce-variables-copy-method-in},
+and the old method is eliminated on
+line~\ref{algorithm-introduce-variables-method-elim}.
+The new method action can then be renamed to $methodName$ via an
+application of Law~[\nameref{action-rename-law}] on
+line~\ref{algorithm-introduce-variables-rename-method}.
+
+After this, the argument parameters $arg1, \ldots, arg{<}n{>}$ are
+outside the method action and can be eliminated by application of
+Rule~[\nameref{argument-variable-elimination-rule}], shown in
+Figure~\ref{argument-variable-elimination-rule-figure}.
+This rule takes the name of the method action as a parameter and
+eliminates the argument parameters around the call to the method
+action, passing their values directly to the method action.
+It is applied on line~\ref{algorithm-argument-variable-elimination}
 
 \begin{figure}[thp]
   \begin{restatable}[argument-variable-elimination]{crule}{ArgumentVariableEliminationRule}
     \label{argument-variable-elimination-rule}
+    Given an action name $M$,
     \begin{circus}
       \begin{array}{l}
         (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
-        \t1 \circvar var1, \ldots, var{<}\ell{>} : Word \circspot \\
-        \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-        \t2 
-        \t2 {} \cdots {})(arg_1, \ldots, arg_n)
+        \t1 M(arg1, \ldots, arg{<}n{>}))(arg_1, \ldots, arg_n)
       \end{array}
       \circrefines_A
       \begin{array}{l}
-        (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-         \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-         \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-         \t2 {} \cdots {})(arg_1, \ldots, arg_n)
+        M(arg_1, \ldots, arg_n)
       \end{array}
     \end{circus}
   \end{restatable}
@@ -559,30 +633,20 @@ $var1, \ldots, var{<}n{>}$.
 
 As in the previous section, we only handle methods that do not return
 a value.
-Handling methods that do return a value would require another
-compilation rule, similar to
+Handling methods that do return a value would require additional
+compilation rules, similar to
+Rule~[\nameref{var-parameter-conversion-rule}] and
 Rule~[\nameref{argument-variable-elimination-rule}], which would
 account for the additional result parameter present in such methods.
 The result parameter would not be replaced with a local variable,
 since it is only used for returning the value and, as such, does not
 map onto a specific local variable.
+It would instead, be simply moved to be grouped with the local
+variable parameters.
 The rules on lines~\ref{algorithm-poppedArgs-elimination}
 to~\ref{algorithm-multi-poppedArgs-elimination} would also require
 separate versions to handle the storing of the returned value in the
 calling method.
-
-After the method's parameters have been transformed, we replace the
-definition of the $methodName$ action with the new method body, which
-is the parametrised block created by
-Rule~[\nameref{argument-variable-elimination-rule}].
-The old definition of $methodName$ is eliminated on
-line~\ref{algorithm-efs-eliminate-old-method-action} and the new
-action is obtained by matching the form of the parametrised block on
-line~\ref{algorithm-efs-match-new-method-action} and introducing it on
-line~\ref{algorithm-efs-introduce-new-method-action}.
-The occurrences of the method's body are then replaced with a
-reference to the new action on
-line~\ref{algorithm-local-variables-copy-method-out}.
 
 When the variables have been introduced to our example, the
 $TPK\_handleAsyncEvent$ action has the form shown in

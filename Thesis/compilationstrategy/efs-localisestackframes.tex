@@ -15,33 +15,37 @@ procedure \Call{LocaliseStackFrames}{}.
     \label{algorithm-method-dependency-order-call}
     \For{$methodName \gets iterationOrder$}
     \label{algorithm-localise-stack-frames-loop}
-    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-localise-stack-frames-copy-in}
-    \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
-    \State $newMethodBody \gets
-    methodBody\begin{array}[t]{l}[stackFrame/last~frameStack, \\
-                stackFrame'/last~frameStack']
-              \end{array}$
     \State $numArgs \gets$ \Call{MethodArguments}{$methodName$}
-    \State \ExhaustivelyApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$methodBody$, $numArgs$}
-    \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
-    % TODO: add areturn handling rules
-    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{methodName, \Call{ActionBody}{methodName}}
-    \label{algorithm-localise-stack-frames-method-elimination}
-    \MatchThen{$\begin{array}[t]{l}
-                  (\circval arg1, \ldots, arg{<}numArgs{>} : Word \circspot \\
-                  \t1 \circvar stackFrame : StackFrameEPC \circspot init \circseq newMethodBody)
-                \end{array}$}
-    \label{algorithm-localise-stack-frames-method-reintroduction-match}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$,
+    \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
+    \State \ExhaustivelyApplyFor{Rule~[\nameref{arguments-introduction-rule}]}{$methodName$, $numArgs$}
+    \label{algorithm-arguments-introduction}
+    \MatchThen{%
       $\begin{array}[t]{l}
-         \circval arg1, \ldots, arg{<}numArgs{>} : Word \circspot \\
-         \t1 \circvar stackFrame : StackFrameEPC \circspot \\
-         \t1 init \circseq newMethodBody
+         (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+         \t1 \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+         \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+         \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)(args~1, \ldots, args~n)
        \end{array}$}
-     \label{algorithm-localise-stack-frames-method-reintroduction}
-     \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-     \label{algorithm-localise-stack-frames-copy-out}
+     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, %
+       $\begin{array}[t]{l}
+          (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+          \t1 \lschexpract \exists methodArgs? \\
+          \t3 {} == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+          \t2 InterpreterNewStackFrame[ \\
+          \t3 c/class?, m/methodID?] \rschexpract \circseq \\
+          \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)
+        \end{array}$}
+        \label{algorithm-localise-stack-frames-new-method-action}
+      \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName'$}
+      \label{algorithm-localise-stack-frames-copy-out}
+      \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName'$}}{$methodName$}
+      \label{algorithm-localise-stack-frames-copy-in}
+      \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
+      \label{algorithm-localise-stack-frames-method-elim}
+      \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
+      \label{algorithm-localise-stack-frames-method-rename}
+      \State \ApplyToFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{\Call{ActionBody}{$methodName$}}{$numArgs$}
+      \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
     \EndFor
   \end{algorithmic}
   \caption{LocaliseStackFrames}
@@ -109,38 +113,110 @@ Algorithm~\ref{localise-stack-frames-algorithm}.
 We then loop, introducing a stack frame variable for each method in
 the order specified by $iterationOrder$, in the for loop on
 line~\ref{algorithm-localise-stack-frames-loop}.
-Within the for loop, for a method action name $methodName$, we expand
-all occurrences of $methodName$ using Law~[\nameref{copy-rule-law}],
-on line~\ref{algorithm-localise-stack-frames-copy-in}.
-A new variable, $stackFrame$, is then introduced via an application of
-Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}], shown
-in Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
-This rule is applied to two parameters:~$methodBody$, the body of
-$methodName$, and $numArgs$, the number of arguments to the method
-(which is encoded as part of the method identifier, and so can be
-determined during the strategy).
-We apply this rule wherever possible on
+Within the for loop, we first introduce value parameters, representing
+the arguments to the method, around the call to the method action.
+This ensures that the body of the method is completely independent of
+the context in which it is called, enabling us to separate the whole
+method body (including stack frame creation and return actions) into
+its own action.
+Introduction of method arguments is performed using
+Rule~[\nameref{arguments-introduction-rule}], shown in
+Figure~\ref{arguments-introduction-rule-figure}.
+This rule is applied to two parameters:~$methodName$, the name of the
+method being considered, and $numArgs$, the number of arguments to the
+method (which is encoded as part of the method identifier, and so can
+be determined during the strategy).
+We apply this rule everywhere it applies on
 line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 
 \begin{figure}[thp]
-\begin{restatable}[$Return$-$stackFrame$-introduction]{crule}{HandleReturnEPCStackFrameIntroductionRule}
-  \label{HandleReturnEPC-stackFrame-introduction-rule}
+\begin{restatable}[$Return$-arguments-intro]{crule}{ArgumentsIntroductionRule}
+  \label{arguments-introduction-rule}
   %\setlength{\zedtab}{0.4cm}
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
-  Given a sequence of actions $A$ and $n : \nat$, if $A$ operates solely on
-  $last~frameStack$ and do not change the length of $frameStack$, then
+  Given an action name $M$ and $n : \nat$,
   \begin{circus}
     \begin{array}{l}
-      InterpreterNewStackFrame[ \\
+      \lschexpract InterpreterNewStackFrame[ \\
       \t1 c/class?, \\
       \t1 m/methodID?, \\
-      \t1 args/methodArgs?] \circseq \\
-      A \circseq \lschexpract InterpreterReturn \rschexpract
+      \t1 args/methodArgs?] \rschexpract \circseq \\
+      M \circseq \lschexpract InterpreterReturn \rschexpract
     \end{array}
     \circrefines_A
     \begin{array}{l}
       (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+      \t1 \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[ \\
+      \t3 c/class?, \\
+      \t3 m/methodID?] \rschexpract \circseq \\
+      \t1 M \circseq \lschexpract InterpreterReturn \rschexpract \\
+      )(args~1, \ldots, args~n)
+    \end{array}
+  \end{circus}
+  where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
+\end{restatable}
+\caption{Rule~[\nameref{arguments-introduction-rule}]}
+\label{arguments-introduction-rule-figure}
+\end{figure}
+
+Rule~[\nameref{arguments-introduction-rule}] introduces value
+parameters representing method arguments around a method ending with
+an $InterpreterReturn$ operation.
+The arguments array passed into the $methodArgs$ input of
+$InterpreterNewStackFrame$ is split into its individual elements,
+which are passed into the parameters and recombined to be passed into
+$InterpreterNewStackFrame$.
+This splitting of the array ensures that the individual arguments can
+be more easily handled in the next step, where we introduce local
+variables.
+
+After the method arguments have been introduced, we redefine the
+method action to include the value parameters representing those
+arguments.
+That is performed by first introducing a temporary method action,
+$methodName'$, matching the parametrised block around the call to
+$methodName$, via an application of Law~[\nameref{action-intro-law}]
+on line~\ref{algorithm-localise-stack-frames-new-method-action}.
+The occurrences of the body of $methodName'$ are replaced with a
+reference to the new action using Law~[\nameref{copy-rule-law}] on
+line~\ref{algorithm-localise-stack-frames-copy-out}.
+The occurrence of $methodName$ in the body of $methodName'$ is then
+expanded using Law~[\nameref{copy-rule-law}] and $methodName$ is
+eliminated using Law~[\nameref{action-intro-law}], since it no longer
+occurs in the process.
+Finally, the temporary action $methodName'$ is renamed to $methodName$
+using Law~[\nameref{action-rename-law}] on
+line~\ref{algorithm-localise-stack-frames-method-rename}.
+
+Having completely separated the method into its own, independent,
+action, we then introduce the stack frame variable for the method
+using Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}],
+shown in
+Figure~\ref{HandleReturnEPC-stackFrame-introduction-rule-figure}.
+This is applied to the body of $methodName$ on
+line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule},
+with the number of arguments, $numArgs$, passed to it.
+
+\begin{figure}[thp]
+\begin{restatable}[$Return$-$stackFrame$-intro]{crule}{HandleReturnEPCStackFrameIntroductionRule}
+  \label{HandleReturnEPC-stackFrame-introduction-rule}
+  \setlength{\zedtab}{0.4cm}
+  \setlength{\zedindent}{0.5cm}
+  %\setlength{\zedleftsep}{0pt}
+  Given $n : \nat$, if $A$ operates solely on $last~frameStack$ and do
+  not change the length of $frameStack$, then
+  \begin{circus}
+    \begin{array}{l}
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[ \\
+      \t3 c/class?, \\
+      \t3 m/methodID? \rschexpract \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
       \circvar stackFrame : StackFrameEPC \circspot \\
       \t1 \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
       \t1 stackFrame' : StackFrameEPC  | \\
@@ -151,8 +227,7 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
       \t2 stackFrame'.frameClass = c \land \\
       \t2 stackFrame'.stackSize = s] \rschexpract \circseq \\
       \t1 A[stackFrame/last~frameStack, \\
-      \t2 stackFrame'/last~frameStack'] \\
-      )(args~1, \ldots, args~n)
+      \t2 stackFrame'/last~frameStack']
     \end{array}
   \end{circus}
   where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
@@ -175,41 +250,23 @@ operation that changes the size of $frameStack$ and we replace
 references to the $frameStack$ in nested methods first, by the
 definition of $iterationOrder$.
 
-Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] also
-introduces the arguments to the method as value parameters, with their
-values passed into the action initialising the $stackFrame$ variable.
-This ensures that the body of the method is completely independent of
-the context in which it is called, enabling us to separate the whole
-method body (including the initialisation of $stackFrame$) into its
-own action.
-We thus redefine the method action $methodName$ to correspond to the
-parametrised block introduced by
-Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}].
-This is done using Law~[\nameref{action-intro-law}] to eliminate the
-existing definition on
-line~\ref{algorithm-localise-stack-frames-method-elimination}, and
-introducing the new definition on
-lines~\ref{algorithm-localise-stack-frames-method-reintroduction-match}
-and~\ref{algorithm-localise-stack-frames-method-reintroduction}.
-The actions are then copied out using the new definitions on
-line~\ref{algorithm-localise-stack-frames-copy-out}.
-
 Note that the operations performed on
-lines~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
-and~\ref{algorithm-localise-stack-frames-method-reintroduction}
+lines~\ref{algorithm-arguments-introduction}
+and~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
 specifically handle methods that do not return a value.
 We omit the handling of methods that do return a value. 
 Handling such methods would require rules similar to
-Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] for
-method bodies followed by $InterpreterAreturn1$ and
-$InterpreterAreturn2$, which would introduce a result parameter for
-the method in addition to the value parameters representing the
-method's arguments.
-These rules would be applied in a way similar to
-line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}, and
-the introduction of the method action on
-line~\ref{algorithm-localise-stack-frames-method-reintroduction} would
-match a form of the method including the result parameter.
+Rule~[\nameref{arguments-introduction-rule}] for method bodies
+followed by $InterpreterAreturn1$ and $InterpreterAreturn2$, which
+would introduce a result parameter for the method in addition to the
+value parameters representing the method's arguments.
+The new method action would then have to match the different method
+parameters.
+We would also require a rule similar
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] to
+handle the slightly different ending of the method action that the
+return handling would create.
+These rules would be applied in a way similar to the existing rules.
 
 In our example, a $stackFrame$ variable will be introduced for
 $TPK\_f$ first, since it does not call any other methods.

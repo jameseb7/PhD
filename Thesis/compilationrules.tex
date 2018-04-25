@@ -572,6 +572,8 @@
 
 \subsection{Localise Stack Frames}
 
+\ArgumentsIntroductionRule*
+
 \HandleReturnEPCStackFrameIntroductionRule*
 
 % \begin{restatable}[$InterpreterAreturn$-$stackFrame$-introduction]{crule}{HandleAreturnEPCStackFrameIntroductionRule}
@@ -842,7 +844,7 @@
 
 \EliminateValueOneValueTwoConditional*
 
-\begin{restatable}[eliminate-$oid$-$getField$]{crule}{EliminateOidGetField}
+\begin{restatable}[$getField$-$oid$-elim]{crule}{EliminateOidGetField}
   \label{eliminate-oid-getField-rule}
   \begin{circus}
     \begin{array}{l}
@@ -861,7 +863,7 @@
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[eliminate-$oid$-$value$-$putField$]{crule}{EliminateOidValuePutField}
+\begin{restatable}[$putField$-$oid$-$value$-elim]{crule}{EliminateOidValuePutField}
   \label{eliminate-oid-value-putField-rule}
   \begin{circus}
     \begin{array}{l}
@@ -879,7 +881,7 @@
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[eliminate-$value$-$putStatic$]{crule}{EliminateValuePutStatic}
+\begin{restatable}[$putStatic$-$value$-elim]{crule}{EliminateValuePutStatic}
   \label{eliminate-value-putStatic-rule}
   \begin{circus}
     \begin{array}{l}
@@ -896,7 +898,7 @@
 
 \MethodParameterIntroductionRule*
 
-\begin{restatable}[$getClassIDOf$-$poppedArgs$-elimination]{crule}{GetClassIDOfMethodParameterIntroductionRule}
+\begin{restatable}[$getClassIDOf$-$poppedArgs$-elim]{crule}{GetClassIDOfMethodParameterIntroductionRule}
   \label{getClassIDOf-method-parameter-introduction-rule}
   \begin{circus}
     \begin{array}{l}
@@ -914,7 +916,7 @@
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[$getClassIDOf$-multi-$poppedArgs$-elimination]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
+\begin{restatable}[$getClassIDOf$-multi-$poppedArgs$-elim]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
   \label{getClassIDOf-multi-method-parameter-introduction-rule}
   \begin{circus}
     \begin{array}{l}
@@ -964,5 +966,7 @@
 %     \end{array}
 %   \end{circus}
 % \end{restatable}
+
+\VarParameterConversionRule*
 
 \ArgumentVariableEliminationRule*

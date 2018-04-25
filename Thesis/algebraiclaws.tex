@@ -620,6 +620,40 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% from application of Law [copy-rule] and Law [action-intro]
+\begin{law}[action-rename]
+  \label{action-rename-law}
+  Given action names $M$ and $N$, if $N$ is not referenced in the body
+  of $P$ then,
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 M \circdef B \\
+      \t1 {} \cdots {} \\
+      \t1 PPars \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+    =
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 N \circdef B \\
+      \t1 {} \cdots {} \\
+      \t1 PPars[N/M] \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A[N/M] \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+\end{law}
+
 % From definition B.40 in Marcel's thesis
 \begin{law}[schema-action-fixed-var-intro]
   \label{schema-action-fixed-var-intro-law}

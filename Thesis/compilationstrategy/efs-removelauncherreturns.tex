@@ -18,20 +18,25 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-method-single-return-loop}
     \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
     \State $returnAction \gets$ \Call{ReturnAction}{$methodBody$}
-    \label{algorithm-determine-return-action}
+    \label{algorithm-determine-return-action}   
     \State \ExhaustivelyApplyToFor{Law~[\nameref{rec-action-intro-law}]}{$methodBody$}{$returnAction$}
     \label{algorithm-introduce-infinite-loop-returns}
     \State \ExhaustivelyApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$methodBody$}
     \label{algorithm-distribute-returns}
+
+    \Match{$methodBody$}{($A \circseq returnAction$)}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, $A$}
+    \label{algorithm-remove-returns-introduce-method-action}
+    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$methodBody$}{$methodName'$}
+    \label{algorithm-eliminate-returns-copy-method-out}
+
+    
     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-eliminate-returns-copy-method-in}
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
     \label{algorithm-remove-returns-eliminate-method-action}
-    \Match{$methodBody$}{($A \circseq returnAction$)}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, $A$}
-    \label{algorithm-remove-returns-introduce-method-action}
-    \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-eliminate-returns-copy-method-out}
+    \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName$, $methodName'$}
+    \label{algorithm-rename-method-action}
     \EndFor
     \State \Call{IntroduceFrameStackAssumptions}{}
     \label{algorithm-introduce-frameStack-assumptions}
@@ -88,11 +93,11 @@ on line~\ref{algorithm-determine-return-action}, using a syntactic
 function \Call{ReturnAction}.
 
 Having determined the return action for a method, we convert the
-method to a form in which it has one occurence of that action at the
+method to a form in which it has one occurrence of that action at the
 end of its body.
 This is achieved by introducing occurrences of $returnAction$ after
 infinite loops in $methodBody$ using
-Law~[\nameref{rec-action-intro-law}] and distributing occurences of
+Law~[\nameref{rec-action-intro-law}] and distributing occurrences of
 $returnAction$ outside conditionals using
 Law~[\nameref{alt-seq-dist-law}].
 These laws are applied on
@@ -100,20 +105,25 @@ lines~\ref{algorithm-introduce-infinite-loop-returns}
 and~\ref{algorithm-distribute-returns} of
 Algorithm~\ref{remove-launcher-returns-algorithm}.
 
-When the method has a single return instruction at the end, its
-definition is expanded at every point it is referenced using
-Law~[\nameref{copy-rule-law}] on
-line~\ref{algorithm-eliminate-returns-copy-method-in}. 
-We then redefine the method action by eliminating it on
-line~\ref{algorithm-remove-returns-eliminate-method-action} and
-reintroducing it with a new definition that excludes the return action
-at the end of the method.
-This is performed using Law~[\nameref{action-intro-law}], on
-lines~\ref{algorithm-remove-returns-eliminate-method-action}
-to~\ref{algorithm-remove-returns-introduce-method-action}.
-Law~[\nameref{copy-rule-law}] is then used to copy out the method into
-its action using the new definition, on
-line~\ref{algorithm-eliminate-returns-copy-method-out}.
+When the method has a single return instruction at the end, it is
+redefined to exclude the return action.
+This is performed by introducing an intermediate action named
+$methodName'$ on
+line~\ref{algorithm-remove-returns-introduce-method-action}, using
+Law~[\nameref{action-intro-law}], containing the actions of
+$methodBody$ before $returnAction$.
+Those actions are then replaced with a reference to $methodName'$ on
+line~\ref{algorithm-eliminate-returns-copy-method-out} via an
+application of Law~[\nameref{copy-rule-law}].
+The definition of $methodName$ is then expanded everywhere on
+line~\ref{algorithm-eliminate-returns-copy-method-in}, replacing
+references to it with a reference to $methodName'$ and $returnAction$.
+The $methodName$ action is then removed on
+line~\ref{algorithm-remove-returns-eliminate-method-action} and the
+$methodName'$ action is renamed to $methodName$ on
+line~\ref{algorithm-rename-method-action}, using
+Law~[\nameref{action-rename-law}], which allows renaming an action to a
+fresh name.
 
 We then introduce assumptions that state whether the $frameStack$ is
 empty or not.
@@ -127,7 +137,7 @@ $InterpreterNewStackFrame$ increasing its depth by one, and the return
 instructions decreasing its depth by one.
 The result is that the return instructions following the method
 actions in $ExecuteMethod$ have an assumption $frameStack = \emptyset$
-following them, and the return instructions occuring in the middle of
+following them, and the return instructions occurring in the middle of
 other methods have an assumption $frameStack \neq \emptyset$.
 % This can be seen in
 % Figure~\ref{efs-return-assumption-distribution-figure}.
