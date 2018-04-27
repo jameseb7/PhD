@@ -3028,29 +3028,26 @@ do {...} while (b);
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright \hfill \newline Field read &
 \begin{lstlisting}
-y = ((X *) x)->f;
+y = ((C *) x)->f;
 \end{lstlisting}
 &
 {
 \def\arraystretch{1.1}
 \[
-  getObject!x \then {} \\
-  \t1 getObjectRet?struct \then {} \\
-  \t1 y := (castX~struct).f
+  getField!x!C!f \then {} \\
+  \t1 getFieldRet?value \then {} \\
+  \t1 y := value
   \]}\\  
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright \hfill \newline Field write &
 \begin{lstlisting}
-((X *) x)->f = y;
+((C *) x)->f = y;
 \end{lstlisting}
 &
 {
 \def\arraystretch{1.1}
 \[
-  getObject!x \then {} \\
-  \t1 getObjectRet?struct \then {} \\
-  \t1 putObject!(updateX\_f~struct~y) \\
-  \t1 {} \then \Skip
+  putField!x!C!f!y \then \Skip
   \]}\\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{tabular}}
@@ -3098,26 +3095,19 @@ C.
 
 Finally, we model accesses to structs representing objects using
 communications with the struct manager.
-Getting the value of a field is performed by obtaining the struct
-value representing the object using the $getObject$ and $getObjectRet$
-channels.
-This value is then converted to the correct schema type for the class
-of the object, and the appropriate field of that schema binding is
-accessed to read the value and store it into a variable.
-This represents dereferencing a pointer to a C struct, with a cast to
-a struct type that possibly has fewer fields in order to handle
-polymorphism.
-
-For writes to a field, the struct is obtained using the $getObject$
-and $getObjectRet$, and then the field is updated using a function.
-The result is stored back in the struct manager via the $putObject$
-channel.
-This represents casting and dereferencing a pointer to the struct,
-then updating a field of the struct.
-
-Accesses to static fields are performed similarly, obtaining the
-static fields struct via the $getStaticFields$ channel, and setting it
-via the $putStaticFields$ channel.
+These use the same channels as in the interpreter model, but the
+struct manager model, described in the next section, is such that the
+communications have the effect of performing reads and updates of
+object structs, with appropriate C casts and dereferences of pointers
+to such structs.
+The object, field and class identifiers required for these struct
+accesses are included in the channel communications so, with the
+semantics conferred by the struct manager, they can be translated to
+the corresponding C code by a simple lexical transformation, as shown
+in Table~\ref{embedding-table}.
+Accesses to static fields are performed similarly, using the
+$getStatic$ and $putStatic$ channels to represent accesses to a global
+static fields struct. 
 The struct types and the functions for manipulating them are described
 in the next section, where we discuss the struct manager,
 $StructMan_{cs}$.
@@ -3150,7 +3140,8 @@ The constructor for each ${<}classID_k{>}$ is called
 ${<}classID_k{>}Con$, with a single parameter of type
 ${<}classID_k{>}Obj$.
 \begin{zed}
-  ObjectStruct ::= {<}classID_1{>}Con \ldata {<}classID_1{>}Obj \rdata | \dots | {<}classID_n{>}Con \ldata {<}classID_n{>}Obj \rdata
+  ObjectStruct ::= \\
+  \t1 {<}classID_1{>}Con \ldata {<}classID_1{>}Obj \rdata | \dots | {<}classID_n{>}Con \ldata {<}classID_n{>}Obj \rdata
 \end{zed}
 
 For each object type, we define a natural number constant
@@ -3168,31 +3159,29 @@ subclass of ${<}classID_k{>}$, with the common fields copied across.
 Thus, $cast{<}classID_k{>}$ represents casting of C structs, where a
 struct can be truncated by casting to a struct whose fields are a
 prefix of it.
-Finally, we also define a function
+Finally, we define a function
 $update{<}classID_k{>}\_{<}fieldID{>}_i$ for each class
 ${<}classID_k{>}$ and field identifier ${<}fieldID_i{>}$, which takes
 an $ObjectStruct$ and updates the field with a given value.
 This is a combined cast and update.
 
-The static fields ${<}staticfieldID_{i,j}{>}$ from each class
+The static fields ${<}staticFieldID_{i,j}{>}$ from each class
 ${<}classID_i{>}$ are collected together in a schema $StaticFields$,
 as shown below.
 \begin{schema}{StaticFields}
-  {<}classID_1{>}\_{<}staticfieldID_{1,1}{>} : Word \\
+  {<}classID_1{>}\_{<}staticFieldID_{1,1}{>} : Word \\
   \t1 \vdots \\
-  {<}classID_1{>}\_{<}staticfieldID_{1,\ell_1}{>} : Word \\
+  {<}classID_1{>}\_{<}staticFieldID_{1,\ell_1}{>} : Word \\
   \t1 \vdots \\
-  {<}classID_n{>}\_{<}staticfieldID_{n,1}{>} : Word \\
+  {<}classID_n{>}\_{<}staticFieldID_{n,1}{>} : Word \\
   \t1 \vdots \\
-  {<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} : Word
+  {<}classID_n{>}\_{<}staticFieldID_{n,\ell_n}{>} : Word
 \end{schema}
-We define a constant $sizeofStaticFields$ giving the space needed
-for the struct represented by $StaticFields$.
-
-Channels $getObject$, $getObjectRet$, and $putObject$ pass
-$ObjectStruct$ values to and from $StructMan_{cs}$.
-The $StaticFields$ type is communicated using $getStaticFields$ and
-$putStaticFields$ channels.
+We define a constant $sizeofStaticFields$ giving the space needed for
+the struct represented by $StaticFields$.
+Functions $updateStatic{<}classID_i{>}\_{<}staticField_{i,j}{>}$ are
+also defined for each class and static field to perform updates of
+specific fields in the $StaticFields$ struct.
 
 The state of $StructMan_{cs}$ is given by the schema $StructManState$.
 It is similar to $ObjManState$ defined in
@@ -3207,23 +3196,23 @@ However, $AllocateStaticFields$ is changed to handle the
 $StaticFields$ type.
 
 Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
-are replaced with new actions $GetObject$, $PutObject$,
-$GetStaticFields$ and $PutStaticFields$.
-These are fairly simple, with $GetObject$ and $PutObject$ retrieving
-and storing $ObjectStruct$ values in the $objects$ map.
-These are exposed on the $getObject$ and $getObjectRet$ channels for
-$GetObject$, and the $putObject$ channel for $PutObject$. 
-Similarly, $GetStaticFields$ and $PutStaticFields$ retrieve and store
-the $StaticFields$ value associated with $staticClassFieldsID$ from
-the $staticClassFields$ map.
-These are performed on the $getStaticFields$ and $putStaticFields$
-channels respectively.
+are refined to operate on the struct types described in this section.
+$GetField$ simply applies the $cast{<}cid{>}$ function for the
+$classID$ value $cid$ provided on the $getField$ channel to the object
+corresponding to the $ObjectID$ provided on the $getField$ channel,
+and returns the requested field of the resultant struct on the
+$getFieldRet$.
+Similarly, $PutField$ updates the specified object using the
+$update{<}cid{>}\_{<}fid{>}$ for the $ClassID$ $cid$ and $FieldID$
+$fid$ provided on the $putField$ channel.
+The $GetStatic$ and $PutStatic$ actions access and update the
+specified static field in $staticClassFields$.
 We omit the definitions of these actions here; their definitions are
 given in Appendix~\ref{struct-manager-appendix}, which shows the
 general form of the $StructMan_{cs}$ process.
 
 The $NewObject$ action is different in $StructMan_{cs}$ to that in
-$ObjMan$. 
+$ObjMan$.
 It uses the same channels ($newObject$ and $newObjectRet$), but
 creates an $ObjectStruct$ value for the provided class.
 It has the form shown below.
@@ -3251,20 +3240,24 @@ is handled in $AllocateObject$.
   NewObject \circdef \circvar objectID : ObjectID \circspot \\
   \t1 newObject?thread?classID \then \\
   \t1 \circif classID = {{<}classID_1{>}} \circthen {} \\
-  \t2 AllocateObject(thread, sizeof{<}classID_1{>}, objectID) \circseq \lschexpract StructMan{<}classID_1{>}ObjInit \rschexpract \\
+  \t2 AllocateObject(thread, sizeof{<}classID_1{>}, objectID) \circseq \\
+  \t2 \lschexpract StructMan{<}classID_1{>}ObjInit \rschexpract \\
   \t1 {} \circelse classID = {{<}classID_2{>}} \circthen {} \\
-  \t2 AllocateObject(thread, sizeof{<}classID_2{>}, objectID) \circseq \lschexpract StructMan{<}classID_2{>}ObjInit \rschexpract \\
+  \t2 AllocateObject(thread, sizeof{<}classID_2{>}, objectID) \circseq \\
+  \t2 \lschexpract StructMan{<}classID_2{>}ObjInit \rschexpract \\
   \t2 \vdots \\
   \t1 {} \circelse classID = {{<}classID_n{>}} \circthen {} \\
-  \t2 AllocateObject(thread, sizeof{<}classID_n{>}, objectID) \circseq \lschexpract StructMan{<}classID_n{>}ObjInit \rschexpract \\
+  \t2 AllocateObject(thread, sizeof{<}classID_n{>}, objectID) \circseq \\
+  \t2 \lschexpract StructMan{<}classID_n{>}ObjInit \rschexpract \\
   \t1 \circfi \circseq newObjectRet!objectID \then \Skip \\
 \end{circusaction}
 
 Finally, $GetClassIDOf$ is changed to extract the class identifier
 from an $ObjectStruct$ value using the $classIDOf$ function.
-This is not used in the C code, which, as we see in the next section,
-uses $classIDOf$ directly, but is supplied for use by the $Launcher$,
-which is unchanged by the strategy.
+This represents a C cast to a struct type representing the
+\texttt{Object} class, which is always vaild since every class extends
+\texttt{Object}, and an access of the $class$ field of that struct
+type.
 
 This concludes our explanation of the model for the C code. 
 In the next section we discuss how the models of the core execution
