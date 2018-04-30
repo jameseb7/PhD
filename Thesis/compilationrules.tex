@@ -524,6 +524,64 @@
 
 \subsection{Remove Launcher Returns}
 
+\begin{restatable}[frameStack-assump-NewStackFrame-dist]{crule}{FrameStackAssumpNewStackFrameDist}
+  \label{frameStack-assump-NewStackFrame-dist-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
+      \lschexpract InterpreterNewStackFrame[ \\
+      \t1 c/class?,
+      \t1 m/methodID?, \\
+      \t1 args/methodArgs?]\rschexpract
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \lschexpract InterpreterNewStackFrame[ \\
+      \t1 c/class?,
+      \t1 m/methodID?, \\
+      \t1 args/methodArgs?]\rschexpract \circseq \\
+      \{\# frameStack = k + 1 \}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[frameStack-assump-instruction-dist]{crule}{FrameStackAssumpInstructionDist}
+  \label{frameStack-assump-instruction-dist-rule}
+  If $A$ is $Poll$, $HandleAconst\_nullEPC$, $HandleDupEPC$,
+  $HandleAloadEPC(lvi)$, $HandleAstoreEPC(lvi)$, $HandleIaddEPC$,
+  $HandleIconstEPC(n)$, $HandleInegEPC$,
+  $\lschexpract InterpreterPopEPC \rschexpract$,
+  $\lschexpract InterpreterPushEPC \rschexpract$,
+  $\lschexpract \exists argsToPop? 
+  == m @ InterpreterStackFrameInvoke \rschexpract$,
+  $HandleNewEPC(cpi)$, $HandleGetfieldEPC(cpi)$,
+  $HandlePutfieldEPC(cpi)$, $HandleGetstaticEPC(cpi)$, or
+  $HandlePutstaticEPC(cpi)$, then
+  \begin{circus}
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq A
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      A \circseq \{\# frameStack = k \}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[frameStack-assump-return-dist-rule]{crule}{FrameStackAssumpReturnDist}
+  \label{frameStack-assump-return-dist-rule}
+  If $A$ is $HandleAreturn$ or $HandleReturn$, and $k > 0$ then
+  \begin{circus}
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq A
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      A \circseq \{\# frameStack = k - 1 \}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
 \RefineHandleReturnEPCEmptyFrameStackRule*
 
 \begin{restatable}[refine-$HandleReturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleReturnEPCNonemptyFrameStackRule}

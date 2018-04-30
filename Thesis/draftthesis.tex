@@ -132,8 +132,6 @@ prefoothook={\qedsymbol\relax}
 \renewcommand{\circblockbegin}{\left(\begin{array}{l}}
 \renewcommand{\circblockend}{\end{array}\right)}
 
-\MakeRobust{\Call}
-
 \newcommand{\Apply}[1]{{\bf apply} {#1}}
 \newcommand{\ApplyFor}[2]{{\bf apply} {#1}(#2)}
 \newcommand{\ApplyTo}[2]{{\bf apply} {#1} {\bf to} {#2}}
@@ -153,10 +151,20 @@ prefoothook={\qedsymbol\relax}
 \algloopdefx{Match}[2]{{\bf match} #1 {\bf with} #2 {\bf then}}
 \algloopdefx{MatchIn}[2]{{\bf match} #1 {\bf in} #2 {\bf then}}
 \algloopdefx{MatchThen}[1]{{\bf match} #1 {\bf then}}
+\algloopdefx{Let}[1]{{\bf let} #1 {\bf in}}
 \newcommand{\Matches}[2]{#1 {\bf matches} #2}
 \algblockx[Try]{Try}{EndTry}
   {{\bf try}}
   {{\bf end try}}
+\algblockx[ExhaustivelyTry]{ExhaustivelyTry}{EndExhaustivelyTry}
+  {{\bf exhaustively try}}
+  {{\bf end try}}
+\algblockx[MatchInBlock]{MatchInBegin}{EndMatch}
+  [2]{{\bf match} #1 {\bf in} #2 {\bf then begin}}
+  {{\bf end match}}
+
+\MakeRobust{\Call}
+\MakeRobust{\Let}
 
 %TC:group zed 0 displaymath
 %TC:group axdef 0 displaymath

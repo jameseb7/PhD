@@ -29,7 +29,7 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-remove-returns-introduce-method-action}
     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$methodBody$}{$methodName'$}
     \label{algorithm-eliminate-returns-copy-method-out}
-
+    
     
     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-eliminate-returns-copy-method-in}
@@ -68,6 +68,59 @@ procedure \Call{RemoveLauncherReturns}{}.
   \label{remove-launcher-returns-algorithm}
 \end{algorithm}
 
+\begin{algorithm}
+  \begin{algorithmic}
+    \ExhaustivelyTry
+    \MatchInBegin{$\{g\} \circseq \circif {} \circelse i \in I \circspot h_i \circthen B_i \circfi$}{$A$}
+    \State \ApplyTo{Law~[\nameref{assump-alt-dist-remove-law}]}{$A$}
+    \For{$i \gets I$}
+    \State \Call{DistributeFrameStackAssumptions}{$B_i$}
+    \EndFor
+    \State \ApplyReverseTo{Law~[\nameref{alt-seq-dist-law}]}{$A$}
+    \EndMatch
+    \MatchIn{$\{g\} \circseq (\circmu X \circspot F(X))$}{$A$}
+    \Let{$G(\{g\} \circseq X) = $ \Call{DistributeFrameStackAssumptions}{}$(\{g\} \circseq F(X))$}
+    \Let{$H(X) \circseq \{g\} =  $ \Call{DistributeFrameStackAssumptions}{}$(G(X \circseq \{g\}))$}
+    \State \ApplyToFor{Law~[\nameref{assump-rec-dist-refine-law}]}{$A$}{$G$, $H$}
+    \State \ApplyTo{Rule~[\nameref{frameStack-assump-NewStackFrame-dist-rule}]}{$A$}
+    \MatchInBegin{$\{ g \} \circseq M$}{$A$}
+    \State \ApplyFor{Law~[action-intro-law]}{$M'$, $(\{ g \} \circseq M)$}
+    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$A$}{$M'$}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$M'$}}{$M$}
+    \State \Call{DistributeFrameStackAssumptions}{\Call{ActionBody}{$M'$}}
+    \State \ApplyReverseFor{Law~[action-intro-law]}{$M$, \Call{ActionBody}{$M$}}
+    \Match{\Call{ActionBody}{$M'$}}{$A \circseq \{ g \}$}
+    \State \ApplyFor{Law~[action-intro-law]}{$M$, $A$}
+    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$M'$}}{$M$}
+    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$A$}{$M'$}
+    \State \ApplyReverseFor{Law~[action-intro-law]}{$M'$, \Call{ActionBody}{$M'$}}
+    \EndMatch
+    \MatchInBegin{$\{ g \} \circseq HandleReturn \circseq B$ {\bf or} $\{ g \} \circseq HandleAreturn \circseq B$}{$A$}
+    \State \ApplyTo{Rule~[\nameref{frameStack-assump-return-dist-rule}]}{$A$}
+    \State \Call{DistributeFrameStackAssumptions}{$B$}
+    \State \Return
+    \EndMatch
+    \MatchInBegin{$\{ g \} \circseq (\circvar x : T \circspot B)$}{$A$}
+    \State \ApplyTo{Law~[\nameref{var-seq-extl-law}]}{$\{ g \} \circseq (\circvar x : T \circspot B)$}
+    \State \Call{DistributeFrameStackAssumptions}{}{$(\{ g \} \circseq B)$}
+    \State \ApplyTo{Law~[\nameref{var-seq-extr-law}]}{$(\circvar x : T \circspot B \circseq \{ g \})$}
+    \EndMatch
+    \MatchInBegin{$\{g\} \circseq c?e \then B$}{$A$}
+    \State \ApplyTo{Law~[\nameref{assump-input-prefix-dist-move-law}]}{$c \then B$}
+    \State \Call{DistributeFrameStackAssumptions}{}{$(\{ g \} \circseq B)$}
+    \State \ApplyTo{Law~[\nameref{input-prefix-seq-assoc-law}]}{$c?e \then (B \circseq \{ g \})$}
+    \EndMatch
+    \MatchInBegin{$\{g\} \circseq c!e \then B$}{$A$}
+    \State \ApplyTo{Law~[\nameref{assump-output-prefix-dist-move-law}]}{$c \then B$}
+    \State \Call{DistributeFrameStackAssumptions}{}{$(\{ g \} \circseq B)$}
+    \State \ApplyTo{Law~[\nameref{output-prefix-seq-assoc-law}]}{$c?e \then (B \circseq \{ g \})$}
+    \EndMatch
+    \State \ApplyTo{Rule~[\nameref{frameStack-assump-instruction-dist-rule}]}{$A$}
+    \EndExhaustivelyTry
+  \end{algorithmic}
+  \caption{DistributeFrameStackAssumptions($A$)}
+\end{algorithm}
+  
 Algorithm~\ref{remove-launcher-returns-algorithm} begins by iterating
 over each of the method actions, in the for loop beginning on
 line~\ref{algorithm-method-single-return-loop}.

@@ -110,6 +110,16 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Needs Proving in Isabelle (follows from Law [assump-alt-dist], Law [assump-elim] and Law [seq-unitl])
+\begin{law}[assump-alt-dist-move]
+  \label{assump-alt-dist-remove-law}
+  \begin{circus}
+    \{h\} \circseq \circif {} \circelse_{i} g_i \circthen A_i \circfi
+    \circrefines_A
+   \circif {} \circelse_{i} g_i \circthen \{h\} \circseq A_i \circfi
+  \end{circus}
+\end{law}
+
 % Proved in Isabelle
 \begin{law}[assign-assump-intro]
   \label{assign-assump-intro-law}
@@ -333,6 +343,14 @@ proofs of our compilation rules.
     \{ g \} \circseq c!x \then A = \{ g \} \circseq c!x \then \{ g \} \circseq A
   \end{circus}
 \end{law}
+
+% From Law [assump-output-prefix-dist], Law [alt-elim] and Law [seq-unitl]
+\begin{law}[assump-output-prefix-dist-move]
+  \label{assump-output-prefix-dist-move-law}
+  \begin{circus}
+    \{ g \} \circseq c!x \then A =  c!x \then \{ g \} \circseq A
+  \end{circus}
+\end{law}
   
 % Law C.48 in Marcel's thesis
 \begin{law}[assump-input-prefix-dist]
@@ -340,6 +358,15 @@ proofs of our compilation rules.
   If $x$ is not free in $g$ then,
   \begin{circus}
     \{ g \} \circseq c?x \then A = \{ g \} \circseq c?x \then \{ g \} \circseq A
+  \end{circus}
+\end{law}
+
+% From Law [assump-input-prefix-dist], Law [alt-elim] and Law [seq-unitl]
+\begin{law}[assump-input-prefix-dist-move]
+  \label{assump-input-prefix-dist-move-law}
+  If $x$ is not free in $g$ then,
+  \begin{circus}
+    \{ g \} \circseq c?x \then A = c?x \then \{ g \} \circseq A
   \end{circus}
 \end{law}
 
@@ -402,6 +429,15 @@ proofs of our compilation rules.
   If $v$ is not free in $B$ then,
   \begin{circus}
     c?v \then (A \circseq B) = (c?v \then A) \circseq B
+  \end{circus}
+\end{law}
+
+% From Law C.101 in Marcel's thesis
+\begin{law}[output-prefix-seq-assoc]
+  \label{output-prefix-seq-assoc-law}
+  If $v$ is not free in $B$ then,
+  \begin{circus}
+    c!v \then (A \circseq B) = (c!v \then A) \circseq B
   \end{circus}
 \end{law}
 
@@ -696,6 +732,25 @@ proofs of our compilation rules.
     \{g\} \circseq (\circmu X \circspot F(X))
     \circrefines_A
     (\circmu X \circspot \{g\} \circseq F(X))
+  \end{circus}
+\end{law}
+
+\begin{law}[assump-rec-dist-refine]
+  \label{assump-rec-dist-refine-law}
+  Given functions on actions $G$ and $H$,
+  if, for all actions $X$ and $n \in \nat$,
+  \[\begin{array}{l}
+      (F(X) \land tr \leq tr' \land \# (tr'-tr) < n + 1) \\
+      {} = {} \\
+      (F(X \land tr \leq tr' \land \# (tr'-tr) < n) \land tr \leq tr' \land \# (tr'-tr) < n + 1)
+    \end{array}\],
+  $\{g\} \circseq F(X) \circrefines_A \{g\} \circseq G(\{g\} \circseq
+  X)$ and $G(X \circseq \{g\}) \circrefines_A H(X) \circseq \{g\}$
+  then,
+  \begin{circus}
+    \{g\} \circseq (\circmu X \circspot F(X))
+    \circrefines_A
+    (\circmu X \circspot H(X)) \circseq \{g\}
   \end{circus}
 \end{law}
 
