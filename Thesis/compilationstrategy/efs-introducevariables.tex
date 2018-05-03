@@ -150,11 +150,17 @@ the value of $frameClass$, indicated by the procedure
 \Call{IntroduceFrameClassAssumptions}{} on
 line~\ref{algorithm-introduce-frameClass-assumptions}, which is
 applied to the body of $methodName$.
-This introduces an assumption from the schema action initialising
-$stackFrame$, using Law~[\nameref{schema-assump-intro-law}], and
-distributes it using standard refinement laws.
-This is straightforward as none of the operations affect the value of
-$frameClass$.
+This procedure is similar to \Call{IntroduceFrameStackAssumptions}{}
+in that it introduces an assumption and distributes it with restricted
+forms of standard algebraic laws.
+However, \Call{IntroduceFrameClassAssumptions}{} acts on over the body
+of a single method and introduces an assumption about the value of the
+$frameClass$ component of $stackFrame$ from the schema action
+initialising $stackFrame$.
+The \Call{IntroduceFrameClassAssumptions}{} procedure is defined by
+Algorithm~\ref{introduce-frameClass-assumptions-algorithm}, which we
+omit here, but which is included in
+Appendix~\ref{introduce-variables-appendix-subsection}.
 We can then apply Rules~[\nameref{refine-PutfieldSF-rule}],
 [\nameref{refine-GetfieldSF-rule}],
 [\nameref{refine-PutstaticSF-rule}],
@@ -230,24 +236,13 @@ which stack slot variables the refined operations should operate on.
 We ensure that this information is available, by introducing and
 distributing assumptions on the size of the $operandStack$ component
 of $stackFrame$.
-
-An assumption that $operandStack$ is empty can be generated from the
-$stackFrame$ initialisation operation (introduced by rules such as
-Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]), using
-Law~[\nameref{schema-assump-intro-law}].
-This assumption is distributed through each method using standard
-algebraic laws, with the size of $operandStack$ updated after each
-data operation on $stackFrame$.
-Of course, this requires that the size of the $operandStack$ is the
-same at the end of a loop as at the beginning of the loop, and also
-the same at the end of each branch of a conditional.
-These requirements are, however, ensured by bytecode verification so
-we are always able to distribute well-defined assumptions about the
-$operandStack$ size.
-We perform the introduction of $operandStack$ size assumptions in this
-way in the procedure
-\Call{IntroduceOperandStackAssumptions}{}, on
+This is performed by the \Call{IntroduceOperandStackAssumptions}{}
+procedure, called on
 line~\ref{algorithm-introduce-operandStack-assumptions}.
+It is similar to \Call{IntroduceFrameClassAssumptions}{} and is
+defined by
+Algorithm~\ref{introduce-operandStack-assumptions-algorithm}, which is
+included in Appendix~\ref{introduce-variables-appendix-subsection}.
 
 After an $operandStack$ assumption has been introduced before each
 data operation, the local data refinement is performed on

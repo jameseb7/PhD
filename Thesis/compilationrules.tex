@@ -523,8 +523,55 @@
 \section{Elimination of Frame Stack}
 
 \subsection{Remove Launcher Returns}
+\label{remove-launcher-returns-appendix-subsection}
 
-\begin{restatable}[frameStack-assump-NewStackFrame-dist]{crule}{FrameStackAssumpNewStackFrameDist}
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \Apply{Rule~[\nameref{InterpreterInitEPC-frameStack-assump-intro-rule}]} 
+    \State {\bf exhaustively apply} \\
+    $\t1$ Rule~[\nameref{frameStack-assump-non-return-dist-rule}] \\
+    $\t1$ Rule~[\nameref{frameStack-assump-return-dist-rule}] \\
+    $\t1$ Rule~[\nameref{frameStack-assump-NewStackFrame-dist-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-alt-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-alt-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-var-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-var-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-output-prefix-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-output-prefix-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-input-prefix-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-input-prefix-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-infinite-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-infinite-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-extchoice-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-extchoice-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-guard-dist-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-assign-dist-rule}]
+  \end{algorithmic}
+  \caption{IntroduceFrameStackAssumptions}
+  \label{introduce-frameStack-assumptions-algorithm}
+\end{algorithm}
+
+\begin{restatable}[$InterpreterInitEPC$-$frameStack$-assump-intro]{crule}{InterpreterInitEPCFrameStackAssumpIntro}
+  \label{InterpreterInitEPC-frameStack-assump-intro-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \lschexpract InterpreterInitEPC \rschexpract
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \lschexpract InterpreterInitEPC \rschexpract \circseq
+      \{ \# frameStack = 0 \}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$frameStack$-assump-NewStackFrame-dist]{crule}{FrameStackAssumpNewStackFrameDist}
   \label{frameStack-assump-NewStackFrame-dist-rule}
   \begin{circus}
     \begin{array}{l}
@@ -545,51 +592,355 @@
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[frameStack-assump-instruction-dist]{crule}{FrameStackAssumpInstructionDist}
-  \label{frameStack-assump-instruction-dist-rule}
-  If $A$ is $Poll$, $HandleAconst\_nullEPC$, $HandleDupEPC$,
-  $HandleAloadEPC(lvi)$, $HandleAstoreEPC(lvi)$, $HandleIaddEPC$,
-  $HandleIconstEPC(n)$, $HandleInegEPC$,
-  $\lschexpract InterpreterPopEPC \rschexpract$,
-  $\lschexpract InterpreterPushEPC \rschexpract$,
-  $\lschexpract \exists argsToPop? 
-  == m @ InterpreterStackFrameInvoke \rschexpract$,
-  $HandleNewEPC(cpi)$, $HandleGetfieldEPC(cpi)$,
-  $HandlePutfieldEPC(cpi)$, $HandleGetstaticEPC(cpi)$, or
-  $HandlePutstaticEPC(cpi)$, then
+\begin{restatable}[$frameStack$-assump-non-return-dist]{crule}{FrameStackAssumpNonReturnDist}
+  \label{frameStack-assump-non-return-dist-rule}
+  If $A$ is one of
+  \begin{itemize}
+  \item $\Skip$
+  \item $Poll$,
+  \item $HandleAconst\_nullEPC$,
+  \item $HandleDupEPC$,
+  \item $HandleAloadEPC(lvi)$,
+  \item $HandleAstoreEPC(lvi)$,
+  \item $HandleIaddEPC$,
+  \item $HandleIconstEPC(n)$,
+  \item $HandleInegEPC$,
+  \item $\lschexpract InterpreterPopEPC \rschexpract$,
+  \item $\lschexpract InterpreterPushEPC \rschexpract$,
+  \item $\lschexpract \exists argsToPop? == m @ InterpreterStackFrameInvoke \rschexpract$,
+  \item $HandleNewEPC(cpi)$,
+  \item $HandleGetfieldEPC(cpi)$,
+  \item $HandlePutfieldEPC(cpi)$,
+  \item $HandleGetstaticEPC(cpi)$, or
+  \item $HandlePutstaticEPC(cpi)$,
+  \end{itemize}
+  and $B$ does not begin with $\{\# frameStack = k\}$, then
   \begin{circus}
     \begin{array}{l}
-      \{\# frameStack = k\} \circseq A
+      \{\# frameStack = k\} \circseq A \circseq B
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      A \circseq \{\# frameStack = k \}
+      \{\# frameStack = k\} \circseq A \circseq \{\# frameStack = k \} \circseq B
     \end{array}
   \end{circus}
 \end{restatable}
 
-\begin{restatable}[frameStack-assump-return-dist-rule]{crule}{FrameStackAssumpReturnDist}
+\begin{restatable}[$frameStack$-assump-return-dist-rule]{crule}{FrameStackAssumpReturnDist}
   \label{frameStack-assump-return-dist-rule}
-  If $A$ is $HandleAreturn$ or $HandleReturn$, and $k > 0$ then
+  If $A$ is $HandleAreturn$ or $HandleReturn$, $B$ does not begin with
+  $\{\# frameStack = k\}$, and $k > 0$ then
   \begin{circus}
     \begin{array}{l}
-      \{\# frameStack = k\} \circseq A
+      \{\# frameStack = k\} \circseq A \circseq B
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      A \circseq \{\# frameStack = k - 1 \}
+      A \circseq \{\# frameStack = k - 1 \} \circseq B
     \end{array}
   \end{circus}
 \end{restatable}
+
+\begin{restatable}[restricted-assump-alt-distl]{crule}{RestrictedAssumpAltDistl}
+  \label{restricted-assump-alt-distl-rule}
+  If no $A_i$ begins with $\{h\}$ then
+  \begin{circus}
+    \{h\} \circseq \circif {} \circelse_{i} g_i \circthen A_i \circfi
+    =
+    \{h\} \circseq \circif {} \circelse_{i} g_i \circthen \{h\} \circseq A_i \circfi
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-alt-distr]{crule}{RestrictedAssumpAltDistr}
+  \label{restricted-assump-alt-distr-rule}
+  If no $A_i$ begins with $\{h\}$ then
+  \begin{circus}
+    \circif {} \circelse_{i} g_i \circthen A_i \circseq \{h\} \circfi
+    =
+    \{h\} \circseq \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq \{h\}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-var-distl]{crule}{RestrictedAssumpVarDistl}
+  \label{restricted-assump-var-distl-rule}
+  If $A$ does not begin with $\{h\}$ then
+  \begin{circus}
+    \{h\} \circseq (\circvar x : T \circspot A)
+    =
+    \{h\} \circseq (\circvar x : T \circspot \{h\} \circseq A)
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-var-distr]{crule}{RestrictedAssumpVarDistr}
+  \label{restricted-assump-var-distr-rule}
+  If $B$ does not begin with $\{h\}$ then
+  \begin{circus}
+    (\circvar x : T \circspot A \circseq \{h\}) \circseq B
+    =
+    (\circvar x : T \circspot A \circseq \{h\}) \circseq \{h\} \circseq B
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-output-prefix-distl]{crule}{RestrictedAssumpOutputPrefixDistl}
+  \label{restricted-assump-output-prefix-distl-rule}
+  If $A$ does not begin with $\{g\}$  then
+  \begin{circus}
+    \{ g \} \circseq c!x \then A = \{ g \} \circseq c!x \then \{ g \} \circseq A
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-output-prefix-distr]{crule}{RestrictedAssumpOutputPrefixDistr}
+  \label{restricted-assump-output-prefix-distr-rule}
+  If $B$ does not begin with $\{g\}$ then
+  \begin{circus}
+    (c!x \then A \circseq \{ g \}) \circseq B
+    =
+    (c!x \then A \circseq \{ g \}) \circseq \{ g \} \circseq B
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-input-prefix-distl]{crule}{RestrictedAssumpInputPrefixDistl}
+  \label{restricted-assump-input-prefix-distl-rule}
+  If $A$ does not begin with $\{g\}$ and $x$ is not free in $\{g\}$
+  then
+  \begin{circus}
+    \{ g \} \circseq c?x \then A
+    =
+    \{ g \} \circseq c?x \then \{ g \} \circseq A
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-input-prefix-distr]{crule}{RestrictedAssumpInputPrefixDistr}
+  \label{restricted-assump-input-prefix-distr-rule}
+  If $B$ does not begin with $\{g\}$ and $x$ is not free in $\{g\}$ then
+  \begin{circus}
+    (c?x \then A \circseq \{ g \}) \circseq B
+    =
+    (c?x \then A \circseq \{ g \}) \circseq \{ g \} \circseq B
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-infinite-loop-distl]{crule}{RestrictedAssumpInfiniteLoopDistl}
+  \label{restricted-assump-infinite-loop-distl-rule}
+  If $A$ does not begin with $\{g\}$ and
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\} $ then
+  \begin{circus}
+    \{g\} \circseq (\circmu X \circspot A \circseq X)
+    \circrefines_A
+    \{g\} \circseq (\circmu X \circspot \{g\} \circseq A \circseq X)
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-infinite-loop-distr]{crule}{RestrictedAssumpInfiniteLoopDistr}
+  \label{restricted-assump-infinite-loop-distr-rule}
+  If $B$ does not begin with $\{g\}$ then
+  \begin{circus}
+    (\circmu X \circspot A \circseq \{g\} \circseq X) \circseq B
+    =
+    (\circmu X \circspot A \circseq \{g\} \circseq X) \circseq \{g\} \circseq B
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-mid-while-loop-distl]{crule}{RestrictedAssumpMidWhileLoopDistl}
+  \label{restricted-assump-mid-while-loop-distl-rule}
+  If $A$ does not begin with $\{g\}$,
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$,
+  $\{g\} \circseq B \circrefines_A B \circseq \{g\}$,
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot A \circseq \\
+      \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-mid-while-loop-distr]{crule}{RestrictedAssumpMidWhileLoopDistr}
+  \label{restricted-assump-mid-while-loop-distr-rule}
+  If $C$ does not begin with $\{g\}$,
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$,
+  $\{g\} \circseq B \circrefines_A B \circseq \{g\}$,
+  then
+  \begin{circus}
+    \begin{array}{l}
+      (\circmu X \circspot A \circseq \\
+      \t1 \circif h \circthen B \circseq \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \circseq \{g\} \\
+      \t1 \circfi) \circseq C
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circmu X \circspot A \circseq \\
+      \t1 \circif h \circthen B \circseq \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \circseq \{g\}  \\
+      \t1 \circfi) \circseq \{g\} \circseq C
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-do-while-loop-distl]{crule}{RestrictedAssumpDoWhileLoopDistl}
+  \label{restricted-assump-do-while-loop-distl-rule}
+  If $A$ does not begin with $\{g\}$ and
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$,
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot A \circseq \\
+      \t1 \circif h \circthen X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-do-while-loop-distr]{crule}{RestrictedAssumpDoWhileLoopDistr}
+  \label{restricted-assump-do-while-loop-distr-rule}
+  If $B$ does not begin with $\{g\}$ and
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$,
+  then
+  \begin{circus}
+    \begin{array}{l}
+      (\circmu X \circspot A \circseq \\
+      \t1 \circif h \then \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circseq \Skip \circseq \{g\} \\
+      \t1 \circfi) \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circmu X \circspot A \circseq \\
+      \t1 \circif h \then \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circseq \Skip \circseq \{g\} \\
+      \t1 \circfi) \circseq \{g\} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-while-loop-distl]{crule}{RestrictedAssumpWhileLoopDistl}
+  \label{restricted-assump-while-loop-distl-rule}
+  If $A$ does not begin with $\{g\}$ and
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$,
+  then
+  \begin{circus}
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot \\
+      \t1 \circif h \circthen A \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot \{g\} \circseq \\
+      \t1 \circif h \circthen A \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-while-loop-distr]{crule}{RestrictedAssumpWhileLoopDistr}
+  \label{restricted-assump-while-loop-distr-rule}
+  If $B$ does not begin with $\{g\}$ and
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$,
+  then
+  \begin{circus}
+    \begin{array}{l}
+      (\circmu X \circspot \\
+      \t1 \circif h \circthen A \circseq \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \circseq \{g\}  \\
+      \t1 \circfi) \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circmu X \circspot \\
+      \t1 \circif h \circthen A \circseq \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \circseq \{g\} \\
+      \t1 \circfi) \circseq \{g\} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-extchoice-distl]{crule}{RestrictedAssumpExtchoiceDistl}
+  \label{restricted-assump-extchoice-distl-rule}
+  If $A$ and $B$ do not begin with $\{g\}$ then
+  \begin{circus}
+    \begin{array}{l}
+      \{g\} \circseq (A \extchoice B)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{g\} \circseq ((\{g\} \circseq A) \extchoice (\{g\} \circseq B))
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-extchoice-distr]{crule}{RestrictedAssumpExtchoiceDistr}
+  \label{restricted-assump-extchoice-distr-rule}
+  If $C$ does not begin with $\{g\}$ then
+  \begin{circus}
+    \begin{array}{l}
+      ((A \circseq \{g\}) \extchoice (\{g\} \circseq B)) \circseq C
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      ((A \circseq \{g\}) \extchoice (\{g\} \circseq B)) \circseq \{g\} \circseq C
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-guard-dist]{crule}{RestrictedAssumpGuardDist}
+  \label{restricted-assump-guard-dist-rule}
+  If $A$ does not begin with $\{g\}$ then
+  \begin{circus}
+    \begin{array}{l}
+      \{g\} \circseq \lcircguard h \rcircguard \circguard A
+    \end{array}
+    =
+    \begin{array}{l}
+      \{g\} \circseq \lcircguard h \rcircguard \circguard \{g\} \circseq A
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[restricted-assump-assign-dist]{crule}{RestrictedAssumpAssignDist}
+  \label{restricted-assump-assign-dist-rule}
+  If $B$ does not begin with $\{g\}$ and $x$ is not free in $g$ then
+  \begin{circus}
+    \begin{array}{l}
+      \{g\} \circseq x := e \circseq B
+    \end{array}
+    =
+    \begin{array}{l}
+      \{g\} \circseq x := e \circseq \{g\} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
+
 
 \RefineHandleReturnEPCEmptyFrameStackRule*
 
 \begin{restatable}[refine-$HandleReturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleReturnEPCNonemptyFrameStackRule}
   \label{refine-HandleReturnEPC-nonempty-frameStack-rule}
+  If $k > 1$ then
   \begin{circus}
     \begin{array}{l}
-      HandleReturnEPC \circseq \\
-      \{ frameStack \neq \emptyset \}
+      \{\# frameStack = k\} \circseq \\
+      HandleReturnEPC
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -602,8 +953,8 @@
   \label{refine-HandleAreturnEPC-empty-frameStack-rule}
   \begin{circus}
     \begin{array}{l}
-      HandleAreturnEPC \circseq \\
-      \{ frameStack = \emptyset \}
+      \{\# frameStack = 1\} \circseq \\
+      HandleAreturnEPC
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -616,10 +967,11 @@
 
 \begin{restatable}[refine-$HandleAreturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleAreturnEPCNonemptyFrameStackRule}
   \label{refine-HandleAreturnEPC-nonempty-frameStack-rule}
+  If $k > 1$ then
   \begin{circus}
     \begin{array}{l}
-      HandleAreturnEPC \circseq \\
-      \{ frameStack \neq \emptyset \}
+      \{\# frameStack = k\} \circseq \\
+      HandleAreturnEPC
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -674,6 +1026,96 @@
 % TODO: rules for the areturn cases here?
 
 \subsection{Introduce Variables}
+\label{introduce-variables-appendix-subsection}
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \ApplyTo{Rule~[\nameref{stackFrame-init-frameClass-assump-intro-rule}]}{$A$}
+    \State {\bf exhaustively apply to }{$A$}  \\
+    $\t1$ Rule~[\nameref{frameClass-assump-dist-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-alt-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-alt-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-var-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-var-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-output-prefix-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-output-prefix-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-input-prefix-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-input-prefix-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-infinite-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-infinite-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distl-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distr-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-guard-dist-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-assign-dist-rule}]
+  \end{algorithmic}
+  \caption{IntroduceFrameClassAssumptions(A)}
+  \label{introduce-frameClass-assumptions-algorithm}
+\end{algorithm}
+
+\begin{restatable}[$stackFrame$-init-$frameClass$-assump-intro]{crule}{StackFrameInitFrameClassAssumpIntroRule}
+  \label{stackFrame-init-frameClass-assump-intro-rule}
+  \setlength{\zedindent}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
+      \t1 stackFrame' : StackFrameEPC  | \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \\
+      \t2 {} \subseteq stackFrame'.localVariables \land \\
+      \t1 \# stackFrame'.localVariables = \ell \land \\
+      \t1 stackFrame'.operandStack = \langle\rangle \land \\
+      \t1 stackFrame'.frameClass = c \land \\
+      \t1 stackFrame'.stackSize = s] \rschexpract
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
+      \t1 stackFrame' : StackFrameEPC  | \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \\
+      \t2 {} \subseteq stackFrame'.localVariables \land \\
+      \t1 \# stackFrame'.localVariables = \ell \land \\
+      \t1 stackFrame'.operandStack = \langle\rangle \land \\
+      \t1 stackFrame'.frameClass = c \land \\
+      \t1 stackFrame'.stackSize = s] \rschexpract \circseq \\
+      \{ stackFrame.frameClass = c\}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$frameClass$-assump-dist]{crule}{FrameClassAssumpDistRule}
+  \label{frameClass-assump-dist-rule}
+  If $A$ is one of
+  \begin{itemize}
+  \item $\Skip$,
+  \item $Poll$,
+  \item $HandleAconst\_nullSF$,
+  \item $HandleDupSF$,
+  \item $HandleAloadSF(lvi)$,
+  \item $HandleAstoreSF(lvi)$,
+  \item $HandleIaddSF$,
+  \item $HandleIconstSF(n)$,
+  \item $HandleInegSF$,
+  \item $\lschexpract InterpreterPopSF \rschexpract$,
+  \item $\lschexpract InterpreterPushSF \rschexpract$,
+  \item $\lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract$
+  \end{itemize}
+  and $B$ does not begin with $\{ stackFrame.frameClass = c \}$, then
+  \begin{circus}
+    \begin{array}{l}
+      \{ stackFrame.frameClass = c \} \circseq A \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ stackFrame.frameClass = c \} \circseq A \circseq \\
+      \{ stackFrame.frameClass = c \} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
 
 \RefinePutfieldSFRule*
 
@@ -772,6 +1214,177 @@
   \begin{circus}
     cpi \in ClassRefIndices~c \land \\
     c.constantPool~cpi = ClassRef~cid
+  \end{circus}
+\end{restatable}
+
+\begin{algorithm}
+  \begin{algorithmic}[1]
+    \State \ApplyTo{Rule~[\nameref{stackFrame-init-operandStack-assump-intro-rule}]}{$A$}
+    \State {\bf exhaustively apply to }{$A$}  \\
+    $\t1$ Rule~[\nameref{operandStack-assump-unchanged-dist-rule}] \\
+    $\t1$ Rule~[\nameref{operandStack-assump-increment-dist-rule}] \\
+    $\t1$ Rule~[\nameref{operandStack-assump-decrement-dist-rule}] \\
+    $\t1$ Rule~[\nameref{operandStack-assump-InvokeSF-dist-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-alt-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-alt-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-var-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-var-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-output-prefix-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-output-prefix-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-input-prefix-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-input-prefix-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-infinite-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-infinite-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distl-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distr-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-guard-dist-rule}] \\
+    % $\t1$ Rule~[\nameref{restricted-assump-assign-dist-rule}]
+  \end{algorithmic}
+  \caption{IntroduceOperandStackAssumptions(A)}
+  \label{introduce-operandStack-assumptions-algorithm}
+\end{algorithm}
+
+\begin{restatable}[$operandStack$-init-$frameClass$-assump-intro]{crule}{StackFrameInitOperandStackAssumpIntroRule}
+  \label{stackFrame-init-operandStack-assump-intro-rule}
+  \setlength{\zedindent}{0.1cm}
+  \begin{circus}
+    \begin{array}{l}
+      \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
+      \t1 stackFrame' : StackFrameEPC  | \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \\
+      \t2 {} \subseteq stackFrame'.localVariables \land \\
+      \t1 \# stackFrame'.localVariables = \ell \land \\
+      \t1 stackFrame'.operandStack = \langle\rangle \land \\
+      \t1 stackFrame'.frameClass = c \land \\
+      \t1 stackFrame'.stackSize = s] \rschexpract
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
+      \t1 stackFrame' : StackFrameEPC  | \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \\
+      \t2 {} \subseteq stackFrame'.localVariables \land \\
+      \t1 \# stackFrame'.localVariables = \ell \land \\
+      \t1 stackFrame'.operandStack = \langle\rangle \land \\
+      \t1 stackFrame'.frameClass = c \land \\
+      \t1 stackFrame'.stackSize = s] \rschexpract \circseq \\
+      \{ \# stackFrame.operandStack = 0 \}
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$operandStack$-assump-unchanged-dist]{crule}{OperandStackAssumpUnchangedDistRule}
+  \label{operandStack-assump-unchanged-dist-rule}
+  \setlength{\zedindent}{0.1cm}
+  If $A$ is one of
+  \begin{itemize}
+  \item $\Skip$,
+  \item $Poll$,
+  % \item $HandleAconst\_nullSF$,
+  % \item $HandleDupSF$,
+  % \item $HandleAloadSF(lvi)$,
+  % \item $HandleAstoreSF(lvi)$,
+  % \item $HandleIaddSF$,
+  % \item $HandleIconstSF(n)$,
+  \item $HandleInegSF$,
+  % \item $\lschexpract InterpreterPopSF \rschexpract$,
+  % \item $\lschexpract InterpreterPushSF \rschexpract$,
+  % \item $\lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract$
+  \end{itemize}
+  and $B$ does not begin with $\{ \# stackFrame.operandStack = k \}$, then
+  \begin{circus}
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq A \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq A \circseq \\ \{ \# stackFrame.operandStack = k \} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$operandStack$-assump-increment-dist]{crule}{OperandStackAssumpIncrementDistRule}
+  \label{operandStack-assump-increment-dist-rule}
+  \setlength{\zedindent}{0.1cm}
+  If $A$ is one of
+  \begin{itemize}
+  % \item $\Skip$,
+  % \item $Poll$,
+  \item $HandleAconst\_nullSF$,
+  \item $HandleDupSF$,
+  \item $HandleAloadSF(lvi)$,
+  % \item $HandleAstoreSF(lvi)$,
+  % \item $HandleIaddSF$,
+  \item $HandleIconstSF(n)$,
+  % \item $HandleInegSF$,
+  % \item $\lschexpract InterpreterPopSF \rschexpract$,
+  \item $\lschexpract InterpreterPushSF \rschexpract$,
+  % \item $\lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract$
+  \end{itemize}
+  and $B$ does not begin with $\{ \# stackFrame.operandStack = k+1 \}$, then
+  \begin{circus}
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq A \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq A \circseq \\
+      \{ \# stackFrame.operandStack = k+1 \} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$operandStack$-assump-decrement-dist]{crule}{OperandStackAssumpDecrementDistRule}
+  \label{operandStack-assump-decrement-dist-rule}
+  \setlength{\zedindent}{0.1cm}
+  If $A$ is one of
+  \begin{itemize}
+  % \item $\Skip$,
+  % \item $Poll$,
+  % \item $HandleAconst\_nullSF$,
+  % \item $HandleDupSF$,
+  % \item $HandleAloadSF(lvi)$,
+  \item $HandleAstoreSF(lvi)$,
+  \item $HandleIaddSF$,
+  \item $HandleIconstSF(n)$,
+  % \item $HandleInegSF$,
+  \item $\lschexpract InterpreterPopSF \rschexpract$,
+  % \item $\lschexpract InterpreterPushSF \rschexpract$,
+  % \item $\lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract$
+  \end{itemize}
+  and $B$ does not begin with $\{ \# stackFrame.operandStack = k-1 \}$, then
+  \begin{circus}
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq A \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq A \circseq \\ \{ \# stackFrame.operandStack = k-1 \} \circseq B
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[$operandStack$-assump-$InvokeSF$-dist]{crule}{OperandStackAssumpInvokeSFDistRule}
+  \label{operandStack-assump-InvokeSF-dist-rule}
+  \setlength{\zedindent}{0.1cm}
+  If $B$ does not begin with $\{ \# stackFrame.operandStack = k-m \}$, then
+  \begin{circus}
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq \\
+      \lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract \circseq B
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \{ \# stackFrame.operandStack = k \} \circseq \\
+      \lschexpract \exists argsToPop? == m @ InvokeSF \rschexpract \circseq \\
+      \{ \# stackFrame.operandStack = k-m \} \circseq B
+    \end{array}
   \end{circus}
 \end{restatable}
 

@@ -29,8 +29,6 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-remove-returns-introduce-method-action}
     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$methodBody$}{$methodName'$}
     \label{algorithm-eliminate-returns-copy-method-out}
-    
-    
     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
     \label{algorithm-eliminate-returns-copy-method-in}
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
@@ -46,6 +44,10 @@ procedure \Call{RemoveLauncherReturns}{}.
     \State \ExhaustivelyApply{Rule~[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]}
     \State \ExhaustivelyApply{Rule~[\nameref{refine-HandleAreturnEPC-nonempty-frameStack-rule}]}
     \label{algorithm-eliminate-returns-try-end}
+    \State \ExhaustivelyApply{Law~[\nameref{assump-elim-law}]}
+    \label{algorithm-remove-launcher-returns-assump-elim}
+    \State \ExhaustivelyApply{Law~[\nameref{seq-unitl-law}]}
+    \label{algorithm-remove-launcher-returns-seq-unitl}
     \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$MainThread$}}{$ExecuteMethod$}
     \label{algorithm-copy-ExecuteMethod-in-MainThread}
     \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$Started$}}{$ExecuteMethod$}
@@ -66,59 +68,6 @@ procedure \Call{RemoveLauncherReturns}{}.
   \end{algorithmic}
   \caption{RemoveLauncherReturns}
   \label{remove-launcher-returns-algorithm}
-\end{algorithm}
-
-\begin{algorithm}
-  \begin{algorithmic}
-    \ExhaustivelyTry
-    \MatchInBegin{$\{g\} \circseq \circif {} \circelse i \in I \circspot h_i \circthen B_i \circfi$}{$A$}
-    \State \ApplyTo{Law~[\nameref{assump-alt-dist-remove-law}]}{$A$}
-    \For{$i \gets I$}
-    \State \Call{DistributeFrameStackAssumptions}{$B_i$}
-    \EndFor
-    \State \ApplyReverseTo{Law~[\nameref{alt-seq-dist-law}]}{$A$}
-    \EndMatch
-    \MatchIn{$\{g\} \circseq (\circmu X \circspot F(X))$}{$A$}
-    \Let{$G(\{g\} \circseq X) = $ \Call{DistributeFrameStackAssumptions}{}$(\{g\} \circseq F(X))$}
-    \Let{$H(X) \circseq \{g\} =  $ \Call{DistributeFrameStackAssumptions}{}$(G(X \circseq \{g\}))$}
-    \State \ApplyToFor{Law~[\nameref{assump-rec-dist-refine-law}]}{$A$}{$G$, $H$}
-    \State \ApplyTo{Rule~[\nameref{frameStack-assump-NewStackFrame-dist-rule}]}{$A$}
-    \MatchInBegin{$\{ g \} \circseq M$}{$A$}
-    \State \ApplyFor{Law~[action-intro-law]}{$M'$, $(\{ g \} \circseq M)$}
-    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$A$}{$M'$}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$M'$}}{$M$}
-    \State \Call{DistributeFrameStackAssumptions}{\Call{ActionBody}{$M'$}}
-    \State \ApplyReverseFor{Law~[action-intro-law]}{$M$, \Call{ActionBody}{$M$}}
-    \Match{\Call{ActionBody}{$M'$}}{$A \circseq \{ g \}$}
-    \State \ApplyFor{Law~[action-intro-law]}{$M$, $A$}
-    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$M'$}}{$M$}
-    \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{$A$}{$M'$}
-    \State \ApplyReverseFor{Law~[action-intro-law]}{$M'$, \Call{ActionBody}{$M'$}}
-    \EndMatch
-    \MatchInBegin{$\{ g \} \circseq HandleReturn \circseq B$ {\bf or} $\{ g \} \circseq HandleAreturn \circseq B$}{$A$}
-    \State \ApplyTo{Rule~[\nameref{frameStack-assump-return-dist-rule}]}{$A$}
-    \State \Call{DistributeFrameStackAssumptions}{$B$}
-    \State \Return
-    \EndMatch
-    \MatchInBegin{$\{ g \} \circseq (\circvar x : T \circspot B)$}{$A$}
-    \State \ApplyTo{Law~[\nameref{var-seq-extl-law}]}{$\{ g \} \circseq (\circvar x : T \circspot B)$}
-    \State \Call{DistributeFrameStackAssumptions}{}{$(\{ g \} \circseq B)$}
-    \State \ApplyTo{Law~[\nameref{var-seq-extr-law}]}{$(\circvar x : T \circspot B \circseq \{ g \})$}
-    \EndMatch
-    \MatchInBegin{$\{g\} \circseq c?e \then B$}{$A$}
-    \State \ApplyTo{Law~[\nameref{assump-input-prefix-dist-move-law}]}{$c \then B$}
-    \State \Call{DistributeFrameStackAssumptions}{}{$(\{ g \} \circseq B)$}
-    \State \ApplyTo{Law~[\nameref{input-prefix-seq-assoc-law}]}{$c?e \then (B \circseq \{ g \})$}
-    \EndMatch
-    \MatchInBegin{$\{g\} \circseq c!e \then B$}{$A$}
-    \State \ApplyTo{Law~[\nameref{assump-output-prefix-dist-move-law}]}{$c \then B$}
-    \State \Call{DistributeFrameStackAssumptions}{}{$(\{ g \} \circseq B)$}
-    \State \ApplyTo{Law~[\nameref{output-prefix-seq-assoc-law}]}{$c?e \then (B \circseq \{ g \})$}
-    \EndMatch
-    \State \ApplyTo{Rule~[\nameref{frameStack-assump-instruction-dist-rule}]}{$A$}
-    \EndExhaustivelyTry
-  \end{algorithmic}
-  \caption{DistributeFrameStackAssumptions($A$)}
 \end{algorithm}
   
 Algorithm~\ref{remove-launcher-returns-algorithm} begins by iterating
@@ -178,26 +127,38 @@ line~\ref{algorithm-rename-method-action}, using
 Law~[\nameref{action-rename-law}], which allows renaming an action to a
 fresh name.
 
-We then introduce assumptions that state whether the $frameStack$ is
-empty or not.
-These are introduced by extracting an assumption from the state
-initialisation schema $InterpreterInit$, in the main action of $ThrCF$
-(which has the same form as in $Thr$), stating that the $frameStack$
-is empty.
-This assumption is then distributed through each action using standard
-laws, with most actions not affecting the depth of the $frameStack$,
-$InterpreterNewStackFrame$ increasing its depth by one, and the return
-instructions decreasing its depth by one.
-The result is that the return instructions following the method
-actions in $ExecuteMethod$ have an assumption $frameStack = \emptyset$
-following them, and the return instructions occurring in the middle of
-other methods have an assumption $frameStack \neq \emptyset$.
-% This can be seen in
-% Figure~\ref{efs-return-assumption-distribution-figure}.
-This introduction of assumptions is indicated in
-Algorithm~\ref{remove-launcher-returns-algorithm} by the call to an
+We then introduce assumptions that state the depth of the
+$frameStack$, so that we can determine whether the $frameStack$ is
+empty or not at each return instruction.
+This introduction of assumptions is performed by the call to an
 \Call{IntroduceFrameStackAssumptions}{} procedure on
 line~\ref{algorithm-introduce-frameStack-assumptions}.
+The \Call{IntroduceFrameStackAssumptions}{} procedure introduces an
+assumption from the $InterpreterInitEPC$ schema (which is the result
+of applying the data refinement in
+Section~\ref{remove-pc-from-state-subsection} to $InterpreterInit$) at
+the start of the main action of $ThrCF_{bc,cs}$.
+The assumption is then distributed throughout the process by
+exhaustive application of restricted versions of standard algebraic
+distribution laws and rules stating how the size of $frameStack$ is
+affected by the operations that appear in the code resulting from the
+elimination of program counter.
+The restriction applied to these laws is that the assumption is not
+distributed if an identical assumption is already in place, thus
+preventing unbounded distribution of the assumptions and ensuring the
+procedure terminates.
+As the procedure is a straightforward application of these rules and
+laws, we omit its definition here.
+It is defined by
+Algorithm~\ref{introduce-frameStack-assumptions-algorithm}, which is
+included in Appendix~\ref{remove-launcher-returns-appendix-subsection}
+along with the rules used by it. 
+The result of this procedure is that the return instructions following
+the method actions in $ExecuteMethod$ have an assumption
+$\# frameStack = 1$ before them, and the return instructions occurring
+in the middle of other methods have an assumption $\# frameStack = k$
+for some $k > 1$.
+
 
 % \begin{figure}[t!]
 %   \centering
@@ -284,7 +245,7 @@ line~\ref{algorithm-introduce-frameStack-assumptions}.
 % \end{figure}
 
 After assumptions on the state of the $frameStack$ have been
-introduced,we can handle the return actions at each point where they
+introduced, we can handle the return actions at each point where they
 occur, applying the rules on
 lines~\ref{algorithm-eliminate-returns-try-begin}
 to~\ref{algorithm-eliminate-returns-try-end} of the algorithm wherever
@@ -292,22 +253,24 @@ possible.
 An example of one of these rules is
 Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}], shown
 in Figure~\ref{refine-HandleReturnEPC-empty-frameStack-rule-figure}.
-This rule replaces an occurrence of $HandleReturnEPC$ that causes the
-$frameStack$ to be empty with a call to the data operation
+This rule replaces an occurrence of $HandleReturnEPC$ where the
+$frameStack$ has a size of one, with a call to the data operation
 $InterpreterReturnEPC$ followed by a communication with the $Launcher$
 on the $executeMethodRet$ channel.
 The value communicated on $executeMethodRet$ is $returnValue$,
 introduced in a variable block.
 This essentially expands the definition of $HandleReturnEPC$ and
-resolves the choice over whether $frameStack$ is empty.
+resolves the choice over whether $frameStack$ is empty, since the
+operation causes the $frameStack$ to be empty when it only has one
+stack frame on it.
 
 \begin{figure}[tp!]
   \begin{restatable}[refine-$HandleReturnEPC$-empty-$frameStack$]{crule}{RefineHandleReturnEPCEmptyFrameStackRule}
   \label{refine-HandleReturnEPC-empty-frameStack-rule}
   \begin{circus}
     \begin{array}{l}
-      HandleReturnEPC \circseq \\
-      \{ frameStack = \emptyset \}
+      \{\# frameStack = 1\} \circseq \\
+      HandleReturnEPC
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -321,14 +284,21 @@ resolves the choice over whether $frameStack$ is empty.
 \label{refine-HandleReturnEPC-empty-frameStack-rule-figure}
 \end{figure}
 
-The other rules in the try block are similar, handling the cases for
-the $frameStack$ being left nonempty and the $HandleAreturnEPC$
-action.
+The other rules on lines~\ref{algorithm-eliminate-returns-try-begin}
+to~\ref{algorithm-eliminate-returns-try-end} are similar, handling the
+cases for the $frameStack$ being left nonempty and the
+$HandleAreturnEPC$ action.
 They can be found in Appendix~\ref{compilation-rules-appendix}.
 In the cases when the $frameStack$ is not empty after execution of the
 return instruction, which occurs when a method is called from within
 another method, the communication on $executeMethodRet$ and the
 variable block for $returnValue$ are removed, since they are not used.
+After application of these rules, any remaining assumptions are
+eliminated by application of Law~[\nameref{assump-elim-law}] and
+Law~[\nameref{seq-unitl-law}] on
+lines~\ref{algorithm-remove-launcher-returns-assump-elim}
+and~\ref{algorithm-remove-launcher-returns-seq-unitl}, since they are
+no longer necessary.
 
 After the return instructions have been refined, the $ExecuteMethod$
 action contains a choice over method actions that end with a variable
