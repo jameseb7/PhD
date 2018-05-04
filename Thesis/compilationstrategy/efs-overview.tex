@@ -20,8 +20,7 @@ be summarised by the following theorem.
 In this stage, we operate mainly on the method actions introduced in
 the previous stage.
 Algorithm~\ref{efs-algorithm} describes the strategy for transforming
-the method actions to introduce variables and eliminate the
-$frameStack$.
+those actions to introduce variables and eliminate the $frameStack$.
 \begin{algorithm}[tp!]
   \begin{algorithmic}[1]
     \State \Call{RemoveLauncherReturns}{}
@@ -39,17 +38,17 @@ $frameStack$.
   \label{efs-algorithm}
 \end{algorithm}
 It begins on line~\ref{algorithm-remove-launcher-returns}, by refining
-the return instructions that occur at the end of each method to remove
-the $CheckLauncherReturn$ actions that occur in those instructions,
-resolving the check of whether $frameStack$ is empty.
+the return instructions that occur at the end of each method action to
+remove the $CheckLauncherReturn$ actions that occur in those
+instructions, resolving the check of whether $frameStack$ is empty.
 This removes the only remaining use of $frameStack$ as a whole,
 enabling us to consider the stack frames for each method individually.
-We introduce a variable in each method that contains its stack
-frame on line~\ref{algorithm-localise-stack-frames} of the algorithm,
-and convert the operations of the method to operate over the new
-variable rather than the global $frameStack$.
-Then, on line~\ref{algorithm-introduce-variables}, we perform local
-data refinements to convert the stack frame for each method into
+We introduce a variable in each method that contains its stack frame
+on line~\ref{algorithm-localise-stack-frames} of the algorithm, and
+convert the operations of the method to operate over the new variable
+rather than the global $frameStack$.
+Afterwards, on line~\ref{algorithm-introduce-variables}, we perform
+local data refinements to convert the stack frame for each method into
 variables representing the local variables and operand stack slots of
 the method.
 Finally, we eliminate the, now unused, $frameStack$ from the state of
@@ -60,8 +59,8 @@ explaining them with reference to the running example introduced in
 Section~\ref{overview-subsection}.
 The removal of launcher returns is discussed first, in
 Section~\ref{remove-launcher-returns-subsection}.
-Then, the localisation of stack frames is discussed in
+Afterwards, the localisation of stack frames is discussed in
 Section~\ref{localise-stack-frames-subsection}, followed by variable
 introduction in Section~\ref{introduce-variables-subsection}.
-Finally we discuss the remove of $frameStack$ from the state of the
+Finally, we discuss the removal of $frameStack$ from the state of the
 process, in Section~\ref{remove-frameStack-from-state-subsection}.

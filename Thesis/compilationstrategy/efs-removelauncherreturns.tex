@@ -1,5 +1,5 @@
-After the elimination of program counter stage, each conditional
-branch in a method ends with a return instruction or an infinite loop.
+After the previous stage, each conditional branch in a method ends
+with a return instruction or an infinite loop.
 This can be seen in
 Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}, presented
 earlier, where $TPK\_handleAsyncEvent$ ends with a $HandleReturnEPC$
@@ -23,18 +23,8 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-introduce-infinite-loop-returns}
     \State \ExhaustivelyApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$methodBody$}
     \label{algorithm-distribute-returns}
-
-    \Match{$methodBody$}{($A \circseq returnAction$)}
-    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, $A$}
-    \label{algorithm-remove-returns-introduce-method-action}
-    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$methodBody$}{$methodName'$}
-    \label{algorithm-eliminate-returns-copy-method-out}
-    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    \label{algorithm-eliminate-returns-copy-method-in}
-    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
-    \label{algorithm-remove-returns-eliminate-method-action}
-    \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName$, $methodName'$}
-    \label{algorithm-rename-method-action}
+    \State \Call{RedefineMethodActionExcludingReturnAction}{$methodName$,$returnAction$}
+    \label{algorithm-redefine-method-action-excluding-return-action}
     \EndFor
     \State \Call{IntroduceFrameStackAssumptions}{}
     \label{algorithm-introduce-frameStack-assumptions}
@@ -58,7 +48,7 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-ExecuteMethod-refinement-Started}
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$, \Call{ActionBody}{$ExecuteMethod$}}
     \label{algorithm-remove-ExecuteMethod}
-    \MatchIn{$\begin{array}[t]{l}(\circvar retVal : Word \circspot (A)(c, m, a, retVal) \circseq \\\t1 executeMethodRet!thread!retVal \then \Skip)\end{array}$}{\Call{ActionBody}{Started}}
+    \MatchIn{$\begin{array}[t]{l}(\circvar retVal : Word \circspot (A)(c, m, a, retVal) \circseq \\\t1 executeMethodRet!thread!retVal \then \Skip)\end{array}$}{\Call{ActionBody}{$Started$}}
   \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$ExecuteMethod$, $A$}
     \label{algorithm-reintroduce-ExecuteMethod}
     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$MainThread$}{$ExecuteMethod$}
@@ -81,22 +71,21 @@ corresponding to $methodName$.
 
 The return actions that may occur at the end of method branches are
 either $HandleAreturnEPC$ or $HandleReturnEPC$.
-$HandleAreturnEPC$ only occurs in methods that return a value and,
-conversely, $HandleReturnEPC$ only occurs in methods that do not
+$HandleAreturnEPC$ occurs only in methods that return a value and,
+conversely, $HandleReturnEPC$ occurs only in methods that do not
 return a value.
 We can thus determine which return action a method uses by examining
-the syntax of $methodBody$ to see which action occurs at the end of
-the branches.
+$methodBody$ to see which action occurs at the end of the branches.
 A method in which all branches end in infinite loops is treated as
 using the return action $HandleReturnEPC$, since it does not produce a
 value.
 We determine the return action type, $returnAction$, for $methodBody$
 on line~\ref{algorithm-determine-return-action}, using a syntactic
-function \Call{ReturnAction}.
+function \Call{ReturnAction}{}.
 
-Having determined the return action for a method, we convert the
-method to a form in which it has one occurrence of that action at the
-end of its body.
+Having determined the return action for a method, we convert it to a
+form in which it has one occurrence of that action at the end of its
+body.
 This is achieved by introducing occurrences of $returnAction$ after
 infinite loops in $methodBody$ using
 Law~[\nameref{rec-action-intro-law}] and distributing occurrences of
@@ -109,23 +98,35 @@ Algorithm~\ref{remove-launcher-returns-algorithm}.
 
 When the method has a single return instruction at the end, it is
 redefined to exclude the return action.
-This is performed by introducing an intermediate action named
-$methodName'$ on
-line~\ref{algorithm-remove-returns-introduce-method-action}, using
-Law~[\nameref{action-intro-law}], containing the actions of
-$methodBody$ before $returnAction$.
-Those actions are then replaced with a reference to $methodName'$ on
-line~\ref{algorithm-eliminate-returns-copy-method-out} via an
-application of Law~[\nameref{copy-rule-law}].
-The definition of $methodName$ is then expanded everywhere on
-line~\ref{algorithm-eliminate-returns-copy-method-in}, replacing
-references to it with a reference to $methodName'$ and $returnAction$.
-The $methodName$ action is then removed on
-line~\ref{algorithm-remove-returns-eliminate-method-action} and the
-$methodName'$ action is renamed to $methodName$ on
-line~\ref{algorithm-rename-method-action}, using
-Law~[\nameref{action-rename-law}], which allows renaming an action to a
-fresh name.
+This is performed using Law~[\nameref{copy-rule-law}] and
+Law~[\nameref{action-intro-law}], but since the use of these laws to
+redefine an action in this way is standard, it is specified in a
+separate procedure
+\Call{RedefineMethodActionExcludingReturnAction}{$methodName$,$returnAction$},
+called on
+line~\ref{algorithm-redefine-method-action-excluding-return-action} of
+Algorithm~\ref{remove-launcher-returns-algorithm}.
+This procedure is defined in
+Algorithm~\ref{redefine-method-action-excluding-return-action-algorithm}
+which is included in
+Appendix~\ref{remove-launcher-returns-appendix-subsection}.
+% This is performed by introducing an intermediate action named
+% $methodName'$ on
+% line~\ref{algorithm-remove-returns-introduce-method-action}, using
+% Law~[\nameref{action-intro-law}], containing the actions of
+% $methodBody$ before $returnAction$.
+% Those actions are then replaced with a reference to $methodName'$ on
+% line~\ref{algorithm-eliminate-returns-copy-method-out} via an
+% application of Law~[\nameref{copy-rule-law}].
+% The definition of $methodName$ is then expanded everywhere on
+% line~\ref{algorithm-eliminate-returns-copy-method-in}, replacing
+% references to it with a reference to $methodName'$ and $returnAction$.
+% The $methodName$ action is then removed on
+% line~\ref{algorithm-remove-returns-eliminate-method-action} and the
+% $methodName'$ action is renamed to $methodName$ on
+% line~\ref{algorithm-rename-method-action}, using
+% Law~[\nameref{action-rename-law}], which allows renaming an action to
+% a fresh name.
 
 We then introduce assumptions that state the depth of the
 $frameStack$, so that we can determine whether the $frameStack$ is
@@ -133,32 +134,30 @@ empty or not at each return instruction.
 This introduction of assumptions is performed by the call to an
 \Call{IntroduceFrameStackAssumptions}{} procedure on
 line~\ref{algorithm-introduce-frameStack-assumptions}.
-The \Call{IntroduceFrameStackAssumptions}{} procedure introduces an
-assumption from the $InterpreterInitEPC$ schema (which is the result
-of applying the data refinement in
-Section~\ref{remove-pc-from-state-subsection} to $InterpreterInit$) at
-the start of the main action of $ThrCF_{bc,cs}$.
+It is defined by
+Algorithm~\ref{introduce-frameStack-assumptions-algorithm}, which is
+included in Appendix~\ref{remove-launcher-returns-appendix-subsection}
+along with the rules used by it. 
+This procedure introduces an assumption $\{\# frameStack = 0 \}$ from
+the $InterpreterInitEPC$ schema (which is the result of applying the
+data refinement in Section~\ref{remove-pc-from-state-subsection} to
+$InterpreterInit$) at the start of the main action of $ThrCF_{bc,cs}$.
 The assumption is then distributed throughout the process by
 exhaustive application of restricted versions of standard algebraic
-distribution laws and rules stating how the size of $frameStack$ is
-affected by the operations that appear in the code resulting from the
-elimination of program counter.
+assumption distribution laws and rules stating how the size of
+$frameStack$ is affected by the operations that appear in the code
+resulting from the elimination of program counter.
 The restriction applied to these laws is that the assumption is not
 distributed if an identical assumption is already in place, thus
 preventing unbounded distribution of the assumptions and ensuring the
 procedure terminates.
 As the procedure is a straightforward application of these rules and
 laws, we omit its definition here.
-It is defined by
-Algorithm~\ref{introduce-frameStack-assumptions-algorithm}, which is
-included in Appendix~\ref{remove-launcher-returns-appendix-subsection}
-along with the rules used by it. 
 The result of this procedure is that the return instructions following
 the method actions in $ExecuteMethod$ have an assumption
 $\# frameStack = 1$ before them, and the return instructions occurring
 in the middle of other methods have an assumption $\# frameStack = k$
 for some $k > 1$.
-
 
 % \begin{figure}[t!]
 %   \centering
@@ -248,9 +247,9 @@ After assumptions on the state of the $frameStack$ have been
 introduced, we can handle the return actions at each point where they
 occur, applying the rules on
 lines~\ref{algorithm-eliminate-returns-try-begin}
-to~\ref{algorithm-eliminate-returns-try-end} of the algorithm wherever
-possible.
-An example of one of these rules is
+to~\ref{algorithm-eliminate-returns-try-end} of
+Algorithm~\ref{remove-launcher-returns-algorithm} wherever possible.
+An example is
 Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}], shown
 in Figure~\ref{refine-HandleReturnEPC-empty-frameStack-rule-figure}.
 This rule replaces an occurrence of $HandleReturnEPC$ where the
@@ -259,10 +258,18 @@ $InterpreterReturnEPC$ followed by a communication with the $Launcher$
 on the $executeMethodRet$ channel.
 The value communicated on $executeMethodRet$ is $returnValue$,
 introduced in a variable block.
-This essentially expands the definition of $HandleReturnEPC$ and
-resolves the choice over whether $frameStack$ is empty, since the
-operation causes the $frameStack$ to be empty when it only has one
-stack frame on it.
+This essentially expands the definition of $HandleReturnEPC$, shown
+below, and resolves the choice in $CheckLauncherReturn$ (presented
+earlier in Section~\ref{cee-interpreter-subsection}) over whether
+$frameStack$ is empty.
+This involves distributing the assumption over the
+$InterpreterReturnEPC$ data operation, which removes the last stack
+frame from the $frameStack$, causing $frameStack$ to be empty when
+$\# frameStack = 1$. 
+\begin{circus}
+  HandleReturnEPC \circdef \circvar returnValue : Word \circspot \\
+  \t1 \lschexpract InterpreterReturnEPC \rschexpract \circseq CheckLauncherReturn(returnValue)
+\end{circus}
 
 \begin{figure}[tp!]
   \begin{restatable}[refine-$HandleReturnEPC$-empty-$frameStack$]{crule}{RefineHandleReturnEPCEmptyFrameStackRule}
@@ -300,12 +307,49 @@ lines~\ref{algorithm-remove-launcher-returns-assump-elim}
 and~\ref{algorithm-remove-launcher-returns-seq-unitl}, since they are
 no longer necessary.
 
-After the return instructions have been refined, the $ExecuteMethod$
-action contains a choice over method actions that end with a variable
-block and communication on $executeMethodRet$.
-The variable blocks are expanded to cover the whole of the
-$ExecuteMethod$ action, and the communications on $executeMethodRet$
-are distributed outside the action.
+\begin{figure}[tp!]
+  \centering
+  % \setlength{\zedtab}{0.4cm}
+  % \setlength{\zedindent}{0pt}
+  % \setlength{\zedleftsep}{0pt}
+  % \setlength{\abovedisplayskip}{0pt}
+  % \setlength{\belowdisplayskip}{0pt}
+  % \setlength{\abovedisplayshortskip}{0pt}
+  % \setlength{\belowdisplayshortskip}{0pt}
+  \begin{circusaction}
+    ExecuteMethod \circdef \\
+    \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+    \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \circseq \\
+    \t2 (\circvar returnValue : Word \circspot \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
+    \t3 executeMethodRet!thread!returnValue \then \Skip) \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \circseq \\
+    \t2 (\circvar returnValue : Word \circspot \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
+    \t3 executeMethodRet!thread!returnValue \then \Skip) \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \circseq \\
+    \t2 (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn2EPC \rschexpract \circseq \\
+    \t3 executeMethodRet!thread!returnValue \then \Skip) \\
+    \t1 {} \cdots {} \\
+    \t1 \circfi
+  \end{circusaction}
+  \caption{$ExecuteMethod$ after refining return instructions}
+  \label{efs-ExecutMethod-refined-return-instructions-figure}
+\end{figure}
+
+Since the return action at the end of each method in $ExecuteMethod$
+causes $frameStack$ to be empty, the application of these
+transformations to our running example results in the $ExecuteMethod$
+action shown in
+Figure~\ref{efs-ExecutMethod-refined-return-instructions-figure}.
+Each method action is followed by a $returnValue$ variable block with
+a data operation followed by an $executeMethodRet$ communication,
+which results from the refinement of the return actions.
+While the data operations differ depending on whether a value is
+returned from the method or not, the variable block and
+$executeMethodRet$ communication are the same for each method.
+They can thus be distributed outside the $ExecuteMethod$ action.
 This is performed by first replacing $ExecuteMethod$ with its
 definition, via an application of Law~[\nameref{copy-rule-law}] on
 lines~\ref{algorithm-copy-ExecuteMethod-in-MainThread}
@@ -313,7 +357,8 @@ and~\ref{algorithm-copy-ExecuteMethod-in-Started}, then applying
 Rule~[\nameref{ExecuteMethod-refinement-rule}], shown in
 Figure~\ref{ExecuteMethod-refinement-rule-figure}, on
 lines~\ref{algorithm-ExecuteMethod-refinement-MainThread}
-and~\ref{algorithm-ExecuteMethod-refinement-Started}.
+and~\ref{algorithm-ExecuteMethod-refinement-Started}, to distribute the
+variable block and communication.
 
 \begin{figure}[thp]
   \begin{restatable}[$ExecuteMethod$-refinement]{crule}{ExecuteMethodRefinementRule}
@@ -370,12 +415,13 @@ The actions are then copied back out using the new definition by
 application of Law~[\nameref{copy-rule-law}] on
 lines~\ref{algorithm-copy-ExecuteMethod-out-MainThread}
 and~\ref{algorithm-copy-ExecuteMethod-out-Started}.
-For our example, this results in the $ExecuteMethod$, $MainThread$ and
-$Started$ actions shown in
-Figure~\ref{efs-eliminate-returns-example-figure1}.
-The refinement of the return actions in methods causes
-$TPK\_handleAsyncEvent$ to have the form shown in
-Figure~\ref{efs-eliminate-returns-example-figure1}.
+This results in the $MainThread$ and $Started$ actions shown in
+Figure~\ref{efs-eliminate-returns-MainThread-Started-figure}.
+Within the body of a method, the return actions have been refined to
+simple data operations with no $executeMethodRet$ communication, as
+can be seen in
+Figure~\ref{efs-eliminate-returns-handleAsyncEvent-example-figure},
+which shows the result of this stage on $TPK\_handleAsyncEvent$.
 
 \begin{figure}[tp!]
   \centering
@@ -386,23 +432,6 @@ Figure~\ref{efs-eliminate-returns-example-figure1}.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
-  \begin{circusaction}
-    ExecuteMethod \circdef \\
-    \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
-    \t1 \circres returnValue : Word \circspot \\
-    \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \circseq \\
-    \t2 \lschexpract InterpreterReturnEPC \rschexpract  \\
-    \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \circseq \\
-    \t2 \lschexpract InterpreterReturnEPC \rschexpract \\
-    \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \circseq \\
-    \t2 \lschexpract InterpreterAreturnEPC \rschexpract \\
-    \t1 {} \cdots {} \\
-    \t1 \circfi
-  \end{circusaction}
-
   \begin{circusaction}
     MainThread \circdef \\
     \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
@@ -434,9 +463,9 @@ Figure~\ref{efs-eliminate-returns-example-figure1}.
     \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
     \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
   \end{circusaction}
-  \caption{$ExecuteMethod$, $MainThread$ and $Started$ after
-    $Launcher$ return elimination}
-  \label{efs-eliminate-returns-example-figure1}
+  \caption{$MainThread$ and $Started$ after $Launcher$ return
+    elimination}
+  \label{efs-eliminate-returns-MainThread-Started-figure}
 \end{figure}
 
 \begin{figure}[tp!]
@@ -483,7 +512,7 @@ Figure~\ref{efs-eliminate-returns-example-figure1}.
     \t4 \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
     \t4 \lschexpract InterpreterNewStackFrame[\\
     \t5 TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-    \t3 Poll \circseq TPK\_f \circseq \lschexpract InterpreterAreturn1 \rschexpract \circseq Poll \circseq \\
+    \t3 Poll \circseq TPK\_f \circseq \lschexpract InterpreterAreturn1EPC \rschexpract \circseq Poll \circseq \\
     % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
     \t3 {} \cdots {} \\
     % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
@@ -504,5 +533,5 @@ Figure~\ref{efs-eliminate-returns-example-figure1}.
   \end{circusaction}
   \caption{$TPK\_handleAsyncEvent$ after $Launcher$ return
     elimination}
-  \label{efs-eliminate-returns-example-figure2}
+  \label{efs-eliminate-returns-handleAsyncEvent-example-figure}
 \end{figure}

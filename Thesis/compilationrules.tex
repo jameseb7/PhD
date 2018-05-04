@@ -525,7 +525,21 @@
 \subsection{Remove Launcher Returns}
 \label{remove-launcher-returns-appendix-subsection}
 
-\begin{algorithm}
+\begin{algorithm}[htb!]
+  \begin{algorithmic}[1]
+    \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
+    \Match{$methodBody$}{($A \circseq returnAction$)}
+    \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, $A$}
+    \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$methodBody$}{$methodName'$}
+    \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+    \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
+    \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName$, $methodName'$}
+  \end{algorithmic}
+  \caption{RedefineMethodActionExcludingReturnAction($methodName$,$returnAction$)}
+  \label{redefine-method-action-excluding-return-action-algorithm}
+\end{algorithm}
+
+\begin{algorithm}[htb!]
   \begin{algorithmic}[1]
     \State \Apply{Rule~[\nameref{InterpreterInitEPC-frameStack-assump-intro-rule}]} 
     \State {\bf exhaustively apply} \\
@@ -556,6 +570,8 @@
   \caption{IntroduceFrameStackAssumptions}
   \label{introduce-frameStack-assumptions-algorithm}
 \end{algorithm}
+
+\FloatBarrier
 
 \begin{restatable}[$InterpreterInitEPC$-$frameStack$-assump-intro]{crule}{InterpreterInitEPCFrameStackAssumpIntro}
   \label{InterpreterInitEPC-frameStack-assump-intro-rule}
@@ -959,7 +975,7 @@
     \circrefines_A
     \begin{array}{l}
       \circvar returnValue : Word \circspot \\
-      \lschexpract InterpreterAreturn2 \rschexpract \circseq \\
+      \lschexpract InterpreterAreturn2EPC \rschexpract \circseq \\
       executeMethodRet!thread!returnValue \then \Skip
     \end{array}
   \end{circus}
@@ -975,7 +991,7 @@
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \lschexpract InterpreterAreturn1 \rschexpract
+      \lschexpract InterpreterAreturn1EPC \rschexpract
     \end{array}
   \end{circus}
 \end{restatable}
