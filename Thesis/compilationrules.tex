@@ -997,8 +997,38 @@
 \end{restatable}
 
 \subsection{Localise Stack Frames}
+\label{localise-stack-frames-appendix-subsection}
 
 \ArgumentsIntroductionRule*
+
+\begin{algorithm}[tbh]
+  \begin{algorithmic}[1]
+    \MatchThen{%
+      $\begin{array}[t]{l}
+         (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+         \t1 \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+         \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+         \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)(args~1, \ldots, args~n)
+       \end{array}$}
+     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, %
+       $\begin{array}[t]{l}
+          (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+          \t1 \lschexpract \exists methodArgs? \\
+          \t3 {} == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+          \t2 InterpreterNewStackFrame[ \\
+          \t3 c/class?, m/methodID?] \rschexpract \circseq \\
+          \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)
+        \end{array}$}
+      \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName'$}
+      \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName'$}}{$methodName$}
+      \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
+      \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
+  \end{algorithmic}
+  \caption{RedefineMethodActionToIncludeParameters($nethodName$)}
+  \label{redefine-method-action-to-include-parameters-algorithm}
+\end{algorithm}
+
+\FloatBarrier  
 
 \HandleReturnEPCStackFrameIntroductionRule*
 
@@ -1655,5 +1685,39 @@
 % \end{restatable}
 
 \VarParameterConversionRule*
+
+\begin{algorithm}[tbh!]
+  \begin{algorithmic}[1]
+     % introduce new method action
+     \MatchIn{$%
+       \begin{array}[t]{l}
+         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+         \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t1 A)(arg_1, \ldots, arg_n)
+       \end{array}$
+     }{\Call{ActionBody}{$methodName$}}
+     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, $%
+       \begin{array}[t]{l}
+         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+         \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
+         \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
+         \t1 A)(arg_1, \ldots, arg_n)
+       \end{array}$
+     }
+     % copy out new method action
+     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName$}}{$methodName'$}
+     % expand old method action
+     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
+     % remove old method method action
+     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, \Call{ActionBody}{$methodName$}}
+     % rename new method action
+     \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
+  \end{algorithmic}
+  \caption{RedefineMethodActionToExcludeParameters($methodName$)}
+  \label{redefine-method-action-to-exclude-parameters-algorithm}
+\end{algorithm}
+
+\FloatBarrier  
 
 \ArgumentVariableEliminationRule*

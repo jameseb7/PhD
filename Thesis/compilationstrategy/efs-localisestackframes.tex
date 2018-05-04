@@ -16,36 +16,12 @@ procedure \Call{LocaliseStackFrames}{}.
     \For{$methodName \gets iterationOrder$}
     \label{algorithm-localise-stack-frames-loop}
     \State $numArgs \gets$ \Call{MethodArguments}{$methodName$}
-    \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
     \State \ExhaustivelyApplyFor{Rule~[\nameref{arguments-introduction-rule}]}{$methodName$, $numArgs$}
     \label{algorithm-arguments-introduction}
-    \MatchThen{%
-      $\begin{array}[t]{l}
-         (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
-         \t1 \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
-         \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
-         \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)(args~1, \ldots, args~n)
-       \end{array}$}
-     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, %
-       $\begin{array}[t]{l}
-          (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
-          \t1 \lschexpract \exists methodArgs? \\
-          \t3 {} == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
-          \t2 InterpreterNewStackFrame[ \\
-          \t3 c/class?, m/methodID?] \rschexpract \circseq \\
-          \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)
-        \end{array}$}
-        \label{algorithm-localise-stack-frames-new-method-action}
-      \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName'$}
-      \label{algorithm-localise-stack-frames-copy-out}
-      \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName'$}}{$methodName$}
-      \label{algorithm-localise-stack-frames-copy-in}
-      \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
-      \label{algorithm-localise-stack-frames-method-elim}
-      \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
-      \label{algorithm-localise-stack-frames-method-rename}
-      \State \ApplyToFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{\Call{ActionBody}{$methodName$}}{$numArgs$}
-      \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
+    \State \Call{RedefineMethodActionToIncludeParameters}{$methodName$}
+    \label{algorithm-redefine-method-action-to-include-parameters}
+    \State \ApplyToFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{\Call{ActionBody}{$methodName$}}{$numArgs$}
+    \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
     \EndFor
   \end{algorithmic}
   \caption{LocaliseStackFrames}
@@ -173,22 +149,15 @@ be more easily handled in the next step, where we introduce local
 variables.
 
 After the method arguments have been introduced, we redefine the
-method action to include the value parameters representing those
-arguments.
-That is performed by first introducing a temporary method action,
-$methodName'$, matching the parametrised block around the call to
-$methodName$, via an application of Law~[\nameref{action-intro-law}]
-on line~\ref{algorithm-localise-stack-frames-new-method-action}.
-The occurrences of the body of $methodName'$ are replaced with a
-reference to the new action using Law~[\nameref{copy-rule-law}] on
-line~\ref{algorithm-localise-stack-frames-copy-out}.
-The occurrence of $methodName$ in the body of $methodName'$ is then
-expanded using Law~[\nameref{copy-rule-law}] and $methodName$ is
-eliminated using Law~[\nameref{action-intro-law}], since it no longer
-occurs in the process.
-Finally, the temporary action $methodName'$ is renamed to $methodName$
-using Law~[\nameref{action-rename-law}] on
-line~\ref{algorithm-localise-stack-frames-method-rename}.
+method action to include the contents of the parametrised block
+introduced by Rule~[\nameref{arguments-introduction-rule}].
+This is performed in a separate procedure,
+\Call{RedefineMethodActionToIncludeParameters}{}, which is similar to
+the \Call{RedefineMethodActionExcludingReturnAction}{} procedure used
+in the previous section.
+It is defined by
+Algorithm~\ref{redefine-method-action-to-include-parameters-algorithm}
+in Appendix~\ref{localise-stack-frames-appendix-subsection}.
 
 Having completely separated the method into its own, independent,
 action, we then introduce the stack frame variable for the method

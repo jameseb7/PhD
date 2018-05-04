@@ -2,8 +2,8 @@ After the previous stage, each conditional branch in a method ends
 with a return instruction or an infinite loop.
 This can be seen in
 Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}, presented
-earlier, where $TPK\_handleAsyncEvent$ ends with a $HandleReturnEPC$
-action.
+earlier, where the method $TPK\_handleAsyncEvent$ ends with a
+$HandleReturnEPC$ action.
 In the first step of this stage, at
 line~\ref{algorithm-remove-launcher-returns} of
 Algorithm~\ref{efs-algorithm}, such actions are moved outside the
@@ -360,11 +360,15 @@ lines~\ref{algorithm-ExecuteMethod-refinement-MainThread}
 and~\ref{algorithm-ExecuteMethod-refinement-Started}, to distribute the
 variable block and communication.
 
-\begin{figure}[thp]
+\begin{figure}[tbhp!]
   \begin{restatable}[$ExecuteMethod$-refinement]{crule}{ExecuteMethodRefinementRule}
     \label{ExecuteMethod-refinement-rule}
     If, for all $i$, $returnValue$ is not free in $A_i$, then
     \setlength{\zedindent}{0.5cm}
+    \setlength{\abovedisplayskip}{0pt}
+    \setlength{\belowdisplayskip}{0pt}
+    \setlength{\abovedisplayshortskip}{0pt}
+    \setlength{\belowdisplayshortskip}{0pt}
   \begin{circus}
     \begin{array}{l}
       (\circval classID : ClassID; \\

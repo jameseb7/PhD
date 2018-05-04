@@ -20,6 +20,10 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
     \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-GetstaticSF-rule}]}{\Call{ActionBody}{$methodName$}}
     \State \ExhaustivelyApplyTo{Rule~[\nameref{refine-NewSF-rule}]}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-apply-refine-NewSF}
+    \State \ExhaustivelyApplyTo{Law~[\nameref{assump-elim-law}]}{\Call{ActionBody}{$methodName$}}
+    \label{algorithm-frameClass-assump-elim}
+    \State \ExhaustivelyApplyTo{Law~[\nameref{seq-unitl-law}]}{\Call{ActionBody}{$methodName$}}
+    \label{algorithm-frameClass-seq-unitl}
     % introduce operand stack assumptions
     \State \Call{IntroduceOperandStackAssumptions}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-introduce-operandStack-assumptions}
@@ -33,6 +37,10 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
        \end{array}$,
        $V{<}\ell{>}S{<}s{>}CI$})
      \Statex $\t1${\bf to} {\Call{ActionBody}{$methodName$}}
+    \State \ExhaustivelyApplyTo{Law~[\nameref{assump-elim-law}]}{\Call{ActionBody}{$methodName$}}
+    \label{algorithm-operandStack-assump-elim}
+    \State \ExhaustivelyApplyTo{Law~[\nameref{seq-unitl-law}]}{\Call{ActionBody}{$methodName$}}
+    \label{algorithm-operandStack-seq-unitl}
     \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-value1-value2-conditional-rule}]}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-apply-eliminate-value1-value2-conditional-rule}
     \State \ExhaustivelyApplyTo{Rule~[\nameref{eliminate-oid-getField-rule}]}{\Call{ActionBody}{$methodName$}}
@@ -63,68 +71,14 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
        \end{array})$%
      }
      \label{algorithm-move-loop-start}
-
-     
      % convert local vars to parameters
      \State \ApplyTo{Rule~[\nameref{var-parameter-conversion-rule}]}{\Call{ActionBody}{$methodName$}}
      \label{algorithm-var-parameter-conversion}
-     % introduce new method action
-     \MatchIn{$%
-       \begin{array}[t]{l}
-         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-         \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-         \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-         \t1 A)(arg_1, \ldots, arg_n)
-       \end{array}$
-     }{\Call{ActionBody}{$methodName$}}
-     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, $%
-       \begin{array}[t]{l}
-         (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-         \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-         \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-         \t1 A)(arg_1, \ldots, arg_n)
-       \end{array}$
-     }
-     \label{algorithm-introduce-variables-method-action-intro}
-     % copy out new method action
-     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName$}}{$methodName'$}
-     \label{algorithm-introduce-variables-copy-method-out}
-     % expand old method action
-     \State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-     \label{algorithm-introduce-variables-copy-method-in}
-     % remove old method method action
-     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, \Call{ActionBody}{$methodName$}}
-     \label{algorithm-introduce-variables-method-elim}
-     % rename new method action
-     \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
-     \label{algorithm-introduce-variables-rename-method}
+     \State \Call{RedefineMethodActionToExcludeParameters}{$methodName$}
+     \label{algorithm-redefine-method-action-to-exclude-parameters}
      % remove unnecessary parameters
      \State \ApplyFor{Rule~[\nameref{argument-variable-elimination-rule}]}{$methodName$}
-     \label{algorithm-argument-variable-elimination}
-
-     
-     %\State \ExhaustivelyApplyFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    % \label{algorithm-introduce-variables-copy-method-in}
-    % \State \ApplyFor{Rule~[\nameref{argument-variable-elimination-rule}]}{}
-    % \label{algorithm-argument-variable-elimination}
-    % \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$}
-    % \label{algorithm-efs-eliminate-old-method-action}
-    % \MatchThen{$\begin{array}[t]{l}
-    %      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-    %               \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-    %               \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot A)(arg_1, \ldots, arg_n)
-    %             \end{array}$}
-    %           \label{algorithm-efs-match-new-method-action}
-    % \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, \arraycolsep=0cm
-    %   $\begin{array}[t]{l}
-    %      (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-    %      \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell{>}) : Word \circspot \\
-    %      \t1 \circvar stack1, \ldots, stack{<}s{>} : Word \circspot \\
-    %      \t2 A)(arg_1, \ldots, arg_n)
-    %    \end{array}$}
-    %  \label{algorithm-efs-introduce-new-method-action}
-    % \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$}
-    % \label{algorithm-local-variables-copy-method-out}
+     \label{algorithm-argument-variable-elimination}     
     \EndFor
   \end{algorithmic}
   \caption{IntroduceVariables}
@@ -186,6 +140,11 @@ Rule~[\nameref{refine-GetstaticSF-rule}] and
 Rule~[\nameref{refine-NewSF-rule}] are similar so we omit them here.
 They can be found, along with the other compilation rules, in
 Appendix~\ref{compilation-rules-appendix}.
+After these laws have been applied, we eliminate any remaining
+$frameClass$ assumptions by applying Law~[\nameref{assump-elim-law}]
+and Law~[\nameref{seq-unitl-law}] on
+lines~\ref{algorithm-frameClass-assump-elim}
+and~\ref{algorithm-frameClass-seq-unitl}.
 
 \begin{figure}
   \centering
@@ -445,10 +404,14 @@ of the compilation rules in Appendix~\ref{compilation-rules-appendix}.
 These, together with the standard laws for distributing simulations
 through \Circus{} constructs, are sufficient to unambiguously define
 the local data refinement to be applied to the method.
+After the data refinement, we eliminate any remaining assumptions by
+applying Law~[\nameref{assump-elim-law}] and
+Law~[\nameref{seq-unitl-law}] on
+lines~\ref{algorithm-operandStack-assump-elim}
+and~\ref{algorithm-operandStack-seq-unitl}.
 
-After the data refinement has been applied, we eliminate the
-additional variables used in the data operations that pop values from
-the stack.
+We then eliminate the additional variables used in the data operations
+that pop values from the stack.
 Those that push values to the stack are pushing values received from a
 channel, which require a separate assignment operation and so cannot
 be eliminated.
@@ -579,24 +542,18 @@ line~\ref{algorithm-var-parameter-conversion}.
   \label{var-parameter-conversion-rule-figure}
 \end{figure}
 
-After local variables have been converted into arguments, we separate
-the new parametrised block into its own action, so that the redundant
-argument parameters $arg1, \ldots, arg{<}n{>}$ can be eliminated.
-This is performed by first introducing a temporary action
-$methodName'$ containing the parametrised block created by
-Rule~[\nameref{var-parameter-conversion-rule}], via an application of
-Law~[\nameref{action-intro-law}] on
-line~\ref{algorithm-introduce-variables-method-action-intro}.
-The parametrised block in the old method action, $methodName$, is then
-replaced with a reference to $methodName'$ on
-line~\ref{algorithm-introduce-variables-copy-method-out}.
-The old method action is then replaced with its definition everywhere
-it occurs, on line~\ref{algorithm-introduce-variables-copy-method-in},
-and the old method is eliminated on
-line~\ref{algorithm-introduce-variables-method-elim}.
-The new method action can then be renamed to $methodName$ via an
-application of Law~[\nameref{action-rename-law}] on
-line~\ref{algorithm-introduce-variables-rename-method}.
+After local variables have been converted into arguments, we redefine
+the method action to exclude the parametrised block for the
+$arg1, \ldots, arg{<}n{>}$ parameters, so that the, now redundant,
+parameters can be eliminated.
+This is performed, as with previous redefinitions of method actions,
+in a separate procedure,
+\Call{RedefineMethodActionToExcludeParameters}{}, defined by
+Algorithm~\ref{redefine-method-action-to-exclude-parameters-algorithm}
+in Appendix~\ref{introduce-variables-appendix-subsection}.
+This procedure is called on
+line~\ref{algorithm-redefine-method-action-to-exclude-parameters} of
+Algorithm~\ref{introduce-variables-algorithm}.
 
 After this, the argument parameters $arg1, \ldots, arg{<}n{>}$ are
 outside the method action and can be eliminated by application of
