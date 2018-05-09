@@ -18,7 +18,7 @@ procedure \Call{LocaliseStackFrames}{}.
     \State $numArgs \gets$ \Call{MethodArguments}{$methodName$}
     \State \ExhaustivelyApplyFor{Rule~[\nameref{arguments-introduction-rule}]}{$methodName$, $numArgs$}
     \label{algorithm-arguments-introduction}
-    \State \Call{RedefineMethodActionToIncludeParameters}{$methodName$}
+    \State \Call{RedefineMethodToIncludeParameters}{$methodName$}
     \label{algorithm-redefine-method-action-to-include-parameters}
     \State \ApplyToFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{\Call{ActionBody}{$methodName$}}{$numArgs$}
     \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
@@ -62,26 +62,42 @@ The $frameStackID$ is hidden from the new state.
 
 $FrameStackCI$ describes a functional data refinement, so the new
 actions can be calculated in each case.
-None of the actions in the process read from $frameStackID$, so it can
-be safely hidden and the operations to set the $frameStackID$ are
-reduced to $\Skip$.
-As mentioned above, $(last~frameStack).frameClass$ is inserted
-wherever $currentClass$ occurs in the old actions.
+The effect of this data refinement is that the operations to set the
+$frameStackID$ are reduced to $\Skip$ and, as mentioned above,
+$(last~frameStack).frameClass$ is inserted wherever $currentClass$
+occurs in the old actions.
 We can then proceed with introducing stack frame variables.
 
 When introducing the variables to represent stack frames, we must
-begin with those stack frames at the greatest depth on the stack.
+begin with those methods at the greatest call depth.
 This ensures uses of the $frameStack$ within a nested method do not
 interfere with replacing uses of the $frameStack$ in an outer method.
-The order in which we introduce stack frame variables to the methods
-is specified by a procedure \Call{MethodDependencyOrder}{}, which
+To understand this, consider if we were to try to introduce a variable
+representing the stack frame for $TPK\_handleAsyncEvent$, shown in
+part in
+Figure~\ref{efs-eliminate-returns-handleAsyncEvent-example-figure},
+without first introducing the stack frame variable for $TPK\_f$.
+The $InterpreterNewStackFrame$ operation that appears before the call
+to $TPK\_f$ creates a new stack frame on $frameStack$.
+This new stack frame is different from the stack frame we are
+introducing a variable for it in $TPK\_handleAsyncEvent$, although it
+is the last frame on $frameStack$ during the body of $TPK\_f$.
+This makes it much more complex to refer to correct stack frame when
+introducing the variable to $TPK\_handleAsyncEvent$.
+Ensuring the stack frame variable is introduced for $TPK\_f$ first
+avoids this issue, since it means the size of $frameStack$ is not
+affected within the body of $TPK\_handleAsyncEvent$.
+
+
+We therefore introduce stack frame variables to the methods in the
+order specified by a procedure \Call{MethodDependencyOrder}{}, which
 constructs a sequence of method action names indicating the order in
 which the method actions should be handled.
 This sequence is constructed by first adding to the sequence any
 methods that contain no method calls, then adding any methods that
 only call methods already in the sequence, and repeating until all
 methods are in the sequence.
-Since we do not allow recursion, this will always terminate.
+Since we do not allow recursion, this always terminates.
 We construct this sequence, $iterationOrder$, on
 line~\ref{algorithm-method-dependency-order-call} of
 Algorithm~\ref{localise-stack-frames-algorithm}.
@@ -152,8 +168,8 @@ After the method arguments have been introduced, we redefine the
 method action to include the contents of the parametrised block
 introduced by Rule~[\nameref{arguments-introduction-rule}].
 This is performed in a separate procedure,
-\Call{RedefineMethodActionToIncludeParameters}{}, which is similar to
-the \Call{RedefineMethodActionExcludingReturnAction}{} procedure used
+\Call{RedefineMethodToIncludeParameters}{}, which is similar to
+the \Call{RedefineMethodExcludingReturn}{} procedure used
 in the previous section.
 It is defined by
 Algorithm~\ref{redefine-method-action-to-include-parameters-algorithm}
