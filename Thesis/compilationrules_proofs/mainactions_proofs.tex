@@ -933,5 +933,55 @@
       \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \\
       \t1 \circfi)(c, m, a) \circseq Poll
     \end{array}\\
+    = & Law~[\nameref{alt-assump-intro-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t2 \{(classID, methodID) = (c_1,m_1)\} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t2 \{(classID, methodID) = (c_n,m_n)\} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \\
+      \t1 \circfi)(c, m, a) \circseq Poll
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t2 \{(classID, methodID) = (c_1,m_1)\} \circseq \{ methodID = m_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?] \rschexpract \circseq M_1 \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t2 \{(classID, methodID) = (c_n,m_n)\} \circseq \{ methodID = m_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?] \rschexpract \circseq M_n \\
+      \t1 \circfi)(c, m, a) \circseq Poll
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t2 \{(classID, methodID) = (c_1,m_1)\} \circseq \{ methodID = m_1 \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?, m_1/methodID?] \rschexpract \circseq M_1 \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t2 \{(classID, methodID) = (c_n,m_n)\} \circseq \{ methodID = m_n \} \circseq \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?, m_n/methodID?] \rschexpract \circseq M_n \\
+      \t1 \circfi)(c, m, a) \circseq Poll
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \\
+      {} \then (\circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+      \t1 \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_1/class?, m_1/methodID?] \rschexpract \circseq M_1 \\
+      \t1 {} \cdots {} \\
+      \t1 {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
+      \t2 \lschexpract InterpreterNewStackFrame[classInfo_n/class?, m_n/methodID?] \rschexpract \circseq M_n \\
+      \t1 \circfi)(c, m, a) \circseq Poll
+    \end{array}\\
   \end{argue}
 \end{crproof}

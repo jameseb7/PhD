@@ -92,11 +92,13 @@ in $MainThread$ and $Started$.
       \circval methodArgs : \seq Word \circspot \\
       \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
       \t1 InterpreterNewStackFrame[\\
-      \t2 classInfo_1/class?] \circseq M_1 \\
+      \t2 classInfo_1/class?, \\
+      \t2 m_1/methodID?] \circseq M_1 \\
       {} \cdots {} \\
       {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
       \t1 InterpreterNewStackFrame[\\
-      \t2 classInfo_n/class?] \circseq M_n \\ 
+      \t2 classInfo_n/class?, \\
+      \t2 m_n/methodID?] \circseq M_n \\ 
       \circfi)(c, m, a) \circseq Poll
     \end{array}
   \end{circus}

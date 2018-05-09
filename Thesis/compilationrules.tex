@@ -535,7 +535,7 @@
     \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
     \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName$, $methodName'$}
   \end{algorithmic}
-  \caption{RedefineMethodActionExcludingReturnAction($methodName$,$returnAction$)}
+  \caption{RedefineMethodExcludingReturn($methodName$,$returnAction$)}
   \label{redefine-method-action-excluding-return-action-algorithm}
 \end{algorithm}
 
@@ -1024,7 +1024,7 @@
       \State \ApplyReverseFor{Law~[\nameref{action-intro-law}]}{$methodName$, $methodBody$}
       \State \ApplyFor{Law~[\nameref{action-rename-law}]}{$methodName'$, $methodName$}
   \end{algorithmic}
-  \caption{RedefineMethodActionToIncludeParameters($nethodName$)}
+  \caption{RedefineMethodToIncludeParameters($nethodName$)}
   \label{redefine-method-action-to-include-parameters-algorithm}
 \end{algorithm}
 

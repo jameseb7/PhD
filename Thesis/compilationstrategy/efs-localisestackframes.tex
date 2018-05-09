@@ -16,6 +16,11 @@ procedure \Call{LocaliseStackFrames}{}.
     \For{$methodName \gets iterationOrder$}
     \label{algorithm-localise-stack-frames-loop}
     \State $numArgs \gets$ \Call{MethodArguments}{$methodName$}
+    \If{$\lnot$ \Call{IsStatic}{$methodName$}}
+    \label{algorithm-static-args-check-start}
+    \State $numArgs \gets numArgs + 1$
+    \EndIf
+    \label{algorithm-static-args-check-end}
     \State \ExhaustivelyApplyFor{Rule~[\nameref{arguments-introduction-rule}]}{$methodName$, $numArgs$}
     \label{algorithm-arguments-introduction}
     \State \Call{RedefineMethodToIncludeParameters}{$methodName$}
@@ -88,7 +93,6 @@ Ensuring the stack frame variable is introduced for $TPK\_f$ first
 avoids this issue, since it means the size of $frameStack$ is not
 affected within the body of $TPK\_handleAsyncEvent$.
 
-
 We therefore introduce stack frame variables to the methods in the
 order specified by a procedure \Call{MethodDependencyOrder}{}, which
 constructs a sequence of method action names indicating the order in
@@ -116,8 +120,13 @@ Rule~[\nameref{arguments-introduction-rule}], shown in
 Figure~\ref{arguments-introduction-rule-figure}.
 This rule is applied to two parameters:~$methodName$, the name of the
 method being considered, and $numArgs$, the number of arguments to the
-method (which is encoded as part of the method identifier, and so can
-be determined during the strategy).
+method.
+The number of arguments is determined from the name of the method
+(recall that the arguments of a method are encoded in its identifier)
+and we add an extra argument for \texttt{this} if the method is not
+static, as indicated by if statement on
+lines~\ref{algorithm-static-args-check-start}
+to~\ref{algorithm-static-args-check-end}.
 We apply this rule everywhere it applies on
 line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 
@@ -147,7 +156,6 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
       )(args~1, \ldots, args~n)
     \end{array}
   \end{circus}
-  where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
 \end{restatable}
 \caption{Rule~[\nameref{arguments-introduction-rule}]}
 \label{arguments-introduction-rule-figure}
@@ -163,6 +171,24 @@ $InterpreterNewStackFrame$.
 This splitting of the array ensures that the individual arguments can
 be more easily handled in the next step, where we introduce local
 variables.
+
+For example, every call to the method action $TPK\_handleAsyncEvent$
+is preceded by an $InterpreterNewStackFrame$ operation and followed by
+an $InterpreterReturnEPC$ operation.
+The Rule~[\nameref{arguments-introduction-rule}] therefore applies to
+it and the number of arguments given as the $n$ parameter to the rule
+is $1$, since the SCJ method \texttt{handleAsyncEvent()} takes no
+explicit arguments, but is non-static.
+Calls to $TPK\_handleAsyncEvent$ (the only one of which occurs in
+$ExecuteMethod$, since it is only called by the infrastructure), then
+have the form shown below.
+\begin{circus}
+  (\circval arg1 : Word \circspot \\
+      \t1 \lschexpract \exists methodArgs? == \langle arg1 \rangle @ \\
+      \t2 InterpreterNewStackFrame[TPK/class?, handleAsyncEvent/methodID?] \rschexpract \circseq \\
+      \t2 TPK\_handleAsyncEvent \circseq \lschexpract InterpreterReturn \rschexpract \\
+      )(methodArgs~1)
+\end{circus}
 
 After the method arguments have been introduced, we redefine the
 method action to include the contents of the parametrised block
@@ -253,13 +279,17 @@ handle the slightly different ending of the method action that the
 return handling would create.
 These rules would be applied in a way similar to the existing rules.
 
-In our example, a $stackFrame$ variable will be introduced for
-$TPK\_f$ first, since it does not call any other methods.
-$TPK\_handleAsyncEvent$ only has its $stackFrame$ variable introduced
-after $stackFrame$ variables have been introduced for all methods
-called in $TPK\_handleAsyncEvent$.
-When the $stackFrame$ variable for $TPK\_handleAsyncEvent$ has been
-introduced, it has the form shown in
+In our example, the body of $TPK\_handleAsyncEvent$ (having the form
+of the actions in the parametrised block shown above), begins with an
+$InterpreterNewStackFrame$ operation having $TPK$ as its $class?$ and
+$handleAsyncEvent$ as its $methodID?$.
+The values for $\ell$ and $s$ can thus be obtained from the
+$methodLocals$ and $methodStackSize$ components of the $TPK$ class
+structure shown in Figure~\ref{example-model-figure}.
+This gives values of $6$ for $\ell$ and $3$ for $s$.
+Thus, after applying
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] the
+$TPK\_handleAsyncEvent$ is as shown in
 Figure~\ref{efs-localise-stack-frames-example-figure}.
 
 For brevity, we define new actions, which we refer to as $Handle*SF$

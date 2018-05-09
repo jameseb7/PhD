@@ -326,15 +326,18 @@ no longer necessary.
     ExecuteMethod \circdef \\
     \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
     \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \circseq \\
+    \t2 InterpreterNewStackFrame[TPK/class?, APEHinit/methodID?] \circseq \\
+    \t2 TPK\_APEHinit \circseq \\
     \t2 (\circvar returnValue : Word \circspot \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
     \t3 executeMethodRet!thread!returnValue \then \Skip) \\
     \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \circseq \\
+    \t2 InterpreterNewStackFrame[TPK/class?, handleAsyncEvent/methodID?] \circseq \\
+    \t2 TPK\_handleAsyncEvent \circseq \\
     \t2 (\circvar returnValue : Word \circspot \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
     \t3 executeMethodRet!thread!returnValue \then \Skip) \\
     \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \circseq \\
+    \t2 InterpreterNewStackFrame[TPK/class?, f/methodID?] \circseq \\
+    \t2 TPK\_f \circseq \\
     \t2 (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn2EPC \rschexpract \circseq \\
     \t3 executeMethodRet!thread!returnValue \then \Skip) \\
     \t1 {} \cdots {} \\
