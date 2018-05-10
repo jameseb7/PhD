@@ -93,7 +93,18 @@ The Java code must be run through a Java compiler to generate the
 corresponding bytecode, which then defines the $bc$ and $cs$ constants
 of our model.
 Their values for our example are shown in
-Figure~\ref{example-model-figure}.
+Figure~\ref{example-model-figure}, along with $TPK$ class information.
+While most of the compilation of the methods of \texttt{TPK} depends
+only on the data in the $TPK$ class information, the object data for
+instances of \texttt{TPK} includes fields from its superclasses.
+In particular, the fields for \texttt{TPK} are contributed by the
+\texttt{AperiodicEventHandler} and \texttt{ManagedEventHandler}
+classes (the superclasses of \texttt{ManagedEventHandler} do not
+contribute any fields), whose $Class$ data structures are presented in
+Figure~\ref{example-superclasses-model-figure}.
+The generation of object structures from this field information is
+discussed in more detail in
+Section~\ref{data-refinement-of-objects-section}.
 
 \begin{figure}[p]
   \begin{center}
@@ -153,7 +164,9 @@ Figure~\ref{example-model-figure}.
       cs : ClassID \pfun Class
       \where
       cs = \{ \\
-      \t1 TPKClassID \mapsto TPK \\
+      \t1 TPKClassID \mapsto TPK, \\
+      \t1 AperiodicEventHandlerClassID \mapsto AperiodicEventHandler, \\
+      \t1 ManagedEventHandlerClassID \mapsto ManagedEventHandler, \\
       \t1 \cdots \\
       \}
     \end{axdef}
@@ -224,6 +237,134 @@ Figure~\ref{example-model-figure}.
   \end{center}
   \caption{The \Circus{} code corresponding to our example program}
   \label{example-model-figure}
+\end{figure}%
+
+\begin{figure}[t!]
+  \begin{center}
+    % \setlength{\linewidth}{12cm}
+    \begin{minipage}{7.5cm}
+      \scriptsize
+      \setlength{\abovedisplayskip}{0cm}
+      \setlength{\belowdisplayskip}{0cm}
+      \setlength{\zedindent}{0cm}
+      \setlength{\zedtab}{0.3cm}
+      \setlength{\zedleftsep}{0cm}
+    \begin{axdef}
+      AperiodicEventHandler : Class
+    \where
+      AperiodicEventHandler = \lblot \\
+      \t1 constantPool == \{ \\
+      \t2 1 \mapsto ClassRef~AperiodicEventHandlerClassID, \\
+      \t2 3 \mapsto ClassRef~ManagedEventHandlerClassID, \\
+      % \t2 8 \mapsto MethodRef~ManagedEventHandlerClassID~MEHinit, \\
+      \t2 {} \cdots {} \\
+      % \t2 11 \mapsto FieldRef~AperiodicEventHandler~priority, \\
+      % \t2 15 \mapsto FieldRef~AperiodicEventHandler~backingStoreSpace, \\
+      % \t2 18 \mapsto FieldRef~AperiodicEventHandler~allocAreaSpace, \\
+      % \t2 21 \mapsto FieldRef~AperiodicEventHandler~stackSize, \\
+      % \t2 24 \mapsto MethodRef~AperiodicEventHandler~initAPEH, \\
+      % \t2 40 \mapsto MethodRef~AperiodicEventHandler~releaseAperiodic \\
+      \t1 \}, \\
+      \t1 this == 1, \\
+      \t1 super == 3, \\
+      \t1 interfaces == \{\}, \\
+      \t1 methodEntry == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 0, \\
+      % \t2 release \mapsto 16 \\
+      \}, \\
+      \t1 methodEnd == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 15, \\
+      % \t2 release \mapsto 18 \\
+      \}, \\
+      \t1 methodLocals == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 5, \\
+      % \t2 release \mapsto 1 \\
+      \}, \\
+      \t1 methodStackSize == \{ {} \cdots {} 
+      % \t2 MEHinit \mapsto 5, \\
+      % \t2 release \mapsto 1 \\
+      \}, \\
+      \t1 fields == \{\}, \\
+      \t1 staticFields == \{\} \\
+      \rblot
+    \end{axdef}%
+  \end{minipage}
+  \hfill
+  \begin{minipage}{8cm}
+    \scriptsize
+    \setlength{\zedindent}{0cm}
+    \setlength{\zedtab}{0.3cm}
+    \setlength{\zedleftsep}{0cm}
+    \begin{axdef}
+      ManagedEventHandler : Class
+    \where
+      ManagedEventHandler = \lblot \\
+      \t1 constantPool == \{ \\
+      \t2 1 \mapsto ClassRef~ManagedEventHandlerClassID, \\
+      \t2 3 \mapsto ClassRef~BoundAsyncEventHandlerClassID, \\
+      \t2 5 \mapsto ClassRef~ManagedSchedulableClassID, \\
+      % \t2 15 \mapsto MethodRef~BoundAsyncEventHandlerClassID~BAEHinit, \\
+      \t2 {} \cdots {} \\
+      % \t2 18 \mapsto MethodRef~PriorityParameters~getPriority, \\
+      % \t2 19 \mapsto ClassRef~PriorityParameters, \\
+      % \t2 24 \mapsto FieldRef~ManagedEventHandler~priority, \\
+      % \t2 26 \mapsto MethodRef~ScopeParameters~getMaxInitialBackingStore, \\
+      % \t2 27 \mapsto ClassRef~ScopeParameters, \\
+      % \t2 32 \mapsto FieldRef~ManagedEventHandler~backingStoreSpace, \\
+      % \t2 34 \mapsto MethodRef~ScopeParameters~getMaxInitialArea, \\
+      % \t2 37 \mapsto FieldRef~ManagedEventHandler~allocAreaSpace, \\
+      % \t2 39 \mapsto MethodRef~ConfigurationParameters~getSizes, \\
+      % \t2 40 \mapsto ClassRef~ConfigurationParameters, \\
+      % \t2 45 \mapsto MethodRef~LongArray~load, \\
+      % \t2 46 \mapsto ClassRef~LongArray, \\
+      % \t2 51 \mapsto FieldRef~ManagedEventHandler~stackSize, \\
+      % \t2 66 \mapsto MethodRef~ManagedEventHandler~register \\
+      \t1 \}, \\
+      \t1 this == 1, \\
+      \t1 super == 3, \\
+      \t1 interfaces == \{5\}, \\
+      \t1 methodEntry == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 19, \\
+      % \t2 getName \mapsto 41, \\
+      % \t2 signalTermination \mapsto 46, \\
+      % \t2 cleanUp \mapsto 40, \\
+      % \t2 register \mapsto 43 \\
+      \}, \\
+      \t1 methodEnd == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 39, \\
+      % \t2 getName \mapsto 42, \\
+      % \t2 signalTermination \mapsto 46, \\
+      % \t2 cleanUp \mapsto 40, \\
+      % \t2 register \mapsto 45 \\
+      \}, \\
+      \t1 methodLocals == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 4, \\
+      % \t2 getName \mapsto 1, \\
+      % \t2 signalTermination \mapsto 1, \\
+      % \t2 cleanUp \mapsto 1, \\
+      % \t2 register \mapsto 1 \\
+      \}, \\
+      \t1 methodStackSize == \{ {} \cdots {}
+      % \t2 MEHinit \mapsto 3, \\
+      % \t2 getName \mapsto 1, \\
+      % \t2 signalTermination \mapsto 0, \\
+      % \t2 cleanUp \mapsto 0, \\
+      % \t2 register \mapsto 1 \\
+      \}, \\
+      \t1 fields == \{ \\
+      \t2 priority, \\
+      \t2 backingStoreSpace, \\
+      \t2 allocAreaSpace, \\
+      \t2 stackSize \\
+      \t1 \}, \\
+      \t1 staticFields == \{\} \\
+      \rblot
+    \end{axdef}
+  \end{minipage}
+  \end{center}
+  \caption{The $Class$ structures for \texttt{AperiodicEventHandler}
+    and \texttt{ManagedEventHandler}}
+  \label{example-superclasses-model-figure}
 \end{figure}%
 
 Applying the bytecode expansion on
