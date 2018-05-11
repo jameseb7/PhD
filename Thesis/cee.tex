@@ -2134,23 +2134,17 @@ The invariant of $StackFrame$ just requires the $operandStack$ to not
 be larger than $stackSize$.
 
 The state of $Thr$ is given by the schema $InterpreterState$, below.
-Its first component, $frameStackID$, is the identifier of the frame
-stack for the thread. 
-It is of a type $Stack$, which may be $Uninitialised$ with no value,
-or $Initialised$ with a $StackID$ value for the stack.
-The second component, $frameStack$, represents the stack itself, which
+Its first component, $frameStack$, represents the stack itself, which
 is a sequence of $StackFrame$ bindings, with one for each method
 entered.
-The third component, $pc$, is the program counter for the thread.
-Finally, the fourth component, $currentClass$, is a copy of the class
+The second component, $pc$, is the program counter for the thread.
+Finally, the third component, $currentClass$, is a copy of the class
 information for the current method.
 \begin{schema}{InterpreterState}
-  frameStackID : Stack \\
   frameStack : \seq StackFrame \\
   pc : ProgramAddress \\
   currentClass : Class
 \where
-  frameStackID = Uninitialised \implies frameStack = \emptyset \\
   % definition of currentClass (only important if the frame stack is nonempty)
   frameStack \neq \emptyset \implies currentClass = (last~frameStack).frameClass \\
   % need to ensure pc is consistent with currentClass
@@ -2161,14 +2155,11 @@ information for the current method.
   \t1 (\exists_1 m : MethodID | m \in \dom c.methodEntry @  \\
   \t2 f.storedPC \in c.methodEntry~m \upto c.methodEnd~m))
 \end{schema}
-The first conjunct of the invariant requires that there be no
-$StackFrames$ on the $frameStack$ when $frameStackID$ is
-$Uninitialised$.
-The second conjunct defines $currentClass$ as the $frameClass$ of the
-last $StackFrame$ on the $frameStack$.
+The first conjunct of the invariant defines $currentClass$ as the
+$frameClass$ of the last $StackFrame$ on the $frameStack$.
 This is only required when $frameStack$ is nonempty, since otherwise
 $currentClass$ is unused.
-The third conjunct states that $currentClass$ is the unique $Class$
+The second conjunct states that $currentClass$ is the unique $Class$
 information in $cs$ that contains a unique method containing $pc$ in
 its $ProgramAddress$ range.
 This ensures that the current class information can always be
@@ -2178,8 +2169,7 @@ value of each $StackFrame$ in the $frameStack$, to ensure that the
 third conjunct remains true when a method returns.
 
 The state is initialised as described in a schema $InterpreterInit$.
-The initialisation just sets $frameStackID$ to $Unintialised$ and the
-$frameStack$ to empty.
+The initialisation just sets the $frameStack$ to empty.
 The other state components take arbitrary values and are initialised
 when the first $StackFrame$ is created, since they are unused until
 then.
@@ -2266,8 +2256,8 @@ Figure~\ref{interpreter-flow-figure}.
 
 The $MainThread$ action is shown below.
 It begins by accepting a $StackID$ from the $Launcher$ on the
-$initMainThread$ channel, which is used to initialise the
-$frameStackID$ state component.
+$initMainThread$ channel, ensuring that space has been allocated for
+the stack.
 It then offers a choice of executing a method on the $main$ thread in
 response to a request from the $Launcher$, or switching to another
 thread.
@@ -2292,7 +2282,7 @@ Although the whole $Interpreter$ model is the object of the
 compilation strategy, as we discuss in the next chapter, the action
 $Running$ is the main focus.
 \begin{circusaction}
-  MainThread \circdef initMainThread?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
+  MainThread \circdef initMainThread?stack \then \circmu X \circspot \\
   \t1 \circblockbegin
   StartInterpreter \circseq Running \circseq X \\
   {} \extchoice {} \\
@@ -2330,8 +2320,7 @@ $NotStarted$ action below.
 It accepts a request to start the $thread$ represented by the process
 from the scheduler on the $CEEstartThread$ channel.
 The identifier, $bsid$, of the thread's backing store is then passed
-to $ObjMan$ via the $addThreadMemory$ channel, and the $stack$
-identifier is used to initialise $frameStackID$.
+to $ObjMan$ via the $addThreadMemory$ channel.
 The remaining information is stored in $classID$, $methodID$ and
 $methodArgs$. 
 The process then behaves as the $Blocked$ action, waiting for an
@@ -2344,7 +2333,7 @@ response from the $Launcher$.
   NotStarted \circdef \circvar methodID : MethodID; methodArgs : \seq Word \circspot \\
   \t1 CEEstartThread?toStart?bsid?stack?cid?mid?args \prefixcolon (toStart = thread) \\
   \t1 {} \then addThreadMemory!thread!bsid \\
-  \t1 {} \then frameStackID, methodID, methodArgs := Initialised~stack, mid, args \circseq \\
+  \t1 {} \then methodID, methodArgs := mid, args \circseq \\
   \t1 Blocked \circseq runThread!thread!(head~methodArgs)!methodID \then Started
 \end{circusaction}
 
@@ -2771,9 +2760,8 @@ Section~\ref{cee-interpreter-subsection}.
 However, the $pc$ and $frameStack$ components are eliminated from the
 state during compilation.
 The state of $CThr_{bc,cs}$ contains a single component, $stackID$,
-which has the same type as $frameStackID$ in $InterpreterState$ and so
-may be $Uninitialised$ or $Initialised$ with a $StackID$ for the C
-thread's stack.
+which may be $Uninitialised$ or $Initialised$ with a $StackID$ for the
+C thread's stack.
 Since there is no explicit stack in C, we only need to ensure there is
 a stack identifier in $stackID$ so space for the thread's stack has
 been allocated.

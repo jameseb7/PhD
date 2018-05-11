@@ -39,9 +39,6 @@ remove $currentClass$ from the state.
 We defined $currentClass$ in the model as a convenience when accessing
 the $frameClass$ of the topmost stack frame, which is no longer
 necessary when we have separate variables for each stack frame.
-We also remove $frameStackID$ at this stage, since its only purpose is
-to guard whether frameStack is permitted to be non-empty, which holds
-from the form of the model.
 The data refinement is applied on
 line~\ref{algorithm-remove-currentClass-data-refinement} of
 Algorithm~\ref{localise-stack-frames-algorithm}, and transforms the
@@ -56,7 +53,6 @@ $InterpreterStateFS$ is described by the coupling invariant
 $FrameStackCI$, shown below.
 It ensures $frameStack$ is unaffected by the refinement and replaces
 occurrences of $currentClass$ with $(last~frameStack).frameClass$.
-The $frameStackID$ is hidden from the new state.
 \begin{schema}{FrameStackCI}
   InterpreterStateEPC \\
   InterpreterStateFS_1
@@ -67,10 +63,9 @@ The $frameStackID$ is hidden from the new state.
 
 $FrameStackCI$ describes a functional data refinement, so the new
 actions can be calculated in each case.
-The effect of this data refinement is that the operations to set the
-$frameStackID$ are reduced to $\Skip$ and, as mentioned above,
-$(last~frameStack).frameClass$ is inserted wherever $currentClass$
-occurs in the old actions.
+The effect of this data refinement is, as mentioned above, that
+$currentClass$ is replaced with $(last~frameStack).frameClass$,
+wherever it occurs in the old actions.
 We can then proceed with introducing stack frame variables.
 
 When introducing the variables to represent stack frames, we must
