@@ -69,24 +69,8 @@ We can then proceed with introducing stack frame variables.
 
 When introducing these variables, we must begin with those methods at
 the greatest call depth.
-This ensures uses of the $frameStack$ within a nested method do not
-interfere with replacing uses of the $frameStack$ in an outer method.
-To illustrate this issue, we consider the result if we were to try to
-introduce a variable representing the stack frame for
-$TPK\_handleAsyncEvent$, shown in part in
-Figure~\ref{efs-eliminate-returns-handleAsyncEvent-example-figure},
-without first introducing the stack frame variable for $TPK\_f$.
-The $InterpreterNewStackFrame$ operation that appears before the call
-to $TPK\_f$ creates a new stack frame on $frameStack$.
-This new stack frame is different from the stack frame we are
-introducing a variable for in $TPK\_handleAsyncEvent$, although it
-is the last frame on $frameStack$ when the body of $TPK\_f$ is executing.
-This makes it much more complex to refer to the correct stack frame when
-introducing the variable to $TPK\_handleAsyncEvent$.
-Ensuring the stack frame variable is introduced for $TPK\_f$ first
-avoids this issue, since it means the size of $frameStack$ is not
-affected within the body of $TPK\_handleAsyncEvent$.
-
+This is necessary due to the approach we take in introducing these
+variables, as we explain later.
 We therefore introduce stack frame variables to the methods in the
 order specified by a procedure \Call{MethodDependencyOrder}{}, which
 constructs a sequence of method action names indicating the order in
@@ -254,6 +238,23 @@ However, this requirement is met since method calls are the only
 operation that changes the size of $frameStack$ and we replace
 references to the $frameStack$ in nested methods first, by the
 definition of $iterationOrder$.
+
+Iterating over methods beginning with the greatest call depth ensures
+that the requirements of
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] are met.
+Otherwise, each nested method call would have its own
+$InterpreterNewStackFrame$ operation, as can be seen in
+Figure~\ref{efs-eliminate-returns-handleAsyncEvent-example-figure},
+where the call to $TPK\_f$ has such an operation.
+This changes the size of $frameStack$, making references to
+$last~frameStack$ refer a different stack frame and so preventing a
+direct replacement with the $stackFrame$ variable.
+Ensuring the stack frame variable is introduced for $TPK\_f$ first
+avoids this issue, since it means that references to $frameStack$
+(including the operation to change its size) are already replaced with
+references to a separate $stackFrame$ variable by the time we apply
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] to
+$TPK\_handleAsyncEvent$.
 
 Note that the operations performed on
 lines~\ref{algorithm-arguments-introduction}
