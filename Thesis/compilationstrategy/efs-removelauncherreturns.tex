@@ -56,7 +56,7 @@ procedure \Call{RemoveLauncherReturns}{}.
     \State \ApplyReverseToFor{Law~[\nameref{copy-rule-law}]}{$Started$}{$ExecuteMethod$}
     \label{algorithm-copy-ExecuteMethod-out-Started}
   \end{algorithmic}
-  \caption{RemoveLauncherReturns}
+  \caption{\Call{RemoveLauncherReturns}{}}
   \label{remove-launcher-returns-algorithm}
 \end{algorithm}
   
@@ -83,7 +83,7 @@ We determine the return action type, $returnAction$, for $methodBody$
 on line~\ref{algorithm-determine-return-action}, using a syntactic
 function \Call{ReturnAction}{}.
 
-With the return action identified, we convert the method to a form in
+With $returnAction$ identified, we convert the method to a form in
 which it has one occurrence of that action at the end of its body.
 This is achieved by introducing occurrences of $returnAction$ after
 infinite loops in $methodBody$ using
@@ -144,14 +144,14 @@ data refinement in Section~\ref{remove-pc-from-state-subsection} to
 $InterpreterInit$) at the start of the main action of $ThrCF_{bc,cs}$.
 The assumption is then distributed throughout the process by
 exhaustive application of restricted versions of standard algebraic
-assumption distribution laws and rules stating how the size of
+assumption-distribution laws, and rules stating how the size of
 $frameStack$ is affected by the operations that appear in the code
 resulting from the elimination of program counter.
 
-The restriction applied to these laws is that the assumption is not
-distributed if an identical assumption is already in place, thus
-preventing unbounded distribution of the assumptions and ensuring the
-procedure terminates.
+The restrictions added to these laws, in the form of extra provisos,
+guarantee that the assumption is not distributed if an identical
+assumption is already in place, thus preventing unbounded distribution
+of the assumptions and ensuring the procedure terminates.
 % As the procedure is a straightforward application of these rules and
 % laws, we omit its definition here.
 The result is that the return instructions following the method
@@ -253,7 +253,7 @@ An example is
 Rule~[\nameref{refine-HandleReturnEPC-empty-frameStack-rule}], shown
 in Figure~\ref{refine-HandleReturnEPC-empty-frameStack-rule-figure}.
 This rule replaces an occurrence of $HandleReturnEPC$ where the
-$frameStack$ has a size of one, with a call to the data operation
+$frameStack$ has a size of $1$, with a call to the data operation
 $InterpreterReturnEPC$ followed by a communication with the $Launcher$
 on the $executeMethodRet$ channel.
 The value communicated on $executeMethodRet$ is $returnValue$,
@@ -292,7 +292,7 @@ $frameStack$, causing it to be empty when $\# frameStack = 1$.
 \label{refine-HandleReturnEPC-empty-frameStack-rule-figure}
 \end{figure}
 
-The other rules on lines~\ref{algorithm-eliminate-returns-try-begin}
+The other rules used on lines~\ref{algorithm-eliminate-returns-try-begin}
 to~\ref{algorithm-eliminate-returns-try-end} are similar, handling the
 cases for the $frameStack$ being left nonempty and the
 $HandleAreturnEPC$ action.
@@ -358,9 +358,8 @@ which result from the refinement of the return actions.
 While the data operations differ depending on whether a value is
 returned from the method or not, the variable block and
 $executeMethodRet$ communication are the same for each method.
-We thus distribute them outside $ExecuteMethod$, to avoid the
-unecessary duplication of them in each of the branches of
-$ExecuteMethod$.
+We thus distribute them outside $ExecuteMethod$, to avoid their
+unecessary duplication in each of the branches of $ExecuteMethod$.
 This is performed by first replacing $ExecuteMethod$ with its
 definition, via an application of Law~[\nameref{copy-rule-law}] on
 lines~\ref{algorithm-copy-ExecuteMethod-in-MainThread}
@@ -433,9 +432,9 @@ This results in the $MainThread$ and $Started$ actions shown in
 Figure~\ref{efs-eliminate-returns-MainThread-Started-figure}, where we
 have highlighted the parts of those actions that have changed as a
 result of applying the rules in this section.
-Note that, since these actions have a known format, we can be sure
-that the application of Law~[\nameref{copy-rule-law}] only replaces
-the intended portion of those actions.
+Note that, since these actions have a very specific format, we can be
+sure that the application of Law~[\nameref{copy-rule-law}] replaces
+only the intended components of those actions.
 Within the body of a method, the return actions have been refined to
 simple data operations with no $executeMethodRet$ communication, as
 can be seen in
@@ -456,9 +455,9 @@ operations highlighted.
     MainThread \circdef \\
     \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
     \t1 \circblockbegin
-    \colorbox{yellow}{$\circvar retVal : Word \circspot$}
+    \colorbox{lightgray}{$\circvar retVal : Word \circspot$}
     executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
-    \t1 \colorbox{yellow}{$ExecuteMethod(c, m, a, retVal) \circseq
+    \t1 \colorbox{lightgray}{$ExecuteMethod(c, m, a, retVal) \circseq
     executeMethodRet!thread!retVal \then Poll$} \circseq  X \\
     {} \extchoice {} \\
     CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
@@ -468,8 +467,8 @@ operations highlighted.
   \begin{circusaction}
     Started \circdef \\
     \t1 \circblockbegin
-    \colorbox{yellow}{$\circvar retVal : Word \circspot$} executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
-    \t1 \colorbox{yellow}{$ExecuteMethod(c, m, a, retVal) \circseq executeMethodRet!thread!retVal \then Poll$} \circseq \\
+    \colorbox{lightgray}{$\circvar retVal : Word \circspot$} executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
+    \t1 \colorbox{lightgray}{$ExecuteMethod(c, m, a, retVal) \circseq executeMethodRet!thread!retVal \then Poll$} \circseq \\
     \t1 \circblockbegin
     continue?t \prefixcolon (t = thread) \then Started \\
     {} \extchoice {} \\
@@ -504,7 +503,7 @@ operations highlighted.
     \t2 \lschexpract \exists argsToPop? == 2 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
     \t2 \lschexpract InterpreterNewStackFrame[\\
     \t3 ConsoleConnection/class?, CCinit/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq Poll \circseq \\
-    \t1 ConsoleConnection\_CCinit \circseq \colorbox{yellow}{$\lschexpract InterpreterReturnEPC \rschexpract$} \circseq Poll \circseq \\
+    \t1 ConsoleConnection\_CCinit \circseq \colorbox{lightgray}{$\lschexpract InterpreterReturnEPC \rschexpract$} \circseq Poll \circseq \\
     %\t1 HandleAstoreEPC(1) \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
     \t1 {} \cdots {} \\
     % \t1 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
@@ -532,7 +531,7 @@ operations highlighted.
     \t4 \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
     \t4 \lschexpract InterpreterNewStackFrame[\\
     \t5 TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-    \t3 Poll \circseq TPK\_f \circseq \colorbox{yellow}{$\lschexpract InterpreterAreturn1EPC \rschexpract$} \circseq Poll \circseq \\
+    \t3 Poll \circseq TPK\_f \circseq \colorbox{lightgray}{$\lschexpract InterpreterAreturn1EPC \rschexpract$} \circseq Poll \circseq \\
     % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
     \t3 {} \cdots {} \\
     % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\

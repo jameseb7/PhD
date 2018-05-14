@@ -6,7 +6,7 @@ This is performed as described in
 Algorithm~\ref{localise-stack-frames-algorithm}, which defines the
 procedure \Call{LocaliseStackFrames}{}.
 
-\begin{algorithm}
+\begin{algorithm}[t]
   \begin{algorithmic}[1]
     \arraycolsep=0cm
     \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$InterpreterStateFS$, $FrameStackCI$}
@@ -29,23 +29,22 @@ procedure \Call{LocaliseStackFrames}{}.
     \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
     \EndFor
   \end{algorithmic}
-  \caption{LocaliseStackFrames}
+  \caption{\Call{LocaliseStackFrames}{}}
   \label{localise-stack-frames-algorithm}
 \end{algorithm}
  
-Since we must be able to operate directly on the $frameStack$ when
-introducing stack frame variables, we first apply a data refinement to
-remove $currentClass$ from the state.
-We defined $currentClass$ in the model as a convenience when accessing
-the $frameClass$ of the topmost stack frame, which is no longer
-necessary when we have separate variables for each stack frame.
+We first apply a data refinement to remove $currentClass$ from the
+state.
+We have defined $currentClass$ in the model as a convenience when
+accessing the $frameClass$ of the topmost stack frame, which is no
+longer necessary when we have separate variables for each stack frame.
 The data refinement is applied on
 line~\ref{algorithm-remove-currentClass-data-refinement} of
 Algorithm~\ref{localise-stack-frames-algorithm}, and transforms the
-state to $InterpreterStateFS$, shown below, which only contains
+state to $InterpreterStateFS$, below, which only contains
 $frameStack$.
 \begin{schema}{InterpreterStateFS}
-  frameStack : StackFrameEPC
+  frameStack : \seq StackFrameEPC
 \end{schema}
 
 The relationship between $InterpreterStateEPC$ and
@@ -68,21 +67,21 @@ $currentClass$ is replaced with $(last~frameStack).frameClass$,
 wherever it occurs in the old actions.
 We can then proceed with introducing stack frame variables.
 
-When introducing the variables to represent stack frames, we must
-begin with those methods at the greatest call depth.
+When introducing these variables, we must begin with those methods at
+the greatest call depth.
 This ensures uses of the $frameStack$ within a nested method do not
 interfere with replacing uses of the $frameStack$ in an outer method.
-To understand this, consider if we were to try to introduce a variable
-representing the stack frame for $TPK\_handleAsyncEvent$, shown in
-part in
+To illustrate this issue, we consider the result if we were to try to
+introduce a variable representing the stack frame for
+$TPK\_handleAsyncEvent$, shown in part in
 Figure~\ref{efs-eliminate-returns-handleAsyncEvent-example-figure},
 without first introducing the stack frame variable for $TPK\_f$.
 The $InterpreterNewStackFrame$ operation that appears before the call
 to $TPK\_f$ creates a new stack frame on $frameStack$.
 This new stack frame is different from the stack frame we are
-introducing a variable for it in $TPK\_handleAsyncEvent$, although it
-is the last frame on $frameStack$ during the body of $TPK\_f$.
-This makes it much more complex to refer to correct stack frame when
+introducing a variable for in $TPK\_handleAsyncEvent$, although it
+is the last frame on $frameStack$ when the body of $TPK\_f$ is executing.
+This makes it much more complex to refer to the correct stack frame when
 introducing the variable to $TPK\_handleAsyncEvent$.
 Ensuring the stack frame variable is introduced for $TPK\_f$ first
 avoids this issue, since it means the size of $frameStack$ is not
