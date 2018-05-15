@@ -454,7 +454,7 @@ slot variables whose values they store.
 \end{figure}
 
 We also eliminate the intermediate $poppedArgs$ variable used when
-passing variables to a method.
+passing variables to method calls in the body of a method.
 This is performed by the rules applied on
 lines~\ref{algorithm-poppedArgs-elimination}
 to~\ref{algorithm-multi-poppedArgs-elimination}, which are applied to
@@ -500,10 +500,87 @@ that they are before the start of the loop and at the end of the loop
 body.
 This is performed on line~\ref{algorithm-move-loop-start}.
 
-After these transformations of the method's body, we adjust the
-method's parameters so that the method's arguments are stored directly
-in the local variables of the method rather passed in additional
-argument parameters.
+After these rules have been applied to the body of
+$TPK\_handleAsyncEvent$, it has the form shown in
+Figure~\ref{efs-introduce-variables-mid-example-figure}.
+The effect of these rules can be seen in the fact that values stored
+in stack slots such as $stack1$ are passed directly to the arguments
+of called functions.
+The conditionals also compare stack slots directly and the assignments
+to those stack slots ($stack1 := var4$ and $stack2 := 10$) have been
+moved to before the start of the loop and just before the end of the
+loop, rather than just after the beginning of the loop.
+The argument to the function is passed in via the $arg1$ variable and
+assigned to the local variable $var1$. 
+This indirection is unnecessary, and we wish instead to have the
+argument passed directly into $var1$.
+We thus perform some final transformations to turn the local variables
+corresponding to the methods arguments into parameters and eliminate
+the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
+
+\begin{figure}[tbp!]
+  \centering
+  \setlength{\zedtab}{0.5cm}
+  \setlength{\zedindent}{0pt}
+  \setlength{\zedleftsep}{0pt}
+  \setlength{\abovedisplayskip}{0pt}
+  \setlength{\belowdisplayskip}{0pt}
+  \setlength{\abovedisplayshortskip}{0pt}
+  \setlength{\belowdisplayshortskip}{0pt}
+  \begin{circusaction}
+    TPK\_handleAsyncEvent \circdef \circval arg1 : Word \circspot \\
+    \t1 \circvar var1 var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
+    \t1 var1 := arg1
+    \t1 newObject!thread!ConsoleConnectionClassID \\
+    \t2 {} \then  newObjectRet!oid \then stack1 := oid \circseq Poll \circseq \\
+    \t1 stack2 := stack1 \circseq Poll \circseq \\
+    \t1 stack3 := null \circseq Poll \circseq \\
+    \t1 {} \cdots {} \\
+    % \t1 ConsoleConnection\_CCinit(stack2, stack3) \circseq Poll \circseq \\
+    % \t1 var1 := stack1 \circseq Poll \circseq \\
+    % \t1 stack1 := var1 \circseq Poll \circseq \\
+    % \t1 getClassIDOf!stack1?cid \\
+    % \t2 {} \then ConsoleConnection\_openInputStream(stack1, stack1) \circseq Poll \circseq \\
+    % \t1 var2 := stack1 \circseq Poll \circseq \\
+    % \t1 stack1 := var1 \circseq Poll \circseq \\
+    % \t1 getClassIDOf!stack1?cid \\
+    % \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
+    % \t1 var3 := stack1 \circseq Poll \circseq \\
+    % \t1 stack1 := 0 \circseq Poll \circseq \\
+    \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 stack1 := var4 \circseq Poll \circseq \\
+    \t1 stack2 := 10 \circseq Poll \circseq \\
+    \t1 \circmu Y \circspot \\
+    \t2 \circif stack1 \leq stack2 \circthen Poll \circseq \\
+    \t3 stack1 := var2 \circseq Poll \circseq \\
+    \t3 getClassIDOf!stack1?cid \then ConsoleInput\_read(stack1, stack1) \circseq Poll \circseq \\
+    \t3 TPK\_f(stack1, stack1) \circseq Poll \circseq \\
+    \t3 var5 := stack1 \circseq Poll \circseq \\
+    \t3 {} \cdots {} \\
+    % \t3 stack1 := var5 \circseq Poll \circseq \\
+    % \t3 stack2 := 400 \circseq Poll \circseq \\
+    % \t3 \circif stack1 \leq stack2 \circthen Poll \circseq \\
+    % \t4 stack1 := var3 \circseq Poll \circseq \\
+    % \t4 stack2 := var5 \circseq Poll \circseq \\
+    % \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
+    % \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
+    % \t4 stack1 := var3 \circseq Poll \circseq \\
+    % \t4 stack2 := 0 \circseq Poll \circseq \\
+    % \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
+    % \t3 \circfi \circseq Poll \circseq \\
+    % \t3 stack1 := var4 \circseq Poll \circseq \\
+    % \t3 stack2 := 1 \circseq Poll \circseq \\
+    % \t3 stack1 := stack1 + stack2 \circseq Poll \circseq \\
+    % \t3 var4 := stack1 \circseq Poll \\
+    \t3 stack1 := var4 \circseq Poll \circseq \\
+    \t3 stack2 := 10 \circseq Poll \circseq Y \\
+    \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
+    \t2 \circfi \circseq Poll
+  \end{circusaction}
+  \caption{$TPK\_handleAsyncEvent$ after its variables have been introduced}
+  \label{efs-introduce-variables-mid-example-figure}
+\end{figure}
+
 First, we make the first $n$ local variables into parameters using
 Rule~[\nameref{var-parameter-conversion-rule}], shown in
 Figure~\ref{var-parameter-conversion-rule-figure}.
@@ -583,41 +660,20 @@ It is applied on line~\ref{algorithm-argument-variable-elimination}
 
 As in the previous section, we only handle methods that do not return
 a value.
-Handling methods that do return a value would require additional
+Handling methods that do return a value requires additional
 compilation rules, similar to
 Rule~[\nameref{var-parameter-conversion-rule}] and
-Rule~[\nameref{argument-variable-elimination-rule}], which would
-account for the additional result parameter present in such methods.
-The result parameter would not be replaced with a local variable,
-since it is only used for returning the value and, as such, does not
-map onto a specific local variable.
-It would instead, be simply moved to be grouped with the local
-variable parameters.
+Rule~[\nameref{argument-variable-elimination-rule}], to account for
+the additional result parameter present in such methods.
+The result parameter is not replaced with a local variable, since it
+is only used for returning the value and, as such, does not map onto a
+specific local variable.
+Instead, it is simply moved to be grouped with the local variable
+parameters.
 The rules on lines~\ref{algorithm-poppedArgs-elimination}
-to~\ref{algorithm-multi-poppedArgs-elimination} would also require
-separate versions to handle the storing of the returned value in the
-calling method.
-
-When the variables have been introduced to our example, the
-$TPK\_handleAsyncEvent$ action has the form shown in
-Figure~\ref{efs-localise-stack-frames-example-figure}.
-This code is fairly close to the corresponding C code, shown for
-comparison in Figure~\ref{efs-introduce-variables-c-code-figure}.
-Note that the assignments to $stack1$ and $stack2$ before the start of
-the loop are replicated just before the end of the loop, since they
-have been moved by an application of
-Law~[\nameref{rec-rolling-rule-law}].
-The $Poll$ actions remain present in the \Circus{} code to indicate
-which actions must be atomic.
-As discussed in Section~\ref{cee-final-considerations-section}, this
-is a requirement on how the behaviour of the code is perceived
-externally and so the $Poll$ actions are not evident in the C code of
-the method.
-The $getClassIDOf$ communications are also omitted from the C code,
-since their results are not stored or otherwise used. 
-They are retained in cases where they are used to determine which
-variant of a method to call, though no such cases occur in
-$TPK\_handleAsyncEvent$.
+to~\ref{algorithm-multi-poppedArgs-elimination} also require separate
+versions to handle the storing of the returned value in the calling
+method.
 
 \begin{figure}[tp!]
   \centering
@@ -637,16 +693,17 @@ $TPK\_handleAsyncEvent$.
     \t1 stack3 := null \circseq Poll \circseq \\
     \t1 ConsoleConnection\_CCinit(stack2, stack3) \circseq Poll \circseq \\
     \t1 var1 := stack1 \circseq Poll \circseq \\
-    \t1 stack1 := var1 \circseq Poll \circseq \\
-    \t1 getClassIDOf!stack1?cid \\
-    \t2 {} \then ConsoleConnection\_openInputStream(stack1, stack1) \circseq Poll \circseq \\
-    \t1 var2 := stack1 \circseq Poll \circseq \\
-    \t1 stack1 := var1 \circseq Poll \circseq \\
-    \t1 getClassIDOf!stack1?cid \\
-    \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
-    \t1 var3 := stack1 \circseq Poll \circseq \\
-    \t1 stack1 := 0 \circseq Poll \circseq \\
-    \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 {} \cdots {} \\
+    % \t1 stack1 := var1 \circseq Poll \circseq \\
+    % \t1 getClassIDOf!stack1?cid \\
+    % \t2 {} \then ConsoleConnection\_openInputStream(stack1, stack1) \circseq Poll \circseq \\
+    % \t1 var2 := stack1 \circseq Poll \circseq \\
+    % \t1 stack1 := var1 \circseq Poll \circseq \\
+    % \t1 getClassIDOf!stack1?cid \\
+    % \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
+    % \t1 var3 := stack1 \circseq Poll \circseq \\
+    % \t1 stack1 := 0 \circseq Poll \circseq \\
+    % \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
     \t1 stack1 := var4 \circseq Poll \circseq \\
     \t1 stack2 := 10 \circseq Poll \circseq \\
     \t1 \circmu Y \circspot \\
@@ -662,9 +719,10 @@ $TPK\_handleAsyncEvent$.
     \t4 stack2 := var5 \circseq Poll \circseq \\
     \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
     \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
-    \t4 stack1 := var3 \circseq Poll \circseq \\
-    \t4 stack2 := 0 \circseq Poll \circseq \\
-    \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
+    \t3 {} \cdots {} \\
+    % \t4 stack1 := var3 \circseq Poll \circseq \\
+    % \t4 stack2 := 0 \circseq Poll \circseq \\
+    % \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
     \t3 \circfi \circseq Poll \circseq \\
     \t3 stack1 := var4 \circseq Poll \circseq \\
     \t3 stack2 := 1 \circseq Poll \circseq \\
@@ -675,7 +733,8 @@ $TPK\_handleAsyncEvent$.
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
   \end{circusaction}
-  \caption{$TPK\_handleAsyncEvent$ after its variables have been introduced}
+  \caption{$TPK\_handleAsyncEvent$ at the end of the Introduce
+    Variables step}
   \label{efs-introduce-variables-example-figure}
 \end{figure}
 
@@ -688,50 +747,82 @@ $TPK\_handleAsyncEvent$.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
-  \begin{lstlisting}[basicstyle=\ttfamily,keywordstyle=\bf,language=C,numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,escapeinside={(*@}{@*)}]
+  \begin{lstlisting}[basicstyle=\ttfamily,keywordstyle=\bf,language=C,
+    % numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,
+    escapeinside={(*@}{@*)}]
 void TPK_handleAsyncEvent(int32_t var1) {
-  int32_t var2, var3, var4, var5, var6;
-  int32_t stack1, stack2, stack3;
-  stack1 = newObject(ConsoleConnectionClassID);
-  stack2 = stack1;
-  stack3 = 0;
-  ConsoleConnection_CCinit(stack2, stack3);
-  var1 = stack1;
-  stack1 = var1;
-  stack1 = ConsoleConnection_openInputStream(stack1);
-  var2 = stack1;
-  stack1 = var1;
-  stack1 = ConsoleConnection_openOutputStream(stack1);
-  var3 = stack1;
-  stack1 = 0;
-  var4 = stack1;
-  stack1 = var4;
-  stack2 = 10;
-  while (stack1 <= stack2) {
-    stack1 = var2;
-    stack1 = ConsoleInput_read(stack1);
-    stack1 = TPK_f(stack1);
-    var5 = stack1;
-    stack1 = var5;
-    stack2 = 400;
-    if (stack1 <= stack2) {  
-      stack1 = var3;
-      stack2 = var5;
-      ConsoleOutput_write(stack1, stack2);
-    } else {
-      stack1 = var3;
-      stack2 = 0;
-      ConsoleOutput_write(stack1, stack2);
-    }
-    stack1 = var4;
-    stack2 = 1;
-    stack1 = stack1 + stack2;
-    var4 = stack1;
+    int32_t var2, var3, var4, var5, var6;
+    int32_t stack1, stack2, stack3;
+
+    stack1 = newObject(ConsoleConnectionClassID);
+
+    stack2 = stack1;
+    stack3 = 0;
+    ConsoleConnection_CCinit(stack2, stack3);
+
+    var1 = stack1;
+    (*@
+    % stack1 = var1;
+    % stack1 = ConsoleConnection_openInputStream(stack1);
+    % var2 = stack1;
+    % stack1 = var1;
+    % stack1 = ConsoleConnection_openOutputStream(stack1);
+    % var3 = stack1;
+    % stack1 = 0;
+    % var4 = stack1;
+    @*)...
+
     stack1 = var4;
     stack2 = 10;
-  }
+    while (stack1 <= stack2) {
+        stack1 = var2;
+        stack1 = ConsoleInput_read(stack1);
+        stack1 = TPK_f(stack1);
+        var5 = stack1;
+        
+        stack1 = var5;
+        stack2 = 400;
+        if (stack1 <= stack2) {  
+            stack1 = var3;
+            stack2 = var5;
+            ConsoleOutput_write(stack1, stack2);
+        } else {
+            (*@
+            % stack1 = var3;
+            % stack2 = 0;
+            % ConsoleOutput_write(stack1, stack2);
+            @*)...
+        }
+          
+        stack1 = var4;
+        stack2 = 1;
+        stack1 = stack1 + stack2;
+        var4 = stack1;
+
+        stack1 = var4;
+        stack2 = 10;
+    }
 }
 \end{lstlisting}
-  \caption{The code corresponding to $TPK\_handleAsyncEvent$}
+  \caption{The C code corresponding to $TPK\_handleAsyncEvent$}
   \label{efs-introduce-variables-c-code-figure}
 \end{figure}
+
+When the variables have been introduced to our example, it has a form
+that corresponds directly to the C code for each method.
+This can be seen from
+Figures~\ref{efs-introduce-variables-example-figure}
+and~\ref{efs-introduce-variables-c-code-figure}, which show the
+\Circus{} code for $TPK\_handleAsyncEvent$ and its corresponding C
+code.
+The $Poll$ actions remain present in the \Circus{} code to indicate
+which actions must be atomic.
+As discussed in Section~\ref{cee-final-considerations-section}, this
+is a requirement on how the behaviour of the code is perceived
+externally and so the $Poll$ actions are not evident in the C code of
+the method.
+The $getClassIDOf$ communications are also omitted from the C code,
+since their results are not stored or otherwise used. 
+They are retained in cases where they are used to determine which
+variant of a method to call, though no such cases occur in
+$TPK\_handleAsyncEvent$.
