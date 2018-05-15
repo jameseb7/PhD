@@ -3157,13 +3157,13 @@ The state of $StructMan_{cs}$ is given by the schema $StructManState$.
 It is similar to $ObjManState$ defined in
 Section~\ref{cee-object-manager-subsection}, but the $objects$ map
 relates object identifiers to $ObjectStruct$ values, and
-$staticClassFields$ is a map from $ObjectID$ to the $StaticFields$
-type.
+$staticClassFields$ is of the $StaticFields$ type.
 
 The structure of the $StructMan_{cs}$ process is much the same as for
-the $ObjMan$ process, with the state initialised in the same way.
-However, $AllocateStaticFields$ is changed to handle the
-$StaticFields$ type.
+the $ObjMan$ process, with the state initialised in a similar way.
+However, the initialisation of $staticClassFields$ is done in terms of
+the $StaticFields$ type, although the fields are still set to $null$,
+so $Init$ is refined to reflect that.
 
 Also, the actions $GetField$, $PutField$, $GetStatic$ and $PutStatic$
 are refined to operate on the struct types described in this section.
