@@ -27,9 +27,13 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
     % introduce operand stack assumptions
     \State \Call{IntroduceOperandStackAssumptions}{\Call{ActionBody}{$methodName$}}
     \label{algorithm-introduce-operandStack-assumptions}
+    \State $\ell \gets$ \Call{MethodLocals}{$methodName$}
+    \label{algorithm-get-method-locals}
+    \State $s \gets$ \Call{MethodStackSize}{$methodName$}
+    \label{algorithm-get-method-stack-size}
     \State {\bf apply}
     \label{algorithm-local-data-refinement}
-   {Law~[\nameref{forwards-data-refinement-law}]}
+    {Law~[\nameref{forwards-data-refinement-law}]}
     ({\arraycolsep=0cm
       $\begin{array}[t]{l}
          [var1, \ldots, var{<}\ell{>} : Word;\\
@@ -211,8 +215,14 @@ integer beginning at $1$ and going up to the total number of local
 variables for the method, $\ell$.
 It also contains operand stack slots, named $stack$ followed by an
 integer from $1$ up to the maximum stack size for the method, $s$.
-These values $\ell$ and $s$ are obtained from the $maxLocals$ and
-$maxStack$ information for the method in $cs$.
+These values $\ell$ and $s$ are obtained from the $methodLocals$ and
+$methodStackSize$ information for the method in $cs$, on
+lines~\ref{algorithm-get-method-locals}
+and~\ref{algorithm-get-method-stack-size} of
+Algorithm~\ref{introduce-variables-algorithm}.
+For example, the values associated with $handleAsyncEvent$ in the
+$TPK$ class in Figure~\ref{example-model-figure} give values of $6$
+for $\ell$ and $3$ for $s$. 
 The coupling invariant for the data refinement of a method $m$ is then
 given by the template $V{<}\ell{>}S{<}s{>}CI$, shown below.
 
@@ -518,7 +528,7 @@ We thus perform some final transformations to turn the local variables
 corresponding to the methods arguments into parameters and eliminate
 the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
 
-\begin{figure}[tbp!]
+\begin{figure}[tp!]
   \centering
   \setlength{\zedtab}{0.5cm}
   \setlength{\zedindent}{0pt}
@@ -702,8 +712,8 @@ method.
     % \t1 getClassIDOf!stack1?cid \\
     % \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
     % \t1 var3 := stack1 \circseq Poll \circseq \\
-    % \t1 stack1 := 0 \circseq Poll \circseq \\
-    % \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 stack1 := 0 \circseq Poll \circseq \\
+    \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
     \t1 stack1 := var4 \circseq Poll \circseq \\
     \t1 stack2 := 10 \circseq Poll \circseq \\
     \t1 \circmu Y \circspot \\
@@ -719,10 +729,9 @@ method.
     \t4 stack2 := var5 \circseq Poll \circseq \\
     \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
     \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
-    \t3 {} \cdots {} \\
-    % \t4 stack1 := var3 \circseq Poll \circseq \\
-    % \t4 stack2 := 0 \circseq Poll \circseq \\
-    % \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
+    \t4 stack1 := var3 \circseq Poll \circseq \\
+    \t4 stack2 := 0 \circseq Poll \circseq \\
+    \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
     \t3 \circfi \circseq Poll \circseq \\
     \t3 stack1 := var4 \circseq Poll \circseq \\
     \t3 stack2 := 1 \circseq Poll \circseq \\
@@ -755,23 +764,23 @@ void TPK_handleAsyncEvent(int32_t var1) {
     int32_t stack1, stack2, stack3;
 
     stack1 = newObject(ConsoleConnectionClassID);
-
     stack2 = stack1;
     stack3 = 0;
     ConsoleConnection_CCinit(stack2, stack3);
-
     var1 = stack1;
+    
     (*@
     % stack1 = var1;
     % stack1 = ConsoleConnection_openInputStream(stack1);
     % var2 = stack1;
+    
     % stack1 = var1;
     % stack1 = ConsoleConnection_openOutputStream(stack1);
     % var3 = stack1;
-    % stack1 = 0;
-    % var4 = stack1;
     @*)...
 
+    stack1 = 0;
+    var4 = stack1;
     stack1 = var4;
     stack2 = 10;
     while (stack1 <= stack2) {
@@ -787,11 +796,9 @@ void TPK_handleAsyncEvent(int32_t var1) {
             stack2 = var5;
             ConsoleOutput_write(stack1, stack2);
         } else {
-            (*@
-            % stack1 = var3;
-            % stack2 = 0;
-            % ConsoleOutput_write(stack1, stack2);
-            @*)...
+            stack1 = var3;
+            stack2 = 0;
+            ConsoleOutput_write(stack1, stack2);
         }
           
         stack1 = var4;

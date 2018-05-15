@@ -221,12 +221,11 @@ with the number of arguments, $numArgs$, passed to it.
     stackFrame' : StackFrameEPC
   \where
     \langle arg1?, \ldots, arg{<}n{>}? \rangle \subseteq stackFrame'.localVariables \\
-    \# stackFrame'.localVariables = \ell \\
+    \# stackFrame'.localVariables = c.methodLocals~m \\
     stackFrame'.operandStack = \langle\rangle \\
     stackFrame'.frameClass = c \\
-    stackFrame'.stackSize = s
+    stackFrame'.stackSize = c.methodStackSize~m
   \end{schema}
-  where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
 \end{restatable}
 \caption{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}
 \label{HandleReturnEPC-stackFrame-introduction-rule-figure}
@@ -287,14 +286,15 @@ In our example, the body of $TPK\_handleAsyncEvent$ (having the form
 of the actions in the parametrised block shown above), begins with an
 $InterpreterNewStackFrame$ operation having $TPK$ as its $class?$ and
 $handleAsyncEvent$ as its $methodID?$.
-The values for $\ell$ and $s$ can thus be obtained from the
-$methodLocals$ and $methodStackSize$ components of the $TPK$ class
-structure shown in Figure~\ref{example-model-figure}.
-This gives values of $6$ for $\ell$ and $3$ for $s$.
-Thus, after applying
-Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] the
-$TPK\_handleAsyncEvent$ is as shown in
-Figure~\ref{efs-localise-stack-frames-example-figure}.
+This operation is thus replaced with an $InitTPK\_handleAsyncEventSF$
+operation, which has the form shown in
+Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}].
+% The values for $\ell$ and $s$ can thus be obtained from the
+% $methodLocals$ and $methodStackSize$ components of the $TPK$ class
+% structure shown in Figure~\ref{example-model-figure}.
+% This gives values of $6$ for $\ell$ and $3$ for $s$.
+After this rule has been applied, $TPK\_handleAsyncEvent$ is as shown
+in Figure~\ref{efs-localise-stack-frames-example-figure}.
 
 For brevity, we define new actions, which we refer to as $Handle*SF$
 actions.
@@ -328,12 +328,7 @@ of $last~frameStack$.
     TPK\_f \circdef \\
     \t1 \circval arg1 : Word \circspot \\
     \t1 \circvar stackFrame : StackFrameEPC \circspot \\
-    \t1 \lschexpract [arg1? : Word; stackFrame' : StackFrameEPC | \\
-    \t2 \langle arg1? \rangle \subseteq stackFrame'.localVariables \land \\
-    \t2 \# stackFrame'.localVariables = 6 \land \\
-    \t2 stackFrame'.operandStack = \langle\rangle \land \\
-    \t2 stackFrame'.frameClass = TPK \land \\
-    \t2 stackFrame'.stackSize = 3] \rschexpract \circseq \\
+    \t1 \lschexpract InitTPK\_handleAsyncEventSF \rschexpract \circseq \\
     \t1 Poll \circseq HandleNewSF(27) \circseq Poll \circseq HandleDupSF \circseq Poll \circseq  HandleAconst\_nullSF \circseq Poll \circseq \\
     \t1 (\circvar poppedArgs : \seq Word \circspot \\
     \t2 \lschexpract \exists argsToPop? == 2 @ InvokeSF \rschexpract \circseq \\
