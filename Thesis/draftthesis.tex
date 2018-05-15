@@ -26,6 +26,7 @@
 \usepackage{thm-restate}
 \usepackage{supertabular}
 \usepackage{afterpage}
+\usepackage{letltxmacro}
 
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
@@ -164,6 +165,8 @@ prefoothook={\qedsymbol\relax}
   {{\bf end match}}
 
 \MakeRobust{\Call}
+\LetLtxMacro{\OldCall}{\Call}
+\renewcommand{\Call}[2]{\OldCall{\mbox{#1}}{#2}}
 \MakeRobust{\Let}
 
 %TC:group zed 0 displaymath

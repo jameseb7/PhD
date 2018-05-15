@@ -70,7 +70,7 @@ We can then proceed with introducing stack frame variables.
 When introducing these variables, we must begin with those methods at
 the greatest call depth.
 This is necessary due to the approach we take in introducing these
-variables, as we explain later.
+variables, as we explain later in this section.
 We therefore introduce stack frame variables to the methods in the
 order specified by a procedure \Call{MethodDependencyOrder}{}, which
 constructs a sequence of method action names indicating the order in
@@ -80,7 +80,7 @@ methods that contain no method calls, then adding any methods that
 only call methods already in the sequence, and repeating until all
 methods are in the sequence.
 Since we do not allow recursion, this always terminates.
-We construct this sequence, $iterationOrder$, on
+We construct this sequence and assign it to $iterationOrder$ on
 line~\ref{algorithm-method-dependency-order-call} of
 Algorithm~\ref{localise-stack-frames-algorithm}.
 
@@ -100,21 +100,23 @@ This rule is applied to two parameters:~$methodName$, the name of the
 method being considered, and $numArgs$, the number of arguments to the
 method.
 The number of arguments is determined from the name of the method
-(recall that the arguments of a method are encoded in its identifier)
-and we add an extra argument for \texttt{this} if the method is not
-static, as indicated by if statement on
+(since the arguments of a method are encoded in its identifier) and we
+add an extra argument for \texttt{this} if the method is not static,
+as indicated by if statement on
 lines~\ref{algorithm-static-args-check-start}
 to~\ref{algorithm-static-args-check-end}.
 We apply this rule everywhere it applies on
 line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 
 \begin{figure}[thp]
-\begin{restatable}[$Return$-arguments-intro]{crule}{ArgumentsIntroductionRule}
+\begin{restatable}[$InterpreterReturn$-arguments-intro]{crule}{ArgumentsIntroductionRule}
   \label{arguments-introduction-rule}
   %\setlength{\zedtab}{0.4cm}
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
-  Given an action name $M$ and $n : \nat$,
+  Given an action name $M$ and $n : \nat$, if
+  $arg1, \ldots, arg{<}n{>}$ are not free in $M$ and are distinct from
+  $c$, $m$ and $args$, then
   \begin{circus}
     \begin{array}{l}
       \lschexpract InterpreterNewStackFrame[ \\
@@ -142,9 +144,9 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 Rule~[\nameref{arguments-introduction-rule}] introduces value
 parameters representing method arguments around a method ending with
 an $InterpreterReturn$ operation.
-The arguments array passed into the $methodArgs$ input of
+The arguments array passed as the $methodArgs$ input of
 $InterpreterNewStackFrame$ is split into its individual elements,
-which are passed into the parameters and recombined to be passed into
+which are passed to the parameters and then recombined to be passed into
 $InterpreterNewStackFrame$.
 This splitting of the array ensures that the individual arguments can
 be more easily handled in the next step, where we introduce local
@@ -156,7 +158,7 @@ an $InterpreterReturnEPC$ operation.
 The Rule~[\nameref{arguments-introduction-rule}] therefore applies to
 it and the number of arguments given as the $n$ parameter to the rule
 is $1$, since the SCJ method \texttt{handleAsyncEvent()} takes no
-explicit arguments, but is non-static.
+explicit arguments, but is not static.
 Calls to $TPK\_handleAsyncEvent$ (the only one of which occurs in
 $ExecuteMethod$, since it is only called by the infrastructure), then
 have the form shown below.
@@ -189,13 +191,14 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule},
 with the number of arguments, $numArgs$, passed to it.
 
 \begin{figure}[thp]
-\begin{restatable}[$Return$-$stackFrame$-intro]{crule}{HandleReturnEPCStackFrameIntroductionRule}
+\begin{restatable}[$InterpreterReturn$-$stackFrame$-intro]{crule}{HandleReturnEPCStackFrameIntroductionRule}
   \label{HandleReturnEPC-stackFrame-introduction-rule}
   \setlength{\zedtab}{0.4cm}
   \setlength{\zedindent}{0.5cm}
   %\setlength{\zedleftsep}{0pt}
-  Given $n : \nat$, if $A$ operates solely on $last~frameStack$ and do
-  not change the length of $frameStack$, then
+  Given $n : \nat$, if the only occurrences of $frameStack$ in $A$ are
+  in the expression $last~frameStack$ and the length of $frameStack$
+  does not change throughout $A$, then
   \begin{circus}
     \begin{array}{l}
       \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
@@ -207,18 +210,22 @@ with the number of arguments, $numArgs$, passed to it.
     \circrefines_A
     \begin{array}{l}
       \circvar stackFrame : StackFrameEPC \circspot \\
-      \t1 \lschexpract [arg1?, \ldots, arg{<}n{>}? : Word; \\
-      \t1 stackFrame' : StackFrameEPC  | \\
-      \t2 \langle arg1?, \ldots, arg{<}n{>}? \rangle \\
-      \t3 {} \subseteq stackFrame'.localVariables \land \\
-      \t2 \# stackFrame'.localVariables = \ell \land \\
-      \t2 stackFrame'.operandStack = \langle\rangle \land \\
-      \t2 stackFrame'.frameClass = c \land \\
-      \t2 stackFrame'.stackSize = s] \rschexpract \circseq \\
+      \t1 \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq \\
       \t1 A[stackFrame/last~frameStack, \\
       \t2 stackFrame'/last~frameStack']
     \end{array}
   \end{circus}
+  where $Init{<}c{>}\_{<}m{>}SF$ is defined by
+  \begin{schema}{Init{<}c{>}\_{<}m{>}SF}
+    arg1?, \ldots, arg{<}n{>}? : Word \\
+    stackFrame' : StackFrameEPC
+  \where
+    \langle arg1?, \ldots, arg{<}n{>}? \rangle \subseteq stackFrame'.localVariables \\
+    \# stackFrame'.localVariables = \ell \\
+    stackFrame'.operandStack = \langle\rangle \\
+    stackFrame'.frameClass = c \\
+    stackFrame'.stackSize = s
+  \end{schema}
   where $\ell = c.methodLocals~m$ and $s = c.methodStackSize~m$.
 \end{restatable}
 \caption{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}
@@ -226,12 +233,13 @@ with the number of arguments, $numArgs$, passed to it.
 \end{figure}
 
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]
-introduces a variable $stackFrame$, of type $StackFrameEPC$, over the
-body of a method that ends with an $InterpreterReturn$ operation.
-The $stackFrame$ variable is initialised in the same way as for the
-stack frame created by $InterpreterNewStackFrame$, and each reference
-to $last~frameStack$ in the body of the method is replaced with a
-reference to $stackFrame$.
+introduces a variable $stackFrame$, which has type $StackFrameEPC$,
+over the body of a method that ends with an $InterpreterReturn$
+operation.
+The $stackFrame$ variable is initialised, in $Init{<}c{>}\_{<}m{>}SF$,
+in the same way as for the stack frame created by
+$InterpreterNewStackFrame$, and each reference to $last~frameStack$ in
+the body of the method is replaced with a reference to $stackFrame$.
 Replacing the references to $last~frameStack$ requires that the size
 of $frameStack$ does not change during the method.
 However, this requirement is met since method calls are the only
@@ -247,7 +255,7 @@ $InterpreterNewStackFrame$ operation, as can be seen in
 Figure~\ref{efs-eliminate-returns-handleAsyncEvent-example-figure},
 where the call to $TPK\_f$ has such an operation.
 This changes the size of $frameStack$, making references to
-$last~frameStack$ refer a different stack frame and so preventing a
+$last~frameStack$ refer to a different stack frame and so preventing a
 direct replacement with the $stackFrame$ variable.
 Ensuring the stack frame variable is introduced for $TPK\_f$ first
 avoids this issue, since it means that references to $frameStack$
@@ -258,21 +266,22 @@ $TPK\_handleAsyncEvent$.
 
 Note that the operations performed on
 lines~\ref{algorithm-arguments-introduction}
-and~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
-specifically handle methods that do not return a value.
-We omit the handling of methods that do return a value. 
-Handling such methods would require rules similar to
+and~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule} of
+Algorithm~\ref{localise-stack-frames-algorithm} specifically handle
+methods that do not return a value.
+We omit the similar handling of methods that do return a value. 
+Handling such methods requires rules similar to
 Rule~[\nameref{arguments-introduction-rule}] for method bodies
 followed by $InterpreterAreturn1$ and $InterpreterAreturn2$, which
-would introduce a result parameter for the method in addition to the
-value parameters representing the method's arguments.
-The new method action would then have to match the different method
+introduce a result parameter for the method in addition to the value
+parameters representing the method's arguments.
+The new method action then has to match the different method
 parameters.
-We would also require a rule similar
+We also require a rule similar
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] to
 handle the slightly different ending of the method action that the
-return handling would create.
-These rules would be applied in a way similar to the existing rules.
+return handling creates.
+These rules are applied in a way similar to the existing rules.
 
 In our example, the body of $TPK\_handleAsyncEvent$ (having the form
 of the actions in the parametrised block shown above), begins with an

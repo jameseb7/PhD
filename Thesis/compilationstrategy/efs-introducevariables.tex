@@ -92,13 +92,12 @@ of the actions from $cs$ via the function \Call{MethodNames}{}.
 Within this loop we refer to the name of the method action under
 consideration as $methodName$.
 Unlike the introduction of the $stackFrame$ variables, the order in
-which the methods are iterated over does not matter when introducing
-variables, since each has its own $stackFrame$ variable that undergoes
-local refinement.
+which the methods are iterated over does not matter, since each has
+its own $stackFrame$ variable that undergoes local refinement.
 
 We first refine field access operations to remove their reliance on
 the $frameClass$ component of the $stackFrame$, which is removed in
-the data refinement.
+the data refinement later in this section.
 This is done by first introducing and distributing assumptions stating
 the value of $frameClass$, indicated by the procedure
 \Call{IntroduceFrameClassAssumptions}{} on
@@ -107,14 +106,15 @@ applied to the body of $methodName$.
 This procedure is similar to \Call{IntroduceFrameStackAssumptions}{}
 in that it introduces an assumption and distributes it with restricted
 forms of standard algebraic laws.
-However, \Call{IntroduceFrameClassAssumptions}{} acts on over the body
-of a single method and introduces an assumption about the value of the
+However, \Call{IntroduceFrameClassAssumptions}{} acts on the body of a
+single method and introduces an assumption about the value of the
 $frameClass$ component of $stackFrame$ from the schema action
 initialising $stackFrame$.
 The \Call{IntroduceFrameClassAssumptions}{} procedure is defined by
 Algorithm~\ref{introduce-frameClass-assumptions-algorithm}, which we
-omit here, but which is included in
+omit here, but is included in
 Appendix~\ref{introduce-variables-appendix-subsection}.
+
 We can then apply Rules~[\nameref{refine-PutfieldSF-rule}],
 [\nameref{refine-GetfieldSF-rule}],
 [\nameref{refine-PutstaticSF-rule}],
@@ -122,7 +122,6 @@ We can then apply Rules~[\nameref{refine-PutfieldSF-rule}],
 wherever possible to refine the field accesses and object creation
 actions, on lines~\ref{algorithm-apply-refine-PutfieldSF}
 to~\ref{algorithm-apply-refine-NewSF}.
-
 As an example of one of these rules, we show
 Rule~[\nameref{refine-PutfieldSF-rule}] in
 Figure~\ref{refine-PutfieldSF-rule-figure}.
@@ -139,7 +138,7 @@ Rule~[\nameref{refine-PutstaticSF-rule}],
 Rule~[\nameref{refine-GetstaticSF-rule}] and
 Rule~[\nameref{refine-NewSF-rule}] are similar so we omit them here.
 They can be found, along with the other compilation rules, in
-Appendix~\ref{compilation-rules-appendix}.
+Appendix~\ref{introduce-variables-appendix-subsection}.
 After these laws have been applied, we eliminate any remaining
 $frameClass$ assumptions by applying Law~[\nameref{assump-elim-law}]
 and Law~[\nameref{seq-unitl-law}] on
@@ -207,15 +206,15 @@ After an $operandStack$ assumption has been introduced before each
 data operation, the local data refinement is performed on
 line~\ref{algorithm-local-data-refinement}.
 The new state for the data refinement contains the local variables,
-which are all of type $Word$, and are named with $var$ followed by an
+which are all of type $Word$, and are named $var$ followed by an
 integer beginning at $1$ and going up to the total number of local
 variables for the method, $\ell$.
-It also contains operand stack slots, named with $stack$ followed by
-an integer from $1$ up to the maximum stack size for the method, $s$.
+It also contains operand stack slots, named $stack$ followed by an
+integer from $1$ up to the maximum stack size for the method, $s$.
 These values $\ell$ and $s$ are obtained from the $maxLocals$ and
-$maxStack$ information for the  method in $cs$.
-The coupling invariant for the data refinement of a method
-$m$ is then given by the template $V{<}\ell{>}S{<}s{>}CI$, shown below.
+$maxStack$ information for the method in $cs$.
+The coupling invariant for the data refinement of a method $m$ is then
+given by the template $V{<}\ell{>}S{<}s{>}CI$, shown below.
 
 % I don't think this is functional...does that matter?
 \begin{schema}{V{<}\ell{>}S{<}s{>}CI}
@@ -236,7 +235,7 @@ $m$ is then given by the template $V{<}\ell{>}S{<}s{>}CI$, shown below.
 \end{schema}
 
 $V{<}\ell{>}S{<}s{>}CI$ requires the number of local variables to be
-equal to $\ell$ relates each of the values in the $localVariables$
+equal to $\ell$, relates each of the values in the $localVariables$
 sequence in $stackFrame$ to the corresponding local variables, $var1$
 to $var{<}\ell{>}$.
 It also requires the maximum operand stack size, $stackSize$, to be
@@ -258,9 +257,7 @@ This means that we cannot directly compute the actions resulting from
 the refinement (since there are multiple possibilities), so we must
 specify how each of the data operations is refined.
 We therefore state compilation rules in terms of \Circus{} simulation
-between actions, which is the relation that captures an individual
-data refinement, with the data refinement itself made up of simulation
-of all the actions over the state.
+between actions.
 
 Most of the bytecode instructions at this stage in the strategy have
 their semantics stated in terms of a data operation over $stackFrame$,
@@ -400,7 +397,8 @@ arbitrary.
 \end{figure}
 
 The simulation rules we have omitted here can be found with the rest
-of the compilation rules in Appendix~\ref{compilation-rules-appendix}.
+of the compilation rules in
+Appendix~\ref{introduce-variables-appendix-subsection}.
 These, together with the standard laws for distributing simulations
 through \Circus{} constructs, are sufficient to unambiguously define
 the local data refinement to be applied to the method.
@@ -417,7 +415,8 @@ channel, which require a separate assignment operation and so cannot
 be eliminated.
 The additional variables are eliminated using the rules applied on
 lines~\ref{algorithm-apply-eliminate-value1-value2-conditional-rule}
-to~\ref{algorithm-apply-eliminate-value-putStatic-rule}.
+to~\ref{algorithm-apply-eliminate-value-putStatic-rule} of
+Algorithm~\ref{introduce-variables-algorithm}.
 In particular,
 Rule~[\nameref{eliminate-value1-value2-conditional-rule}], shown in
 Figure~\ref{eliminate-value1-value2-conditional-rule-figure}, applies
@@ -460,13 +459,12 @@ This is performed by the rules applied on
 lines~\ref{algorithm-poppedArgs-elimination}
 to~\ref{algorithm-multi-poppedArgs-elimination}, which are applied to
 every method call in the body of $methodName$.
-These rules eliminate the $poppedArgs$ variable and copies the values
-stored in it into the values passed to the value parameters of the
-called method.
+These rules eliminate $poppedArgs$ and copy the values stored in it
+into the values passed to the value parameters of the called method.
 This can be seen in
 Rule~[\nameref{method-parameter-introduction-rule}], shown in
 Figure~\ref{method-parameter-introduction-rule-figure}, which
-eliminates the $poppedArgs$ variable around method calls arising from
+eliminates $poppedArgs$ when associated with method calls arising from
 a \texttt{invokespecial} or \texttt{invokestatic} instruction.
 Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}] and
 Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]
