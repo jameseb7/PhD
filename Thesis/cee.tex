@@ -1799,44 +1799,29 @@ inheritance is properly handled.
 The third part of $ObjMan$'s state is described by the schema
 $StaticFieldsInfo$, shown below, which stores information about the
 static fields of classes.
-Its first component, $staticClassFieldsID$, is of a free type
-$StaticFieldsStructID$, and may be either $Uninitialised$ or
-$Initialised$ with an $ObjectID$ representing the space allocated for
-the static class fields.
-The values of the fields themselves are stored in the
-$staticClassFields$ map, which relates pairs of class and field
-identifiers to $Word$ values.
+Its component is the $staticClassFields$ map, which relates pairs of
+class and field identifiers to $Word$ values, representing the
+contents of each static field.
 The invariant of $StaticFieldsInfo$ requires that $staticClassFields$
-be empty when $staticClassFieldsID$ is $Uninitialised$, and that it
-must contain every field specified by the $staticFields$ component for
-each class in $cs$ when $staticClassFieldsID$ is $Initialised$.
+contain every field specified by the $staticFields$ component for each
+class in $cs$.
 \begin{schema}{StaticFieldsInfo}
-	staticClassFieldsID : StaticFieldsStructID \\
 	staticClassFields : (ClassID \cross FieldID) \pfun Word
 \where
-	staticClassFieldsID = Uninitialised \implies staticClassFields = \{\} \\
-	staticClassFieldsID \in \ran Initialised \implies {} \\
-	\t1 \dom staticClassFields = \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \}
+	dom staticClassFields = \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \}
 \end{schema}
 
 These three parts are conjoined together to form the schema
 $ObjManState$, shown below, which is the state for $ObjMan$.
 This has an additional invariant, relating the parts together.
 The first conjunct of the invariant requires that the domain of
-$objects$, plus $staticClassFieldsID$ if it is $Initialised$, is
-partitioned by the $ObjectID$ sets given by $backingStoreMap$, so that
-every object is allocated in exactly one backing store.
-This uses a function $toSet$ to convert $staticClassFieldsID$ to a set
-of $ObjectID$s.
-The second conjunct requires that the $staticClassFieldsID$, if it is
-$Initialised$, must be in the root backing store, $rootBS$.
-Combined with the invariant of, this implies that at least one thread
-must have entered the $rootBS$ at all times.
+$objects$ is partitioned by the $ObjectID$ sets given by
+$backingStoreMap$, so that every object is allocated in exactly one
+backing store.
 \begin{schema}{ObjManState}
 	BackingStoreManager; ObjectInfo; StaticFieldsInfo
 \where
-	backingStoreMap \partition \dom objects \cup toSet~staticClassFieldsID \\
-	toSet~staticClassFieldsID \subseteq backingStoreMap~rootBS
+	backingStoreMap \partition \dom objects \\
 \end{schema}
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
@@ -1851,8 +1836,9 @@ The $backingStoreStacks$ map is initialised to contain the $main$ and
 $idle$ thread, both with $rootBS?$ as their only backing store
 entered.
 The $rootBS$ identifier is set to be the same as the $rootBS?$ input.
-The $staticClassFieldsID$ is set to $Uninitialised$, with
-$staticClassFields$ empty.
+Every static field in $staticClassFields$ (whose domain is determined
+by the invariant of $StaticFieldsInfo$) is initially set to null.
+% TODO: shouldn't we have initial values for these from the class files?
 \begin{schema}{ObjManInit}
 	ObjManState~' \\
 	rootBS? : BackingStoreID
@@ -1861,22 +1847,19 @@ $staticClassFields$ empty.
 	backingStoreMap' = \{ rootBS? \mapsto \emptyset \} \\
 	backingStoreStacks' = \{ main \mapsto \langle rootBS? \rangle, idle \mapsto \langle rootBS? \rangle \} \\
 	rootBS' = rootBS? \\
-	staticClassFieldsID = Uninitialised \\
-	staticClassFields = \{\}
+	\forall x : \dom staticClassFields @ staticClassFields~x = null
 \end{schema}
 
 The $ObjMan$ process then proceeds as described in its main action,
 shown below.
-It begins in $Init$ by communicating with the SCJVM memory manager to
-obtain the identifier of the root backing store and then initialising
-the state as described in $ObjManInit$.
-The space for static fields is then allocated in
-$AllocateStaticFields$, initialising $staticClassFieldsID$ and
-populating $staticClassFields$ with each field mapped to $null$.
-Finally, in $Loop$, the process repeatedly offers each of its services
-in external choice.
+It begins in $Init$, which communicates with the SCJVM memory manager
+to obtain the identifier of the root backing store and allocate space
+for $staticClassFields$, and then initialises the state as described
+in $ObjManInit$.
+Afterwards, in $Loop$, the process repeatedly offers each of its
+services in external choice.
 \begin{circusaction}
-  \circspot Init \circseq AllocateStaticFields \circseq Loop
+  \circspot Init \circseq Loop
 \end{circusaction}
 
 % The space for static fields is allocated as described in
@@ -1973,9 +1956,8 @@ in external choice.
 %   \t2 {} \extchoice MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos)
 % \end{circusaction}
 
-After $ObjMan$ is initialised and the space for the static fields has
-been created, $ObjMan$ offers services to the other components of the
-$CEE$, in the $Loop$ action shown below.
+After $ObjMan$ is initialised, $ObjMan$ offers services to the other
+components of the $CEE$, in the $Loop$ action shown below.
 The services offered by $Loop$ include $NewObject$, which creates an
 object of a given class.
 The $GetField$ and $PutField$ actions allow for obtaining and setting
