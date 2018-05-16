@@ -103,7 +103,7 @@ We first refine field access operations to remove their reliance on
 the $frameClass$ component of the $stackFrame$, which is removed in
 the data refinement later in this section.
 This is done by first introducing and distributing assumptions stating
-the value of $frameClass$, indicated by the procedure
+the value of $frameClass$, using the procedure
 \Call{IntroduceFrameClassAssumptions}{} on
 line~\ref{algorithm-introduce-frameClass-assumptions}, which is
 applied to the body of $methodName$.
@@ -131,10 +131,10 @@ Rule~[\nameref{refine-PutfieldSF-rule}] in
 Figure~\ref{refine-PutfieldSF-rule-figure}.
 It refines a $PutfieldSF(cpi)$ instruction preceded by an assumption
 stating the value of the $frameClass$ component of $stackFrame$.
-After the application of the rule, the definition of $PutfieldSF$ has
-been expanded and the class identifier, $cid$, and field identifier,
-$fid$, at the constant pool index $cpi$ are substituted in place of
-the accesses to the constant pool.
+With the application of the rule, the definition of $PutfieldSF$ is
+expanded and the class identifier, $cid$, and field identifier, $fid$,
+at the constant pool index $cpi$ are substituted in place of the
+accesses to the constant pool.
 This removes the reference to the $constantPool$ of the $frameClass$,
 and hence the reference to the $frameClass$.
 Rule~[\nameref{refine-GetfieldSF-rule}],
@@ -192,12 +192,13 @@ After references to the $frameClass$ have been removed, we can perform
 a local data refinement on the body of the method to convert the
 $stackFrame$ variable to separate variables for the local variables
 and operand stack slots.
-During this data refinement, we must know the size of the operand
-stack at each point where the operations occur in order to determine
-which stack slot variables the refined operations should operate on.
+Since we are converting the $operandStack$ component of $stackFrame$
+from a sequence to a fixed set of variables representing an array of
+stack slots, we must know the length of $operandStack$ before each
+operation in order to determine which variable corresponds to the top
+of the stack, and hence should be affected by the operation.
 We ensure that this information is available, by introducing and
-distributing assumptions on the size of the $operandStack$ component
-of $stackFrame$.
+distributing assumptions on the size of $operandStack$.
 This is performed by the \Call{IntroduceOperandStackAssumptions}{}
 procedure, called on
 line~\ref{algorithm-introduce-operandStack-assumptions}.
@@ -221,8 +222,8 @@ lines~\ref{algorithm-get-method-locals}
 and~\ref{algorithm-get-method-stack-size} of
 Algorithm~\ref{introduce-variables-algorithm}.
 For example, the values associated with $handleAsyncEvent$ in the
-$TPK$ class in Figure~\ref{example-model-figure} give values of $6$
-for $\ell$ and $3$ for $s$. 
+$TPK$ class in Figure~\ref{example-model-figure} are $6$ for $\ell$
+and $3$ for $s$. 
 The coupling invariant for the data refinement of a method $m$ is then
 given by the template $V{<}\ell{>}S{<}s{>}CI$, shown below.
 
@@ -253,33 +254,34 @@ $s$ and relates each value in $operandStack$ to the corresponding
 stack slots, $stack1$ to $stack{<}s{>}$, but only if $operandStack$ is
 long enough to contain such a value.
 The values of the stack slots outside the length of the $operandStack$
-at each point in the program are left nondeterministic, since they are
-not used until they have been initialised with the correct value.
+at each point in the program are not specified, and so are chosen
+nondeterministically, since they are not used until they have been
+initialised with the correct value.
 This nondeterminism allows us to avoid introducing unnecessary
 assignments to initialise the stack slots and return them to a default
 value when they are no longer used, which would be required if we
 specified a value for unused stack slots in the coupling invariant.
 
 However, the nondeterminism in $V{<}\ell{>}S{<}s{>}CI$ means that it
-is not a function, since there are multiple possible states for the
-operand stack slots that correspond to a non-full $operandStack$.
+does not define a function, since there are multiple possible states
+for the operand stack slots that correspond to a non-full
+$operandStack$.
 This means that we cannot directly compute the actions resulting from
-the refinement (since there are multiple possibilities), so we must
-specify how each of the data operations is refined.
-We therefore state compilation rules in terms of \Circus{} simulation
-between actions.
+the refinement (since there are multiple possibilities). 
+So we must specify how each of the data operations is refined.
+We, therefore, state compilation rules in terms of \Circus{}
+simulations between actions.
 
 Most of the bytecode instructions at this stage in the strategy have
 their semantics stated in terms of a data operation over $stackFrame$,
 in the form of a $Handle*SF$ action.
-We state the simulations for such instructions as simulations of the
-sequential composition of the $Handle*SF$ action with an
-$operandStack$ size assumption, which can be viewed as adding an extra
-precondition to the action.
+We state the simulations for such instructions as simulations of a
+$Handle*SF$ action preceded by an $operandStack$ size assumption,
+which can be viewed as adding an extra precondition to the action.
 An example of such a simulation is
 Rule~[\nameref{HandleAloadSF-simulation-rule}], shown in
 Figure~\ref{HandleAloadSF-simulation-rule-figure}.
-It sates that $HandleAloadSF(lvi)$, with an assumption that the size
+It states that $HandleAloadSF(lvi)$, with an assumption that the size
 of $operandStack$ is $k$, is simulated by an assignment
 $stack{<}k+1{>} := var{<}lvi{>}$.
 This rule applies, for example, to the $HandleAloadSF(1)$ action
@@ -312,7 +314,7 @@ Their communication with the object manager need not be changed by the
 data refinement.
 However, the data operations used by these operations to pop or push
 the values communicated from or to the operand stack must be refined.
-An example of the simulation of such an operation is
+An example of the simulation for such an operation is
 Rule~[\nameref{InterpreterPopEPC-simulation-rule}], shown in
 Figure~\ref{InterpreterPopEPC-simulation-rule-figure}.
 This establishes a simulation between $InterpreterPopEPC$, modified to
@@ -372,7 +374,7 @@ The passing of the arguments to the invoked method has already been
 refined in the introduction of the $stackFrame$ variable, but the
 schema initialising $stackFrame$ must be further refined to initialise
 the local variables.
-The simulation of the $stackFrame$ initialisation schema is stated by
+The simulation for the $stackFrame$ initialisation schema is stated by
 Rule~[\nameref{stackFrame-init-simulation-rule}], shown in
 Figure~\ref{stackFrame-init-simulation-rule-figure}.
 It is simulated by a sequence of assignments setting the local
@@ -815,21 +817,15 @@ void TPK_handleAsyncEvent(int32_t var1) {
   \label{efs-introduce-variables-c-code-figure}
 \end{figure}
 
-When the variables have been introduced to our example, it has a form
-that corresponds directly to the C code for each method.
+When the variables have been introduced, the model that we obtain has
+a form that corresponds directly to the C code for each method.
 This can be seen from
 Figures~\ref{efs-introduce-variables-example-figure}
 and~\ref{efs-introduce-variables-c-code-figure}, which show the
 \Circus{} code for $TPK\_handleAsyncEvent$ and its corresponding C
 code.
-The $Poll$ actions remain present in the \Circus{} code to indicate
-which actions must be atomic.
-As discussed in Section~\ref{cee-final-considerations-section}, this
-is a requirement on how the behaviour of the code is perceived
-externally and so the $Poll$ actions are not evident in the C code of
-the method.
-The $getClassIDOf$ communications are also omitted from the C code,
-since their results are not stored or otherwise used. 
-They are retained in cases where they are used to determine which
-variant of a method to call, though no such cases occur in
-$TPK\_handleAsyncEvent$.
+All that remains is to refine the form of the objects, the accesses to
+which are represented by communications with the object manager, to
+concrete C structs.
+This is performed in the final stage of the strategy, described in the
+next section.
