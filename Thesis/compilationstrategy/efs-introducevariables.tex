@@ -839,8 +839,7 @@ Figures~\ref{efs-introduce-variables-example-figure}
 and~\ref{efs-introduce-variables-c-code-figure}, which show the
 \Circus{} code for $TPK\_handleAsyncEvent$ and its corresponding C
 code.
-All that remains is to refine the form of the objects, the accesses to
-which are represented by communications with the object manager, to
-concrete C structs.
-This is performed in the final stage of the strategy, described in the
-next section.
+Note that the $getClassIDOf$ communications with the object manager
+correspond to accesses to C structs representing objects.
+These structs are introduced in the final stage the strategy, in
+Section~\ref{data-refinement-of-objects-section}.

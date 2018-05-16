@@ -1,0 +1,316 @@
+The final stage of the compilation strategy introduces the
+representation of objects in C.
+Unlike the previous stages of the strategy, this stage operates on the
+object manager, $ObjMan$, refining it to the $StructMan_{cs}$ process
+described in Section~\ref{cee-struct-manager-subsection}.
+Thus, this stage may be summarised by the following theorem.
+\begin{thm}[Data Refinement of Objects]\label{dro-thm}
+  \begin{circus}
+    ObjMan(cs) \circrefines StructMan_{cs}
+  \end{circus}
+\end{thm}
+
+\begin{algorithm}[ht]
+  \begin{algorithmic}[1]
+    \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$StructManState$, $ObjectCI$}
+    \label{algorithm-dro-data-refinement}
+    \State \ApplyTo{Rule~[\nameref{refine-NewObject-rule}]}{$NewObject$}
+    \label{algorithm-dro-refine-NewObject}
+    \State \ApplyTo{Rule~[\nameref{refine-GetField-rule}]}{$GetField$}
+    \State \ApplyTo{Rule~[\nameref{refine-PutField-rule}]}{$PutField$}
+    \State \ApplyTo{Rule~[\nameref{refine-GetStatic-rule}]}{$GetStatic$}
+    \State \ApplyTo{Rule~[\nameref{refine-PutStatic-rule}]}{$PutStatic$}
+    \label{algorithm-dro-refine-PutStatic}
+    \State \ApplyFor{Law~[\nameref{process-param-elim-law}]}{$cs$}
+    \label{algorithm-dro-cs-elimination}
+  \end{algorithmic}
+  \caption{Data Refinement of Objects}
+  \label{dro-algorithm}
+\end{algorithm}
+
+The process of refining $ObjMan$ is described by
+Algorithm~\ref{dro-algorithm}. 
+It begins on line~\ref{algorithm-dro-data-refinement} with a data
+refinement to change the representation of objects used in the
+interpreter to the C structs used in the final code.
+This data refinement uses new types and functions to represent struct
+types for each class in $cs$, having the form described in
+Section~\ref{cee-struct-manager-subsection}.
+The fields in all superclasses of a class are collected together to
+form the fields used to define each class struct.
+Note that an interface cannot have non-static fields and so, since we
+require that the inputs to the compilation strategy pass the standard
+checks performed on Java class files, the object fields of each class
+are defined by a straight hierarchy of superclasses.
+We can thus assume the fields of an object's superclass are stored
+first in its representation, before the fields specific to its own
+type.
+This ensures that the definition of the structs is consistent with the
+way struct casting works in C.
+
+As an example, we present the struct for objects of the \texttt{TPK}
+class, $TPKObj$, below.
+Since \texttt{TPK} declares no fields of its own (as indicated by the
+empty $fields$ set for $TPK$ in Figure~\ref{example-model-figure} from
+Section~\ref{overview-subsection}), it only includes fields from the
+superclasses of \texttt{TPK} (shown in
+Figure~\ref{example-superclasses-model-figure}).
+Its fields are thus those of \texttt{ManagedEventHandler}, since
+\texttt{AperiodicEventHandler} does not add any timing information to
+the base information for an event handler.
+These fields are in addition to the $classID$ field, which is
+contained in every object's struct and identifies the class of the
+object.
+The other fields are the $threadID$, $backingStoreSize$,
+$allocAreaSize$ and $stackSize$ fields from the $ManagedEventHandler$
+class information structure.
+These provide space in which the information about the event handler
+may be stored by the $Launcher$ during mission startup.
+\begin{schema}{TPKObj}
+  classID : ClassID \\
+  threadID : Word \\
+  backingStoreSize : Word \\
+  allocAreaSize : Word \\
+  stackSize : Word
+\end{schema}
+
+Similar types are created for $ManagedEventHandler$ and
+$AperiodicEventHandler$, with the same fields, and named
+$ManagedEventHandlerObj$ and $AperiodicEventHandlerObj$ repectively.
+This means that $TPKObj$ values can be easily converted to those
+types.
+Other aperiodic event handlers may have additional fields to store
+data specific to them.
+Those fields would be placed at the end of their types, which can be
+converted to $AperiodicEventHandlerObj$ by simply discarding the
+additional fields.
+The struct types for each class are collected together into an
+$ObjectStruct$ type, shown below.
+\begin{zed}
+  ObjectStruct ::= \\
+  \t1 TPKCon \ldata TPKObj \rdata | \\
+  \t1 AperiodicEventHandlerCon \ldata AperiodicEventHandlerObj \rdata | \\
+  \t1 ManagedEventHandlerCon \ldata ManagedEventHandlerObj \rdata | \cdots {} 
+\end{zed}
+
+The values of $ObjectStruct$ that can be converted to
+$ManagedEventHandlerObj$ can be mapped onto it by the function
+$castManagedEventHandler$, representing a C cast to that type.
+Similar functions are defined for the other object types.
+We also define functions for performing a combined cast and field
+update and collect the static fields from all classes into a
+$StaticFields$ structure, as described in
+Section~\ref{cee-struct-manager-subsection}.
+
+These types and functions are all used in the struct manager after the
+compilation strategy has been applied, so we introduce them before
+applying the data refinement.
+Note that, since the types are Z data types, they do not need to be
+declared in a process and so we do not need to introduce them by
+refinement of $ObjMan$.
+The state resulting from the data refinement on
+line~\ref{algorithm-dro-data-refinement} is $StructManState$,
+shown below, which uses the object struct types described above.
+\begin{schema}{StructManState}
+  BackingStoreManager \\
+  objects : ObjectID \pfun ObjectStruct \\
+  staticClassFields : StaticFields
+\where
+  backingStoreMap \partition \dom objects 
+  % \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} = \dom backingStoreMap \\
+  % rootBS \in \dom backingStoreMap \\
+\end{schema}
+As mentioned in Section~\ref{cee-struct-manager-subsection},
+$StructManState$ is very similar to $ObjManState$.
+It contains $BackingStoreManager$, which is the same as in
+$ObjManState$ since the management of backing stores is unaffected by
+the compilation strategy.
+The $objects$ map is similar to that in $ObjManState$, but it maps to
+the $ObjectStruct$ type, rather than the $Object$ type.
+The $staticClassFields$ component in $StructManState$ is of the
+$StaticFields$ type, rather than the map from fields to their values
+in $ObjManState$, since we have a known set of static fields, having
+been supplied with the $cs$ map.
+
+The data refinement is described by the coupling invariant $ObjectCI$,
+shown in Figure~\ref{ObjectCI-figure}, which relates $ObjManState$ to
+$StructManState$.
+It is presented as a template to be instantiated by the identifiers of
+the classes in $cs$ and their corresponding fields, in much the same
+format as for the schemas in
+Section~\ref{cee-struct-manager-subsection}.
+This equates the $BackingStoreManager$ fields in $ObjManState$ with
+those in $StructManState$, since management of backing stores is
+unaffected by the data refinement.
+
+\begin{figure}[t!]
+\begin{schema}{ObjectCI}
+  ObjManState \\
+  StructManState_1
+\where
+  backingStoreMap = backingStoreMap_1 \\
+  backingStoreStacks = backingStoreStacks_1 \\
+  rootBS = rootBS_1 \\
+  \dom~objects = \dom objects_1 \\
+  \forall x : \dom objects @ \\
+  % \t1 thisClassID~((objects~x).class) \in \{{<}classID_1{>}, \ldots, {<}classID_n{>}\} \land \\
+  \t1 (thisClassID~((objects~x).class) = {<}classID_1{>} \implies \\
+  % \t2 (\dom (objects~x).fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\} \land \\
+  \t2 objects_1~x = {<}classID_1{>}Con~\lblot \\
+  \t3 classID == {<}classID_1{>}, \\
+  \t3 {<}fieldID_{1,1}{>} == (objects~x).fields~{<}fieldID_{1,1}{>}, \\
+  \t4 \cdots \\
+  \t3 {<}fieldID_{1,m_1}{>} == (objects~x).fields~{<}fieldID_{1,m_1}{>} \\
+  \t2 \rblot) \land \\
+  \t2 \cdots \\
+  \t1 (thisClassID~((objects~x).class) = {<}classID_n{>} \implies \\
+  % \t2 (\dom (objects~x).fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{1,m_n}{>}\} \land \\
+  \t2 objects_1~x = {<}classID_n{>}Con~\lblot \\
+  \t3 classID == {<}classID_n{>}, \\
+  \t3 {<}fieldID_{n,1}{>} == (objects~x).fields~{<}fieldID_{n,1}{>}, \\
+  \t4 \cdots \\
+  \t3 {<}fieldID_{n,m_n}{>} == (objects~x).fields~{<}fieldID_{n,m_n}{>} \\
+  \t2 \rblot) \\
+  staticClassFields_1.{<}classID_1{>}\_{<}staticfieldID_{1,1}{>} = \\
+  \t1 staticClassFields~({<}classID_1{>}, {<}staticfieldID_{1,1}{>}) \\
+  \t1 \cdots \\
+  staticClassFields_1.{<}classID_1{>}\_{<}staticfieldID_{1,\ell_1}{>} = \\
+  \t1 staticClassFields~({<}classID_1{>}, {<}staticfieldID_{1,\ell_1}{>}) \\
+  \t1 \cdots \\
+  staticClassFields_1.{<}classID_n{>}\_{<}staticfieldID_{n,1}{>} = \\
+  \t1 staticClassFields~({<}classID_n{>}, {<}staticfieldID_{n,1}{>}) \\
+  \t1 \cdots \\
+  staticClassFields_1.{<}classID_n{>}\_{<}staticfieldID_{n,\ell_n}{>} = \\
+  \t1 staticClassFields~({<}classID_n{>}, {<}staticfieldID_{n,\ell_n}{>}) \\
+\end{schema}
+\caption{The $ObjectCI$ schema, which is the coupling invariant between $ObjManState$ and $StructManState$}
+\label{ObjectCI-figure}
+\end{figure}
+
+The $objects$ maps for both the abstract and concrete states have the
+same domain, since the set of objects does not change, merely their
+representation.
+The representation of each object in the $objects$ map after the data
+refinement is determined by the class identifier in its $class$
+information before the refinement.
+The object is the struct type for the class identifier.
+For example, the class identifier $TPKClassID$ is class identifier
+corresponding to the class information of \texttt{TPK}, since that is
+the identifier in the $constantPool$ of the $TPK$ structure
+(Figure~\ref{example-model-figure}) that corresponds to its $this$
+value.
+Thus, any object of that type will have the correponding class
+information stored and so will be refined to an $ObjectStruct$ value
+using the $TPKCon$ constructor and containing a value of the $TPKObj$
+type shown above.
+
+The fields of the structure are taken from the values corresponding to
+each field identifier in the object's information before the data
+refinement.
+These fields are guaranteed to correspond to the fields listed in the
+object's class information (including the fields from its
+superclasses) by the invariant of $ObjManState$.
+Similarly, the fields in $staticClassFields$ map directly onto fields
+in the $StaticFields$ structure, with the set of fields guarantees to
+be the same by the invariant of $StaticFieldsInfo$.
+
+$ObjectCI$ is based on equating the information in the old model with
+the fields of the object structs in the new model, and so it describes
+a functional data refinement from which we can calculate the form of
+the actions in the resultant model.
+However, the direct application of this refinement yields actions in a
+form that does not directly correspond to the representation of the
+semantics of C structs that we desire.
+We thus apply some additional compilation rules on
+lines~\ref{algorithm-dro-refine-NewObject}
+to~\ref{algorithm-dro-refine-PutStatic}, to refine the actions of the
+process to the correct form.
+
+An example of such a rule is Rule~[\nameref{refine-NewObject-rule}],
+shown in Figure~\ref{refine-NewObject-rule-figure}.
+It operates on the body of the $NewObject$ action, which has the form
+of the left-hand side of the rule after the application of the data
+refinement.
+In this rule, we represent by the schema $StructManObjectInit$ the
+result of applying the data refinement to the $ObjManObjectInit$
+schema.
+The rule splits the schema into separate schemas initialising each of
+object struct types, which are defined in
+Appendix~\ref{struct-manager-appendix}, offering a choice over each
+class identifier in $cs$ to determine which one should be used.
+The $AllocateObject$ action that communicates with the memory manager
+to allocate space for the object is also supplied with a constants
+indicating the size of each object struct type, rather than
+determining it from the class information in $cs$.
+This means the $GetObjectClassInfo$ schema, which determines the class
+information, can also be removed, eliminating reliance on $cs$ in the
+action.
+
+\begin{figure}[thp]
+  \begin{restatable}[refine-$NewObject$]{crule}{RefineNewObjectRule}
+    \label{refine-NewObject-rule}
+    \begin{circus}
+      \begin{array}{l}
+        \circvar thread : ThreadID; classID : ClassID \circspot \\
+        \circvar objectID : ObjectID; class : Class \circspot \\
+        newObject?t?c \then thread, classID := t, c \circseq \\
+        \lschexpract GetObjectClassInfo \rschexpract \circseq \\
+        AllocateObject(\\
+        \t1 thread, sizeOfObject~class, objectID) \circseq \\
+        \lschexpract StructManObjectInit \rschexpract \circseq \\
+        newObjectRet!objectID \then \Skip
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        \circvar objectID : ObjectID \circspot \\
+        newObject?thread?classID \then {} \\
+        \circif classID = {<}classID_1{>} \circthen {} \\
+        \t1 AllocateObject(\\
+        \t2 thread, \\
+        \t2 sizeof{<}classID_1{>}Obj, \\
+        \t2 objectID) \circseq \\
+        \t1 \lschexpract StructMan{<}classID_1{>}ObjInit \rschexpract \circseq \\
+        \t1 {} \vdots {} \\
+        {} \circelse classID = {<}classID_n{>} \circthen {} \\
+        \t1 AllocateObject(\\
+        \t2 thread, \\
+        \t2 sizeof{<}classID_n{>}Obj, \\
+        \t2 objectID) \circseq \\
+        \t1 \lschexpract StructMan{<}classID_n{>}ObjInit \rschexpract \circseq \\
+        \circfi \circseq newObjectRet!objectID \then \Skip
+      \end{array}
+    \end{circus}
+    where, for all $k \in 1 \upto n$,
+    \begin{circus} 
+        \exists \Delta Class | \Xi Class \hide (fields, fields') @ \\
+        \t1 \theta Class = cs~{<}classID_k{>} \land \\
+        \t1 fields' = \bigcup \{ cid : \dom cs | ({<}classID_k{>},cid) \in subclassRel~cs @ (cs~cid).fields \} \land  \\
+        %\t1 \exists class? == \theta Class~' @ ObjManObjectInit \\
+        \t1 sizeof{<}classID_k{>}Obj = \theta Class~'\\
+    \end{circus}
+  \end{restatable}
+  \caption{Rule~[\nameref{refine-NewObject-rule}]}
+  \label{refine-NewObject-rule-figure}
+\end{figure}
+
+Rule~[\nameref{refine-GetField-rule}],
+Rule~[\nameref{refine-PutField-rule}],
+Rule~[\nameref{refine-GetStatic-rule}] and
+Rule~[\nameref{refine-PutStatic-rule}], which refine the $GetField$,
+$PutField$, $GetStatic$ and $PutStatic$ actions respectively, are
+similar to Rule~[\nameref{refine-NewObject-rule}], refining the data
+operations that result from the data refinement to choices over class
+and field identifiers received on the channels for the operations.
+These rules can be found in
+Appendix~\ref{data-refinement-of-objects-appendix-section}.
+Note that, while $Init$ action of $ObjMan$ is refined in this stage,
+it does not require a separate rule, since the necessary refinement is
+performed by the data refinement alone.
+
+After the refinement has been performed, we can eliminate the $cs$
+parameter of the process via an application of
+Law~[\nameref{process-param-elim-law}] on
+line~\ref{algorithm-dro-cs-elimination}.
+This completes the transformation of $ObjMan(cs)$ into
+$StructMan_{cs}$.
+After this, the model corresponds completely to the C code.

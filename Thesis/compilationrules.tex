@@ -1601,3 +1601,164 @@
 \FloatBarrier  
 
 \ArgumentVariableEliminationRule*
+
+\section{Data Refinement of Objects}
+\label{data-refinement-of-objects-appendix-section}
+
+\RefineNewObjectRule*
+
+\begin{restatable}[refine-$GetField$]{crule}{RefineGetFieldRule}
+  \label{refine-GetField-rule}
+  \begin{circus}
+    \begin{array}{l}
+      \circvar value : Word \circspot \\
+      getField?objectID?classID?field \then {}\\
+      \circif (objectID \in \dom objects \\ 
+      \t1 {} \land (classIDOf~(objects~objectID), classID) \in subclassRel~cs) \circthen {} \\
+      \t1 \lschexpract StructManGetField \rschexpract \circseq getFieldRet!value \then \Skip \\
+      {} \circelse (objectID \notin \dom objects \\ 
+      \t1 {} \lor (classIDOf~(objects~objectID), classID) \notin subclassRel~cs) \circthen \Chaos \\
+      \circfi
+    \end{array}\\
+    \\
+    \t2 {} \circrefines_A {} \\
+    \\
+    \begin{array}{l}
+      getField?oid?cid?fid \then {} \\
+      \circif oid \in \dom objects \circthen {} \\
+      \t1 \circif cid = {<}classID_1{>} \land objects~oid \in \dom cast{<}classID_1{>} \circthen {} \\
+      \t2 \circif fid = {<}fieldID_{1,1}{>} \circthen {} \\
+      \t3 getFieldRet!((cast{<}classID_1{>}~(objects~oid)).{<}fieldID_{1,1}{>}) \then \Skip \\
+      \t3 {} \cdots {} \\
+      \t3 {} \circelse fid = {<}fieldID_{1,m_1}{>} \circthen {} \\
+      \t3 getFieldRet!((cast{<}classID_1{>}~(objects~oid)).{<}fieldID_{1,m_1}{>}) \then \Skip \\
+      \t2 \circfi \\
+      \t2 {} \cdots {} \\
+      \t1 {} \circelse cid = {<}classID_n{>} \land objects~oid \in \dom cast{<}classID_n{>} \circthen {} \\
+      \t2 \circif fid = {<}fieldID_{n,1}{>} \circthen {} \\
+      \t3 getFieldRet!((cast{<}classID_n{>}~(objects~oid)).{<}fieldID_{n,1}{>}) \then \Skip \\
+      \t3 {} \cdots {} \\
+      \t2 {} \circelse fid = {<}fieldID_{n,m_n}{>} \circthen {} \\
+      \t3 getFieldRet!((cast{<}classID_n{>}~(objects~oid)).{<}fieldID_{n,m_n}{>}) \then \Skip \\
+      \t2 \circfi \\
+      \t1 \circfi \\
+      {} \circelse oid \notin \dom objects \circthen \Chaos \\
+      \circfi
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$PutField$]{crule}{RefinePutFieldRule}
+  \label{refine-PutField-rule}
+  \setlength{\zedindent}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      putField?objectID?classID?field?value \then {} \\
+      \circif (objectID \in \dom objects \\ 
+      \t1 {} \land (classIDOf~(objects~objectID), classID) \in subclassRel~cs) \circthen \lschexpract StructManPutField \rschexpract \\
+      \t1 {} \circelse (objectID \notin \dom objects \\ 
+      \t1 {} \lor (classIDOf~(objects~objectID), classID) \notin subclassRel~cs) \circthen \Chaos \\
+      \circfi
+    \end{array}\\
+    \\
+    \t2 {} \circrefines_A {} \\
+    \\
+    \begin{array}{l}
+      putField?oid?cid?fid?value \then {} \\
+      \circif oid \in \dom objects \circthen {} \\
+      \t1 \circif cid = {<}classID_1{>} \land objects~oid \in \dom cast{<}classID_1{>} \circthen {} \\
+      \t2 \circif fid = {<}fieldID_{1,1}{>} \circthen {} \\
+      \t3 objects := \\
+      \t4 objects \oplus \{ oid \mapsto update{<}classID_1{>}\_{<}fieldID_{1,1}{>}~(objects~oid)~value \} \\
+      \t3 {} \cdots {} \\
+      \t2 {} \circelse fid = {<}fieldID_{1,m_1}{>} \circthen {} \\
+      \t3 objects := \\
+      \t4 objects \oplus \{ oid \mapsto update{<}classID_1{>}\_{<}fieldID_{1,m_1}{>}~(objects~oid)~value \} \\
+      \t2 \circfi \\
+      \t2 {} \cdots {} \\
+      \t1 {} \circelse cid = {<}classID_n{>} \land objects~oid \in \dom cast{<}classID_n{>}\circthen {} \\
+      \t2 \circif fid = {<}fieldID_{n,1}{>} \circthen {} \\
+      \t3 objects := \\
+      \t4 objects \oplus \{ oid \mapsto update{<}classID_n{>}\_{<}fieldID_{n,1}{>}~(objects~oid)~value \} \\
+      \t3 {} \cdots {} \\
+      \t2 {} \circelse fid = {<}fieldID_{n,m_n}{>} \circthen {} \\
+      \t3 objects := \\
+      \t4 objects \oplus \{ oid \mapsto update{<}classID_n{>}\_{<}fieldID_{n,m_n}{>}~(objects~oid)~value \} \\
+      \t2 \circfi \\
+      \t1 \circfi \\
+      {} \circelse oid \notin \dom objects \circthen \Chaos \\
+      \circfi
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$GetStatic$]{crule}{RefineGetStaticRule}
+  \label{refine-GetStatic-rule}
+  \setlength{\zedindent}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      getStatic?cid?fid \then {} \\
+      \circif (cid,fid) \in \dom staticClassFields \circthen {} \\
+      \t2 \circvar value : Word \circspot \lschexpract ObjManGetStatic \rschexpract \circseq \\
+      \t2 getStaticRet!value \then \Skip \\
+      {} \circelse (cid,fid) \notin \dom staticClassFields \circthen \Chaos \\
+      \circfi
+    \end{array}\\
+    \\
+    \t2 {} \circrefines_A {} \\
+    \\
+    \begin{array}{l}
+      getStatic?cid?fid \then {} \\
+      \circif cid = {<}classID_1{>} \land fid = {<}staticFieldID_{1,1}{>} \circthen {} \\
+      \t1 getStaticRet!(staticClassFields.{<}classID_1{>}\_{<}staticFieldID_{1,1}{>}) \then \Skip \\
+      \t1 {} \cdots {} \\
+      {} \circelse cid = {<}classID_1{>} \land fid = {<}staticFieldID_{1,\ell_1}{>} \circthen {} \\
+      \t1 getStaticRet!(staticClassFields.{<}classID_1{>}\_{<}staticFieldID_{1,\ell_1}{>}) \then \Skip \\
+      \t1 {} \cdots {} \\
+      {} \circelse cid = {<}classID_n{>} \land fid = {<}staticFieldID_{n,1}{>} \circthen {} \\
+      \t1 getStaticRet!(staticClassFields.{<}classID_n{>}\_{<}staticFieldID_{n,1}{>}) \then \Skip \\
+      \t1 {} \cdots {} \\
+      {} \circelse cid = {<}classID_n{>} \land fid = {<}staticFieldID_{n,\ell_n}{>} \circthen {} \\
+      \t1 getStaticRet!(staticClassFields.{<}classID_n{>}\_{<}staticFieldID_{n,\ell_n}{>}) \then \Skip \\
+      \circfi
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[refine-$PutStatic$]{crule}{RefinePutStaticRule}
+  \label{refine-PutStatic-rule}
+  \setlength{\zedindent}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      putStatic?cid?fid?value \then {}
+      \circif (cid,fid) \in \dom staticClassFields \circthen \lschexpract StructManPutStatic \rschexpract \\
+      {} \circelse (cid,fid) \in \dom staticClassFields \circthen \Chaos \\
+      \circfi
+    \end{array}\\
+    \\
+    \t2 {} \circrefines_A {} \\
+    \\
+    \begin{array}{l}
+      putStatic?cid?fid?value \then {} \\
+      \circvar staticFieldsID : ObjectID; staticFields : StaticFields \circspot \\
+      staticFieldsID := (Initialised\inv)~staticClassFieldsID \circseq \\
+      staticFields := staticClassFields~staticFieldsID \circseq \\
+      \circif cid = {<}classID_1{>} \land fid = {<}staticFieldID_{1,1}{>} \circthen {} \\
+      \t1 staticClassFields := staticClassFields \oplus {} \\
+      \t2 \{ staticFieldsID \mapsto updateStatic{<}classID_1{>}\_{<}staticFieldID_{1,1}{>}~staticFields~value \} \\
+      \t1 {} \cdots {} \\
+      {} \circelse cid = {<}classID_1{>} \land fid = {<}staticFieldID_{1,\ell_1}{>} \circthen {} \\
+      \t1 staticClassFields := staticClassFields \oplus {} \\
+      \t2 \{ staticFieldsID \mapsto updateStatic{<}classID_1{>}\_{<}staticFieldID_{1,\ell_1}{>}~staticFields~value \} \\
+      \t1 {} \cdots {} \\
+      {} \circelse cid = {<}classID_n{>} \land fid = {<}staticFieldID_{n,1}{>} \circthen {} \\
+      \t1 staticClassFields := staticClassFields \oplus {} \\
+      \t2 \{ staticFieldsID \mapsto updateStatic{<}classID_n{>}\_{<}staticFieldID_{n,1}{>}~staticFields~value \} \\
+      \t1 {} \cdots {} \\
+      {} \circelse cid = {<}classID_n{>} \land fid = {<}staticFieldID_{n,\ell_n}{>} \circthen {} \\
+      \t1 staticClassFields := staticClassFields \oplus {} \\
+      \t2 \{ staticFieldsID \mapsto updateStatic{<}classID_n{>}\_{<}staticFieldID_{n,\ell_n}{>}~staticFields~value \} \\
+      \circfi
+    \end{array}
+  \end{circus}
+\end{restatable}
