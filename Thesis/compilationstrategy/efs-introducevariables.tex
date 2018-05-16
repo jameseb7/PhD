@@ -721,7 +721,9 @@ method.
     \t1 \circmu Y \circspot \\
     \t2 \circif stack1 \leq stack2 \circthen Poll \circseq \\
     \t3 stack1 := var2 \circseq Poll \circseq \\
-    \t3 getClassIDOf!stack1?cid \then ConsoleInput\_read(stack1, stack1) \circseq Poll \circseq \\
+    \t3 getClassIDOf!stack1?cid \then {} \\
+    \t4 \circif cid = ConsoleInputClassID \circthen ConsoleInput\_read(stack1, stack1) \circseq \\
+    \t4 \circfi \circseq Poll \circseq \\
     \t3 TPK\_f(stack1, stack1) \circseq Poll \circseq \\
     \t3 var5 := stack1 \circseq Poll \circseq \\
     \t3 stack1 := var5 \circseq Poll \circseq \\
@@ -729,11 +731,16 @@ method.
     \t3 \circif stack1 \leq stack2 \circthen Poll \circseq \\
     \t4 stack1 := var3 \circseq Poll \circseq \\
     \t4 stack2 := var5 \circseq Poll \circseq \\
-    \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
+    \t4 getClassIDOf!stack1?cid \then {} \\
+    \t5 \circif cid = ConsoleOutputClassID \circthen ConsoleOutput\_write(stack1, stack2) \\
+    \t5 \circfi
     \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
-    \t4 stack1 := var3 \circseq Poll \circseq \\
-    \t4 stack2 := 0 \circseq Poll \circseq \\
-    \t4 getClassIDOf!stack1?cid \then ConsoleOutput\_write(stack1, stack2) \\
+    \t4 {} \cdots {} \\
+    % \t4 stack1 := var3 \circseq Poll \circseq \\
+    % \t4 stack2 := 0 \circseq Poll \circseq \\
+    % \t4 getClassIDOf!stack1?cid \then {} \\
+    % \t5 \circif cid = ConsoleOutputClassID \circthen ConsoleOutput\_write(stack1, stack2) \\
+    % \t5 \circfi
     \t3 \circfi \circseq Poll \circseq \\
     \t3 stack1 := var4 \circseq Poll \circseq \\
     \t3 stack2 := 1 \circseq Poll \circseq \\
@@ -787,7 +794,9 @@ void TPK_handleAsyncEvent(int32_t var1) {
     stack2 = 10;
     while (stack1 <= stack2) {
         stack1 = var2;
-        stack1 = ConsoleInput_read(stack1);
+        if (stack1->classID = ConsoleInputClassID) {
+            stack1 = ConsoleInput_read(stack1);
+        }
         stack1 = TPK_f(stack1);
         var5 = stack1;
         
@@ -796,11 +805,17 @@ void TPK_handleAsyncEvent(int32_t var1) {
         if (stack1 <= stack2) {  
             stack1 = var3;
             stack2 = var5;
-            ConsoleOutput_write(stack1, stack2);
+            if (stack1->classID = ConsoleOutputClassID) {
+                ConsoleOutput_write(stack1, stack2);
+            }
         } else {
-            stack1 = var3;
-            stack2 = 0;
-            ConsoleOutput_write(stack1, stack2);
+            (*@
+            % stack1 = var3;
+            % stack2 = 0;
+            % if (stack1->classID = ConsoleOutputClassID) {
+            %     ConsoleOutput_write(stack1, stack2);
+            % }
+            @*)...
         }
           
         stack1 = var4;

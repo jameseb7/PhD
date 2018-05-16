@@ -92,24 +92,21 @@ $Running$ action, and so we omit the \textbf{to} clause.
     \label{algorithm-get-method-call-action}
     \If{\Call{IsResolvable}{$methodCall$}}
     \label{algorithm-is-resolvable-check}
-    \If{\Call{HasSingleTarget}{$methodCall$}}
-    \label{algorithm-multiple-targets-check}
     \Try
     \label{algorithm-try-block-begin}
     \State \ApplyTo{Rule~[\nameref{refine-invokespecial-rule}]}{$methodCall$}
     \State \ApplyTo{Rule~[\nameref{refine-invokestatic-rule}]}{$methodCall$}
-    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-single-rule}]}{$methodCall$}
+    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-rule}]}{$methodCall$}
+    \label{algorithm-refine-invokevirtual-multi}
     \EndTry
+    \If{\Call{HasStaticDispatch}{$methodCall$}}
+    \label{algorithm-static-dispatch-check}
     \Try
     \label{algorithm-try-block2-start}
     \State \ApplyTo{Rule~[\nameref{resolve-special-method-rule}]}{$methodCall$}
-    \State \ApplyTo{Rule~[\nameref{resolve-special-method-virtual-rule}]}{$methodCall$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$methodCallAddress$}
-    \State \ApplyFor{Rule~[\nameref{resolve-normal-method-virtual-rule}]}{$methodCallAddress$}
     \EndTry
     \Else
-    \State \ApplyTo{Rule~[\nameref{refine-invokevirtual-multi-rule}]}{$methodCall$}
-    \label{algorithm-refine-invokevirtual-multi}
     \For{$target \gets $\Call{Targets}{$methodCall$}}
     \label{algorithm-targets-loop}
     \Try
@@ -164,7 +161,6 @@ unresolved method call is referred to as $methodCallAddress$, and the
 method call action at the end of the sequence is referred to as
 $methodCall$.
 
-
 For each method call that needs resolving, we check if it can be
 resolved at this point in the compilation strategy.
 This is performed on line~\ref{algorithm-is-resolvable-check}, where
@@ -174,25 +170,25 @@ call $methodCall$ are either special methods or non-special methods that are
 already complete and have been separated into their own actions (as
 described in Algorithm~\ref{separate-complete-methods-algorithm}).
 
-If the method call is resolvable, then we check whether there is a
-single target for the method call or multiple targets.
-Calls to a single target can be transformed to a simple reference to
-the corresponding method action.
-Calls with multiple targets are transformed into a choice over the
-behaviours for each of the possible targets.
-The check of the number of targets is performed on
-line~\ref{algorithm-multiple-targets-check} of
-Algorithm~\ref{resolve-method-calls-algorithm}.
-This uses the condition \Call{HasSingleTarget}{$methodCall$}, which is
-true if the instruction to be handled is \texttt{invokespecial} or
-\texttt{invokestatic}, or an \texttt{invokevirtual} instruction
-referencing a class with no subclasses (other than itself).
-It is false otherwise, that is, if the instruction is
-\texttt{invokevirtual} and there are multiple subclasses of the class
-referenced by the instruction.
+% If the method call is resolvable, then we check whether there is a
+% single target for the method call or multiple targets.
+% Calls to a single target can be transformed to a simple reference to
+% the corresponding method action.
+% Calls with multiple targets are transformed into a choice over the
+% behaviours for each of the possible targets.
+% The check of the number of targets is performed on
+% line~\ref{algorithm-multiple-targets-check} of
+% Algorithm~\ref{resolve-method-calls-algorithm}.
+% This uses the condition \Call{HasSingleTarget}{$methodCall$}, which is
+% true if the instruction to be handled is \texttt{invokespecial} or
+% \texttt{invokestatic}, or an \texttt{invokevirtual} instruction
+% referencing a class with no subclasses (other than itself).
+% It is false otherwise, that is, if the instruction is
+% \texttt{invokevirtual} and there are multiple subclasses of the class
+% referenced by the instruction.
 
-For method calls with a single target, we replace the action that
-handles the method invocation instruction with an action that pops the
+If the method call is resolvable, we replace the action that handles
+the method invocation instruction with an action that pops the
 arguments for the method from the stack and handles invocation of the
 specific method referenced by the instruction.
 This is handled slightly differently for each of the method invocation
@@ -200,7 +196,7 @@ instructions in our bytecode subset, so we have three rules for
 performing this transformation, one for each
 instruction:~Rule~[\nameref{refine-invokestatic-rule}],
 Rule~[\nameref{refine-invokespecial-rule}] and
-Rule~[\nameref{refine-invokevirtual-single-rule}].
+Rule~[\nameref{refine-invokevirtual-rule}].
 They produce slightly different sequences of actions due to the
 differences in the semantics of the method invocation instructions,
 described in Section~\ref{cee-interpreter-subsection}.
@@ -279,33 +275,107 @@ These are passed to $Invoke$, along with the arguments popped from the
 stack, $poppedArgs$, and a boolean value indicating whether the method
 call is static, which is $\true$ in the case of \texttt{invokestatic}.
 
-Rule~[\nameref{refine-invokespecial-rule}] and
-Rule~[\nameref{refine-invokevirtual-single-rule}] are similar to
+Rule~[\nameref{refine-invokespecial-rule}] is similar to
 Rule~[\nameref{refine-invokestatic-rule}].
-They provide for popping an additional \texttt{this} argument from the
+It provides for popping an additional \texttt{this} argument from the
 stack and pass a $\false$ boolean value to $Invoke$.
-Rule~[\nameref{refine-invokevirtual-single-rule}] also leaves a
-communication on the $getClassIDOf$ channel in place, since refinement
-of a single process cannot eliminate channel communications from the
-trace.
-% TODO: is this the right reason for leaving the communication in?
-% The communication is eliminated later in the strategy, during the
-% \emph{Data Refinement of Objects} stage, described in
-% Section~\ref{data-refinement-of-objects-section}.
+
+% For method calls with multiple targets, we introduce the choice over
+% those targets by using
+Rule~[\nameref{refine-invokevirtual-rule}]
+(Figure~\ref{refine-invokevirtual-multi-rule-figure}) refines an
+\texttt{invokevirtual} method call, introducing a choice over all the
+possible targets of the call.
+It replaces the action $HandleInvokeVirtualEPC$ with an action that
+pops the arguments of the function from the stack using the data
+operation $InterpreterStackFrameInvoke$, and then makes a choice of
+which method to invoke using the class of the \texttt{this} argument
+for the method.
+The method invocations are left as references to the $Invoke$ actions,
+to be resolved later in
+Algorithm~\ref{resolve-method-calls-algorithm}.
+The assumption on the value of $pc$ is converted to an assumption on
+the $storedPC$ value of the current stack frame, and distributed into
+each of the branches of the choice, so it can be handled separately
+for each branch.
+
+\begin{figure}[thp]
+\begin{restatable}[refine-invokevirtual]{crule}{RefineInvokeVirtualMultiRule}
+  \label{refine-invokevirtual-rule}
+  Given $i : ProgramAddress$,
+  \setlength{\zedindent}{0.15cm}
+  \setlength{\zedtab}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      \{ pc = j \} \circseq \\
+      HandleInvokevirtualEPC(cpi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circvar poppedArgs : \seq Word \circspot \\
+      \lschexpract \exists argsToPop? == methodArguments~m @ \\
+      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      getClassIDOf!(head~poppedArgs)?cid \then {} \\
+      \circif cid = c_1 \circthen \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 Invoke(c_1, m, poppedArgs, \false) \\
+      {} \cdots {} \\
+      {} \circelse cid = c_n \circthen \\
+      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+      \t1 Invoke(c_n, m, poppedArgs, \false) \\
+      \circfi
+    \end{array}
+  \end{circus}
+  where $m : MethodID$ and $c_1, \ldots, c_n : ClassID$ are such that
+  \begin{displaymath}
+    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
+    \t1 cpi \in methodRefIndices~c_0 \land \\
+    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0 \land \\
+    \t1 \exists c : ClassID @ c_0.constantPool~cpi = MethodRef~(c,m) \land \\
+    \t1 \{ x : ClassID | (x,c) \in subclassRel~cs \} = \{c_1, \ldots , c_n\}
+  \end{displaymath}
+  and provided $n > 1$.
+\end{restatable}
+\caption{Rule~[\nameref{refine-invokevirtual-multi-rule}]}
+\label{refine-invokevirtual-multi-rule-figure}
+\end{figure}
+
+The class identifiers used in the choice are determined by looking up
+the constant pool index, $cpi$, as for
+Rule~[\nameref{refine-invokestatic-rule}], to obtain a class
+identifier, $c$, and method identifier, $m$.
+The identifier $m$ determines which method should be invoked, but the
+class of the method to be invoked is determined from the class of the
+\texttt{this} object popped from the stack.
+% TODO: should we reference the fact that this is mentioned above?
+Since Java bytecode verification ensures that the class is assignable
+to $c$, we need only consider the identifiers of subclasses of
+$c$:~$c_1, \cdots , c_n$.
+We require that $n$ be greater than $1$, since this rule handles cases
+with multiple targets.
 
 After one of the above rules is applied, the method invocation is
 resolved by transforming the $Invoke$ action to the behaviour of the
 method being invoked.
-A $pc$ assignment is also introduced after the method's behaviour so
-that it can be sequentially composed with the instructions after the
-method call.
-There are four rules for this, applied in another try block on
-line~\ref{algorithm-try-block2-start}:~Rule~[\nameref{resolve-special-method-rule}]
-and Rule~[\nameref{resolve-special-method-virtual-rule}], which
-handles resolution of special methods, and
-Rule~[\nameref{resolve-normal-method-rule}] and
-Rule~[\nameref{resolve-normal-method-virtual-rule}], which handle
-resolution of non-special methods.
+A $pc$ assignment is also introduced after the
+method's behaviour so that it can be sequentially composed with the
+instructions after the method call.
+This is performed separately depending on whether the method call is
+performed with static dispatch (\texttt{invokespecial} and
+\texttt{invokestatic}) or dynamic dispatch (\texttt{invokevirtual}),
+since each of the possible targets must be considered in the dynamic
+dispatch case.
+The type of dispatch is thus checked in the if statement on
+line~\ref{algorithm-static-dispatch-check} of
+Algorithm~\ref{resolve-method-calls-algorithm}.
+This is a simple syntactic check as to whether the method call has a
+$getClassIDOf$ communication and a choice over the possible targets.
+In the static dispatch case, there are two rules, applied in another
+try block on
+line~\ref{algorithm-try-block2-start}:~Rule~[\nameref{resolve-special-method-rule}],
+which handles resolution of special methods, and
+Rule~[\nameref{resolve-normal-method-rule}], which handles resolution
+of non-special methods.
 
 Rule~[\nameref{resolve-special-method-rule}], shown in
 Figure~\ref{resolve-special-method-rule-figure}, operates by simply
@@ -351,10 +421,6 @@ whether the method is static.
 \caption{Rule~[\nameref{resolve-special-method-rule}]}
 \label{resolve-special-method-rule-figure}
 \end{figure}
-Rule~[\nameref{resolve-special-method-virtual-rule}] is similar to
-Rule~[\nameref{resolve-special-method-rule}], but handles the extra
-communication on $getClassIDOf$ in the case of an
-\texttt{invokevirtual} instruction.
 
 \begin{table}
   \centering
@@ -587,91 +653,10 @@ operation $InterpreterNewStackFrame$, sequenced with the action $Poll$
 and the method action, $M$, defining the method's behaviour.
 An assignment is placed after $M$ to set $pc$ to the address of the
 next instruction.
-% , allowing a sequential composition with the
-% instructions after the method call to be introduced.
-Rule~[\nameref{resolve-normal-method-virtual-rule}] is similar but, as
-with Rule~[\nameref{resolve-special-method-virtual-rule}], handles the
-$getClassIDOf$ communication.
 
-For method calls with multiple targets, we introduce the choice over
-those targets by using
-Rule~[\nameref{refine-invokevirtual-multi-rule}]
-(Figure~\ref{refine-invokevirtual-multi-rule-figure}), which is
-applied on line~\ref{algorithm-refine-invokevirtual-multi}.
-This replaces the action $HandleInvokeVirtualEPC$ with an action that
-pops the arguments of the function from the stack using the data
-operation $InterpreterStackFrameInvoke$, and then makes a choice of
-which method to invoke using the class of the \texttt{this} argument
-for the method.
-The method invocations are left as references to the $Invoke$ actions,
-to be resolved later in
-Algorithm~\ref{resolve-method-calls-algorithm}.
-The assumption on the value of $pc$ is converted to an assumption on
-the $storedPC$ value of the current stack frame, and distributed into
-each of the branches of the choice, so it can be handled separately
-for each branch.
-
-\begin{figure}[thp]
-\begin{restatable}[refine-invokevirtual-multi]{crule}{RefineInvokeVirtualMultiRule}
-  \label{refine-invokevirtual-multi-rule}
-  Given $i : ProgramAddress$,
-  \setlength{\zedindent}{0.15cm}
-  \setlength{\zedtab}{0.5cm}
-  \begin{circus}
-    \begin{array}{l}
-      \{ pc = j \} \circseq \\
-      HandleInvokevirtualEPC(cpi)
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      \circvar poppedArgs : \seq Word \circspot \\
-      \lschexpract \exists argsToPop? == methodArguments~m @ \\
-      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      getClassIDOf!(head~poppedArgs)?cid \then {} \\
-      \circif cid = c_1 \circthen \\
-      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t1 Invoke(c_1, m, poppedArgs, \false) \\
-      {} \cdots {} \\
-      {} \circelse cid = c_n \circthen \\
-      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t1 Invoke(c_n, m, poppedArgs, \false) \\
-      \circfi
-    \end{array}
-  \end{circus}
-  where $m : MethodID$ and $c_1, \ldots, c_n : ClassID$ are such that
-  \begin{displaymath}
-    \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
-    \t1 cpi \in methodRefIndices~c_0 \land \\
-    \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0 \land \\
-    \t1 \exists c : ClassID @ c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 \{ x : ClassID | (x,c) \in subclassRel~cs \} = \{c_1, \ldots , c_n\}
-  \end{displaymath}
-  and provided $n > 1$.
-\end{restatable}
-\caption{Rule~[\nameref{refine-invokevirtual-multi-rule}]}
-\label{refine-invokevirtual-multi-rule-figure}
-\end{figure}
-The class identifiers used in the choice are determined by looking up
-the constant pool index, $cpi$, as for
-Rule~[\nameref{refine-invokestatic-rule}], to obtain a class
-identifier, $c$, and method identifier, $m$.
-The identifier $m$ determines which method should be invoked, but the
-class of the method to be invoked is determined from the class of the
-\texttt{this} object popped from the stack.
-% TODO: should we reference the fact that this is mentioned above
-Since Java bytecode verification ensures that the class is assignable
-to $c$, we need only consider the identifiers of subclasses of
-$c$:~$c_1, \cdots , c_n$.
-We require that $n$ be greater than $1$, since this rule handles cases
-with multiple targets.
-
-After the action handling the method invocation instruction has been
-refined to introduce a choice over the different methods, the
-individual methods can be resolved.
-This is performed in a way similar to the single method case, but we
-must operate of each branch of the choice separately.
-Thus, we iterate over each branch of the choice in the loop beginning
-on line~\ref{algorithm-targets-loop}, using the function
+In the case of dynamic dispatch, we iterate over each branch of the
+choice over the methods targets, in the loop beginning on
+line~\ref{algorithm-targets-loop}, using the function
 \Call{Targets}{$methodCall$} to obtain a list of the possible targets
 of the method call $methodCall$.
 For each target, we apply
