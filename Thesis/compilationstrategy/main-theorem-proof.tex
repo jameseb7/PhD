@@ -1,0 +1,55 @@
+The three stages of our strategy, taken together, refine the abstract
+interpreting CEE into described in
+Section~\ref{cee-interpreter-section} to the concrete C CEE described
+in Section~\ref{cee-c-code-section}.
+This can be seen from the proof of Theorem~\ref{main-theorem}, shown
+below.
+
+\begin{crproof}[Theorem~\ref{main-theorem}]
+  \begin{argue}
+    \begin{array}{l}
+      CEE(bc,cs,sid,initOrder)
+    \end{array}\\
+    = & Definition of $CEE$ \\
+    \begin{array}{l}
+      ObjMan(cs) \parallel Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
+    \end{array}\\
+    = & Definition of $Interpreter$ \\
+    \begin{array}{l}
+      ObjMan(cs) \parallel {} \\
+      \t1 (\Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, t)) \parallel {} \\
+      \t1 Launcher(sid,initOrder)
+    \end{array}\\
+    \circrefines & Theorem~\ref{epc-thm} \\
+    \begin{array}{l}
+      ObjMan(cs) \parallel {} \\
+      \t1 (\Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot ThrCF_{bc,cs}(cs,t)) \parallel {} \\
+      \t1 Launcher(sid,initOrder)
+    \end{array}\\
+    \circrefines & Theorem~\ref{efs-thm} \\
+    \begin{array}{l}
+      ObjMan(cs) \parallel {} \\
+      \t1 (\Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot CThr_{bc,cs}(t)) \parallel {} \\
+      \t1 Launcher(sid,initOrder)
+    \end{array}\\
+    = & Definition of $CProg_{bc,cs}$ \\
+    \begin{array}{l}
+      ObjMan(cs) \parallel CProg_{bc,cs} \parallel Launcher(sid,initOrder)
+    \end{array}\\
+    \circrefines & Theorem~\ref{dro-thm} \\
+    \begin{array}{l}
+      StructMan_{cs} \parallel CProg_{bc,cs} \parallel Launcher(sid,initOrder)
+    \end{array}\\
+    % = & Definition of $CCEE_{bc, cs}$ \\
+    % \begin{array}{l}
+    %   CCEE_{bc,cs}(sid, initOrder)
+    % \end{array}\\
+  \end{argue}
+\end{crproof}
+
+The correctness of this proof rests on the correctness of theorems for
+each stage of the strategy.
+The compilation strategy forms the proofs of these theorems and it is
+composed of applying compilation rules.
+The correctness of the compilation rules is, in turn, ensured by their
+proofs in terms of algebraic laws that are known to be correct.
