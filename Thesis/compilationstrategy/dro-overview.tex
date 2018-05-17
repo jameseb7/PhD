@@ -10,7 +10,7 @@ Thus, this stage may be summarised by the following theorem.
   \end{circus}
 \end{thm}
 
-\begin{algorithm}[ht]
+\begin{algorithm}[b]
   \begin{algorithmic}[1]
     \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$StructManState$, $ObjectCI$}
     \label{algorithm-dro-data-refinement}
@@ -40,13 +40,9 @@ The fields in all superclasses of a class are collected together to
 form the fields used to define each class struct.
 Note that an interface cannot have non-static fields and so, since we
 require that the inputs to the compilation strategy pass the standard
-checks performed on Java class files, the object fields of each class
-are defined by a straight hierarchy of superclasses.
-We can thus assume the fields of an object's superclass are stored
-first in its representation, before the fields specific to its own
-type.
-This ensures that the definition of the structs is consistent with the
-way struct casting works in C.
+checks performed on Java class files, so an class's objects only
+inherit fields from its true superclasses, even though our superclass
+relation includes implemented interfaces.
 
 As an example, we present the struct for objects of the \texttt{TPK}
 class, $TPKObj$, below.
@@ -77,13 +73,12 @@ may be stored by the $Launcher$ during mission startup.
 Similar types are created for $ManagedEventHandler$ and
 $AperiodicEventHandler$, with the same fields, and named
 $ManagedEventHandlerObj$ and $AperiodicEventHandlerObj$ repectively.
-This means that $TPKObj$ values can be easily converted to those
-types.
+This means that $TPKObj$ values can be converted to those types, since
+they contain fields of the same name and type.
 Other aperiodic event handlers may have additional fields to store
 data specific to them.
-Those fields would be placed at the end of their types, which can be
-converted to $AperiodicEventHandlerObj$ by simply discarding the
-additional fields.
+Their object types can be converted to $AperiodicEventHandlerObj$ by
+simply discarding the additional fields.
 The struct types for each class are collected together into an
 $ObjectStruct$ type, shown below.
 \begin{zed}
@@ -94,9 +89,8 @@ $ObjectStruct$ type, shown below.
 \end{zed}
 
 The values of $ObjectStruct$ that can be converted to
-$ManagedEventHandlerObj$ can be mapped onto it by the function
-$castManagedEventHandler$, representing a C cast to that type.
-Similar functions are defined for the other object types.
+$ManagedEventHandlerObj$ can be cast to it by the function
+$castManagedEventHandler$.
 We also define functions for performing a combined cast and field
 update and collect the static fields from all classes into a
 $StaticFields$ structure, as described in
@@ -127,7 +121,7 @@ $ObjManState$ since the management of backing stores is unaffected by
 the compilation strategy.
 The $objects$ map is similar to that in $ObjManState$, but it maps to
 the $ObjectStruct$ type, rather than the $Object$ type.
-The $staticClassFields$ component in $StructManState$ is of the
+The component $staticClassFields$, in $StructManState$, is of the
 $StaticFields$ type, rather than the map from fields to their values
 in $ObjManState$, since we have a known set of static fields, having
 been supplied with the $cs$ map.
