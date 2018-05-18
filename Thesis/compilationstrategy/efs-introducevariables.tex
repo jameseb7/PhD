@@ -766,7 +766,7 @@ method.
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
   \begin{lstlisting}[basicstyle=\ttfamily,keywordstyle=\bf,language=C,
-    % numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,
+    numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,
     escapeinside={(*@}{@*)}]
 void TPK_handleAsyncEvent(int32_t var1) {
     int32_t var2, var3, var4, var5, var6;
@@ -788,9 +788,9 @@ void TPK_handleAsyncEvent(int32_t var1) {
     % var3 = stack1;
     @*)...
 
-    stack1 = 0;
+    stack1 = 0; (*@ \label{C-code-unnecessary-assignment} @*)
     var4 = stack1;
-    stack1 = var4;
+    stack1 = var4; (*@ \label{C-code-unnecessary-assignment-end} @*)
     stack2 = 10;
     while (stack1 <= stack2) {
         stack1 = var2;

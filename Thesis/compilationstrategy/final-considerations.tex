@@ -1,0 +1,96 @@
+In this chapter, we have presented our compilation strategy from an
+interpreting SCJVM to our model of C code.
+While our compilation strategy proves the correctness of the
+compilation from an interpreting SCJVM to our model of C code, there
+are further optimisations that may be performed on the output of the
+strategy.
+
+One example of such an optimisation is the removal of the unnecessary
+choice offered in virtual method calls with only one possible target.
+Such choices are made using the class identifier of the object, which,
+in our model, is obtained via communication with the struct manager on
+the $getClassIDOf$ channel.
+The removal of the choice requires the removal of this communication,
+which is a refinement all the processes that participate in this
+communication.
+To remove the communication requires collapsing the parallelism
+between these processes and using the fact that the communication is
+hidden to remove it.
+This is not performed in our strategy, since each stage of the
+strategy operates only on a single process, but is a relatively
+straightforward optimisation that could be added as an extension of the
+strategy in future work.
+
+A further consideration is that Z schemas bindings represent an
+unordered collection of fields, whereas C structs define the order in
+which their fields are stored in memory.
+This means that, while our struct manager model defines what fields
+must be in each object's struct type, it does not specify the order of
+those fields and so is still somewhat more abstract than the C code
+itself.
+This can be rectified by a further data refinement to a representation
+using Z sequences to represent the field data stored in memory.
+Field names for each struct type would then be associated with offsets
+into these sequences, as field names in C are associated with offsets
+in the struct's memory.
+We have not performed such a data refinement as part of the strategy,
+since we believe the form of the struct manager is sufficiently clear
+to implementers, although they will have to choose an ordering for the
+C structs when implementing.
+
+We expect other optimisations to be performed by the C compiler that
+compiles the output of the strategy.
+The correctness of such optimisations is part of verification of the C
+compiler and thus outside the scope of our work.
+However, some optimisations could be integrated into the strategy as
+part of future work.
+An example is the elimination of unnecessary assignments, such as on
+line~\ref{C-code-unnecessary-assignment} of the code in
+Figure~\ref{efs-introduce-variables-c-code-figure}.
+There, \texttt{stack1} is used as an intermediate variable to set
+\texttt{var4} and is not otherwise used before it is overwritten on
+line~\ref{C-code-unnecessary-assignment-end}.
+These assignments are removed by optimising C compilers, and so are
+not removed by our strategy, or the icecap HVM, but could be removed
+in order to produce clearer C code.
+
+Other possible directions for future work extending the strategy
+include weakening the assumptions described in
+Section~\ref{compilation-assumptions-section}.
+Our definition of a structured program is slightly stronger than the
+structural requirements imposed by MISRA-C, which permits a single
+exit from the middle of a loop in addition to the condition at the
+start or end of the loop.
+This means loops may have two exits in MISRA-C, whereas our strategy
+only accounts for loops with a single exit point.
+The strategy could be modified to allow for loops with two exit points
+by adding new rules, similar to
+Rule~[\nameref{while-introduction-rule1}], to introduce such loops,
+having two conditionals to allow for exit from the loop.
+
+We do not model and handle integer overflow in the strategy due to the
+fact that it is not handled in icecap, instead requiring the SCJ
+programmer to ensure that their code does not include overflows.
+A possible extension of the strategy would be to model the overflow
+behaviour of the JVM in the bytecode interpreter and refine it C code
+that enforces that overflow behaviour by checking if overflow would
+occur before performing an operation.
+This would create extra checks in many places where they would not be
+necessary, but such checks could be removed in places where overflow
+can be proved not to occur.
+
+While we do not allow recursion due to its potential for stack
+overflow, there may be a few cases in which recursion can be shown to
+be bounded and hence safe.
+The strategy could be extended to handle such cases, requiring rules
+for introducing loops caused by method calls, and separating the
+resulting recursions in recursive actions to represent recursive
+methods.
+Recursion with more than one method involves a similar approach,
+introducing nested loops and creating mutually recursive actions.
+
+
+In the next chapter, we discuss in more detail how the correctness of
+the strategy is assured and evaluate it through consideration of some
+examples.
+
