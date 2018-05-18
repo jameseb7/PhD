@@ -33,16 +33,16 @@ Algorithm~\ref{dro-algorithm}.
 It begins on line~\ref{algorithm-dro-data-refinement} with a data
 refinement to change the representation of objects used in the
 interpreter to the C structs used in the final code.
-This data refinement uses new types and functions to represent struct
-types for each class in $cs$, having the form described in
-Section~\ref{cee-struct-manager-subsection}.
+% This data refinement uses new types and functions to represent struct
+% types for each class in $cs$, having the form described in
+% Section~\ref{cee-struct-manager-subsection}.
 The fields in all superclasses of a class are collected together to
-form the fields used to define each class struct.
+form the fields used to define its struct.
 Note that an interface cannot have non-static fields and so, since we
 require that the inputs to the compilation strategy pass the standard
-checks performed on Java class files, so an class's objects only
-inherit fields from its true superclasses, even though our superclass
-relation includes implemented interfaces.
+checks performed on Java class files, a class's objects only inherit
+fields from its true superclasses, even though our superclass relation
+includes implemented interfaces.
 
 As an example, we present the struct for objects of the \texttt{TPK}
 class, $TPKObj$, below.
@@ -52,8 +52,8 @@ Section~\ref{overview-subsection}), it only includes fields from the
 superclasses of \texttt{TPK} (shown in
 Figure~\ref{example-superclasses-model-figure}).
 Its fields are thus those of \texttt{ManagedEventHandler}, since
-\texttt{AperiodicEventHandler} does not add any timing information to
-the base information for an event handler.
+\texttt{AperiodicEventHandler} does not add any information to the
+base information for an event handler.
 These fields are in addition to the $classID$ field, which is
 contained in every object's struct and identifies the class of the
 object.
@@ -96,23 +96,22 @@ update and collect the static fields from all classes into a
 $StaticFields$ structure, as described in
 Section~\ref{cee-struct-manager-subsection}.
 
-These types and functions are all used in the struct manager after the
-compilation strategy has been applied, so we introduce them before
-applying the data refinement.
+% TODO: does this need to be said?
+These types and functions are all used in the struct manager, so we
+introduce them before applying the data refinement.
 Note that, since the types are Z data types, they do not need to be
 declared in a process and so we do not need to introduce them by
 refinement of $ObjMan$.
+
 The state resulting from the data refinement on
-line~\ref{algorithm-dro-data-refinement} is $StructManState$,
-shown below, which uses the object struct types described above.
+line~\ref{algorithm-dro-data-refinement} is $StructManState$, shown
+below, which uses the object struct types described above.
 \begin{schema}{StructManState}
   BackingStoreManager \\
   objects : ObjectID \pfun ObjectStruct \\
   staticClassFields : StaticFields
 \where
-  backingStoreMap \partition \dom objects 
-  % \bigcup \{ t : \dom backingStoreStacks @ \ran~(backingStoreStacks~t) \} = \dom backingStoreMap \\
-  % rootBS \in \dom backingStoreMap \\
+  backingStoreMap \partition \dom objects
 \end{schema}
 As mentioned in Section~\ref{cee-struct-manager-subsection},
 $StructManState$ is very similar to $ObjManState$.
@@ -181,22 +180,22 @@ unaffected by the data refinement.
 \label{ObjectCI-figure}
 \end{figure}
 
-The $objects$ maps for both the abstract and concrete states have the
-same domain, since the set of objects does not change, merely their
-representation.
-The representation of each object in the $objects$ map after the data
+The functions $objects$ for both the abstract and concrete states have
+the same domain, since the set of objects does not change, merely
+their representation.
+The representation of each object in $objects$ after the data
 refinement is determined by the class identifier in its $class$
 information before the refinement.
-The object is the struct type for the class identifier.
-For example, the class identifier $TPKClassID$ is class identifier
-corresponding to the class information of \texttt{TPK}, since that is
-the identifier in the $constantPool$ of the $TPK$ structure
+The object is of the struct type for the class identifier.
+For example, $TPKClassID$ is the class identifier corresponding to the
+class information of \texttt{TPK}, since that is the identifier in the
+$constantPool$ of the $TPK$ structure
 (Figure~\ref{example-model-figure}) that corresponds to its $this$
 value.
 Thus, any object of that type will have the correponding class
-information stored and so will be refined to an $ObjectStruct$ value
-using the $TPKCon$ constructor and containing a value of the $TPKObj$
-type shown above.
+information stored and so is refined to an $ObjectStruct$ value using
+the $TPKCon$ constructor and containing a value of the $TPKObj$ type
+shown above.
 
 The fields of the structure are taken from the values corresponding to
 each field identifier in the object's information before the data
@@ -205,7 +204,7 @@ These fields are guaranteed to correspond to the fields listed in the
 object's class information (including the fields from its
 superclasses) by the invariant of $ObjManState$.
 Similarly, the fields in $staticClassFields$ map directly onto fields
-in the $StaticFields$ structure, with the set of fields guarantees to
+in the $StaticFields$ structure, with the set of fields guaranteed to
 be the same by the invariant of $StaticFieldsInfo$.
 
 $ObjectCI$ is based on equating the information in the old model with
@@ -223,17 +222,17 @@ process to the correct form.
 An example of such a rule is Rule~[\nameref{refine-NewObject-rule}],
 shown in Figure~\ref{refine-NewObject-rule-figure}.
 It operates on the body of the $NewObject$ action, which has the form
-of the left-hand side of the rule after the application of the data
+on the left-hand side of the rule after the application of the data
 refinement.
 In this rule, we represent by the schema $StructManObjectInit$ the
 result of applying the data refinement to the $ObjManObjectInit$
 schema.
-The rule splits the schema into separate schemas initialising each of
-object struct types, which are defined in
-Appendix~\ref{struct-manager-appendix}, offering a choice over each
-class identifier in $cs$ to determine which one should be used.
+The rule splits this data operation into separate operations defined
+by simpler schemas, defined in Appendix~\ref{struct-manager-appendix},
+initialising each of the object struct types, offering a choice over
+each class identifier in $cs$ to determine which one should be used.
 The $AllocateObject$ action that communicates with the memory manager
-to allocate space for the object is also supplied with a constants
+to allocate space for the object is also supplied with constants
 indicating the size of each object struct type, rather than
 determining it from the class information in $cs$.
 This means the $GetObjectClassInfo$ schema, which determines the class
