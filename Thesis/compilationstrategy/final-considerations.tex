@@ -1,25 +1,22 @@
 In this chapter, we have presented our compilation strategy from an
-interpreting SCJVM to our model of C code.
-While our compilation strategy proves the correctness of the
-compilation from an interpreting SCJVM to our model of C code, there
-are further optimisations that may be performed on the output of the
-strategy.
+interpreting SCJVM to our model of C code. While our compilation
+strategy proves the correctness of the compilation, there are further
+optimisations that may be performed on the output of the strategy.
 
 One example of such an optimisation is the removal of the unnecessary
 choice offered in virtual method calls with only one possible target.
 Such choices are made using the class identifier of the object, which,
 in our model, is obtained via communication with the struct manager on
-the $getClassIDOf$ channel.
+the $getClassIDOf$ channel. 
 The removal of the choice requires the removal of this communication,
 which is a refinement all the processes that participate in this
-communication.
-To remove the communication requires collapsing the parallelism
-between these processes and using the fact that the communication is
-hidden to remove it.
+communication. 
+It requires collapsing the parallelism between these processes and
+using the fact that the communication is hidden to remove it. 
 This is not performed in our strategy, since each stage of the
 strategy operates only on a single process, but is a relatively
-straightforward optimisation that could be added as an extension of the
-strategy in future work.
+straightforward optimisation that could be added as an extension of
+the strategy in future work.
 
 A further consideration is that Z schemas bindings represent an
 unordered collection of fields, whereas C structs define the order in
@@ -28,14 +25,14 @@ This means that, while our struct manager model defines what fields
 must be in each object's struct type, it does not specify the order of
 those fields and so is still somewhat more abstract than the C code
 itself.
-This can be rectified by a further data refinement to a representation
-using Z sequences to represent the field data stored in memory.
+This can be addressed by a further data refinement to a representation
+using Z sequences.
 Field names for each struct type would then be associated with offsets
 into these sequences, as field names in C are associated with offsets
 in the struct's memory.
 We have not performed such a data refinement as part of the strategy,
 since we believe the form of the struct manager is sufficiently clear
-to implementers, although they will have to choose an ordering for the
+to implementers, although there has to be a choice of ordering for the
 C structs when implementing.
 
 We expect other optimisations to be performed by the C compiler that
@@ -72,9 +69,9 @@ We do not model and handle integer overflow in the strategy due to the
 fact that it is not handled in icecap, instead requiring the SCJ
 programmer to ensure that their code does not include overflows.
 A possible extension of the strategy would be to model the overflow
-behaviour of the JVM in the bytecode interpreter and refine it C code
-that enforces that overflow behaviour by checking if overflow would
-occur before performing an operation.
+behaviour of the JVM in the bytecode interpreter and refine it to C
+code that enforces that overflow behaviour by checking if overflow
+would occur before performing an operation.
 This would create extra checks in many places where they would not be
 necessary, but such checks could be removed in places where overflow
 can be proved not to occur.
@@ -89,7 +86,12 @@ methods.
 Recursion with more than one method involves a similar approach,
 introducing nested loops and creating mutually recursive actions.
 
-
+In summary, there are many optimisations and extensions that are
+possible. 
+What we have achieved, however, is a formal account of a compilation
+strategy that addresses all the central concerns involved in
+transforming SCJ bytecode to a higher-level language like C. 
+Correctness of the compiled code is established by construction.
 In the next chapter, we discuss in more detail how the correctness of
 the strategy is assured and evaluate it through consideration of some
 examples.
