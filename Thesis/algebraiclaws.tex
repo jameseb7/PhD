@@ -28,14 +28,7 @@ proofs of our compilation rules.
 \end{law}
 
 % proved in Isabelle
-\begin{law}[alt-seq-dist]
-  \label{alt-seq-dist-law}
-  \begin{circus}
-    \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
-    =
-    \circif {} \circelse_{i} g_i \circthen A_i \circseq B \circfi
-  \end{circus}
-\end{law}
+\AltSeqDistLaw*
 
 % proved in Isabelle
 \begin{law}[alt-assump-intro]
@@ -238,15 +231,7 @@ proofs of our compilation rules.
 
 
 % Definition B.28 in Marcel's thesis
-\begin{law}[copy-rule]
-  \label{copy-rule-law}
-  Give an action name $N$, if $N$ names an action in the current process then,
-  \begin{circus}
-    N(e) = B(N)(e)
-  \end{circus}
-  where $B$ is a function that returns the body of an action given its
-  name.
-\end{law}
+\CopyRuleLaw*
 
 % Definition B.37 in Marcel's thesis
 \begin{law}[val-def]
@@ -310,12 +295,7 @@ proofs of our compilation rules.
 \end{law}
 
 % Law C.35 in Marcel's thesis
-\begin{law}[assump-elim]
-  \label{assump-elim-law}
-  \begin{circus}
-    \{g\} \circrefines_A \Skip
-  \end{circus}
-\end{law}
+\AssumpElimLaw*
 
 % Law C.36 in Marcel's thesis
 \begin{law}[assump-subst]
@@ -344,11 +324,11 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Law [assump-output-prefix-dist], Law [alt-elim] and Law [seq-unitl]
+% From Law [assump-output-prefix-dist], Law [assump-elim] and Law [seq-unitl]
 \begin{law}[assump-output-prefix-dist-move]
   \label{assump-output-prefix-dist-move-law}
   \begin{circus}
-    \{ g \} \circseq c!x \then A =  c!x \then \{ g \} \circseq A
+    \{ g \} \circseq c!x \then A \circrefines_A c!x \then \{ g \} \circseq A
   \end{circus}
 \end{law}
   
@@ -483,12 +463,7 @@ proofs of our compilation rules.
 \end{law}
 
 % Law C.132A in Marcel's thesis
-\begin{law}[seq-unitl]
-  \label{seq-unitl-law}
-  \begin{circus}
-    \Skip \circseq A = A
-  \end{circus}
-\end{law}
+\SeqUnitlLaw*
 
 % Law C.132B in Marcel's thesis
 \begin{law}[seq-unitr]
@@ -629,66 +604,10 @@ proofs of our compilation rules.
 \end{law}
 
 % From the definition of process refinement (Definition 3.2 in Marcel's thesis)
-\begin{law}[action-intro]
-  \label{action-intro-law}
-  Given an action name $N$ and action body $B$, if $N$ is not
-  referenced in the body of $P$ then,
-  \begin{circus}
-    \begin{array}{l}
-      \circprocess P \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A \\
-      \t1 \circend
-    \end{array}
-    =
-    \begin{array}{l}
-      \circprocess P \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S \\
-      \t1 {} \cdots {} \\
-      \t1 N \circdef B \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A \\
-      \t1 \circend
-    \end{array}
-  \end{circus}
-\end{law}
+\ActionIntroLaw*
 
 % from application of Law [copy-rule] and Law [action-intro]
-\begin{law}[action-rename]
-  \label{action-rename-law}
-  Given action names $M$ and $N$, if $N$ is not referenced in the body
-  of $P$ then,
-  \begin{circus}
-    \begin{array}{l}
-      \circprocess P \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S \\
-      \t1 {} \cdots {} \\
-      \t1 M \circdef B \\
-      \t1 {} \cdots {} \\
-      \t1 PPars \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A \\
-      \t1 \circend
-    \end{array}
-    =
-    \begin{array}{l}
-      \circprocess P \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S \\
-      \t1 {} \cdots {} \\
-      \t1 N \circdef B \\
-      \t1 {} \cdots {} \\
-      \t1 PPars[N/M] \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A[N/M] \\
-      \t1 \circend
-    \end{array}
-  \end{circus}
-\end{law}
+\ActionRenameLaw*
 
 % From definition B.40 in Marcel's thesis
 \begin{law}[schema-action-fixed-var-intro]
@@ -766,22 +685,10 @@ proofs of our compilation rules.
 % F(X) = A \circseq X
 % G(X) = X \circseq B
 % H(X) = A \circseq X
-\begin{law}[rec-action-intro]
-  \label{rec-action-intro-law}
-  Given an action $B$,
-  \begin{circus}
-    (\circmu X \circspot A \circseq X) \circrefines_A (\circmu X \circspot A \circseq X) \circseq B
-  \end{circus}
-\end{law}
+\RecActionIntroLaw*
 
 % Exercise 2.6.4(1) in the UTP book
-\begin{law}[rec-rolling-rule]
-  \label{rec-rolling-rule-law}
-  Given action functions $F$ and $G$,
-  \begin{circus}
-    (\circmu X \circspot F(G(X))) = F(\circmu X \circspot G(F(X)))
-  \end{circus}
-\end{law}
+\RecRollingRuleLaw*
 
 % TODO: needs proof (should follow from Definition B.40 in Marcel's
 % thesis, and Law vrbI in ZRC or a generalisation of
@@ -808,64 +715,7 @@ proofs of our compilation rules.
 \end{law}
 
 % From Definition 4.3 and Theorem 4.1 in Marcel's thesis
-\begin{minipage}{\textwidth}
-  \begin{law}[forwards-data-refinement]
-    \label{forwards-data-refinement-law}
-    Given a new process state $S_2$ and a relation $CI$, if $CI$
-    relates a process state $S_1$ to $S_2$, with action local state
-    $L$, and, for actions $A_1$ and $A_2$,
-  \begin{circus}
-    \forall S_2; L @ (\exists S_1 @ CI),
-  \end{circus}
-  and
-  \begin{circus}
-    \forall S_1; S_2; S_2'; L @ CI \land A_2 \implies (\exists S_1'; L' @ A_1 \land CI' ),
-  \end{circus}
-  then,
-  \begin{circus}
-    \begin{array}{l}
-      \circprocess P1 \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S_1 \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A_1 \\
-      \t1 \circend
-    \end{array}
-    \circrefines_P
-    \begin{array}{l}
-      \circprocess P_2 \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S_2 \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A_2 \\
-      \t1 \circend
-    \end{array}
-  \end{circus}
-  where $A_2$ is such that $A_1 \circsimulates A_2$
-\end{law}
-\end{minipage}
+\ForwardsDataRefinementLaw*
 
 % From Definition B.51 in Marcel's Thesis
-\begin{law}[process-param-elim]
-  \label{process-param-elim-law}
-  If $x$ is not referenced in the body of $P$, then
-  \begin{circus}
-    \begin{array}{l}
-      \circprocess P \circdef x : T \circspot \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A \\
-      \t1 \circend
-    \end{array}
-    =
-    \begin{array}{l}
-      \circprocess P \circdef \circbegin \\
-      \t1 {} \cdots {} \\
-      \t1 \circstate S \\
-      \t1 {} \cdots {} \\
-      \t1 \circspot A \\
-      \t1 \circend
-    \end{array}
-  \end{circus}
-\end{law}
+\ProcessParamElimLaw*

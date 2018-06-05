@@ -479,6 +479,7 @@
     \end{array}
     \circrefines_A
     \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
       \lschexpract InterpreterNewStackFrame[ \\
       \t1 c/class?,
       \t1 m/methodID?, \\
@@ -532,7 +533,7 @@
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      A \circseq \{\# frameStack = k - 1 \} \circseq B
+      \{\# frameStack = k\} \circseq A \circseq \{\# frameStack = k - 1 \} \circseq B
     \end{array}
   \end{circus}
 \end{restatable}
@@ -1760,5 +1761,178 @@
       \t2 \{ staticFieldsID \mapsto updateStatic{<}classID_n{>}\_{<}staticFieldID_{n,\ell_n}{>}~staticFields~value \} \\
       \circfi
     \end{array}
+  \end{circus}
+\end{restatable}
+
+\section{Algebraic Laws Used in the Compilation Strategy}
+\label{compilation-strategy-algebraic-laws-section}
+
+\begin{restatable}[action-intro]{law}{ActionIntroLaw}
+  \label{action-intro-law}
+  Given an action name $N$ and action body $B$, if $N$ is not
+  referenced in the body of $P$ then,
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+    =
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 N \circdef B \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[action-rename]{law}{ActionRenameLaw}
+  \label{action-rename-law}
+  Given action names $M$ and $N$, if $N$ is not referenced in the body
+  of $P$ then,
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 M \circdef B \\
+      \t1 {} \cdots {} \\
+      \t1 PPars \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+    =
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 N \circdef B \\
+      \t1 {} \cdots {} \\
+      \t1 PPars[N/M] \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A[N/M] \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[alt-seq-dist]{law}{AltSeqDistLaw}
+  \label{alt-seq-dist-law}
+  \begin{circus}
+    \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
+    =
+    \circif {} \circelse_{i} g_i \circthen A_i \circseq B \circfi
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[assump-elim]{law}{AssumpElimLaw}
+  \label{assump-elim-law}
+  \begin{circus}
+    \{g\} \circrefines_A \Skip
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[copy-rule]{law}{CopyRuleLaw}
+  \label{copy-rule-law}
+  Give an action name $N$, if $N$ names an action in the current process then,
+  \begin{circus}
+    N(e) = B(N)(e)
+  \end{circus}
+  where $B$ is a function that returns the body of an action given its
+  name.
+\end{restatable}
+
+\begin{minipage}{\textwidth}
+  \begin{restatable}[forwards-data-refinement]{law}{ForwardsDataRefinementLaw}
+    \label{forwards-data-refinement-law}
+    Given a new process state $S_2$ and a relation $CI$, if $CI$
+    relates a process state $S_1$ to $S_2$, with action local state
+    $L$, and, for actions $A_1$ and $A_2$,
+  \begin{circus}
+    \forall S_2; L @ (\exists S_1 @ CI),
+  \end{circus}
+  and
+  \begin{circus}
+    \forall S_1; S_2; S_2'; L @ CI \land A_2 \implies (\exists S_1'; L' @ A_1 \land CI' ),
+  \end{circus}
+  then,
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P1 \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S_1 \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A_1 \\
+      \t1 \circend
+    \end{array}
+    \circrefines_P
+    \begin{array}{l}
+      \circprocess P_2 \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S_2 \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A_2 \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+  where $A_2$ is such that $A_1 \circsimulates A_2$
+\end{restatable}
+\end{minipage}
+
+\begin{restatable}[process-param-elim]{law}{ProcessParamElimLaw}
+  \label{process-param-elim-law}
+  If $x$ is not referenced in the body of $P$, then
+  \begin{circus}
+    \begin{array}{l}
+      \circprocess P \circdef x : T \circspot \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+    =
+    \begin{array}{l}
+      \circprocess P \circdef \circbegin \\
+      \t1 {} \cdots {} \\
+      \t1 \circstate S \\
+      \t1 {} \cdots {} \\
+      \t1 \circspot A \\
+      \t1 \circend
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[rec-action-intro]{law}{RecActionIntroLaw}
+  \label{rec-action-intro-law}
+  Given an action $B$,
+  \begin{circus}
+    (\circmu X \circspot A \circseq X) \circrefines_A (\circmu X \circspot A \circseq X) \circseq B
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[rec-rolling-rule]{law}{RecRollingRuleLaw}
+  \label{rec-rolling-rule-law}
+  Given action functions $F$ and $G$,
+  \begin{circus}
+    (\circmu X \circspot F(G(X))) = F(\circmu X \circspot G(F(X)))
+  \end{circus}
+\end{restatable}
+
+\begin{restatable}[seq-unitl]{law}{SeqUnitlLaw}
+  \label{seq-unitl-law}
+  \begin{circus}
+    \Skip \circseq A = A
   \end{circus}
 \end{restatable}
