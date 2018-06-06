@@ -121,21 +121,22 @@ program.
 We adopt an algebraic style of proof, in which the algebraic laws are
 applied one-by-one to transform the left-hand-side of a rule into its
 right-hand-side.
-This ensures that each step of the proof is shown to be a refinement
-of, or equal to, the previous step, by application of a known law.
+This ensures that the term obtained in each step of the proof is shown
+to be a refinement of, or equal to, that of the previous step, by
+application of a known law.
 The overall proof then follows from the transitivity of refinement.
 Thus, every step of the proof is justified formally and this can be
 easily seen from the layout of the proof.
 
 The laws used in the proofs come from various sources.
-Some are existing laws taken from \cite{oliveira2006} and
-\cite{miyazawa2012}, which have already been proved as part of those
-works, and so can be safely reused.
-We have also used a few ZRC laws from \cite{cavalcanti1998}, which can
+Some are existing laws taken from~\cite{oliveira2006}
+and~\cite{miyazawa2012}, which have already been proved as part of
+those works, and so can be safely reused.
+We have also used a few ZRC laws from~\cite{cavalcanti1998}, which can
 be applied to \Circus{} since the semantics of ZRC are compatible with
-those of \Circus{}.
-Standard least-fixed-point laws, stated in \cite{hoare1998} are also
-applied to \Circus recursion, since it defined using
+those of \Circus{}, by Theorem 4.3 from~\cite{oliveira2006}.
+Standard least-fixed-point laws, stated in~\cite{hoare1998} are also
+applied to \Circus{} recursion, since it defined using
 least-fixed-points.
 Some laws follow as a trivial consequence of the definitions given in
 these sources, such as Law~[\nameref{action-intro-law}], which follows
@@ -147,19 +148,18 @@ Isabelle~\cite{nipkow2002} with its implementation of
 UTP~\cite{foster2015}.
 The constructs supported by that implementation limit the types of
 laws that may be proved, but we have proved several laws relating to
-conditionals, assumptions and assignment.
+conditionals, assumptions, and assignment.
 In the case of conditionals, we contributed an implementation of
 \Circus{} conditionals to Isabelle/UTP.
-This allowed us to prove more general laws that those that have been
-proved previously, since previous laws have used the fact that
+This has allowed us to prove laws more general than those that have
+been proved previously, since previous laws have used the fact that
 conditionals can be converted to external choice, which requires that
 the guards be disjoint and provide complete coverage.
 We require these more general laws to perform transformation of the
 $Running$ action during the elimination of program counter, since not
 all program counter values have a corresponding bytecode instruction,
 so we cannot ensure coverage.
-Our work on this has been given to the maintainer of Isabelle/UTP and
-has now been integrated into Isabelle/UTP itself.
+Our work on this has now been integrated into Isabelle/UTP itself.
 
 Some of the algebraic laws are applied directly in our strategy, and
 may be found in
