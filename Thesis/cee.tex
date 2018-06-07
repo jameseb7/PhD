@@ -291,8 +291,11 @@ in a different way to that of other methods.
       *\dag & $executeInAreaOf$ & $ThreadID \cross ObjectID$ & I & L \\
       *\dag & $executeInOuterArea$ & $ThreadID$ & I & L \\
       *\dag & $exitMemory$ & $ThreadID$ & I & L \\
-      *\S & $suspend$ & \textless no parameters\textgreater & I & L \\
-      *\S & $resumeThread$ & $ThreadID$ & I & L \\
+      *\S & $takeLock$ & $ObjectID$ & I & L \\
+      *\S & $releaseLock$ & $ObjectID$ & I & L \\
+      *\S & $setPriorityCeiling$ & $ObjectID \cross Priority$ & I & L \\
+%      *\S & $suspend$ & \textless no parameters\textgreater & I & L \\
+%      *\S & $resumeThread$ & $ThreadID$ & I & L \\
       *{}+{} & $initAPEH$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross \nat \cross \nat \cross \nat$ & I & L \\
       *{}+{} & $initPEH$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
       *{}+{} & $initOSEHAbs$ & \raggedright $ThreadID \cross ObjectID \cross Priority$\endgraf$\t1 {}\cross Time \cross \nat \cross \nat \cross \nat$ & I & L \\
@@ -788,18 +791,20 @@ $executeMethodRet$, is used to handle special methods in
 $WaitForExecution$.
 \begin{circusaction}
   HandleSpecialMethodsMainLoop \circdef \\
-  \circval memoryEntries : ThreadID \fun \nat; \circres retVal : Word \circspot \\
-  \t1 (\Extchoice t : ThreadID \circspot EnterMemory(t) \circseq \\
-  \t2 HandleSpecialMethodsMainLoop(\\
+  \t1 \circval memoryEntries : ThreadID \fun \nat; \circres retVal : Word \circspot \\
+  \t1 (\Extchoice t : ThreadID \circspot \\
+  \t2 EnterMemory(t) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop( \\
   \t3 memoryEntries \oplus \{ t \mapsto memoryEntries~t + 1 \}, retVal)) \\
   \t1 {} \extchoice {} \\
-  \t1 (\Extchoice t : ThreadID \circspot \lcircguard memoryEntries~t > 0 \rcircguard \circguard ExitMemory(t) \circseq \\
-  \t2 HandleSpecialMethodsMainLoop(\\
+  \t1 (\Extchoice t : ThreadID \circspot \\
+  \t2 \lcircguard memoryEntries~t > 0 \rcircguard \circguard ExitMemory(t) \circseq \\
+  \t2 HandleSpecialMethodsMainLoop( \\
   \t3 memoryEntries \oplus \{ t \mapsto memoryEntries~t - 1 \}, retVal)) \\
   \t1 {} \extchoice {} \\
-  \t1 ((Register \extchoice Suspend \extchoice Resume \extchoice InitAperiodicEventHandler \\
-  \t2 {} \extchoice InitPeriodicEventHandler \extchoice InitOneShotEventHandlerRel \\
-  \t2 {} \extchoice InitOneShotEventHandlerAbs) \circseq \\
+  \t1 ((Register \extchoice TakeLock \extchoice ReleaseLock \extchoice SetPriorityCeiling \\
+  \t2 {} \extchoice InitAperiodicEventHandler \extchoice InitPeriodicEventHandler \\
+  \t2 {} \extchoice InitOneShotEventHandlerRel \extchoice InitOneShotEventHandlerAbs) \circseq \\
   \t2 HandleSpecialMethodsMainLoop(memoryEntries, retVal)) \\
   \t1 {} \extchoice {} \\
   \t1 (\lcircguard \forall t : ThreadID @ memoryEntries~t = 0 \rcircguard \circguard {} \\
@@ -1591,20 +1596,23 @@ natural numbers giving the required number of local variables and
 operand stack slots for the method.
 These values are used during the compilation strategy to declare C
 variables to store the local variables and operand stack values.
-The final component, $staticMethods$, is a set of $MethodID$ values
-for the static methods of the class.
+The final two components, $staticMethods$ and $synchronizedMethods$,
+are sets of $MethodID$ values containing the static and synchronized
+methods of the class respectively.
 The methods not in the $staticMethods$ are considered to be non-static
 methods and must take an additional \texttt{this} argument.
 \begin{schema}{ClassMethods}
   methodEntry, methodEnd : MethodID \pfun ProgramAddress \\
   methodLocals, methodStackSize : MethodID \pfun \nat \\
-  staticMethods : \finset MethodID
+  staticMethods, synchronizedMethods : \finset MethodID
 \where
   \dom methodEntry = \dom methodEnd = \dom methodLocals = \dom methodStackSize \\
   staticMethods \subseteq \dom methodEntry \\
+  synchronizedMethods \subseteq \dom methodEntry \\
   \forall m : \dom methodEntry @ methodEntry~m \leq methodEnd~m \\
   % a method's local variables must at least include space for its arguments
-  \t1 \land methodArguments~m + (\IF m \in staticMethods \THEN 0 \ELSE 1) \leq methodLocals~m 
+  \t1 \land (m \in staticMethods \implies methodArguments~m \leq methodLocals~m) \\
+  \t1 \land (m \notin staticMethods \implies methodArguments~m + 1 \leq methodLocals~m)
 \end{schema}
 In addition to the components of $ClassMethods$, we declare a global
 function $methodArguments$ from $MethodID$s to natural numbers, which
@@ -1622,7 +1630,9 @@ all the component maps have the same domain, so that all the
 information must be supplied for any method present in the class.
 The second conjunct requires that every $MethodID$ in $staticMethods$
 be within the domains of these maps.
-Finally, the third conjunct requires that, for each method, its
+The third conjunct states a similar requirement for
+$synchronizedMethods$.
+Finally, the fourth conjunct requires that, for each method, its
 $methodEntry$ is before its $methodEnd$, and that its $methodLocals$
 is large enough to contain its $methodArguments$, plus an extra
 \texttt{this} argument for non-static methods, since each argument of
@@ -2479,24 +2489,56 @@ parameter of the bytecode instruction into a separate variable.
 
 The actions to handle the return instructions (\texttt{areturn} and
 \texttt{return}), besides calling the Z data operation to deal with
-these instructions, have the possibility of engaging in a
+these instructions, must perform some additional operations.
+Firstly, the lock on the \texttt{this} object of the method must be
+released when returning from a synchronized method.
+This is handled by an additional action, $CheckSynchronizedReturn$,
+called before the data operation.
+Secondly, a return instruction has the possibility of engaging in a
 communication to pass the return value to the $Launcher$ when
 returning from a method that has been started by the $Launcher$.
-This is performed by an additional action, $CheckLauncherReturn$,
-which is called after return from the schema action.
+This is performed by a second additional action,
+$CheckLauncherReturn$, which is called after return from the data
+operation.
 It checks whether the extra communication is needed and carries it
 out, if this is the case.
-This can be seen in the definition of $HandleAreturn$ below, where
+These can be seen in the definition of $HandleAreturn$ below, where
 $CheckLauncherReturn$ is passed the return value, $returnValue$, from
 the $InterpreterAreturn$ operation.
 \begin{circusaction}
-  HandleAreturn \circdef \circvar returnValue : Word \circspot \\
-  \t1 \lcircguard pc \in \dom bc \land bc~pc = areturn \rcircguard \circguard \lschexpract InterpreterAreturn \rschexpract \circseq \\
+  HandleAreturn \circdef \circvar returnValue : Word \circspot \lcircguard pc \in \dom bc \land bc~pc = areturn \rcircguard \circguard \\
+  \t1 CheckSynchronizedReturn \circseq \lschexpract InterpreterAreturn \rschexpract \circseq \\
   \t1 CheckLauncherReturn(returnValue)
 \end{circusaction}
 The form of the $HandleReturn$ action is similar, but since
 $InterpreterReturn$ does not output a return value, $returnValue$
 takes an arbitrary value.
+
+Within the $CheckSynchronisedReturn$ action, shown below, the
+identifier of the current method, $methodID$, is obtained from the
+$pc$ using a data operation, $GetCurrentMethod$.
+The information in $currentClass$ is then checked to determine if
+$methodID$ denotes a method that is synchronized and not static.
+We do not apply synchronisation to static methods, following the
+behaviour of icecap, since data guarded by synchronisation should be
+stored in individual objects with a specific scope, rather than being
+made globally available.
+For a method that is synchronized and not static, we communicate with
+the launcher on the $releaseLock$ channel, sending the \texttt{this}
+pointer of the current method.
+The launcher then communicates with the scheduler to release the lock.
+If the method is static or not synchronized, then no synchronisation
+needs to be done and the action terminates.
+\begin{circusaction}
+  CheckSynchronizedReturn \circdef \\
+  \t1 \circvar methodID : MethodID \circspot \lschexpract GetCurrentMethod \rschexpract \circseq \\
+  \t1 \circif methodID \in currentClass.synchronizedMethods \\
+  \t2 \land methodID \notin currentClass.staticMethods \circthen {} \\
+  \t2 releaseLock!((last~frameStack).localVariables~1) \then releaseLockRet \then \Skip \\
+  \t1 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+  \t2 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+  \t1 \circfi
+\end{circusaction}
 
 Within the $CheckLauncherReturn$ action, the definition of which is
 shown below, the $frameStack$ is checked to determine whether the
@@ -2670,19 +2712,25 @@ It starts execution of the method in the interpreter by first finding
 its $Class$ information with $ResolveMethod$.
 The $staticMethods$ set in the class information is then checked for
 consistency with the $static$ parameter, diverging if it is not.
+We take the lock of the object pointed to by the first argument in
+$methodArguments$ if the invoked method is recorded as synchronized
+and not static in the class information.
+This is handled by an action $CheckSynchronizedInvoke$, which is
+similar to $CheckSynchronizedReturn$, but takes the class information,
+method idenifier and method arguments as inputs, and performs its
+communication on the $takeLock$ channel. 
 A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
-The $baseFrame$ value is set to $\false$ here, since the stack frame
-is created due to execution of a bytecode instruction in the
-interpreter, rather than in response to an external request.
 \begin{circusaction}
   InvokeOther \circdef \\
-  \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
+  \t1 \circval classID : ClassID; \circval methodID : MethodID; \\
+  \t2 \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
   \t1 \lcircguard ((classID,resumeThreadClass) \notin subclassRel~cs \lor methodID \neq resumeThreadID) \\
   \t2 {} \land \cdots \\
   \t2 {} \land ((classID, writeClass) \notin subclassRel~cs \lor methodID \neq writeID) \rcircguard \circguard {} \\
   \t1 \circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
   \t1 \circif static = \true \iff methodID \in class.staticMethods \circthen {} \\
-  \t2 \lschexpract \exists baseFrame? == \false @ InterpreterNewStackFrame \rschexpract \\
+  \t2 CheckSynchronizedInvoke(class, methodID, methodArgs) \circseq \\
+  \t2 \lschexpract InterpreterNewStackFrame \rschexpract \\
   \t1 {} \circelse \lnot (static = \true \iff methodID \in class.staticMethods) \circthen \Chaos \\
   \t1 \circfi
 \end{circusaction}
