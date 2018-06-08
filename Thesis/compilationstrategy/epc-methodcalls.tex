@@ -395,12 +395,13 @@ The assumption on the value of $pc$ is also eliminated, since it is no
 longer needed.
 This is also the case for the other method resolution rules applied in
 the try block on line~\ref{algorithm-try-block2-start}.
+The boolean value indicating whether the method is static is required
+to be $\true$, since all the special methods we define are static.
 The actions that define the behaviour of the special method are
 identified by the syntactic function $specialMethodAction$, which is
 defined by Table~\ref{special-method-action-table}.
 It determines which behaviour should be used based on the class and
-method identifiers passed to $Invoke$ and the boolean value indicating
-whether the method is static.
+method identifiers passed to $Invoke$.
 \begin{figure}[thp]
 \begin{restatable}[resolve-special-method]{crule}{ResolveSpecialMethodRule}
   \label{resolve-special-method-rule}
@@ -419,7 +420,7 @@ whether the method is static.
       \circvar poppedArgs : \seq Word \circspot \\
       \lschexpract \exists argsToPop? == e @ \\
       \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      specialMethodAction(c, m, s) \circseq \\
+      specialMethodAction(c, m) \circseq \\
       pc := i + 1
     \end{array}
   \end{circus}

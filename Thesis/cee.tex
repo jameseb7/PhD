@@ -2662,9 +2662,9 @@ The class and method identifiers used in the special method actions
 are a mixture of identifiers from the SCJ API and
 implementation-defined identifiers provided to expose SCJVM services
 to bytecode programs.
-The special-method actions check if the $static$ parameter has the
-correct value for the method ($\true$ if the method is static,
-$\false$ otherwise), and diverges if it is incorrect (since that
+The special-method actions check if the $static$ parameter is $\true$
+(since we define them as static methods for simplicity of the
+interface with the SCJVM), and diverges if it is not (since that
 indicates an erroneous input program).
 In the example below, the method is static as it is exposing an SCJVM
 service that is not attached to an object instance.
