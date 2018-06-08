@@ -6,6 +6,37 @@
 
 \HandleInstructionRefinementRule*
 
+\CheckSynchronizedReturnSynchronizedRefinementRule*
+
+\begin{restatable}[$CheckSynchronizedReturn$-nonsync-refinement]{crule}{CheckSynchronizedReturnNonsynchronizedRefinementRule}
+  \label{CheckSynchronizedReturn-nonsynchronized-refinement-rule}
+  Given $i : ProgramAddress$,
+  \setlength{\zedindent}{0.5cm}
+  \setlength{\zedtab}{0.5cm}
+  \begin{circus}
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen CheckSynchronizedReturn \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+  \end{circus}
+  provided
+  \begin{displaymath}
+    \exists c : Class; m : MethodID | \\
+    \t1 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+    \t1 i \in c.methodEntry~m \upto c.methodEnd~m \land \\
+    \t1 m \in c.synchronisedMethods \land m \notin c.staticMethods
+  \end{displaymath}
+\end{restatable}
+
 \subsection{Introduce Sequential Composition}
 
 \SequenceIntroductionRule*
@@ -280,44 +311,73 @@
 
 \ResolveNormalMethodRule*
 
-\begin{restatable}[resolve-special-method-branch]{crule}{ResolveSpecialMethodBranchRule}
-  \label{resolve-special-method-branch-rule}
-  Given $c_\ell : ClassID$, if $c = c_\ell$, $m$ and $static = \false$
-  match one of the rows of Table~\ref{special-method-action-table},
-  then
-  \setlength{\zedindent}{0.25cm}
-  \setlength{\zedtab}{0.5cm}
+\begin{restatable}[$CheckSynchronizedInvoke$-sync-refinement]{crule}{CheckSynchronizedInvokeSynchronizedRefinementRule}
+  \label{CheckSynchronizedInvoke-synchronized-refinement-rule}
+  If $m \in c.synchronizedMethods \land m \notin c.staticMethods$, then
   \begin{circus}
     \begin{array}{l}
-      \circvar poppedArgs : \seq Word \circspot \\
-      \lschexpract \exists argsToPop? == e @ \\
-      \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \circif cid = c_1 \circthen A_1 \\
-      {} \cdots {} \\
-      {} \circelse cid = c_\ell \circthen {} \\
-      \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t1 Invoke(c_\ell, m, poppedArgs, \false) \\
-      {} \cdots {} \\
-      {} \circelse cid = c_n \circthen A_n \\
-      \circfi
+      CheckSynchronizedInvoke(c, m, args)
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
-      \lschexpract \exists argsToPop? == e @ \\
-      InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \circif cid = c_1 \circthen A_1 \\
-      {} \cdots {} \\
-      {} \circelse cid = c_\ell \circthen {} \\
-      \t1 specialMethodAction(c_\ell, m, \false) \circseq pc := i + 1 \\
-      {} \cdots {} \\
-      {} \circelse cid = c_n \circthen A_n \\
-      \circfi
-    \end{array} 
+      takeLock!(head~args) \\
+      {} \then takeLockRet \then \Skip
+    \end{array}
   \end{circus}
-  where $specialMethodAction$ is the syntactic function defined by
-  Table~\ref{special-method-action-table}.
 \end{restatable}
+
+\begin{restatable}[$CheckSynchronizedInvoke$-nonsync-refinement]{crule}{CheckSynchronizedInvokeNonsynchronizedRefinementRule}
+  \label{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}
+  If $m \notin c.synchronizedMethods \lor m \in c.staticMethods$, then
+  \begin{circus}
+    \begin{array}{l}
+      CheckSynchronizedInvoke(c, m, args)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      \Skip
+    \end{array}
+  \end{circus}
+\end{restatable}
+
+% \begin{restatable}[resolve-special-method-branch]{crule}{ResolveSpecialMethodBranchRule}
+%   \label{resolve-special-method-branch-rule}
+%   Given $c_\ell : ClassID$, if $c = c_\ell$, $m$ and $static = \false$
+%   match one of the rows of Table~\ref{special-method-action-table},
+%   then
+%   \setlength{\zedindent}{0.25cm}
+%   \setlength{\zedtab}{0.5cm}
+%   \begin{circus}
+%     \begin{array}{l}
+%       \circvar poppedArgs : \seq Word \circspot \\
+%       \lschexpract \exists argsToPop? == e @ \\
+%       \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
+%       \circif cid = c_1 \circthen A_1 \\
+%       {} \cdots {} \\
+%       {} \circelse cid = c_\ell \circthen {} \\
+%       \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
+%       \t1 Invoke(c_\ell, m, poppedArgs, \false) \\
+%       {} \cdots {} \\
+%       {} \circelse cid = c_n \circthen A_n \\
+%       \circfi
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
+%       \lschexpract \exists argsToPop? == e @ \\
+%       InterpreterStackFrameInvoke \rschexpract \circseq \\
+%       \circif cid = c_1 \circthen A_1 \\
+%       {} \cdots {} \\
+%       {} \circelse cid = c_\ell \circthen {} \\
+%       \t1 specialMethodAction(c_\ell, m, \false) \circseq pc := i + 1 \\
+%       {} \cdots {} \\
+%       {} \circelse cid = c_n \circthen A_n \\
+%       \circfi
+%     \end{array} 
+%   \end{circus}
+%   where $specialMethodAction$ is the syntactic function defined by
+%   Table~\ref{special-method-action-table}.
+% \end{restatable}
 
 \begin{restatable}[resolve-normal-method-branch]{crule}{ResolveNormalMethodBranchRule}
   \label{resolve-normal-method-branch-rule}
@@ -381,7 +441,7 @@
       \t3 {} \cdots {} \\
       \t3 {} \circelse cid = c_\ell \circthen {} \\
       \t4 \lschexpract InterpreterNewStackFrame[ \\
-      \t5 classInfo/class?,
+      \t5 classInfo/class?, \\
       \t5 m/methodID?, \\
       \t5 poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
@@ -1496,50 +1556,104 @@
 
 \MethodParameterIntroductionRule*
 
-\begin{restatable}[$getClassIDOf$-$poppedArgs$-elim]{crule}{GetClassIDOfMethodParameterIntroductionRule}
-  \label{getClassIDOf-method-parameter-introduction-rule}
-  \begin{circus}
-    \begin{array}{l}
-      (\circvar poppedArgs : \seq Word \circspot \\
-      poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
-      getClassIDOf!(head~poppedArgs)!cid \\
-      {} \then M(poppedArgs~1, \ldots, poppedArgs~n))
-      % Remember: Poll starts the \cdots
-    \end{array}
-    \circrefines_A
-    \begin{array}{l}
-      getClassIDOf!arg_1!cid \\
-      {} \then M(arg_1, \ldots, arg_n))
-    \end{array}
-  \end{circus}
-\end{restatable}
+\begin{restatable}[$poppedArgs$-sync-elim]{crule}{PoppedArgsSyncElimRule}
+    \label{poppedArgs-sync-elim-rule}
+    \begin{circus}
+      \begin{array}{l}
+        (\circvar poppedArgs : \seq Word \circspot \\
+        poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+        takeLock!(head~methodArgs) \\
+        {} \then takeLockRet \then \Skip \circseq \\
+        M(poppedArgs~1, \ldots, poppedArgs~n))
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        takeLock!arg_1 \\
+        {} \then takeLockRet \then \Skip \circseq \\
+        M(arg_1, \ldots, arg_n)
+      \end{array}
+    \end{circus}
+  \end{restatable}
 
-\begin{restatable}[$getClassIDOf$-multi-$poppedArgs$-elim]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
+% not necessary if we don't eliminate the choice for invokevirtual
+% \begin{restatable}[$getClassIDOf$-$poppedArgs$-elim]{crule}{GetClassIDOfMethodParameterIntroductionRule}
+%   \label{getClassIDOf-method-parameter-introduction-rule}
+%   \begin{circus}
+%     \begin{array}{l}
+%       (\circvar poppedArgs : \seq Word \circspot \\
+%       poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+%       getClassIDOf!(head~poppedArgs)!cid \\
+%       {} \then M(poppedArgs~1, \ldots, poppedArgs~n))
+%       % Remember: Poll starts the \cdots
+%     \end{array}
+%     \circrefines_A
+%     \begin{array}{l}
+%       getClassIDOf!arg_1!cid \\
+%       {} \then M(arg_1, \ldots, arg_n))
+%     \end{array}
+%   \end{circus}
+% \end{restatable}
+
+\begin{restatable}[invokevirtual-$poppedArgs$-elim]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
   \label{getClassIDOf-multi-method-parameter-introduction-rule}
+  If, for each $i \in 1 \upto m$, $A_i$ matches
+  \begin{circus}
+    M_i(poppedArgs~1, \ldots, poppedArgs~n)
+  \end{circus}
+  or
+  \begin{circus}
+    takeLock!(head~methodArgs) \then takeLockRet \then \Skip \circseq \\
+    M_i(poppedArgs~1, \ldots, poppedArgs~n)
+  \end{circus}
+  then,
   \begin{circus}
     \begin{array}{l}
       (\circvar poppedArgs : \seq Word \circspot \\
       poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
       getClassIDOf!(head~poppedArgs)!cid \then {} \\
-      \circif cid = c_1 \circthen {} \\
-      \t1 M_1(poppedArgs~1, \ldots, poppedArgs~n) \\
-      {} \cdots {}
-      \circelse cid = c_m \circthen {} \\
-      \t1 M_m(poppedArgs~1, \ldots, poppedArgs~n) \\
+      \circif cid = c_1 \circthen A_1 \\
+      %\t1 M_1(poppedArgs~1, \ldots, poppedArgs~n) \\
+      {} \cdots {} \\
+      \circelse cid = c_m \circthen A_m \\
+      %\t1 M_m(poppedArgs~1, \ldots, poppedArgs~n) \\
       \circfi
     \end{array}
     \circrefines_A
     \begin{array}{l}
       getClassIDOf!arg_1!cid \then {} \\
-      \circif cid = c_1 \circthen {} \\
-      {} \circelse cid = c_m \circthen {} \\
-      \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
-      \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_m{>}) : Word \circspot \\
-      \t1 \circvar stack1, \ldots, stack{<}s_m{>} : Word \circspot \\
-      \t2 {} \cdots {})(arg_1, \ldots, arg_n)) \\
+      \circif cid = c_1 \circthen instantiateArgs(A_1) \\
+      %\t1 M_1(arg_1, \ldots, arg_n) \\
       {} \cdots {} \\
+      \circelse cid = c_m \circthen instantiateArgs(A_m) \\
+      %\t1 M_m(arg_1, \ldots, arg_n) \\
       \circfi
+      % \circif cid = c_1 \circthen {} \\
+      % \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+      % \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_1{>}) : Word \circspot \\
+      % \t1 \circvar stack1, \ldots, stack{<}s_1{>} : Word \circspot \\
+      % \t2 {} \cdots {})(arg_1, \ldots, arg_n)) \\
+      % {} \circelse cid = c_m \circthen {} \\
+      % \t1 (\circval var1, \ldots, var{<}n{>} : Word \circspot \\
+      % \t1 \circvar var{<}n+1{>}, \ldots, var{<}\ell_m{>}) : Word \circspot \\
+      % \t1 \circvar stack1, \ldots, stack{<}s_m{>} : Word \circspot \\
+      % \t2 {} \cdots {})(arg_1, \ldots, arg_n)) \\
+      % {} \cdots {} \\
+      % \circfi
     \end{array}
+  \end{circus}
+  where, for each $i \in 1 \upto m$,
+  \begin{circus}
+    instantiateArgs(M_i(poppedArgs~1, \ldots, poppedArgs~n)) \\
+    {} = {} \\
+    instantiateArgs(M_i(arg_1, \ldots, arg_n))
+  \end{circus}
+  and
+  \begin{circus}
+    instantiateArgs(takeLock!(head~methodArgs) \then takeLockRet \then \Skip \circseq \\
+    \t1 M_i(poppedArgs~1, \ldots, poppedArgs~n)) \\
+    {} = {} \\
+    instantiateArgs(takeLock!arg_1 \then takeLockRet \then \Skip \circseq \\
+    \t1 M_i(arg_1, \ldots, arg_n)) \\
   \end{circus}
 \end{restatable}
 

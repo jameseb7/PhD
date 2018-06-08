@@ -53,7 +53,8 @@ Algorithm~\ref{introduce-variables-algorithm}, which defines the
     \label{algorithm-apply-eliminate-value-putStatic-rule}
     \State \ExhaustivelyApply{Rule~[\nameref{method-parameter-introduction-rule}]}
     \label{algorithm-poppedArgs-elimination}
-    \State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}
+    \State \ExhaustivelyApply{Rule~[\nameref{poppedArgs-sync-elim-rule}]}
+    %\State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}]}
     \State \ExhaustivelyApply{Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]}
     \label{algorithm-multi-poppedArgs-elimination}
     \MatchIn{
@@ -478,11 +479,12 @@ Rule~[\nameref{method-parameter-introduction-rule}], shown in
 Figure~\ref{method-parameter-introduction-rule-figure}, which
 eliminates $poppedArgs$ when associated with method calls arising from
 a \texttt{invokespecial} or \texttt{invokestatic} instruction.
-Rule~[\nameref{getClassIDOf-method-parameter-introduction-rule}] and
+Rule~[\nameref{poppedArgs-sync-elim-rule}] and
 Rule~[\nameref{getClassIDOf-multi-method-parameter-introduction-rule}]
-are similar, but account for the extra $getClassIDOf$ communication
-arising from \texttt{invokevirtual} instructions, handling single
-target and multiple target method calls respectively.
+are similar, but account for the extra communication before
+synchronized methods, and the extra $getClassIDOf$ communication and
+multiple targets arising from \texttt{invokevirtual} instructions,
+respectively.
 
 \begin{figure}[thp]
   \begin{restatable}[$poppedArgs$-elim]{crule}{MethodParameterIntroductionRule}

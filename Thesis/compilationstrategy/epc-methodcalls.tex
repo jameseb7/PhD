@@ -106,12 +106,20 @@ $Running$ action, and so we omit the \textbf{to} clause.
     \State \ApplyTo{Rule~[\nameref{resolve-special-method-rule}]}{$methodCall$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$methodCallAddress$}
     \EndTry
+    \Try
+    \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]}{$target$}
+    \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]}{$target$}
+    \EndTry
     \Else
     \For{$target \gets $\Call{Targets}{$methodCall$}}
     \label{algorithm-targets-loop}
-    \Try
-    \State \ApplyToFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$methodCall$}{$target$}
+    %special methods must be static
+    %\State \ApplyToFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$methodCall$}{$target$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$methodCall$, $target$}
+    \Try
+    \label{algorithm-CheckSynchronizedInvoke-elimination-try-begin}
+    \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]}{$target$}
+    \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]}{$target$}
     \EndTry
     \EndFor
     \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$methodCall$}
@@ -396,8 +404,8 @@ whether the method is static.
 \begin{figure}[thp]
 \begin{restatable}[resolve-special-method]{crule}{ResolveSpecialMethodRule}
   \label{resolve-special-method-rule}
-  If $c$, $m$ and $static$ match one of the rows of
-  Table~\ref{special-method-action-table}, then
+  If $c$, $m$ match one of the rows of
+  Table~\ref{special-method-action-table} and $s = \true$, then
   \setlength{\zedindent}{0.25cm} \setlength{\zedtab}{0.5cm}
   \begin{circus}
     \begin{array}{l}
@@ -435,33 +443,41 @@ whether the method is static.
   \rowcolors{1}{white}{lightgray}
   \begin{tabular}{p{6.5cm}p{7.7cm}}
     \hline
-    Conditions on $c$, $m$ and $s$ & $specialMethodAction(c, m, s)$ \\
+    Conditions on $c$ and $m$ & $specialMethodAction(c, m)$ \\
     \hline
     \begin{circus}
-      (c,resumeThreadClass) \in subclassRel~cs \\
-      \land m = resumeThreadID \land s = \true
+      (c,setPriorityCeilingClass) \in subclassRel~cs \\
+      {} \land m = setPriorityCeilingID
     \end{circus} &
                    \begin{circus}
-                     resumeThread!(WordToThreadID~(methodArgs~1)) \\
-                     \t1 {} \then resumeThreadRet \then \Skip
+                     setPriorityCeiling!(methodArgs~1)!(methodArgs~2) \\
+                     \t1 {} \then setPriorityCeilingRet \then \Skip
                    \end{circus}\\
-    \begin{circus}
-      (c,suspendClass) \in subclassRel~cs \\
-      \land m = suspendID \land s = \true
-    \end{circus} &
-                   \begin{circus}
-                     suspend \then suspendRet \then \Skip
-                   \end{circus}\\
+    % \begin{circus}
+    %   (c,resumeThreadClass) \in subclassRel~cs \\
+    %   \land m = resumeThreadID
+    % \end{circus} &
+    %                \begin{circus}
+    %                  resumeThread!(WordToThreadID~(methodArgs~1)) \\
+    %                  \t1 {} \then resumeThreadRet \then \Skip
+    %                \end{circus}\\
+    % \begin{circus}
+    %   (c,suspendClass) \in subclassRel~cs \\
+    %   \land m = suspendID
+    % \end{circus} &
+    %                \begin{circus}
+    %                  suspend \then suspendRet \then \Skip
+    %                \end{circus}\\
     \begin{circus}
       (c,writeClass) \in subclassRel~cs \\
-      \land m = writeID \land s = \true
+      {} \land m = writeID
     \end{circus} &
                    \begin{circus}
                      output!(methodArgs~1) \then \Skip
                    \end{circus}\\
     \begin{circus}
       (c,readClass) \in subclassRel~cs \\
-      \land m = readID \land s = \true
+      {} \land m = readID
     \end{circus} &
                    \begin{circus}
                      input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
@@ -469,7 +485,7 @@ whether the method is static.
     \begin{circus}
       (c,managedSchedulableClass) \\
       \t1 {} \in subclassRel~cs \\
-      \land m = registerID \land s = \false
+      {} \land m = registerID
     \end{circus} &
                    \begin{circus}
                      register!thread!(head~methodArgs) \\
@@ -477,8 +493,7 @@ whether the method is static.
                    \end{circus}\\
     \begin{circus}
       (c,managedMemoryClass) \in subclassRel~cs \\
-      \land m = enterPrivateMemoryHelperID \\
-      \land s = \true
+      {} \land m = enterPrivateMemoryHelperID
     \end{circus} &
                    \begin{circus}
                      enterPrivateMemory!thread!(methodArgs~1) \\
@@ -486,8 +501,7 @@ whether the method is static.
                    \end{circus}\\
     \begin{circus}
       (c,managedMemoryClass) \in subclassRel~cs \\
-      \land m = executeInAreaOfHelperID \\
-      \land s = \true
+      {} \land m = executeInAreaOfHelperID
     \end{circus} &
                    \begin{circus}
                      executeInAreaOf!thread!(methodArgs~1) \\
@@ -495,8 +509,7 @@ whether the method is static.
                    \end{circus}\\
     \begin{circus}
       (c,managedMemoryClass) \in subclassRel~cs \\
-      \land m = executeInOuterAreaHelperID \\
-      \land s = \true
+      {} \land m = executeInOuterAreaHelperID
     \end{circus} &
                    \begin{circus}
                      executeInOuterArea!thread \\
@@ -504,7 +517,7 @@ whether the method is static.
                    \end{circus}\\
     \begin{circus}
       (c,managedMemoryClass) \in subclassRel~cs \\
-      \land m = exitMemoryID \land s = \true
+      {} \land m = exitMemoryID
     \end{circus} &
                    \begin{circus}
                      exitMemory!thread \\
@@ -513,7 +526,7 @@ whether the method is static.
     \begin{circus}
       (c,aperiodicEventHandlerClass) \\
       \t1 {} \in subclassRel~cs \\
-      \land m = initAPEHID \land s = \false
+      {} \land m = initAPEHID
     \end{circus} &
                    \begin{circus}
                      initAPEH!thread!(seqTo5Tuple~methodArgs) \\
@@ -522,7 +535,7 @@ whether the method is static.
     \begin{circus}
       (c,periodicEventHandlerClass) \\
       \t1 {} \in subclassRel~cs \\
-      \land m = initPEHID \land s = \false
+      {} \land m = initPEHID
     \end{circus} &
                    \begin{circus}
                      initPEH!thread!(seqTo7Tuple~methodArgs) \\
@@ -531,7 +544,7 @@ whether the method is static.
     \begin{circus}
       (c,oneShotEventHandlerClass) \\
       \t1 {} \in subclassRel~cs \\
-      \land m = initOSEHAbsID \land s = \false
+      {} \land m = initOSEHAbsID
     \end{circus} &
                    \begin{circus}
                      initOSEHAbs!thread!(seqTo6Tuple~methodArgs) \\
@@ -540,14 +553,14 @@ whether the method is static.
     \begin{circus}
       (c,oneShotEventHandlerClass) \\
       \t1 {} \in subclassRel~cs \\
-      \land m = initOSEHRelID \land s = \false
+      {} \land m = initOSEHRelID
     \end{circus} &
                    \begin{circus}
                      initOSEHRel!thread!(seqTo6Tuple~methodArgs) \\
                      \t1 {} \then initOSEHRelRet \then \Skip
                    \end{circus}\\
   \end{tabular}
-  \caption{The syntactic function $specialMethodAction(c, m, static)$}
+  \caption{The syntactic function $specialMethodAction(c, m)$}
   \label{special-method-action-table}
 \end{table}
 
@@ -628,6 +641,8 @@ hold after an infinite loop.
       \t3 (\circvar poppedArgs : \seq Word \circspot \\
       \t3 \lschexpract \exists argsToPop? == e @ \\
       \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 CheckSynchronizedInvoke( \\
+      \t4 classInfo, m, poppedArgs) \circseq \\
       \t3 \lschexpract InterpreterNewStackFrame[ \\
       \t4 classInfo/class?, \\
       \t4 m/methodID?, \\
@@ -648,11 +663,29 @@ Rule~[\nameref{resolve-normal-method-rule}] applies only to those
 class and method identifiers that are not handled by
 Rule~[\nameref{resolve-special-method-rule}].
 Because of this, Rule~[\nameref{resolve-normal-method-rule}] collapses
-the choice in the $Invoke$ action, replacing it with the data
-operation $InterpreterNewStackFrame$, sequenced with the action $Poll$
-and the method action, $M$, defining the method's behaviour.
+the choice in the $Invoke$ action, replacing it with
+$CheckSynchronizedInvoke$ and the data operation
+$InterpreterNewStackFrame$, sequenced with the action $Poll$ and the
+method action, $M$, defining the method's behaviour.
 An assignment is placed after $M$ to set $pc$ to the address of the
 next instruction.
+
+After the resolution of a non-special method, a
+$CheckSynchronizedInvoke$ action is left before the method call.
+We eliminate this action by the application of
+Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]
+and
+Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}
+in the try block beginning on
+line~\ref{algorithm-CheckSynchronizedInvoke-elimination-try-begin}.
+These refine $CheckSynchronizedInvoke$, collapsing the choice in that
+action using the arguments passed to it.
+Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]
+results in a communication on the $takeLock$ channel if the resolved
+method is synchronized and not static.
+For methods that are static or not synchronized,
+Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]
+refines $CheckSynchronizedInvoke$ to $\Skip$.
 
 In the case of dynamic dispatch, we iterate over each branch of the
 choice over the methods targets, in the loop beginning on
@@ -660,14 +693,20 @@ line~\ref{algorithm-targets-loop}, using the function
 \Call{Targets}{$methodCall$} to obtain a list of the possible targets
 of the method call $methodCall$.
 For each target, we apply
-Rule~[\nameref{resolve-special-method-branch-rule}] or
 Rule~[\nameref{resolve-normal-method-branch-rule}].
-These are similar to Rule~[\nameref{resolve-special-method-rule}] and
-Rule~[\nameref{resolve-normal-method-rule}], but operate over only a
-single branch of the choice of targets.
-We omit these rules due to their similarity with the rules previously
+This is similar to Rule~[\nameref{resolve-normal-method-rule}], but
+operates over only a single branch of the choice of targets.
+We omit this rule due to its similarity with the rule previously
 presented.
-They can be found in Appendix~\ref{compilation-rules-appendix}.
+It can be found in Appendix~\ref{compilation-rules-appendix}.
+Note that, since all our special methods are static, none of them can
+occur as the target of a \texttt{invokevirtual} instruction, so we do
+not need to handle special methods in the dynamic dispatch case. 
+When this has been applied, we apply
+Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]
+and
+Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}
+to the target, as in the case of static dispatch.
 After each of the targets has been resolved, the $pc$ assignment is
 moved outside the choice by an application of
 Law~[\nameref{alt-seq-dist-law}] on

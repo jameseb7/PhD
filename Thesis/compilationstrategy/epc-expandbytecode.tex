@@ -15,6 +15,10 @@ Algorithm~\ref{expand-bytecode-algorithm}.
     \label{algorithm-expand-bytecode-loop}
     \State \ApplyFor{Rule~[\nameref{HandleInstruction-refinement-rule}]}{$bc$, $i$}
     \label{algorithm-HandleInstruction-refinement}
+    \State \ApplyFor{Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]}{$i$}
+    \label{algorithm-CheckSynchronisedReturn-synchronized-refinement}
+    \State \ApplyFor{Rule~[\nameref{CheckSynchronizedReturn-nonsynchronized-refinement-rule}]}{$i$}
+    \label{algorithm-CheckSynchronisedReturn-nonsynchronized-refinement}
     \EndFor
   \end{algorithmic}
   \caption{\Call{ExpandBytecode}{}}
@@ -97,8 +101,8 @@ which is defined by Table~\ref{handle-action-table}.
                         \t1 $\lschexpract InterpreterPopEPC \rschexpract \circseq$ \endgraf
                         \t1 $\lschexpract InterpreterPopEPC \rschexpract \circseq$ \endgraf
                          \t1 $pc := \IF value1 \leq value2 \THEN i+ofst \ELSE i+1$ \\
-    $areturn$ & $HandleAreturnEPC$ \\
-    $return$ & $HandleReturnEPC$ \\
+    $areturn$ & $CheckSynchronizedReturn \circseq HandleAreturnEPC$ \\
+    $return$ & $CheckSynchronizedReturn \circseq HandleReturnEPC$ \\
     $new~cpi$ & $HandleNewEPC(cpi) \circseq pc := i+1$ \\
     $getfield~cpi$ & $HandleGetfieldEPC(cpi) \circseq pc := i+1$ \\
     $putfield~cpi$ & $HandlePutfieldEPC(cpi) \circseq pc := i+1$ \\
@@ -183,6 +187,69 @@ method invocation handling actions, since the $pc$ information is used
 in setting the return address.
 We discuss how we operate on the method invocation and return handling
 actions in Section~\ref{resolve-method-calls-subsection}.
+
+We also note that the $CheckSynchronizedReturn$ action is moved
+outside the $Handle{*}EPC$ actions handling return instructions.
+This is so that this action can be removed, since we have sufficient
+information to determine whether the method is synchronized or not.
+This is handled on
+lines~\ref{algorithm-CheckSynchronisedReturn-synchronized-refinement}
+and~\ref{algorithm-CheckSynchronisedReturn-synchronized-refinement} of
+Algorithm~\ref{expand-bytecode-algorithm}, by the application of
+Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]
+and
+Rule~[\nameref{CheckSynchronizedReturn-nonsynchronized-refinement-rule}].
+
+Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]
+matches a branch of the choice in $Running$ corresponding to a given
+$pc$ value, $i$, which begins with a $CheckSynchronizedReturn$ action.
+This rule is applied whenever the unique class, $c$, and method, $m$,
+in which $i$ occurs are such that $m$ is synchronized and not static
+in $c$.
+Recall that we do not apply synchronisation to static methods,
+following the approach of icecap.
+The rule refines $CheckSynchronizedReturn$ to a communication with the
+$Launcher$ on the $releaseLock$ channel, instructing it to release the
+lock on the \texttt{this} object.
+Rule~[\nameref{CheckSynchronizedReturn-nonsynchronized-refinement-rule}]
+is similar, but applies when $m$ is static or not synchronized in $c$,
+and eliminates $CheckSynchronizedReturn$.
+
+\begin{figure}[th]
+  \begin{restatable}[$CheckSynchronizedReturn$-sync-refinement]{crule}{CheckSynchronizedReturnSynchronizedRefinementRule}
+    \label{CheckSynchronizedReturn-synchronized-refinement-rule}
+    Given $i : ProgramAddress$,
+    \setlength{\zedindent}{0.5cm}
+    \setlength{\zedtab}{0.5cm}
+    \begin{circus}
+      \begin{array}{l}
+        \circif {} \cdots {} \\
+        {} \circelse pc = i \circthen {} \\
+        \t1 CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+      \end{array}
+      \circrefines_A
+      \begin{array}{l}
+        \circif {} \cdots {} \\
+        {} \circelse pc = i \circthen {} \\
+        \t1 releaseLock!((last~frameStack).localVariables~1) \\
+        \t1 \then releaseLockRet \then \Skip \circseq A \\
+        {} \cdots {} \\
+        \circfi
+      \end{array}
+    \end{circus}
+    provided
+    \begin{displaymath}
+      \exists c : Class; m : MethodID | \\
+      \t1 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t1 i \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t1 m \in c.synchronisedMethods \land m \notin c.staticMethods
+  \end{displaymath}
+  \end{restatable}
+  \caption{Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]}
+  \label{CheckSynchronizedReturn-synchronized-refinement-rule-figure}
+\end{figure}
 
 At the end of Algorithm~\ref{expand-bytecode-algorithm}, our example
 has the form shown earlier in
