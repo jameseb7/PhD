@@ -287,7 +287,7 @@
       \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m + 1 @ \\
       \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \false)
+      \t1 Invoke(c, m, poppedArgs)
     \end{array}
   \end{circus}
   where $m : MethodID$ and $c : ClassID$ are such that

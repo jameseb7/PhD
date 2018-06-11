@@ -15,10 +15,13 @@ Algorithm~\ref{expand-bytecode-algorithm}.
     \label{algorithm-expand-bytecode-loop}
     \State \ApplyFor{Rule~[\nameref{HandleInstruction-refinement-rule}]}{$bc$, $i$}
     \label{algorithm-HandleInstruction-refinement}
+    \Try
+    \label{algorithm-expand-bytecode-try-block-begin}
     \State \ApplyFor{Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]}{$i$}
     \label{algorithm-CheckSynchronisedReturn-synchronized-refinement}
     \State \ApplyFor{Rule~[\nameref{CheckSynchronizedReturn-nonsynchronized-refinement-rule}]}{$i$}
     \label{algorithm-CheckSynchronisedReturn-nonsynchronized-refinement}
+    \EndTry
     \EndFor
   \end{algorithmic}
   \caption{\Call{ExpandBytecode}{}}
@@ -199,6 +202,9 @@ Algorithm~\ref{expand-bytecode-algorithm}, by the application of
 Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]
 and
 Rule~[\nameref{CheckSynchronizedReturn-nonsynchronized-refinement-rule}].
+These rules are applied in a try block, beginning on
+line~\ref{algorithm-expand-bytecode-try-block-begin}, which tries to
+apply each rule in turn, stopping when one succeeds.
 
 Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]
 matches a branch of the choice in $Running$ corresponding to a given
@@ -206,8 +212,8 @@ $pc$ value, $i$, which begins with a $CheckSynchronizedReturn$ action.
 This rule is applied whenever the unique class, $c$, and method, $m$,
 in which $i$ occurs are such that $m$ is synchronized and not static
 in $c$.
-Recall that we do not apply synchronisation to static methods,
-following the approach of icecap.
+% Recall that we do not apply synchronisation to static methods,
+% following the approach of icecap.
 The rule refines $CheckSynchronizedReturn$ to a communication with the
 $Launcher$ on the $releaseLock$ channel, instructing it to release the
 lock on the \texttt{this} object.

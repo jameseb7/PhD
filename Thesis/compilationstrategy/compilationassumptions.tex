@@ -473,6 +473,15 @@ in C.
 The Java code should be written in a style consistent with MISRA-C,
 where behaviours that are undefined in C must not be relied on.
 
+We do not handle synchronisation of static methods, since icecap does
+not apply synchronisation to static methods.
+It is important that we follow the approach of a practical tool on
+this, to ensure that our strategy can be implemented.
+No expressive power is lost by forbidding static synchronized methods,
+since a singleton instance of a class with synchronized methods can be
+supplied, rather than relying on static methods to access data owned
+by the instance.
+
 Finally, we require that no method in the program recurses, either
 directly or indirectly.
 This is because recursion is not recommended in safety-critical

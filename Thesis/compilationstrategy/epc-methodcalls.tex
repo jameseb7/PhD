@@ -208,11 +208,8 @@ Rule~[\nameref{refine-invokevirtual-rule}].
 They produce slightly different sequences of actions due to the
 differences in the semantics of the method invocation instructions,
 described in Section~\ref{cee-interpreter-subsection}.
-% TODO: move this to the loops and conditionals section if used
-% previously
-These rules are applied in a try block, beginning on
-line~\ref{algorithm-try-block-begin}, which tries to apply each rule in
-turn, stopping when one succeeds.
+They are applied in the try block beginning on
+line~\ref{algorithm-try-block-begin}.
 
 In Figure~\ref{refine-invokestatic-rule-figure} we show
 Rule~[\nameref{refine-invokestatic-rule}], which handles
@@ -248,7 +245,7 @@ expansion (Section~\ref{expand-bytecode-subsection}).
       \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ \\
       \t2 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 Invoke(c, m, poppedArgs, \true)
+      \t1 Invoke(c, m, poppedArgs)
     \end{array}
   \end{circus}
   where $m : MethodID$ and $c : ClassID$ are such that
@@ -280,13 +277,12 @@ Within $c_0$, the $constantPool$ entry at $cpi$ must be a $MethodRef$.
 The $c$ and $m$ values of the method to be invoked are those contained
 in the $MethodRef$.
 These are passed to $Invoke$, along with the arguments popped from the
-stack, $poppedArgs$, and a boolean value indicating whether the method
-call is static, which is $\true$ in the case of \texttt{invokestatic}.
+stack, $poppedArgs$.
 
 Rule~[\nameref{refine-invokespecial-rule}] is similar to
 Rule~[\nameref{refine-invokestatic-rule}].
 It provides for popping an additional \texttt{this} argument from the
-stack and pass a $\false$ boolean value to $Invoke$.
+stack.
 
 % For method calls with multiple targets, we introduce the choice over
 % those targets by using
@@ -326,11 +322,11 @@ for each branch.
       getClassIDOf!(head~poppedArgs)?cid \then {} \\
       \circif cid = c_1 \circthen \\
       \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t1 Invoke(c_1, m, poppedArgs, \false) \\
+      \t1 Invoke(c_1, m, poppedArgs) \\
       {} \cdots {} \\
       {} \circelse cid = c_n \circthen \\
       \t1 \{ (last~frameStack).storedPC = j + 1 \} \circseq \\
-      \t1 Invoke(c_n, m, poppedArgs, \false) \\
+      \t1 Invoke(c_n, m, poppedArgs) \\
       \circfi
     \end{array}
   \end{circus}
@@ -393,10 +389,8 @@ assignment after those actions.
 This collapses the choice in the definition of the $Invoke$ action.
 The assumption on the value of $pc$ is also eliminated, since it is no
 longer needed.
-This is also the case for the other method resolution rules applied in
+This is also the case for the other method-resolution rules applied in
 the try block on line~\ref{algorithm-try-block2-start}.
-The boolean value indicating whether the method is static is required
-to be $\true$, since all the special methods we define are static.
 The actions that define the behaviour of the special method are
 identified by the syntactic function $specialMethodAction$, which is
 defined by Table~\ref{special-method-action-table}.
@@ -406,14 +400,14 @@ method identifiers passed to $Invoke$.
 \begin{restatable}[resolve-special-method]{crule}{ResolveSpecialMethodRule}
   \label{resolve-special-method-rule}
   If $c$, $m$ match one of the rows of
-  Table~\ref{special-method-action-table} and $s = \true$, then
+  Table~\ref{special-method-action-table}, then
   \setlength{\zedindent}{0.25cm} \setlength{\zedtab}{0.5cm}
   \begin{circus}
     \begin{array}{l}
       \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
       \lschexpract \exists argsToPop? == e @ \\
       \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      Invoke(c, m, poppedArgs, s)
+      Invoke(c, m, poppedArgs)
     \end{array}
     \circrefines_A
     \begin{array}{l}
@@ -626,7 +620,7 @@ hold after an infinite loop.
       \t3 \circvar poppedArgs : \seq Word \circspot \\
       \t3 \lschexpract \exists argsToPop? == e @ \\
       \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t3 Invoke(c, m, poppedArgs, s) \\
+      \t3 Invoke(c, m, poppedArgs) \\
       \t2 {} \circelse pc = k \circthen M \\
       \t2 \cdots \\
       \t2 \circfi \circseq Poll \circseq X \\
@@ -676,7 +670,7 @@ $CheckSynchronizedInvoke$ action is left before the method call.
 We eliminate this action by the application of
 Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]
 and
-Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}
+Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]
 in the try block beginning on
 line~\ref{algorithm-CheckSynchronizedInvoke-elimination-try-begin}.
 These refine $CheckSynchronizedInvoke$, collapsing the choice in that
@@ -762,7 +756,7 @@ $pc = 23$ has the following form.
   \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} \circseq \circvar poppedArgs : \seq Word \circspot \\
   \t3 \lschexpract \exists argsToPop? == methodArguments~m @ \\
   \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t3 Invoke(TPKClassID, f, poppedArgs, \true) \\
+  \t3 Invoke(TPKClassID, f, poppedArgs) \\
   \t2 {} \cdots {}
 \end{circusaction}
 

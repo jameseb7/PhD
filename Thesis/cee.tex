@@ -2514,21 +2514,20 @@ The form of the $HandleReturn$ action is similar, but since
 $InterpreterReturn$ does not output a return value, $returnValue$
 takes an arbitrary value.
 
-Within the $CheckSynchronisedReturn$ action, shown below, the
+Within the $CheckSynchronizedReturn$ action, shown below, the
 identifier of the current method, $methodID$, is obtained from the
 $pc$ using a data operation, $GetCurrentMethod$.
 The information in $currentClass$ is then checked to determine if
 $methodID$ denotes a method that is synchronized and not static.
-We do not apply synchronisation to static methods, following the
-behaviour of icecap, since data guarded by synchronisation should be
-stored in individual objects with a specific scope, rather than being
-made globally available.
+We do not apply synchronisation to static methods, matching the
+behaviour of icecap, as we discuss in more detail in
+Section~\ref{compilation-assumptions-section}. 
 For a method that is synchronized and not static, we communicate with
 the launcher on the $releaseLock$ channel, sending the \texttt{this}
 pointer of the current method.
 The launcher then communicates with the scheduler to release the lock.
-If the method is static or not synchronized, then no synchronisation
-needs to be done and the action terminates.
+If the method is static or not synchronized, then no communication is
+required and the action terminates.
 \begin{circusaction}
   CheckSynchronizedReturn \circdef \\
   \t1 \circvar methodID : MethodID \circspot \lschexpract GetCurrentMethod \rschexpract \circseq \\
@@ -2610,8 +2609,7 @@ The number of arguments popped, $argsToPop?$, is the $methodArguments$
 value for $mid$, plus one for the \texttt{this} identifier passed to
 the method.
 The $cid$ and $mid$ identifiers are the passed into $Invoke$ along
-with $poppedArgs$, and a boolean value indicating that the method
-invocation is not from the \texttt{invokestatic} instruction.
+with $poppedArgs$.
 \begin{circusaction}
   HandleInvokespecial \circdef \\
   \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
@@ -2620,7 +2618,7 @@ invocation is not from the \texttt{invokestatic} instruction.
   \t2 cid := classOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \lschexpract CheckSuperclass \rschexpract \circseq \\
   \t2 mid := methodOf~currentClass~((invokespecial\inv)~(bc~pc)) \circseq \\
   \t2 \lschexpract \exists argsToPop? == methodArguments~mid + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-  \t2 Invoke(cid, mid, poppedArgs, \false) \\
+  \t2 Invoke(cid, mid, poppedArgs) \\
   \t1 {} \circelse ((invokespecial\inv)~(bc~pc)) \notin methodRefIndices~currentClass \circthen \Chaos \\
   \t1 \circfi
 \end{circusaction}
@@ -2642,10 +2640,11 @@ $InvokeResumeThread$ for the \texttt{resumeThread()} method).
 The parameters passed to $Invoke$ are passed on to
 each of the actions in the external choice.
 \begin{circusaction}
-  Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word; \circval static : \boolean \circspot \\
-  \t1 InvokeResumeThread(classID, method, args, static) \\
-  \t1 {} \extchoice InvokeSuspend(classID, method, static) \extchoice \cdots \\
-  \t1 {} \extchoice InvokeOther(classID, method, args, static)
+  Invoke \circdef \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word \circspot \\
+  \t1 InvokeResumeThread(classID, method, args) \\
+  \t1 {} \extchoice InvokeSuspend(classID, method) \extchoice \cdots \\
+  \t1 {} \extchoice InvokeOther(classID, method, args)
 \end{circusaction}
 
 Within the special-method actions, there is a guard ensuring the
@@ -2662,12 +2661,6 @@ The class and method identifiers used in the special method actions
 are a mixture of identifiers from the SCJ API and
 implementation-defined identifiers provided to expose SCJVM services
 to bytecode programs.
-The special-method actions check if the $static$ parameter is $\true$
-(since we define them as static methods for simplicity of the
-interface with the SCJVM), and diverges if it is not (since that
-indicates an erroneous input program).
-In the example below, the method is static as it is exposing an SCJVM
-service that is not attached to an object instance.
 The argument to the method, stored as the first element of the
 $methodArgs$ parameter, is converted to a $ThreadID$ and passed to the
 $Launcher$ via the $resumeThread$ channel.
@@ -2675,12 +2668,9 @@ A return signal is then awaited on the $resumeThreadRet$ channel
 before continuing.
 \begin{circusaction}
   InvokeResumeThread \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
   \t1 \lcircguard (classID,resumeThreadClass) \in subclassRel~cs \land method = resumeThreadID \rcircguard \circguard {} \\
-  \t1 \circif static = \true \circthen {} \\
-  \t2 resumeThread!(WordToThreadID~(methodArgs~1)) \then resumeThreadRet \then \Skip \\
-  \t1 {} \circelse static = \false \circthen \Chaos \\
-  \t1 \circfi
+  \t1 resumeThread!(WordToThreadID~(methodArgs~1)) \then resumeThreadRet \then \Skip
 \end{circusaction}
 
 In addition to the special methods handled in the $Launcher$, we also
@@ -2694,12 +2684,9 @@ which accepts the input on the $input$ channel and pushes it onto the
 stack as the return value for the method.
 \begin{circusaction}
   InvokeRead \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
+  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
   \t1 \lcircguard (classID,readClass) \in subclassRel~cs \land method = readID \rcircguard \circguard {} \\
-  \t1 \circif static = \true \circthen {} \\
-  \t2 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract \\
-  \t1 {} \circelse static = \false \circthen \Chaos \\
-  \t1 \circfi
+  \t1 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
 \end{circusaction}
 The $InvokeWrite$ action is similar, writing the method argument to
 the $output$ channel.
@@ -2710,11 +2697,8 @@ It begins with a guard that is the conjunction of the negation of the
 guards for the invocation actions for the special methods.
 It starts execution of the method in the interpreter by first finding
 its $Class$ information with $ResolveMethod$.
-The $staticMethods$ set in the class information is then checked for
-consistency with the $static$ parameter, diverging if it is not.
 We take the lock of the object pointed to by the first argument in
-$methodArguments$ if the invoked method is recorded as synchronized
-and not static in the class information.
+$methodArguments$ if the invoked method is synchronized.
 This is handled by an action $CheckSynchronizedInvoke$, which is
 similar to $CheckSynchronizedReturn$, but takes the class information,
 method idenifier and method arguments as inputs, and performs its
@@ -2722,17 +2706,13 @@ communication on the $takeLock$ channel.
 A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
 \begin{circusaction}
   InvokeOther \circdef \\
-  \t1 \circval classID : ClassID; \circval methodID : MethodID; \\
-  \t2 \circval methodArgs : \seq Word; \circval static : \boolean \circspot \\
+  \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
   \t1 \lcircguard ((classID,resumeThreadClass) \notin subclassRel~cs \lor methodID \neq resumeThreadID) \\
   \t2 {} \land \cdots \\
   \t2 {} \land ((classID, writeClass) \notin subclassRel~cs \lor methodID \neq writeID) \rcircguard \circguard {} \\
   \t1 \circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
-  \t1 \circif static = \true \iff methodID \in class.staticMethods \circthen {} \\
-  \t2 CheckSynchronizedInvoke(class, methodID, methodArgs) \circseq \\
-  \t2 \lschexpract InterpreterNewStackFrame \rschexpract \\
-  \t1 {} \circelse \lnot (static = \true \iff methodID \in class.staticMethods) \circthen \Chaos \\
-  \t1 \circfi
+  \t1 CheckSynchronizedInvoke(class, methodID, methodArgs) \circseq \\
+  \t1 \lschexpract InterpreterNewStackFrame \rschexpract
 \end{circusaction}
 
 This concludes our description of the handling of bytecode
