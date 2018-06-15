@@ -275,9 +275,9 @@ Rule~[\nameref{if-introduction-rule}], shown in
 Figure~\ref{if-introduction-rule-figure}.
 Such a structure can be recognised from the form of the \Circus{} code
 in the $Running$ action, which is that of a node whose sequence of
-instructions ends with an assignment of the form
-$pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$ node ends in
-an assignment $pc := x$.
+instructions ends with a variable block, ending with an assignment of
+the form $pc := \IF b \THEN x \ELSE y$, and for which the $pc = y$
+node ends in an assignment $pc := x$.
 Note that the branches cannot be the other way round (i.e.\ the
 $pc = x$ branch cannot be the body of the conditional) since the
 conditional branches come from Java's branching instructions, which
@@ -303,7 +303,8 @@ next instruction if it is false.
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k) \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
       \t2 {} \cdots {} \\
@@ -315,11 +316,12 @@ next instruction if it is false.
       \circmu X \circspot \\
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
+      \t2 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
       \t3 \circif b \circthen \Skip \\
       \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
-      \t3 \circfi \circseq pc := j \\
+      \t3 \circfi) \circseq pc := j \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = k \circthen B \circseq pc := j \\
       \t2 {} \cdots {} \\
@@ -409,7 +411,8 @@ conditional, representing a loop.
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k) \\
       \t2 \cdots \\
       \t2 {} \circelse pc = j \circthen B \\
       \t2 \cdots \\
@@ -425,11 +428,12 @@ conditional, representing a loop.
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \circseq \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen \Skip \\
       \t3 {} \circelse \lnot b \circthen {} \\
       \t4 pc := k \circseq Poll \circseq C \circseq \\
       \t4 pc := i \circseq Poll \circseq Y \\
-      \t3 \circfi) \circseq pc := j \\
+      \t3 \circfi)) \circseq pc := j \\
       \t2 \cdots \\
       \t2 {} \circelse pc = j \circthen B \\
       \t2 \cdots \\

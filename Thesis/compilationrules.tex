@@ -64,7 +64,8 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k) \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
       \t2 {} \cdots {} \\
@@ -80,9 +81,10 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen pc := j \circseq Poll \circseq B \\
       \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq C \\
-      \t3 \circfi \circseq pc := x \\
+      \t3 \circfi) \circseq pc := x \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = j \circthen B \circseq pc := x \\
       \t2 {} \cdots {} \\
@@ -113,7 +115,8 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k) \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = j \circthen B \\
       \t2 {} \cdots {} \\
@@ -129,9 +132,10 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen pc := j \circseq Poll \circseq B \\
       \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq C \\
-      \t3 \circfi \\
+      \t3 \circfi) \\
       \t2 {} \cdots {} \\
       \t2 {} \circelse pc = j \circthen B \\
       \t2 {} \cdots {} \\
@@ -163,7 +167,8 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN j \ELSE k \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
+      \t3 pc := \IF b \THEN j \ELSE k) \\
       \t2 \cdots \\
       \t2 {} \circelse pc = j \circthen B \circseq pc := i \\
       \t2 \cdots \\
@@ -179,10 +184,11 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \circseq \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen \\
       \t4 pc := j \circseq Poll \circseq B \circseq pc := i \circseq Poll \circseq Y \\
       \t3 {} \circelse \lnot b \circthen C \\
-      \t3 \circfi) \circseq pc := k \\
+      \t3 \circfi)) \circseq pc := k \\
       \t2 \cdots \\
       \t2 {} \circelse pc = j \circthen B \circseq pc := i \\
       \t2 \cdots \\
@@ -211,7 +217,8 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 pc := \IF b \THEN i \ELSE j \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
+      \t3 pc := \IF b \THEN i \ELSE j) \\
       \t2 \cdots \\
       \t2 {} \circelse pc = j \circthen B \\
       \t2 \cdots \\
@@ -225,9 +232,10 @@
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen pc := i \circseq Poll \circseq Y \\
       \t3 {} \circelse \lnot b \circthen \Skip \\
-      \t3 \circfi) \circseq pc := j \\
+      \t3 \circfi)) \circseq pc := j \\
       \t2 \cdots \\
       \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi 
