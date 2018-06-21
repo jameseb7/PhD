@@ -647,8 +647,8 @@ hold after an infinite loop.
       \t3 \lschexpract InterpreterNewStackFrame[ \\
       \t4 classInfo/class?, \\
       \t4 m/methodID?, \\
-      \t4 poppedArgs/methodArgs?] \rschexpract) \circseq \\
-      \t3 Poll \circseq M \circseq pc := j + 1 \\
+      \t4 poppedArgs/methodArgs?] \rschexpract \circseq \\
+      \t3 Poll \circseq M) \circseq pc := j + 1 \\
       \t2 {} \circelse pc = k \circthen M \\
       \t2 \cdots \\
       \t2 \circfi \circseq Poll \circseq X \\
