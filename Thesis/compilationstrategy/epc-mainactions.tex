@@ -75,7 +75,7 @@ in $MainThread$ and $Started$.
   \begin{circus}
     \begin{array}{l}
       \{ frameStack = \emptyset \} \circseq \\
-      StartInterpreter \circseq \circmu X \circspot \\
+      StartInterpreter \circseq Poll \circseq \circmu X \circspot \\
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse framestack \neq \emptyset \circthen {}  \\
       \t2 \circif pc = entry_1 \circthen M_1 \\
@@ -86,7 +86,7 @@ in $MainThread$ and $Started$.
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      executeMethod?t \prefixcolon (t = thread) ?c?m?a \then {} \\
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (Poll \\
       (\circval classID : ClassID; \\
       \circval methodID : MethodID; \\
       \circval methodArgs : \seq Word \circspot \\
@@ -99,7 +99,7 @@ in $MainThread$ and $Started$.
       \t1 InterpreterNewStackFrame[\\
       \t2 classInfo_n/class?, \\
       \t2 m_n/methodID?] \circseq M_n \\ 
-      \circfi)(c, m, a) \circseq Poll
+      \circfi)(c, m, a)) \circseq Poll
     \end{array}
   \end{circus}
 \end{restatable}

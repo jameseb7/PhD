@@ -2270,8 +2270,9 @@ thread.
 A request to start execution of a method is handled in the
 $StartInterpreter$ action, which creates the $StackFrame$ for the
 method.
-The process then behaves as the $Running$ action, executing bytecode
-instructions until the method has finished.
+The process then polls the scheduler (discussed below, when we present
+the $Running$ action) and behaves as the $Running$ action, executing
+bytecode instructions until the method has finished.
 During method execution in $Running$, the thread may accept a request
 to switch to another thread, after which it behaves as $Blocked$,
 waiting for a request to switch back to the thread and continue
@@ -2290,7 +2291,7 @@ $Running$ is the main focus.
 \begin{circusaction}
   MainThread \circdef initMainThread?stack \then \circmu X \circspot \\
   \t1 \circblockbegin
-  StartInterpreter \circseq Running \circseq X \\
+  StartInterpreter \circseq Poll \circseq Running \circseq X \\
   {} \extchoice {} \\
   CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
   \circblockend
@@ -2371,7 +2372,7 @@ thread to be restarted.
 \begin{circusaction}
   Started \circdef \\
   \t1 \circblockbegin
-  StartInterpreter \circseq Running \circseq \circblockbegin
+  StartInterpreter \circseq Poll \circseq Running \circseq \circblockbegin
   continue?t \prefixcolon (t = thread) \then Started \\
   {} \extchoice {} \\
   endThread?t \prefixcolon (t = thread) \then \Skip

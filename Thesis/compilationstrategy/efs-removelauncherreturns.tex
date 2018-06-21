@@ -456,8 +456,8 @@ operations highlighted.
     \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
     \t1 \circblockbegin
     \colorbox{lightgray}{$\circvar retVal : Word \circspot$}
-    executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
-    \t1 \colorbox{lightgray}{$ExecuteMethod(c, m, a, retVal) \circseq
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then (Poll \circseq \\
+    \t1 \colorbox{lightgray}{$ExecuteMethod(c, m, a, retVal)) \circseq
     executeMethodRet!thread!retVal \then Poll$} \circseq  X \\
     {} \extchoice {} \\
     CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
@@ -467,8 +467,8 @@ operations highlighted.
   \begin{circusaction}
     Started \circdef \\
     \t1 \circblockbegin
-    \colorbox{lightgray}{$\circvar retVal : Word \circspot$} executeMethod? t \prefixcolon (t = thread)?c?m?a \then {} \\
-    \t1 \colorbox{lightgray}{$ExecuteMethod(c, m, a, retVal) \circseq executeMethodRet!thread!retVal \then Poll$} \circseq \\
+    \colorbox{lightgray}{$\circvar retVal : Word \circspot$} executeMethod? t \prefixcolon (t = thread)?c?m?a \then (Poll \circseq \\
+    \t1 \colorbox{lightgray}{$ExecuteMethod(c, m, a, retVal)) \circseq executeMethodRet!thread!retVal \then Poll$} \circseq \\
     \t1 \circblockbegin
     continue?t \prefixcolon (t = thread) \then Started \\
     {} \extchoice {} \\
