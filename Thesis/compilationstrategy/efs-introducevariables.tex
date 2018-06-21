@@ -284,10 +284,13 @@ Rule~[\nameref{HandleAloadSF-simulation-rule}], shown in
 Figure~\ref{HandleAloadSF-simulation-rule-figure}.
 It states that $HandleAloadSF(lvi)$, with an assumption that the size
 of $operandStack$ is $k$, is simulated by an assignment
-$stack{<}k+1{>} := var{<}lvi{>}$.
+$stack{<}k+1{>} := var{<}lvi+1{>}$.
+Note that the local variable index $lvi$ has 1 added to it, since
+Java's indices start at 0, whereas Z sequences, and hence our variable
+numbering, are indexed starting at 1.
 This rule applies, for example, to the $HandleAloadSF(1)$ action
 deriving from the $aload~1$ instruction at $pc = 12$ in
-$TPK\_handleAsyncEvent$, which is refined to $stack1 := var1$, since
+$TPK\_handleAsyncEvent$, which is refined to $stack1 := var2$, since
 the stack is empty at that point.
 
 \begin{figure}[thp]
@@ -300,7 +303,7 @@ the stack is empty at that point.
       \end{array}
       \circsimulates
       \begin{array}{l}
-        stack{<}k+1{>} := var{<}lvi{>}
+        stack{<}k+1{>} := var{<}lvi+1{>}
       \end{array}
     \end{circus}
   \end{restatable}
