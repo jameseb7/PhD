@@ -295,6 +295,9 @@ pops the arguments of the function from the stack using the data
 operation $InterpreterStackFrameInvoke$, and then makes a choice of
 which method to invoke using the class of the \texttt{this} argument
 for the method.
+The set of possible targets classes for the choice are those that are
+both subclasses of the class referenced by the \texttt{invokevirtual}
+instruction and in the $instCS$ set of instantiated classes.
 The method invocations are left as references to the $Invoke$ actions,
 to be resolved later in
 Algorithm~\ref{resolve-method-calls-algorithm}.
@@ -336,7 +339,7 @@ for each branch.
     \t1 cpi \in methodRefIndices~c_0 \land \\
     \t1 j \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0 \land \\
     \t1 \exists c : ClassID @ c_0.constantPool~cpi = MethodRef~(c,m) \land \\
-    \t1 \{ x : ClassID | (x,c) \in subclassRel~cs \} = \{c_1, \ldots , c_n\}
+    \t1 \{ x : ClassID | (x,c) \in subclassRel~cs \land x \in instCS \} = \{c_1, \ldots , c_n\}
   \end{displaymath}
   and provided $n > 1$.
 \end{restatable}
@@ -588,26 +591,29 @@ hold after an infinite loop.
   \label{resolve-normal-method-rule}
   Given $i : ProgramAddress$, if
   \setlength{\zedindent}{0.5cm}
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
-  \end{circus}
-  and there exists $classInfo : Class$ in $\ran cs$ such that,
-  \begin{circus}
-    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \\
-    {} = {} \\
-    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \\
-    \t1 \{ class = classInfo \land classInfo.methodEntry~m = k \},
-  \end{circus}
-  and, for any $x : ProgramAddress$,
-  \begin{circus}
-    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \\
-    {} = {} \\
-    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \circseq \{ pc = x \},
-  \end{circus}
-  and $m$ and $c$ do not match any of the conditions in
-  Table~\ref{special-method-action-table} then,
+  \begin{itemize}
+  \item \hfill{\vspace*{-\baselineskip}\setlength{\abovedisplayskip}{0cm}\setlength{\abovedisplayshortskip}{0cm}
+      \begin{circus}
+      \{frameStack \neq \emptyset\} \circseq A \\
+      {} = {} \\
+      \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
+    \end{circus}}
+  \item $methodID = m \land classID = c \implies \pre ResolveMethod$ and
+    \begin{circus}
+      \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \\
+      {} = {} \\
+      \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \{ class.methodEntry~m = k \},
+    \end{circus}
+  \item for any $x : ProgramAddress$,
+    \begin{circus}
+      \{ (last~(front~frameStack)).storedPC = x \} \circseq M \\
+      {} = {} \\
+      \{ (last~(front~frameStack)).storedPC = x \} \circseq M \circseq \{ pc = x \},
+    \end{circus}
+  \item $m$ and $c$ do not match any of the conditions in
+    Table~\ref{special-method-action-table},
+  \end{itemize}
+  then,
   \setlength{\zedindent}{0.2cm}
   \setlength{\zedtab}{0.45cm}
   \begin{circus}

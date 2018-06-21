@@ -387,30 +387,34 @@
 %   Table~\ref{special-method-action-table}.
 % \end{restatable}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[resolve-normal-method-branch]{crule}{ResolveNormalMethodBranchRule}
   \label{resolve-normal-method-branch-rule}
   \setlength{\zedtab}{0.4cm}
-  Given $i : ProgramAddress$, if
-  \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
-    {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
-  \end{circus}
-  and there exists $classInfo : Class$ in $\ran cs$ such that,
-  \begin{circus}
-    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \\
-    {} = {} \\
-    \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \\
-    \t1 \{ class = classInfo \land classInfo.methodEntry~m = k \},
-  \end{circus}
-  and, for any $x : ProgramAddress$,
-  \begin{circus}
-    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \\
-    {} = {} \\
-    \{ (last~(front~frameStack)).storedPC = x \} \circseq M \circseq \{ pc = x \},
-  \end{circus}
-  and $m$ and $c$ do not match any of the conditions in
-  Table~\ref{special-method-action-table} then,
+  Given $i : ProgramAddress$ and $c_{\ell} : ClassID$, if
+  \begin{itemize}
+  \item \hfill{\vspace*{-\baselineskip}\setlength{\abovedisplayskip}{0cm}\setlength{\abovedisplayshortskip}{0cm}
+      \begin{circus}
+      \{frameStack \neq \emptyset\} \circseq A \\
+      {} = {} \\
+      \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
+    \end{circus}}
+  \item $methodID = m \land classID = c_{\ell} \implies \pre ResolveMethod$ and
+    \begin{circus}
+      \{ methodID = m \land classID = c_{\ell} \} \circseq \lschexpract ResolveMethod \rschexpract \\
+      {} = {} \\
+      \{ methodID = m \land classID = c_{\ell} \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \{ class.methodEntry~m = k \},
+    \end{circus}
+  \item for any $x : ProgramAddress$,
+    \begin{circus}
+      \{ (last~(front~frameStack)).storedPC = x \} \circseq M \\
+      {} = {} \\
+      \{ (last~(front~frameStack)).storedPC = x \} \circseq M \circseq \{ pc = x \},
+    \end{circus}
+  \item $m$ and $c$ do not match any of the conditions in
+    Table~\ref{special-method-action-table},
+  \end{itemize}
+  then,
   \setlength{\zedindent}{0.25cm}
   \begin{circus}
     \begin{array}{l}
@@ -463,6 +467,7 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 \subsection{Refine Main Actions}
 
