@@ -482,6 +482,20 @@ since a singleton instance of a class with synchronized methods can be
 supplied, rather than relying on static methods to access data owned
 by the instance.
 
+Each method call must have at least one target (as
+determined by the rules given in
+Section~\ref{resolve-method-calls-subsection}), to allow method calls
+to be resolved.
+Each \texttt{invokestatic} and \texttt{invokespecial} instruction has
+exactly one target, so this poperty is always fulfilled for such
+method calls.
+For \texttt{invokevirtual} instructions, a method call only has no
+targets if the method in which the instruction occurs is unused or if
+the method is invoked on a null pointer (which is erroneous).
+Methods not used in the program should not be included in the
+parameters passed to $CEE$, matching icecap's behaviour of excluding
+such methods from the generated code.
+
 Finally, we require that no method in the program recurses, either
 directly or indirectly.
 This is because recursion is not recommended in safety-critical
