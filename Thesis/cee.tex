@@ -1097,20 +1097,21 @@ Table~\ref{cee-channel-table}.
 % and bytecode instructions, $bc$, which are explained later in this
 % section, become parameters of $CEE$.
 \begin{circus}
-  CEE(cs,bc,sid,initOrder) \circdef \\
+  CEE(cs,bc,instCS,sid,initOrder) \circdef \\
   \t1 ObjMan(cs) \parallel Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
 \end{circus}
 $CEE$ is parametrised by values that characterise a particular
 program:~$bc$, recording the bytecode instructions, $cs$, recording
-information about the classes in the program, $sid$, recording the
+information about the classes in the program, $instCS$, recording the
+classes that are instantiated in the program, $sid$, recording the
 identifier of the \texttt{Safelet} class, and $initOrder$, a sequence
 of class identifiers indicating in which order the classes should be
 initialised.
 These parameters are passed to the components that use them.
 The $sid$ and $initOrder$ parameters have been explained in
 Section~\ref{cee-launcher-section}. 
-We describe the $cs$ and $bc$ later in this section where the
-processes that use them are described.
+We describe the $cs$, $bc$ and $instCS$ later in this section where
+the processes that use them are described.
 
 $ObjMan$ manages the cooperation between the SCJ program and the SCJVM
 memory manager.
@@ -2070,22 +2071,32 @@ $ProgramAddress$ values (which are modeled by natural numbers) to
 $Bytecode$ values.
 The $bc$ map is passed as a parameter to the $Interpreter$ process,
 along with the $cs$ map described in
-Section~\ref{cee-classes-subsection}, as can be seen from its
-definition shown below.
+Section~\ref{cee-classes-subsection}, and a third parameter, $instCS$,
+which represents the set of class identifiers that are instantiated in
+the program.
+These parameters can be seen in the definition of $Interpreter$ below.
+
+The $instCS$ set can be determined from the \texttt{new} instructions
+in $bc$, with the corresponding constant pool information in $cs$.
+This set determines the possible classes for an object, and hence what
+the possible targets for a virtual method call are.
+This is similar to the approach of icecap and allows the choice over
+targets of a method call, which compilation introduces, to be kept as
+small as possible.
 
 The overall structure of $Interpreter$ is a parallel composition of
 $Thr$ processes representing the individual interpreter threads, with
 one process for each $ThreadID$ except for $idle$.
-The $bc$ and $cs$ parameters are passed to each $Thr$ process, along
-with its $ThreadID$.
+The $bc$, $cs$ and $instCS$ parameters are passed to each $Thr$
+process, along with its $ThreadID$.
 \begin{circus}
   \circprocess Interpreter \circdef \\
-  \t1 bc : ProgramAddress \pfun Bytecode; cs : ClassID \pfun Class \circspot \\
-  \t1 \Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, t)
+  \t1 bc : ProgramAddress \pfun Bytecode; cs : ClassID \pfun Class; instCS : \finset ClassID \circspot \\
+  \t1 \Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, instCS, t)
 \end{circus}
-Each $Thr(bc,cs,t)$ process synchronises on a set $ThrChans(t)$,
-containing the $CEEswitchThread.t.t2$ and $CEEswitchThread.t2.t$
-events for all thread identifiers $t2$.
+Each $Thr(bc,cs,t)$ process synchronises on a set $ThrChans(t)$, which
+contains the events $CEEswitchThread.t.t2$ and $CEEswitchThread.t2.t$
+for all thread identifiers $t2$.
 This ensures thread switches can be handled since the two threads
 involved in the switch (the thread switched from and the thread
 switched to) synchronise on the thread switch request.
