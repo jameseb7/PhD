@@ -962,7 +962,7 @@
          (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
          \t1 \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
          \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
-         \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)(args~1, \ldots, args~n)
+         \t1 Poll \circseq methodName \circseq \lschexpract InterpreterReturn \rschexpract)(args~1, \ldots, args~n)
        \end{array}$}
      \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName'$, %
        $\begin{array}[t]{l}
@@ -971,7 +971,8 @@
           \t3 {} == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
           \t2 InterpreterNewStackFrame[ \\
           \t3 c/class?, m/methodID?] \rschexpract \circseq \\
-          \t1 methodName \circseq \lschexpract InterpreterReturn \rschexpract)
+          \t1 Poll \circseq methodName \circseq \\
+          \t1 \lschexpract InterpreterReturn \rschexpract)
         \end{array}$}
       \State \ExhaustivelyApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName'$}
       \State \ApplyToFor{Law~[\nameref{copy-rule-law}]}{\Call{ActionBody}{$methodName'$}}{$methodName$}

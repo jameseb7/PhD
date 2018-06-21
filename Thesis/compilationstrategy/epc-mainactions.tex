@@ -86,20 +86,20 @@ in $MainThread$ and $Started$.
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      executeMethod?t \prefixcolon (t = thread) ?c?m?a \then (Poll \\
+      executeMethod?t \prefixcolon (t = thread) ?c?m?a \then {} \\
       (\circval classID : ClassID; \\
       \circval methodID : MethodID; \\
       \circval methodArgs : \seq Word \circspot \\
       \circif {(classID, methodID) = (c_1,m_1)} \circthen {} \\
       \t1 InterpreterNewStackFrame[\\
       \t2 classInfo_1/class?, \\
-      \t2 m_1/methodID?] \circseq M_1 \\
+      \t2 m_1/methodID?] \circseq Poll \circseq M_1 \\
       {} \cdots {} \\
       {} \circelse (classID, methodID) = (c_n,m_n) \circthen {} \\
       \t1 InterpreterNewStackFrame[\\
       \t2 classInfo_n/class?, \\
-      \t2 m_n/methodID?] \circseq M_n \\ 
-      \circfi)(c, m, a)) \circseq Poll
+      \t2 m_n/methodID?] \circseq Poll \circseq M_n \\ 
+      \circfi)(c, m, a) \circseq Poll
     \end{array}
   \end{circus}
 \end{restatable}
