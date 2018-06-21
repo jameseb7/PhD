@@ -21,8 +21,8 @@ procedure \Call{RemoveLauncherReturns}{}.
     \label{algorithm-determine-return-action}   
     \State \ExhaustivelyApplyToFor{Law~[\nameref{rec-action-intro-law}]}{$methodBody$}{$returnAction$}
     \label{algorithm-introduce-infinite-loop-returns}
-    \State \ExhaustivelyApplyTo{Law~[\nameref{alt-seq-dist-law}]}{$methodBody$}
-    \label{algorithm-distribute-returns}
+    \State \ExhaustivelyApplyToFor{Rule~[\nameref{conditional-dist-rule}]}{$methodBody$}{$returnAction$}
+    \label{algorithm-distribute-return}
     \State \Call{RedefineMethodExcludingReturn}{$methodName$,$returnAction$}
     \label{algorithm-redefine-method-action-excluding-return-action}
     \EndFor
@@ -89,10 +89,11 @@ This is achieved by introducing occurrences of $returnAction$ after
 infinite loops in $methodBody$ using
 Law~[\nameref{rec-action-intro-law}] and distributing occurrences of
 $returnAction$ outside conditionals using
-Law~[\nameref{alt-seq-dist-law}].
+Rule~[\nameref{conditional-dist-rule}], which distributes an action
+outside a \Circus{} conditional and the variable block surrounding it.
 These laws are applied on
 lines~\ref{algorithm-introduce-infinite-loop-returns}
-and~\ref{algorithm-distribute-returns} of
+and~\ref{algorithm-distribute-return} of
 Algorithm~\ref{remove-launcher-returns-algorithm}.
 
 When the method has a single return instruction at the end, it is

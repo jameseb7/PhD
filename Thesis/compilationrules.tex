@@ -478,6 +478,26 @@
 \subsection{Remove Launcher Returns}
 \label{remove-launcher-returns-appendix-subsection}
 
+\begin{restatable}[conditional-dist]{crule}{ReturnActionConditionalDist}
+  \label{conditional-dist-rule}
+  Given an action $X$,
+  \begin{circus}
+    \begin{array}{l}
+      \circvar value1, value2 : Word \circspot A \circseq \\
+      \t1 \circif b \circthen B \circseq X \\
+      \t1 {} \circelse c \circthen C \circseq X \\
+      \t1 \circfi
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circvar value1, value2 : Word \circspot A \circseq \\
+      \t1 \circif b \circthen B \\
+      \t1 {} \circelse c \circthen C \\
+      \t1 \circfi) \circseq X
+    \end{array}
+  \end{circus}
+\end{restatable}
+
 \begin{algorithm}[htb!]
   \begin{algorithmic}[1]
     \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
