@@ -222,18 +222,18 @@ compilation rules, so we do not handle it in our prototype.
 
       \umlclass[x=-3.5cm,y=-3.2cm]{ClassModel}{$\cdots$}{$\cdots$}
 
-      \umlclass[x=3.5cm,y=-3.2cm,type=abstract]{ModelBytecode}{}{}
+      \umlclass[x=3.5cm,y=-3.2cm,type=abstract]{BytecodeModel}{}{}
 
       \umlclass[alias=aconstnull,x=8cm,y=-2cm]{ACONST\_NULL}{$\cdots$}{$\cdots$}
       \node at (8cm,-3.8cm) {\Huge  $\vdots$};
       \umlclass[x=8cm,y=-6cm]{RETURN}{$\cdots$}{$\cdots$}
 
-      \umlinherit[geometry=-|-]{aconstnull}{ModelBytecode}
+      \umlinherit[geometry=-|-]{aconstnull}{BytecodeModel}
       
-      \umlinherit[geometry=-|-]{RETURN}{ModelBytecode}
+      \umlinherit[geometry=-|-]{RETURN}{BytecodeModel}
 
       \umluniaggreg[geometry=|-,anchor1=-110,arg2=classes,mult2=0..*,pos2=1.4,arm2=-0.1cm]{Model}{ClassModel}
-      \umluniaggreg[geometry=|-,anchor1=-90,arg2=bytecodes,mult2=0..*,pos2=1.6,arm2=-0.1cm]{Model}{ModelBytecode}
+      \umluniaggreg[geometry=|-,anchor1=-90,arg2=bytecodes,mult2=0..*,pos2=1.6,arm2=-0.1cm]{Model}{BytecodeModel}
 
       \umlclass[x=0cm,y=-7.8cm]{ThrCFModel}{
         $\cdots$
@@ -289,7 +289,7 @@ compilation rules, so we do not handle it in our prototype.
       \umluniaggreg[geometry=|-|,anchor1=90,arg2=methodActions,mult2=0..*,pos2=2.8]{CThrModel}{CircusAction}
       
       % \aggregation{Model}{classes}{0..*}{ClassModel}
-      % \aggregation{Model}{bytecodes}{0..*}{ModelBytecode}
+      % \aggregation{Model}{bytecodes}{0..*}{BytecodeModel}
     \end{tikzpicture}
   \end{center}
   \caption{Class diagram for our implementation of the compilation
@@ -310,14 +310,14 @@ between them are shown in
 Figure~\ref{implementation-class-diagram-figure}. 
 Our prototype begins by reading each input class file and extracting
 the information into \texttt{ClassModel} and
-\texttt{ModelBytecode} classes.
+\texttt{BytecodeModel} classes.
 \texttt{ClassModel} represents the $Class$ type from our model and
 makes available all the information represented in that type.
-\texttt{ModelBytecode} is an abstract class whose subclasses represent
+\texttt{BytecodeModel} is an abstract class whose subclasses represent
 individual bytecode instructions; it represents the $Bytecode$ type
 from our model.
 The set of \texttt{ClassModel} structures and array of
-\texttt{ModelBytecode}s are collected together into a \texttt{Model},
+\texttt{BytecodeModel}s are collected together into a \texttt{Model},
 representing the inputs to the compilation strategy.
 
 The application of the first stage of the compilation strategy to a
