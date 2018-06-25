@@ -16,6 +16,7 @@ procedure \Call{LocaliseStackFrames}{}.
     \For{$methodName \gets iterationOrder$}
     \label{algorithm-localise-stack-frames-loop}
     \State $numArgs \gets$ \Call{MethodArguments}{$methodName$}
+    \label{algorithm-numArgs-declaration}
     \If{$\lnot$ \Call{IsStatic}{$methodName$}}
     \label{algorithm-static-args-check-start}
     \State $numArgs \gets numArgs + 1$
