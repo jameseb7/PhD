@@ -399,11 +399,12 @@
       {} = {} \\
       \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
     \end{circus}}
-  \item $methodID = m \land classID = c_{\ell} \implies \pre ResolveMethod$ and
+  \item $methodID = m \land classID = c_{\ell} \implies \pre ResolveMethod$ and there is $classInfo : Class$ such that
     \begin{circus}
       \{ methodID = m \land classID = c_{\ell} \} \circseq \lschexpract ResolveMethod \rschexpract \\
       {} = {} \\
-      \{ methodID = m \land classID = c_{\ell} \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \{ class.methodEntry~m = k \},
+      \{ methodID = m \land classID = c_{\ell} \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \\
+      \t1 \{ class = classInfo \land class.methodEntry~m = k \},
     \end{circus}
   \item for any $x : ProgramAddress$,
     \begin{circus}
@@ -452,6 +453,8 @@
       \t3 \circif cid = c_1 \circthen A_1 \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse cid = c_\ell \circthen {} \\
+      \t4 CheckSynchronizedInvoke( \\
+      \t5 classInfo, m, poppedArgs) \circseq
       \t4 \lschexpract InterpreterNewStackFrame[ \\
       \t5 classInfo/class?, \\
       \t5 m/methodID?, \\

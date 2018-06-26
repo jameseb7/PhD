@@ -598,11 +598,12 @@ hold after an infinite loop.
       {} = {} \\
       \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\},
     \end{circus}}
-  \item $methodID = m \land classID = c \implies \pre ResolveMethod$ and
+  \item $methodID = m \land classID = c \implies \pre ResolveMethod$ and there is $classInfo : Class$ such that
     \begin{circus}
       \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \\
       {} = {} \\
-      \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq \{ class.methodEntry~m = k \},
+      \{ methodID = m \land classID = c \} \circseq \lschexpract ResolveMethod \rschexpract \circseq  \\
+      \t1 \{ class = classInfo \land class.methodEntry~m = k \},
     \end{circus}
   \item for any $x : ProgramAddress$,
     \begin{circus}
