@@ -442,7 +442,7 @@ Finally, \texttt{eliminateVarBlocks()} applies the rules on
 lines~\ref{algorithm-apply-eliminate-value1-value2-conditional-rule}
 to~\ref{algorithm-argument-variable-elimination} of
 Algorithm~\ref{introduce-variables-algorithm}, which eliminate extra
-varible blocks around various constructs.
+variable blocks around various constructs.
 The removal of the $frameStack$ from the state
 (Algorithm~\ref{remove-frameStack-from-state-algorithm}) is trivial
 and has no effect on the method actions so there is nothing to be done
@@ -460,42 +460,15 @@ strategy, which are proved, we are confident of its correctness.
 The correctness of the implementation is further validated by loading
 the output of the prototype into CZT to ensure that it is well-formed,
 and checking the output to ensure it has the expected form.
-
-There have been various considerations raised in producing this
-prototype and applying it to examples.
-The first is that the bytecode instructions produced by the Java
-compiler for most SCJ programs are not restricted to the
-representative subset of instructions described in
-Section~\ref{cee-bytecode-subset-subsection}.
-However, since this is a representative subset, the strategy can be
-easily expanded to handle the missing instructions by analogy to the
-instructions in the subset.
-For example binary operation bytecodes can have their semantics
-defined in a similar way to \texttt{iadd}, with compilation rules to
-handle them similar to those for \texttt{iadd} (and their
-corresponding proofs similar).
-Conditional instructions can be handled in a similar way to
-\texttt{if\_icmple} during bytecode expansion, and subsequently handled
-by existing compilation rules.
 % since the loop and conditional
 % introduction rules operate on assignments of the form
 % $pc := \IF b \THEN x \ELSE y$, and so are agnostic to the condition
 % checked.
 
-Array instructions are slightly more challenging to replicate in the
-strategy, but can be represented in programs using classes that
-contain the individual slots of the array as fields. 
-These fields can then be accessed using methods that select the
-appropriate field with conditionals over an array index.
-A full implementation would replace these method calls with
-specialised communications with the struct manager, which would handle
-them using C arrays.
-Although this would require changes to the object/struct manager, it
-would be relatively simple in terms of the strategy as the structure
-of the arrays would not change during compilation and very little
-would need to be performed on the instructions in the interpreter.
-
-A further consideration is that of how to represent the class, field,
+% TODO: rephrase to account for stuff moved to next section
+There have been various considerations raised in producing this
+prototype. 
+One consideration is that of how to represent the class, field,
 and method identifiers used in the bytecode.
 In the model these are represented by given sets, since their
 representations do not matter provided they can be distinguished from
@@ -564,21 +537,171 @@ some main features of SCJ.
 
 We have run the examples through both our prototype and the icecap
 compiler.
-In order to best compare the code generated from the examples, we have
-tried to keep the code passed to icecap and our strategy as similar as
-possible but, since much of the SCJ infrastructure relies on direct
-interaction with the SCJVM to provide features such as scheduling and
-memory management, we have provided our own library covering part of
-the SCJ API.
-Our implementation of the SCJ API is generally a quite thin layer,
-providing the required classes of SCJ and linking the SCJ code to the
-SCJVM via the special methods in our model, which represent native
-methods in the Java code.
-Much of the SCJ infrastructure is already represented in our model by
-the $Launcher$ and SCJVM services, so it is not necessary to provide
-code for it in our SCJ API implementation.
-The API we provide is the same as that for icecap, so the compilation
-results for the code of the examples themselves are similar.
+Our main focus here is validating the compilation of the SCJ programs
+themselves, which is separate from the SCJ infrastructure it depends
+on.
+However, the SCJ infrastructure includes the SCJ API, which is written
+in Java.
+Since icecap and our strategy both operate on complete SCJ programs,
+including the Java code called by the program, the SCJ API must be
+included in the code compiled.
+This is shown in
+Figure~\ref{program-infrastructure-compilation-figure}, which shows
+the structure of an SCJ program in relation to the infrastructure and
+compilation.
+
+How much of the SCJ API implementation is written in Java, and hence
+included in the code that undergoes compilation, depends upon the
+services provided by the operating system and virtual machine.
+These are generally accessed through native method calls in Java code,
+but are usually implementation-defined and not visible to end-users,
+indicated by the dashed line in
+Figure~\ref{program-infrastructure-compilation-figure}.
+The infrastructure in our model is accessed via special methods
+representing these native methods, but our model of the SCJ
+infrastructure is intended to model a wider part of the SCJ
+infrastructure than that which icecap implements in C.
+In order to account for these differences when passing the examples
+through the compilation strategy, we provide a small implementation of
+part of the SCJ API, linking the SCJ code of the examples to the SCJVM
+via the special methods in our model.
+This does not affect the correctness of the examples or the validity
+of comparing them, since the SCJ API is the same for both icecap and
+our implementation; it is only the implementation of the API that
+differs.
+Ensuring the correctness of the API implementation is a separate
+issue, work on which has begun in~\cite{freitas2016}, so we do not
+consider it here.
+In the compiled code, the code corresponding to the methods of the SCJ
+API is separate to the code corresponding to the methods of the SCJ
+program, as indicated in
+Figure~\ref{program-infrastructure-compilation-figure}, so they can be
+easily distinguished.
+
+% In order to best compare the code generated from the examples, we have
+% tried to keep the code passed to icecap and our strategy as similar as
+% possible but, since much of the SCJ infrastructure relies on direct
+% interaction with the SCJVM to provide features such as scheduling and
+% memory management, we have provided our own library covering part of
+% the SCJ API.
+% Our implementation of the SCJ API is generally a quite thin layer,
+% providing the required classes of SCJ and linking the SCJ code to the
+% SCJVM via the special methods in our model, which represent native
+% methods in the Java code.
+% Much of the SCJ infrastructure is already represented in our model by
+% the $Launcher$ and SCJVM services, so it is not necessary to provide
+% code for it in our SCJ API implementation.
+% The API we provide is the same as that for icecap, so the compilation
+% results for the code of the examples themselves are similar.
+
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}
+    \path (0,0) -- (0,5)
+    node[pos=0.0] (bottom) {}
+    node[pos=0.3] (machineBoundary) {}
+    node[pos=0.6] (codeBoundary) {}
+    node[pos=1.0] (top) {};
+
+    \path (0,0) -- (10,0)
+    node[pos=-0.3] (left) {}
+    node[pos=0.00] (preCompilationLeft) {}
+    node[pos=0.25] (preCompilationRight) {}
+    node[pos=0.35] (JavaRight) {}
+    node[pos=0.65] (CLeft) {}
+    node[pos=0.75] (postCompilationLeft) {}
+    node[pos=1.00] (postCompilationRight) {}
+    node[pos=1.00] (right) {};
+
+    \draw (bottom -| preCompilationLeft) rectangle (top -| preCompilationRight);
+    \path (bottom -| preCompilationLeft) rectangle (machineBoundary -| preCompilationRight) coordinate[pos=0.5] (PreVM);
+    \draw[dashed] (machineBoundary -| preCompilationLeft) rectangle (machineBoundary -| preCompilationRight);
+    \path (machineBoundary -| preCompilationLeft) rectangle (codeBoundary -| preCompilationRight) coordinate[pos=0.5] (PreAPI);
+    \draw (codeBoundary -| preCompilationLeft) rectangle (codeBoundary -| preCompilationRight);
+    \path (codeBoundary -| preCompilationLeft) rectangle (top -| preCompilationRight) coordinate[pos=0.5] (PreCode);
+
+    \node[align=center] at (PreVM) {OS and\\SCJVM\\services};
+    \node[align=center] at (PreAPI) {SCJ API};
+    \node[align=center] at (PreCode) {SCJ\\Program};
+
+    \draw (bottom -| left) -- (bottom -| preCompilationLeft);
+    \draw (codeBoundary -| left) -- (codeBoundary -| preCompilationLeft);
+    \path (bottom -| left) -- (codeBoundary -| preCompilationLeft) coordinate[pos=0.5] (SCJVM);
+    \node[align=center] at (SCJVM) {SCJ\\Infrastructure\\Implementation};
+
+    \draw (top -| preCompilationRight) -- (top -| JavaRight);
+    \draw (machineBoundary -| preCompilationRight) -- (machineBoundary -| JavaRight);
+    \path (machineBoundary -| preCompilationRight) -- (top -| JavaRight) coordinate[pos=0.5] (JavaCode);
+    \draw (machineBoundary -| JavaRight) -- (top -| JavaRight) coordinate[pos=0.5] (JavaCodeMid);
+    \node[align=center] at (JavaCode) {Java\\Code};
+    
+    \draw (bottom -| postCompilationLeft) rectangle (top -| postCompilationRight);
+    \path (bottom -| postCompilationLeft) rectangle (machineBoundary -| postCompilationRight) coordinate[pos=0.5] (PostVM);
+    \draw[dashed] (machineBoundary -| postCompilationLeft) rectangle (machineBoundary -| postCompilationRight);
+    \path (machineBoundary -| postCompilationLeft) rectangle (codeBoundary -| postCompilationRight) coordinate[pos=0.5] (PostAPI);
+    \draw (codeBoundary -| postCompilationLeft) rectangle (codeBoundary -| postCompilationRight);
+    \path (codeBoundary -| postCompilationLeft) rectangle (top -| postCompilationRight) coordinate[pos=0.5] (PostCode);
+
+    \node[align=center] at (PostVM) {OS and\\SCJVM\\services};
+    \node[align=center] at (PostAPI) {C Code\\of SCJ API};
+    \node[align=center] at (PostCode) {C Program};
+
+    \draw (top -| CLeft) -- (top -| postCompilationLeft);
+    \draw (machineBoundary -| postCompilationLeft) -- (machineBoundary -| CLeft);
+    \path (machineBoundary -| postCompilationLeft) -- (top -| CLeft) coordinate[pos=0.5] (CCode);
+    \draw (machineBoundary -| CLeft) -- (top -| CLeft) coordinate[pos=0.5] (CCodeMid);
+    \node[align=center] at (CCode) {C\\Code};
+    
+    \draw[-latex] (JavaCodeMid) -- node[above] {compilation} (CCodeMid);
+    
+  \end{tikzpicture}
+  \caption{The relation of an SCJ program to the SCJ infrastructure
+    in compilation}
+  \label{program-infrastructure-compilation-figure}
+\end{figure}
+
+There are various issues with the compilation strategy and our
+prototype that we identified and fixed while considering these
+examples.
+The first is that the examples make use of bytecode instructions that
+are not in the representative subset of instructions described in
+Section~\ref{cee-bytecode-subset-subsection}.
+However, since this is a representative subset, the strategy can be
+easily expanded to handle the missing instructions by analogy to the
+instructions in the subset.
+For example binary operation bytecodes can have their semantics
+defined in a similar way to \texttt{iadd}, with compilation rules to
+handle them similar to those for \texttt{iadd} (and their
+corresponding proofs similar).
+Conditional instructions can be handled in a similar way to
+\texttt{if\_icmple} during bytecode expansion, and subsequently
+handled by existing compilation rules.
+
+Array instructions are slightly more challenging to replicate in the
+strategy, but can be represented in programs using classes that
+contain the individual slots of the array as fields. 
+These fields can then be accessed using methods that select the
+appropriate field with conditionals over an array index.
+A full implementation would replace these method calls with
+specialised communications with the struct manager, which would handle
+them using C arrays.
+Although this would require changes to the object/struct manager, it
+would be relatively simple in terms of the strategy as the structure
+of the arrays would not change during compilation and very little
+would need to be performed on the instructions in the interpreter.
+
+We also found that $poppedArgs$ variable block around special method
+calls is not eliminated in
+Algorithm~\ref{introduce-variables-algorithm}, although normal methods
+are handled by Rule~[\nameref{method-parameter-introduction-rule}] and
+Rule~[\nameref{poppedArgs-sync-elim-rule}].
+Eliminating $poppedArgs$ around special methods requires rules similar
+to these rules for to handle each individual special method.
+We have not added these to the compilation strategy itself due to
+space constraints, but the rules required are simple rules to
+substitute the value of $poppedArgs$ into the body of the action and
+then eliminate the variable block with the initialisation of
+$poppedArgs$.
 
 % illustrate with some examples
 % compare to icecap
@@ -594,8 +717,7 @@ These communicate through an instance of a third class,
 \texttt{PersisentSignal}, after which the example is named.
 The \texttt{PersisentSignal} class contains a boolean flag, with
 \texttt{synchronized} methods to read, set and clear it.
-The behaviour of the example is that \texttt{Producer} periodically
-releases, clears the \texttt{PersistentSignal} flag, and then signals
+\texttt{Producer} releases clear the \texttt{PersistentSignal} flag, and then signals
 for the \texttt{Worker} to release.
 The \texttt{Worker} sets the \texttt{PersistentSignal} flag during its
 release and the \texttt{Producer} checks the flag to see if the
@@ -616,12 +738,12 @@ scheduler may switch to a thread after a small delay if, for example,
 the scheduler is running on its own thread or in response to clock
 interrupts.
 
-The code generated by our prototype for this example has many
-similarities to that generated for it by icecap.
+The code generated by our prototype for this example is similar to
+that generated for it by icecap.
 The operations on local variables and the operand stack are
 represented by operations on C variables in both the code icecap
 generates and the code resulting from our strategy. 
-The names of the varibles differ between icecap and our
+The names of the variables differ between icecap and our
 implementation, since icecap uses the local variable names from the
 original SCJ code, which are included in class files for debug
 purposes, but different names can be used without affecting the
@@ -632,17 +754,16 @@ and is handled the same in both the code from icecap and the code from
 our prototype.
 The lock is taken just before a call to a synchronized method, and
 released at the end of the synchronized method.
-In our model this this represented by the $takeLock$ and $releaseLock$
-channels, but icecap uses a \texttt{handleMonitorEnterExit()} function
-to handle both, passing a boolean flag to it to distiguish between
-taking the lock and releasing the lock.
+In our model this is represented by the $takeLock$ and $releaseLock$
+channels; icecap uses a \texttt{handleMonitorEnterExit()} function to
+handle both, passing a boolean flag to it to distinguish between taking
+the lock and releasing the lock.
 The objects locked on are the same in our code as for icecap:~the
 first argument on the stack when calling the method, and the first
 local variable when returning from the method.
 
-While the code from our prototype and the code from icecap are quite
-similar, there are some differences between them, most of which apply
-to all the examples discussed in this section.
+There are some differences, most of which apply to all the examples
+discussed in this section.
 The code from icecap has extra code to throw and handle exceptions,
 which we do not consider in our model since SCJ code can be checked to
 ensure exceptions will not be thrown.
@@ -652,9 +773,7 @@ work, although it is not necessary for any of our examples.
 Jumps in the bytecode are translated by icecap using \texttt{goto}
 statements in C.
 This allows bytecode instructions to be translated more directly, but
-it means the resulting code is not fully MISRA-C compliant (although
-the rules disallowing use \texttt{goto} are advisory in the case of
-automatically generated code).
+it means the resulting code is not fully MISRA-C compliant.
 In our compilation strategy, we avoid the use of \texttt{goto} by
 considering the control-flow graph of each method and introducing
 structures such as loops and conditionals.
@@ -672,9 +791,9 @@ other variables, to hold some values so that the compiled code can be
 mixed with interpreted code.
 As this feature is not required in our work, we do not include a stack
 pointer in the code generated by our compilation strategy.
-The cases where extra variables are eliminated in our strategy appear
-to be matched by icecap, such as comparing variables representing
-stack slots directly in conditionals, rather than copying them into
+The cases where extra variables are eliminated in our strategy are
+matched by icecap, such as comparing variables representing stack
+slots directly in conditionals, rather than copying them into
 intermediate variables, which are removed by
 Rule~[\nameref{eliminate-value1-value2-conditional-rule}] in our
 strategy.
@@ -705,9 +824,9 @@ to both event handlers.
 Since objects are, by default, allocated in an event handler's
 per-release memory area during its release, this allocation must be
 performed via \texttt{executeInOuterArea()}.
-Note that the buffer itself must also be allocated in mission memory,
-but it does not require use of \texttt{executeInOuterArea()}, since it
-is allocated during mission initialisation.
+The buffer itself must also be allocated in mission memory, but it
+does not require use of \texttt{executeInOuterArea()}, since it is
+allocated during mission initialisation.
 Since the mission memory is not cleared during the mission, it would
 eventually run out of space to allocate the objects with repeated
 releases of \texttt{Producer}.
@@ -717,31 +836,24 @@ it in the buffer if it has been released more than a set number of
 times.
 
 The code generated from this example has many of the same
-considerations to those we have already described for the
+characteristics we have already described for the
 \texttt{PersistentSignal} example.
 In particular, the methods of the buffer are synchronized, so
 synchronisations are produced in the code around calls to such
 methods.
-In addition to these considerations, this example also has further
-considerations related to the how the use of the
-\texttt{executeInOuterArea()} method is represented in the code.
+In addition, we make some further considerations related to the how
+the use of the \texttt{executeInOuterArea()} method is represented in
+the code.
 The call to \texttt{executeInOuterArea()} itself is a simple static
 method call in both the code generated by icecap and the code
-generated by our strategy.
-The implementation of the method differs between the icecap code and
-the code from our strategy, due to the differing SCJ libraries used.
-The common feature of the implementations is that they consist of code
-to change the memory area, a call to the \texttt{run()} method of the
-\texttt{Runnable} object passed into the method, and code to change
-the memory area back to its previous value.
-In the code generated by our strategy, the changes of memory area are
-represented by calls to special methods, which are translated to
-communications with the $Launcher$.
-The code executed in the $Launcher$ can be viewed as equivalent to the
-code generated by icecap in that it overall effect is the same.
-However, in the icecap code the memory area is stored before the
-switch and switched back to afterwards, this is handled in our model
-by $StructMan$ maintaining a stack of entered memory areas.
+generated by our strategy, since the SCJ API does not differ between
+them.
+Although the implementation of the method differs between the icecap
+code and the code from our strategy, due to the differing SCJ
+libraries used, they both contain code to change the memory area, a
+call to the \texttt{run()} method of the \texttt{Runnable} object
+passed into the method, and code to change the memory area back to its
+previous value.
 
 The call to the \texttt{run()} method of the \texttt{Runnable} object
 is interesting as many classes in the SCJ infrastructure implement
@@ -753,9 +865,10 @@ targets, whereas our code lists 4.
 The only target that appears on both lists is \texttt{Producer\$1},
 the anonymous class in \texttt{Producer} that is the actual target of
 the \texttt{executeInOuterArea()} call we are considering.
-However, the other three targets in our code are all subclasses of
+The other three targets in our code are all subclasses of
 \texttt{AsyncEventHandler}, which is part of the superclass hierarchy
 for event handlers. 
+
 \texttt{AsyncEventHandler} is included in the list of choices for
 icecap and is selected there by searching the superclasses of the
 object the method is called on until one of the listed targets is
@@ -767,9 +880,13 @@ This means that while there are three branches of the choice
 corresponding to subclasses of \texttt{AsyncEventHandler}, the
 contents of those branches are the same call to
 \texttt{AsyncEventHandler}'s \texttt{run()} method.
+This is simply a static resolution of the superclass search that
+icecap conducts, for each of the possible subclasses of
+\texttt{AsyncEventHandler} in the example program, so it may be
+regarded as equivalent.
 The other targets listed in the icecap code are parts of the SCJ
 infrastructure that are handled in our model by the $Launcher$ and
-SCJVM services. 
+SCJVM services.
 
 %TODO: say something about how targets are chosen here?
 
@@ -805,17 +922,16 @@ The \texttt{LaunchHandler} gives output to indicate when it is
 released.
 
 This example shows a more complex scheduling behaviour than that of
-the \texttt{PersistentSignal} example.
+the previous examples.
 The \texttt{FireHandler} and \texttt{LaunchHandler} event handlers
 have higher priority than the \texttt{Button} event handlers, so they
 cannot be interrupted by the periodic events firing.
 However, the \texttt{FireHandler} and \texttt{LaunchHandler} handlers
-have the same priority as each other, and the methods of
-\texttt{Barrier} are synchronized, so the boolean flags in
-\texttt{Barrier} are completely reset before the
-\texttt{LaunchHandler} executes.
+have the same priority, and the methods of \texttt{Barrier} are
+synchronized, so the boolean flags in \texttt{Barrier} are completely
+reset before the \texttt{LaunchHandler} executes.
 Due to the differing periods for the \texttt{Button} handlers, the
-first \texttt{FireHandler} releases 4 or 5 times before the second
+first \texttt{FireHandler} releases four or five times before the second
 \texttt{FireHandler} releases and \texttt{LaunchHandler} executes.
 
 A particular feature of interest in the code generated for this
@@ -828,7 +944,7 @@ call to the \texttt{release()} method of
 \texttt{AperiodicEventHandler}.
 The corresponding icecap code simplifies this to a direct call to the
 \texttt{release()} method of \texttt{AperiodicEventHandler}, omitting
-the unecessary choice.
+the unnecessary choice.
 Such a transformation could be made in our strategy, although fully
 applying it involves eliminating the $getClassIDOf$ communication used
 to get the class identifier used in the choice.
