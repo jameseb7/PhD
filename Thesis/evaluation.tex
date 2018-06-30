@@ -530,10 +530,16 @@ We compare the code generated from the prototype implementation of the
 compilation strategy to that resulting from the icecap HVM for each of
 the examples.
 The examples we choose are taken from those developed during the
-high-integrity Java applications using \Circus{}
-project~(which may be found at~\url{www.cs.york.ac.uk/circus/hijac/case.html}).
+high-integrity Java applications using \Circus{} project~(which may be
+found at~\url{www.cs.york.ac.uk/circus/hijac/case.html}). 
 We particularly focus on some SCJ Level 1 examples that illustrate
 some main features of SCJ.
+These examples cover the full range of bytecode instructions in our
+subset, and include various examples of loop and conditional
+constructs to test the strategy.
+We thus believe these examples are suffcient to test the strategy,
+since it is unlikely that another example would contain more features
+not already covered by these examples.
 
 We have run the examples through both our prototype and the icecap
 compiler.
@@ -690,10 +696,11 @@ would be relatively simple in terms of the strategy as the structure
 of the arrays would not change during compilation and very little
 would need to be performed on the instructions in the interpreter.
 
-We also found that $poppedArgs$ variable block around special method
-calls is not eliminated in
-Algorithm~\ref{introduce-variables-algorithm}, although normal methods
-are handled by Rule~[\nameref{method-parameter-introduction-rule}] and
+We also found that $poppedArgs$ variable blocks around special method
+calls are not eliminated in
+Algorithm~\ref{introduce-variables-algorithm}, although variable
+blocks for normal methods are handled by
+Rule~[\nameref{method-parameter-introduction-rule}] and
 Rule~[\nameref{poppedArgs-sync-elim-rule}].
 Eliminating $poppedArgs$ around special methods requires rules similar
 to these rules for to handle each individual special method.
@@ -702,6 +709,8 @@ space constraints, but the rules required are simple rules to
 substitute the value of $poppedArgs$ into the body of the action and
 then eliminate the variable block with the initialisation of
 $poppedArgs$.
+
+
 
 % illustrate with some examples
 % compare to icecap
