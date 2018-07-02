@@ -531,58 +531,72 @@ compilation strategy to that resulting from the icecap HVM for each of
 the examples.
 The examples we choose are taken from those developed during the
 high-integrity Java applications using \Circus{} project~(which may be
-found at~\url{www.cs.york.ac.uk/circus/hijac/case.html}). 
-We particularly focus on some SCJ Level 1 examples that illustrate
-some main features of SCJ.
+found at~\url{www.cs.york.ac.uk/circus/hijac/case.html}).
+
+We particularly focus on SCJ Level 1 examples that illustrate some of
+the main features of SCJ.
 These examples cover the full range of bytecode instructions in our
 subset, and include various examples of loop and conditional
 constructs to test the strategy.
-We thus believe these examples are suffcient to test the strategy,
-since it is unlikely that another example would contain more features
-not already covered by these examples.
+There are three examples we discuss.
+%TODO: finish listing examples
+The first is \texttt{PersistentSignal}, discussed in
+Section~\ref{persistent-signal-subsection}, which demonstrates SCJ
+scheduling behaviour.
+The second is \texttt{Buffer}, discussed in
+Section~\ref{buffer-subsection}, which demonstrates SCJ memory
+behaviour.
+Finally, the third example, \texttt{Barrier}, is discussed in
+Section~\ref{barrier-subsection}.
 
 We have run the examples through both our prototype and the icecap
 compiler.
 Our main focus here is validating the compilation of the SCJ programs
 themselves, which is separate from the SCJ infrastructure it depends
 on.
-However, the SCJ infrastructure includes the SCJ API, which is written
-in Java.
-Since icecap and our strategy both operate on complete SCJ programs,
-including the Java code called by the program, the SCJ API must be
-included in the code compiled.
+Both icecap and our strategy, however, operate on complete SCJ
+programs, including the Java code that implements the SCJ API.
 This is shown in
-Figure~\ref{program-infrastructure-compilation-figure}, which shows
-the structure of an SCJ program in relation to the infrastructure and
-compilation.
+Figure~\ref{program-infrastructure-compilation-figure}, which
+describes the structure of an SCJ program in relation to the
+infrastructure and compilation.
 
 How much of the SCJ API implementation is written in Java, and hence
 included in the code that undergoes compilation, depends upon the
 services provided by the operating system and virtual machine.
 These are generally accessed through native method calls in Java code,
 but are usually implementation-defined and not visible to end-users,
-indicated by the dashed line in
+as indicated by the dashed line in
 Figure~\ref{program-infrastructure-compilation-figure}.
-The infrastructure in our model is accessed via special methods
-representing these native methods, but our model of the SCJ
-infrastructure is intended to model a wider part of the SCJ
-infrastructure than that which icecap implements in C.
-In order to account for these differences when passing the examples
-through the compilation strategy, we provide a small implementation of
-part of the SCJ API, linking the SCJ code of the examples to the SCJVM
-via the special methods in our model.
+
+% The infrastructure in our model is accessed via special methods
+% representing these native methods, but our model of the SCJ
+% infrastructure is intended to model a wider part of the SCJ
+% infrastructure than that which icecap implements in C.
+In our model, native methods are represented by special methods, which
+are called using channels, rather than bytecode invoke instructions.
+Our model of the infrastructure covers all the elements in the SCJ
+standard. 
+In icecap, however, some are implemented in Java, and some are
+implemented in C. 
+So, when compared to our compilation, icecap deals with more Java code
+than we do. 
+To account for these differences when passing the examples through the
+compilation strategy, we provide a small implementation of part of the
+SCJ API, linking the SCJ code of the examples to the SCJVM via the
+special methods in our model.
+
 This does not affect the correctness of the examples or the validity
-of comparing them, since the SCJ API is the same for both icecap and
+of the comparisons, since the SCJ API is the same for both icecap and
 our implementation; it is only the implementation of the API that
 differs.
-Ensuring the correctness of the API implementation is a separate
-issue, work on which has begun in~\cite{freitas2016}, so we do not
-consider it here.
-In the compiled code, the code corresponding to the methods of the SCJ
-API is separate to the code corresponding to the methods of the SCJ
+After compilation, the code corresponding to the methods of the SCJ
+API is still separate from the code corresponding to the methods of the SCJ
 program, as indicated in
 Figure~\ref{program-infrastructure-compilation-figure}, so they can be
 easily distinguished.
+Ensuring the correctness of the API implementation is a separate
+issue, work on which has begun in~\cite{freitas2016}.
 
 % In order to best compare the code generated from the examples, we have
 % tried to keep the code passed to icecap and our strategy as similar as
@@ -666,9 +680,8 @@ easily distinguished.
   \label{program-infrastructure-compilation-figure}
 \end{figure}
 
-There are various issues with the compilation strategy and our
-prototype that we identified and fixed while considering these
-examples.
+Various issues with the compilation strategy and our prototype have
+been identified and fixed while considering these examples.
 The first is that the examples make use of bytecode instructions that
 are not in the representative subset of instructions described in
 Section~\ref{cee-bytecode-subset-subsection}.
@@ -704,20 +717,14 @@ Rule~[\nameref{method-parameter-introduction-rule}] and
 Rule~[\nameref{poppedArgs-sync-elim-rule}].
 Eliminating $poppedArgs$ around special methods requires rules similar
 to these rules for to handle each individual special method.
-We have not added these to the compilation strategy itself due to
-space constraints, but the rules required are simple rules to
-substitute the value of $poppedArgs$ into the body of the action and
-then eliminate the variable block with the initialisation of
-$poppedArgs$.
+The rules required are simple rules to substitute the value of
+$poppedArgs$ into the body of the action and then eliminate the
+variable block with the initialisation of $poppedArgs$.
 
-
-
-% illustrate with some examples
-% compare to icecap
-
-%TODO: finish general explanation about examples
+In what follows, we describe and discuss the examples in more detail.
 
 \subsection{\texorpdfstring{\texttt{PersistentSignal}}{PersistentSignal}}
+\label{persistent-signal-subsection}
 
 Our first example is \texttt{PersistentSignal}. 
 It consists of a single mission with two event handlers:~a periodic
@@ -808,6 +815,7 @@ Rule~[\nameref{eliminate-value1-value2-conditional-rule}] in our
 strategy.
 
 \subsection{\texorpdfstring{\texttt{Buffer}}{Buffer}}
+\label{buffer-subsection}
 
 Our second example is \texttt{Buffer}, which, like the previous
 example, consists of two event handlers:~a periodic handler,
@@ -891,8 +899,8 @@ contents of those branches are the same call to
 \texttt{AsyncEventHandler}'s \texttt{run()} method.
 This is simply a static resolution of the superclass search that
 icecap conducts, for each of the possible subclasses of
-\texttt{AsyncEventHandler} in the example program, so it may be
-regarded as equivalent.
+\texttt{AsyncEventHandler} in the example program, so it is
+equivalent.
 The other targets listed in the icecap code are parts of the SCJ
 infrastructure that are handled in our model by the $Launcher$ and
 SCJVM services.
@@ -900,6 +908,7 @@ SCJVM services.
 %TODO: say something about how targets are chosen here?
 
 \subsection{\texorpdfstring{\texttt{Barrier}}{Barrier}}
+\label{barrier-subsection}
 
 Our third example is \texttt{Barrier}, which demonstrates a common
 pattern in real-time systems, where an event only happens when
