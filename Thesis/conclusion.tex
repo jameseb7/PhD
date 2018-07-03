@@ -15,16 +15,15 @@ machines designed to run programs written in it.
 We have concluded that none of the virtual machines is formally
 verified and that many of them precompile programs to native code.
 Given the need for a formally verified virtual machine, we have stated
-our aim to specify a framework within which an SCJVM can
-be verified.
+our aim to specify a framework within which an SCJVM can be verified.
 
 Having noted that SCJ virtual machines employ compilation, we have
 surveyed some of the work on compiler correctness, particularly those
 related to Java compilation.
-We have established that two approaches to compiler correctness have
-been used:~the commuting-diagram approach and the algebraic approach.
-We have decided to adopt the algebraic approach and chosen \Circus{}
-as a specification language.
+We established that two approaches to compiler correctness have been
+used:~the commuting-diagram approach and the algebraic approach.
+We decided to adopt the algebraic approach and chosen \Circus{} as a
+specification language.
 
 To specify an SCJVM we have identified the requirements
 of the virtual machine services required to support SCJ programs.
@@ -45,6 +44,20 @@ This model has been created by identifying a minimal subset of Java
 bytecode and defining its semantics, and then constructing a \Circus{}
 model of an interpreter for that subset with the necessary
 infrastructure around it.
+
+Finally, we have specified a strategy for compiling SCJ bytecode to C.
+This strategy is specified using the algebraic approach, as a strategy
+to apply individual compilation rules, which are stated as algebraic
+laws, to transform our model of an SCJVM interpreter, loaded with an
+SCJ bytecode program, to a \Circus{} respresentation of the equivalent
+C code.
+Since the compilation rules are stated formally as \Circus{}
+refinement laws, we can, and have, written proofs of them.
+This allows us to be sure of their correctness, so that our
+compilation strategy preserves the semantics of the original SCJ
+bytecode.
+In this way, we have created a strategy for correct compilation from
+SCJ bytecode to C.
 
 Our work is done in the context of a wider effort to facilitate fully
 verified SCJ programs.
@@ -81,24 +94,23 @@ verification of SCJ programs down to executable code.
 \section{Future Work}
 \label{future-work-section}
 
-As part of our agenda for future work, in the scope of this thesis, we
-will specify and prove the correctness of a strategy for compiling
-Java bytecode to C using the algebraic approach.
-This will involve defining the semantics of a subset of C in terms of
-\Circus{} and proving refinement laws between our Java bytecode subset
-model in the core execution environment and the C subset.
-We will mechanise these proofs in the Isabelle proof assistant in
-order to have assurance that the proofs are sound.
+There are various possibilities for future work arising from our work.
+Firstly, our work may be further validated by consideration of a wider
+range of examples.
+This may involve further extension of the model and compilation
+strategy to consider instructions and features not covered by our
+work.
+A further direction for future work to validate the strategy would be
+to mechanise the compilation rules and their proofs using an automated
+theorem prover, such as Isabelle/UTP.
+This would confirm the correctness of the rules and allow for easier
+reasoning about the strategy as whole.
+Code generation from such a mechanisation could also be used to
+produce an implementation of the strategy.
 
-We will also continue to work on validation of the formal models we
-have created by proving correctness properties.
-This may require revision of the formal model due to errors uncovered
-in the process of proving essential properties.
-
-Beyond the scope of our work, possible future work includes the
-verification of an SCJ virtual machine using our framework or even the
-creation of a correct-by-construction virtual machine from our
-specification.
+Other possible directions for future work include the verification of
+an SCJ virtual machine using our framework or even the creation of a
+correct-by-construction virtual machine from our specification.
 The option of deriving a correct virtual machine from our
 specification may be more desirable than verifying an existing one.
 This is because virtual machines can often be complex and therefore
