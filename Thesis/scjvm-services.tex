@@ -154,42 +154,122 @@ Backing stores are assumed to have unique identifiers that can be used
 to refer to them; these identifiers can be simply pointers to the
 physical blocks of memory used for backing stores.
 
-There is initially one backing store, called the root backing store,
-which has its size set when the SCJVM starts up to cover all the
-memory available for allocation in backing stores.
-The root backing store cannot be resized or destroyed, so that there
-is always a fixed base for the layout of memory.
-The root backing store is used as the backing store for the immortal
-memory area.
-
-A backing store may have other backing stores nested within it, so
-that a possible memory layout is as shown in Figure~\ref{memory-fig}.
-In this example, the backing store of the mission memory is nested
-within the root backing store, and the backing stores for the
-per-release memory of each schedulable object in a mission is nested
-within the mission memory's backing store.
+Each backing store is composed of two parts:~an area of memory in
+which memory for objects may be allocated, and an area in which other
+backing stores can be allocated.
+A backing store may thus have other backing stores nested within it,
+so that a possible memory layout is as shown in
+Figure~\ref{memory-fig}.
+In Figure~\ref{memory-fig}, we divide the two parts of each backing
+store by a dashed line, with the object allocation area below and the
+backing store area above.
 
 \begin{figure*}[ht]
   \centering
   \begin{tikzpicture}
-    \draw (0,0) rectangle (12,2); \node[align=center] at (2,1) {Root
-      Backing Store\\(Immortal Memory)};
+
+    \path (0,0) --
+    node[pos=0.0] (RootBSLeft) {}
+    node[pos=1.0] (RootBSRight) {}
+    node[pos=1] (width) {}
+    (8cm,0);
+
+    \path (0,0) --
+    node[pos=0.0] (RootBSBot) {}
+    node[pos=0.2] (RootBSMid) {}
+    node[pos=1.0] (RootBSTop) {}
+    node[pos=1] (height) {}
+    (0,8cm);
+
+    \draw (RootBSLeft |- RootBSBot) rectangle (RootBSRight |- RootBSTop);
+    \draw[dotted] (RootBSLeft |- RootBSMid) rectangle (RootBSRight |- RootBSMid);
+    \path (RootBSLeft |- RootBSBot) rectangle (RootBSRight |- RootBSMid)
+    node[pos=0.5,align=center] {Root Backing Store\\(Immortal Memory)};
+
+    \path (RootBSLeft) --
+    node[pos=0.01] (MisMemLeft) {}
+    node[pos=0.99] (MisMemRight) {}
+    (RootBSRight);
+
+    \path (RootBSMid) --
+    node[pos=0.01] (MisMemBot) {}
+    node[pos=0.99] (MisMemTop) {}
+    (RootBSTop);
+    \path (MisMemBot) -- (MisMemTop) node[pos=0.25] (MisMemMid) {};
+
+    \draw (MisMemLeft |- MisMemBot) rectangle (MisMemRight |- MisMemTop);
+    \draw[dotted] (MisMemLeft |- MisMemMid) rectangle (MisMemRight |- MisMemMid);
+    \path (MisMemLeft |- MisMemBot) rectangle (MisMemRight |- MisMemMid)
+    node[pos=0.5,align=center] {MissionMemory};
+
+    \path (MisMemLeft) --
+    node[pos=0.01] (HdlrMemLeft) {}
+    node[pos=0.99] (HdlrMemRight) {}
+    (MisMemRight);
+
+    \path (MisMemMid) --
+    node[pos=0.10] (Hdlr1MemBot) {}
+    node[pos=0.49] (Hdlr1MemTop) {}
+    node[pos=0.51] (Hdlr2MemBot) {}
+    node[pos=0.99] (Hdlr2MemTop) {}
+    (MisMemTop);
+    \path (Hdlr1MemBot) -- (Hdlr1MemTop) node[pos=0.4] (Hdlr1MemMid) {};
+    \path (Hdlr2MemBot) -- (Hdlr2MemTop) node[pos=0.25] (Hdlr2MemMid) {};
+
+    \draw (HdlrMemLeft |- Hdlr1MemBot) rectangle (HdlrMemRight |- Hdlr1MemTop);
+    \draw[dotted] (HdlrMemLeft |- Hdlr1MemMid) rectangle (HdlrMemRight |- Hdlr1MemMid);
+    \path (HdlrMemLeft |- Hdlr1MemBot) rectangle (HdlrMemRight |- Hdlr1MemMid)
+    node[pos=0.5,align=center] {Per-release Memory};
+
+    \draw (HdlrMemLeft |- Hdlr2MemBot) rectangle (HdlrMemRight |- Hdlr2MemTop);
+    \draw[dotted] (HdlrMemLeft |- Hdlr2MemMid) rectangle (HdlrMemRight |- Hdlr2MemMid);
+    \path (HdlrMemLeft |- Hdlr2MemBot) rectangle (HdlrMemRight |- Hdlr2MemMid)
+    node[pos=0.5,align=center] {Per-release Memory};
+
+    \path (HdlrMemLeft) --
+    node[pos=0.01] (PrivMemLeft) {}
+    node[pos=0.99] (PrivMemRight) {}
+    (HdlrMemRight);
     
-    \draw (4,0.1) rectangle (11.9,1.9); \node[align=center] at (8,1.6)
-    {Mission Memory};
+    \path (Hdlr2MemMid) --
+    node[pos=0.01] (PrivMemBot) {}
+    node[pos=0.99] (PrivMemTop) {}
+    (Hdlr2MemTop);
+    \path (PrivMemBot) -- (PrivMemTop) node[pos=0.6] (PrivMemMid) {};
     
-    \draw (4.3,0.3) rectangle (6.3,1.4); \node[align=center] at
-    (5.3,0.95) {Per-release\\Memory};
     
-    \draw (6.5,0.3) rectangle (11.5,1.4); \node[align=center] at
-    (9,1.2) {Per-release Memory};
+    \draw (PrivMemLeft |- PrivMemBot) rectangle (PrivMemRight |- PrivMemTop);
+    \draw[dotted] (PrivMemLeft |- PrivMemMid) rectangle (PrivMemRight |- PrivMemMid);
+    \path (PrivMemLeft |- PrivMemBot) rectangle (PrivMemRight |- PrivMemMid)
+    node[pos=0.5,align=center] {Private Memory};
     
-    \draw (6.7,0.4) rectangle (11.3,1); \node[align=center] at (9,0.7)
-    {Nested Private Memory};
+    
+    % \draw (0,0) rectangle (12,2); \node[align=center] at (2,1) {Root
+    %   Backing Store\\(Immortal Memory)};
+    
+    % \draw (4,0.1) rectangle (11.9,1.9); \node[align=center] at (8,1.6)
+    % {Mission Memory};
+    
+    % \draw (4.3,0.3) rectangle (6.3,1.4); \node[align=center] at
+    % (5.3,0.95) {Per-release\\Memory};
+    
+    % \draw (6.5,0.3) rectangle (11.5,1.4); \node[align=center] at
+    % (9,1.2) {Per-release Memory};
+    
+    % \draw (6.7,0.4) rectangle (11.3,1); \node[align=center] at (9,0.7)
+    % {Nested Private Memory};
   \end{tikzpicture}
   \caption{An example memory layout}
   \label{memory-fig}
 \end{figure*}
+
+There is initially one backing store, called the root backing store,
+which has its size set when the SCJVM starts up to cover all the
+memory available for allocation in backing stores.
+The root backing store cannot be destroyed, so that there is always a
+fixed base for the layout of memory.
+The root backing store is used as the backing store for the immortal
+memory area.
 
 The operations of the memory manager API are summarised in
 Table~\ref{memory-manager-table}.
@@ -222,6 +302,10 @@ Table~\ref{memory-manager-table} as well.
     backing store identifier &
     size in bytes &
     invalid identifier
+    \\\texttt{getRemainingBackingStore} &
+    backing store identifier &
+    size in bytes &
+    invalid identifier                           
     \\\texttt{findBackingStore} &
     memory pointer &
     backing store identifier &
@@ -235,7 +319,8 @@ Table~\ref{memory-manager-table} as well.
     no current allocation context
     \\\texttt{makeBackingStore} &
     backing store identifier \newline
-    size in bytes & 
+    total size in bytes \newline
+    allocation area size in bytes &                      
     backing store identifier &
     invalid identifier \newline
     insufficient free memory
@@ -276,13 +361,16 @@ root backing store except through memory areas provided by the
 infrastructure.
 
 It is possible to obtain information about the used and available
-space in a given backing store using the operations
-\texttt{get\-Total\-Size}, \texttt{get\-Used\-Size}, and
+space in the object allocation area of a given backing store using the
+operations \texttt{get\-Total\-Size}, \texttt{get\-Used\-Size}, and
 \texttt{get\-Free\-Size}.
 This information is made available to SCJ programs through the
 interface provided by memory areas defined in the infrastructure.
+Similarly, the \texttt{getRemainingBackingStore} operation provides
+the amount of free space in the area for allocating nested
+backing stores.
 
-The backing stored in which a particular memory address lies can also
+The backing store in which a particular memory address lies can also
 be queried.  
 This information can be obtained by the \texttt{find\-Backing\-Store}
 operation and is required by the infrastructure for obtaining the
@@ -291,14 +379,14 @@ memory area of a given object.
 Allocation within backing stores is possible through the
 \texttt{allocate\-Memory} operation, which allocates blocks of memory
 within a given backing store.
-This operation is provided in order for the core execution environment
-to implement the \texttt{new} bytecode instruction and is not directly
+This operation is provided for the core execution environment to
+implement the \texttt{new} bytecode instruction and is not directly
 available to the program or infrastructure.
 Though the memory manager allocates space for objects, there is no
 notion of objects in the memory manager since they only exist at the
 level of Java code, and so are dealt with by the core execution
 environment. 
-Dealing solely with blocks of memory in the SCJVM services allows for
+Dealing solely with blocks of memory in the SCJVM services allows
 objects to be represented in a way appropriate to the structure of the
 core execution environment.
 Allocations within backing stores must not cause fragmentation, so as
@@ -311,6 +399,9 @@ Allocation of backing stores is provided by
 infrastructure for use when creating new memory areas.
 A new backing store is created nested within the specified backing
 store.
+The total size of the new backing store (including space for
+allocating nested backing stores) must be specified when in this
+operation, along with the space required for object allocations.
 The infrastructure is responsible for storing the backing store
 identifier returned by \texttt{make\-Backing\-Store}.
 Backing store allocation must be done in constant time without
@@ -338,25 +429,18 @@ stores in use by different threads.
 The mission memory is only cleared when all the event handler threads
 within the mission have finished and the immortal memory should never
 be cleared.
-An attempt to clear a backing store with a nested backing store in use
-is handled as an error case.
 
 The last operation on backing stores is their resizing.
-This is provided for by \texttt{resize\-Backing\-Store} but, as
-resizing a backing store presents a lot of difficulties in terms of
-fragmentation, there are several restrictions.
-In addition to being a valid backing store and there being enough
-space in the parent backing store for the resizing to take place, a
-backing store to be resized must not be the root backing store, and
-must be empty and the only backing store within its parent.
-This operation should only be needed for resizing of the mission
-memory in between missions and resizing of a nested private memory
-when it is reentered.
-In both these cases all the needed restrictions hold.
-Due to the fact that resizing a backing store can move it and that a
-backing store identifier may be a pointer to the backing store, the
-identifier may change and so the new identifier is output from this
-operation.
+This is provided for by \texttt{resize\-Backing\-Store}, which resizes
+the object allocation area of a backing store by moving the boundary
+between the object allocation area and the nested backing store area.
+To ensure that this does not fragment existing used memory in the
+backing store, it is required that the backing store is empty (i.e. 
+it contains no objects or backing stores).
+This is acceptable, since this operation is only needed for resizing
+of the mission memory inbetween missions and resizing of a nested
+private memory when it is reentered.
+In both these cases the memory area is cleared before being resized.
 
 These operations on backing stores each take a backing store
 identifier as input since the memory manager does not handle
@@ -433,8 +517,8 @@ Table~\ref{scheduler-table}.
     (none)
     \\\texttt{startThreads} &
                               list of thread, \endgraf
-                              \hspace{0.5cm} backing store \endgraf
-                              \hspace{0.5cm} and stack identifiers &
+                              \hspace{0.3cm} backing store \endgraf
+                              \hspace{0.3cm} and stack identifiers &
     (none) &
     invalid identifier \newline
     thread already started
@@ -442,11 +526,11 @@ Table~\ref{scheduler-table}.
     (none) &
     thread identifier &
     (none)
-    \\\texttt{destroyThread} &
-    thread identifier &
-    (none) &
-    invalid identifier \newline
-    thread not destroyable
+    % \\\texttt{destroyThread} &
+    % thread identifier &
+    % (none) &
+    % invalid identifier \newline
+    % thread not destroyable
     \\\texttt{suspendThread} &
     (none) &
     (none) &
@@ -473,6 +557,7 @@ Table~\ref{scheduler-table}.
     \\\texttt{attachInterruptHandler} &
     interrupt identifier \newline
     backing store identifier \newline
+    stack identifier \newline
     class identifier \newline
     pointer to object &
     (none) &
@@ -493,10 +578,12 @@ Table~\ref{scheduler-table}.
     (none) &
     (none) &
     (none)
-    \\\texttt{endInterrupt} &
+    \\\texttt{endThread} &
     (none) &
     (none) &
-    not in interrupt
+    % invalid identifier \newline
+    thread not destroyable \newline
+    thread holds locks
   \end{tabular}
   \caption{The operations of the SCJVM scheduler}
   \label{scheduler-table}
@@ -510,7 +597,7 @@ The range of priorities that an SCJVM actually supports may vary
 between different implementations within these restrictions.
 To allow the range of supported priorities to be determined in the
 implementation of the SCJ API, the minimum and maximum hardware and
-software priority levels can be obtained with
+software priority levels can be obtained with the operations
 \texttt{getMaxSoftwarePriority},
 \texttt{getMinSoftwarePriority},
 \texttt{getMaxHardwarePriority}, and
@@ -585,17 +672,6 @@ thread must wait for the hardware to complete a request, and to
 implement thread release, whereby a thread remains suspended until
 released.
 
-A thread that has been created can then be destroyed with the
-\texttt{destroy\-Thread} operation, which removes the thread from the
-scheduler.
-Destroying a thread does not automatically destroy its stack or the
-backing store being used as its allocation context.
-The SCJ infrastructure should not destroy a thread while it is running
-as a thread should only be destroyed when the mission it is part of is
-ending.
-The infrastructure should instead ensure that all threads in a mission
-are suspended before destroying them.
-
 The SCJVM must support priority ceiling emulation, which is a
 mechanism to avoid priority inversion when threads synchronise via
 locking of objects.
@@ -661,12 +737,39 @@ While interrupts are disabled no interrupt handlers can run, but it is
 implementation-defined as to whether or not interrupts fired while
 interrupts are disabled are lost.
 
-Finally, an interrupt can be ended using the \texttt{end\-Interrupt}
-operation.
-This operation should be used by the infrastructure to ensure normal
-thread scheduling resumes when an interrupt handler has finished
-execution.
-This operation cannot be used outside of an interrupt handler.
+Finally, the \texttt{endThread} operation is used to signal when a
+thread has reached the end of its execution.
+This is used for both event handler and interrupt threads.
+This operation does not automatically destroy the stack or allocation
+context associated with a thread, which should be removed separately
+by the infrastructure in the case of event handler threads, and
+retained for future releases in the case of interrupt handlers.
+The main thread must not be ended by this operation, since it always
+exists and is only blocked during mission execution.
+The end of the main thread corresponds to exit from the SCJVM, which
+is not considered by this operation.
+A thread must also not end while it is holding locks, since all locks
+must be released before the end of the thread is reached.
+Allowing a thread to end while it is holding locks would prevent
+resources from ever being freed for use by other threads.
+
+% A thread that has been created can then be destroyed with the
+% \texttt{destroy\-Thread} operation, which removes the thread from the
+% scheduler.
+% Destroying a thread does not automatically destroy its stack or the
+% backing store being used as its allocation context.
+% The SCJ infrastructure should not destroy a thread while it is running
+% as a thread should only be destroyed when the mission it is part of is
+% ending.
+% The infrastructure should instead ensure that all threads in a mission
+% are suspended before destroying them.
+
+% Finally, an interrupt can be ended using the \texttt{end\-Interrupt}
+% operation.
+% This operation should be used by the infrastructure to ensure normal
+% thread scheduling resumes when an interrupt handler has finished
+% execution.
+% This operation cannot be used outside of an interrupt handler.
 
 Though the scheduler manages most interrupts, the clock interrupt is
 managed by the real-time clock, which is the subject of the next section.
