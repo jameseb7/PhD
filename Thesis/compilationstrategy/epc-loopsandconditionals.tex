@@ -287,6 +287,7 @@ next instruction if it is false.
 \begin{restatable}[\texttt{if}-conditional-intro]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
+  \setlength{\zedtab}{0.65cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
   Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
@@ -396,8 +397,8 @@ conditional, representing a loop.
 \begin{restatable}[\texttt{while}-loop-intro1]{crule}{WhileLoopIntroductionRuleA}
   \label{while-introduction-rule1}
   \setlength{\zedindent}{0.2cm}
-  \setlength{\zedtab}{0.9\zedtab}
-  Given $i : ProgramAddress$, if $i \neq j$,
+  \setlength{\zedtab}{0.55cm}
+  Given $i : ProgramAddress$, if $i \neq j$ and
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
     {} = {} \\

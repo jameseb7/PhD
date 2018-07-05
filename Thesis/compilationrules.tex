@@ -48,6 +48,7 @@
 \begin{restatable}[\texttt{if}-\texttt{else}-conditional-intro]{crule}{IfElseConditionalIntroductionRule}
   \label{if-else-introduction-rule}
   \setlength{\zedindent}{0.25cm}
+  \setlength{\zedtab}{0.57cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
   Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
@@ -99,6 +100,7 @@
 \begin{restatable}[conditional-intro]{crule}{ConditionalIntroductionRule}
   \label{conditional-introduction-rule}
   \setlength{\zedindent}{0.25cm}
+  \setlength{\zedtab}{0.57cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
   Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and
@@ -152,7 +154,7 @@
 \begin{crule}[\texttt{while}-loop-intro2]
   \label{while-introduction-rule2}
   \setlength{\zedindent}{0.2cm}
-  \setlength{\zedtab}{0.9\zedtab}
+  \setlength{\zedtab}{0.58cm}
   Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
@@ -186,7 +188,8 @@
       \t2 {} \circelse pc = i \circthen (\circmu Y \circspot A \circseq \\
       \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen \\
-      \t4 pc := j \circseq Poll \circseq B \circseq pc := i \circseq Poll \circseq Y \\
+      \t4 pc := j \circseq Poll \circseq B \circseq \\
+      \t4 pc := i \circseq Poll \circseq Y \\
       \t3 {} \circelse \lnot b \circthen C \\
       \t3 \circfi)) \circseq pc := k \\
       \t2 \cdots \\
@@ -202,7 +205,8 @@
 
 \begin{restatable}[\texttt{do}-\texttt{while}-loop-intro]{crule}{DoWhileLoopIntroductionRule}
   \label{do-while-introduction-rule}
-  \def\zedindent{0.25cm}
+  \setlength{\zedindent}{0.2cm}
+  \setlength{\zedtab}{0.58cm}
   Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
     \{frameStack \neq \emptyset\} \circseq A \\
@@ -321,6 +325,7 @@
 
 \begin{restatable}[$CheckSynchronizedInvoke$-sync-refinement]{crule}{CheckSynchronizedInvokeSynchronizedRefinementRule}
   \label{CheckSynchronizedInvoke-synchronized-refinement-rule}
+  \hfill \\
   If $m \in c.synchronizedMethods \land m \notin c.staticMethods$, then
   \begin{circus}
     \begin{array}{l}
@@ -336,6 +341,7 @@
 
 \begin{restatable}[$CheckSynchronizedInvoke$-nonsync-refinement]{crule}{CheckSynchronizedInvokeNonsynchronizedRefinementRule}
   \label{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}
+  \hfill \\
   If $m \notin c.synchronizedMethods \lor m \in c.staticMethods$, then
   \begin{circus}
     \begin{array}{l}
@@ -390,7 +396,6 @@
 \begin{minipage}{\textwidth}
 \begin{restatable}[resolve-normal-method-branch]{crule}{ResolveNormalMethodBranchRule}
   \label{resolve-normal-method-branch-rule}
-  \setlength{\zedtab}{0.4cm}
   Given $i : ProgramAddress$ and $c_{\ell} : ClassID$, if
   \begin{itemize}
   \item \hfill{\vspace*{-\baselineskip}\setlength{\abovedisplayskip}{0cm}\setlength{\abovedisplayshortskip}{0cm}
@@ -416,7 +421,8 @@
     Table~\ref{special-method-action-table},
   \end{itemize}
   then,
-  \setlength{\zedindent}{0.25cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedindent}{0cm}
   \begin{circus}
     \begin{array}{l}
       \circmu X \circspot \\
@@ -454,7 +460,7 @@
       \t3 {} \cdots {} \\
       \t3 {} \circelse cid = c_\ell \circthen {} \\
       \t4 CheckSynchronizedInvoke( \\
-      \t5 classInfo, m, poppedArgs) \circseq
+      \t5 classInfo, m, poppedArgs) \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[ \\
       \t5 classInfo/class?, \\
       \t5 m/methodID?, \\
@@ -501,7 +507,7 @@
   \end{circus}
 \end{restatable}
 
-\begin{algorithm}[htb!]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]
     \State $methodBody \gets$ \Call{ActionBody}{$methodName$}
     \Match{$methodBody$}{($A \circseq returnAction$)}
@@ -515,7 +521,7 @@
   \label{redefine-method-action-excluding-return-action-algorithm}
 \end{algorithm}
 
-\begin{algorithm}[htb!]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]
     \State \Apply{Rule~[\nameref{InterpreterInitEPC-frameStack-assump-intro-rule}]} 
     \State {\bf exhaustively apply} \\
@@ -546,8 +552,6 @@
   \caption{IntroduceFrameStackAssumptions}
   \label{introduce-frameStack-assumptions-algorithm}
 \end{algorithm}
-
-\FloatBarrier
 
 \begin{restatable}[$InterpreterInitEPC$-$frameStack$-assump-intro]{crule}{InterpreterInitEPCFrameStackAssumpIntro}
   \label{InterpreterInitEPC-frameStack-assump-intro-rule}
@@ -629,7 +633,8 @@
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \{\# frameStack = k\} \circseq A \circseq \{\# frameStack = k - 1 \} \circseq B
+      \{\# frameStack = k\} \circseq A \circseq \\
+      \t1 \{\# frameStack = k - 1 \} \circseq B
     \end{array}
   \end{circus}
 \end{restatable}
@@ -978,7 +983,7 @@
 
 \ArgumentsIntroductionRule*
 
-\begin{algorithm}[tbh]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]
     \MatchThen{%
       $\begin{array}[t]{l}
@@ -1005,8 +1010,6 @@
   \caption{RedefineMethodToIncludeParameters($nethodName$)}
   \label{redefine-method-action-to-include-parameters-algorithm}
 \end{algorithm}
-
-\FloatBarrier  
 
 \HandleReturnEPCStackFrameIntroductionRule*
 
@@ -1052,7 +1055,7 @@
 \subsection{Introduce Variables}
 \label{introduce-variables-appendix-subsection}
 
-\begin{algorithm}
+\begin{algorithm}[H]
   \begin{algorithmic}[1]
     \State \ApplyTo{Rule~[\nameref{stackFrame-init-frameClass-assump-intro-rule}]}{$A$}
     \State {\bf exhaustively apply to }{$A$}  \\
@@ -1241,7 +1244,7 @@
   \end{circus}
 \end{restatable}
 
-\begin{algorithm}
+\begin{algorithm}[H]
   \begin{algorithmic}[1]
     \State \ApplyTo{Rule~[\nameref{stackFrame-init-operandStack-assump-intro-rule}]}{$A$}
     \State {\bf exhaustively apply to }{$A$}  \\
@@ -1397,7 +1400,7 @@
 \begin{restatable}[$operandStack$-assump-$InvokeSF$-dist]{crule}{OperandStackAssumpInvokeSFDistRule}
   \label{operandStack-assump-InvokeSF-dist-rule}
   \setlength{\zedindent}{0.1cm}
-  If $B$ does not begin with $\{ \# stackFrame.operandStack = k-m \}$, then
+  If $B$ does not begin with \[\{ \# stackFrame.operandStack = k-m \}\], then
   \begin{circus}
     \begin{array}{l}
       \{ \# stackFrame.operandStack = k \} \circseq \\
@@ -1803,12 +1806,13 @@
 \begin{restatable}[refine-$PutField$]{crule}{RefinePutFieldRule}
   \label{refine-PutField-rule}
   \setlength{\zedindent}{0.5cm}
+  \setlength{\zedtab}{0.6cm}
   \begin{circus}
     \begin{array}{l}
       putField?objectID?classID?field?value \then {} \\
       \circif (objectID \in \dom objects \\ 
       \t1 {} \land (classIDOf~(objects~objectID), classID) \in subclassRel~cs) \circthen \lschexpract StructManPutField \rschexpract \\
-      \t1 {} \circelse (objectID \notin \dom objects \\ 
+      {} \circelse (objectID \notin \dom objects \\ 
       \t1 {} \lor (classIDOf~(objects~objectID), classID) \notin subclassRel~cs) \circthen \Chaos \\
       \circfi
     \end{array}\\
@@ -1880,9 +1884,10 @@
 \begin{restatable}[refine-$PutStatic$]{crule}{RefinePutStaticRule}
   \label{refine-PutStatic-rule}
   \setlength{\zedindent}{0.5cm}
+  \setlength{\zedtab}{0.55cm}
   \begin{circus}
     \begin{array}{l}
-      putStatic?cid?fid?value \then {}
+      putStatic?cid?fid?value \then {} \\
       \circif (cid,fid) \in \dom staticClassFields \circthen \lschexpract StructManPutStatic \rschexpract \\
       {} \circelse (cid,fid) \in \dom staticClassFields \circthen \Chaos \\
       \circfi

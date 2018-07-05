@@ -406,8 +406,9 @@ We also provide separate channels for initialisation of one-shot event
 handlers, depending on whether they are initialised with an absolute
 or relative start time.
 
-We only consider constructors for \texttt{AperiodicEventHandler},
-\texttt{PeriodicEventHandler}, and \texttt{OneShotEventHandler}.% , and
+We only consider constructors for the \texttt{AperiodicEventHandler},
+\texttt{PeriodicEventHandler}, and
+\texttt{OneShotEventHandler} classes.% , and
 % we do not include the forms of the constructors that allow for a
 % deadline miss handler to be set.
 We also do not consider deadline miss handlers.
@@ -1211,7 +1212,7 @@ Table~\ref{bytecode-subset-table}.
   \bottomcaption{The instructions in our bytecode subset}
   \label{bytecode-subset-table}
   
-  \begin{supertabular}{llp{8cm}}
+  \begin{supertabular}{llp{7.5cm}}
     \texttt{aconst\_null} & (none) & 
     Pushes a null object reference onto the operand stack.
     \\
@@ -1561,10 +1562,9 @@ particular class by a $ClassID$ and $MethodID$, and $FieldRef$,
 representing a reference to a field of a particular class by a
 $ClassID$ and $FieldID$.
 \begin{zed}
-  CPEntry ::= \\
-  \t1 ClassRef \ldata ClassID \rdata | MethodRef \ldata
-  ClassID \cross MethodID \rdata | FieldRef \ldata ClassID \cross
-  FieldID \rdata
+  CPEntry ::= ClassRef \ldata ClassID \rdata \\
+  \t1 | MethodRef \ldata ClassID \cross MethodID \rdata \\
+  \t1 | FieldRef \ldata ClassID \cross FieldID \rdata
 \end{zed}
 Although there are other types of constant pool entry described in the
 JVM specification, we do not include them in our model since some of
@@ -1607,7 +1607,8 @@ methods and must take an additional \texttt{this} argument.
   methodLocals, methodStackSize : MethodID \pfun \nat \\
   staticMethods, synchronizedMethods : \finset MethodID
 \where
-  \dom methodEntry = \dom methodEnd = \dom methodLocals = \dom methodStackSize \\
+  \dom methodEntry = \dom methodEnd \\
+  \t1 {} = \dom methodLocals = \dom methodStackSize \\
   staticMethods \subseteq \dom methodEntry \\
   synchronizedMethods \subseteq \dom methodEntry \\
   \forall m : \dom methodEntry @ methodEntry~m \leq methodEnd~m \\
@@ -1981,10 +1982,10 @@ object.
 
 Management of allocation contexts is provided by the remaining
 services.
-The first is $EnterBackingStore$, which enters a backing store for a
-given thread by pushing it onto the stack in $backingStoreStacks$ for
-that thread, and adding it to $backingStoreMap$ if it is not already
-in its domain.
+The first service is $EnterBackingStore$, which enters a backing store
+for a given thread by pushing it onto the stack in
+$backingStoreStacks$ for that thread, and adding it to
+$backingStoreMap$ if it is not already in its domain.
 The second is the corresponding operation $ExitBackingStores$ for
 exiting the current allocation context of a given thread, which means
 popping it from the thread's stack in $backingStoreStacks$, and
@@ -2135,7 +2136,8 @@ $operandStack$ for the thread.
 The invariant of $StackFrame$ just requires the $operandStack$ to not
 be larger than $stackSize$.
 
-The state of $Thr$ is given by the schema $InterpreterState$, below.
+The state of the $Thr$ process is given by the schema
+$InterpreterState$, below.
 Its first component, $frameStack$, represents the stack itself, which
 is a sequence of $StackFrame$ bindings, with one for each method
 entered.
@@ -2158,7 +2160,7 @@ information for the current method.
   \forall f : \ran frameStack @ \exists_1 c : \ran cs; m : MethodID | \\
   \t1 m \in \dom c.methodEntry \land \\
   \t1 f.storedPC \in c.methodEntry~m \upto c.methodEnd~m @ \\
-  \t1 f.frameClass = c \\
+  \t1 f.frameClass = c
 \end{schema}
 The first conjunct of the invariant applies only if the $frameStack$
 is nonempty.
@@ -2315,12 +2317,13 @@ superinterfaces.
 The $Class$ information resulting from this is stored in $class$ and
 used to create a new $StackFrame$ on the $frameStack$ in
 $InterpreterNewStackFrame$.
+{\setlength{\zedtab}{0.5cm}
 \begin{circusaction}
   StartInterpreter \circdef \\
   \t1  \circvar classID : ClassID; methodID : MethodID; methodArgs : \seq Word; class : Class \circspot \\
   \t1 executeMethod?t \prefixcolon (t = thread) ?c?m?a \then classID, methodID, methodArgs := c, m, a \circseq \\
   \t1 \lschexpract ResolveMethod \rschexpract \circseq \lschexpract InterpreterNewStackFrame \rschexpract
-\end{circusaction}
+\end{circusaction}}
 
 For threads other than $main$, the behaviour is described by the
 $NotStarted$ action below.
@@ -2369,6 +2372,7 @@ This causes the scheduler to switch to a different thread, so a thread
 switch is accepted on the $CEEswitchThread$ channel.
 After that, the process again behaves as $NotStarted$, allowing the
 thread to be restarted.
+{\setlength{\zedtab}{0.4cm}
 \begin{circusaction}
   Started \circdef \\
   \t1 \circblockbegin
@@ -2384,7 +2388,7 @@ thread to be restarted.
   \circblockend \circseq \\
   \t1 removeThreadMemory!thread \then SendThread \\
   \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
-\end{circusaction}
+\end{circusaction}}
 
 The $Blocked$ and $Running$ actions define the behaviour of threads
 after they have been started.
@@ -2423,10 +2427,11 @@ of actions for handling the bytecode instructions.
 There is one action for each of the instructions, with the action's
 name formed from the bytecode mnemonic prefixed with $Handle$ (e.g.\
 $HandleAload$ for the \texttt{aload} instruction).
+{\setlength{\zedtab}{0.5cm}
 \begin{circusaction}
 	HandleInstruction \circdef \\
 	\t1 HandleAconst\_null \extchoice HandleDup \extchoice HandleAload \extchoice HandleAstore \extchoice HandleIadd \extchoice {} \cdots
-\end{circusaction}
+\end{circusaction}}
 
 The $Handle$ actions define the semantics for the instructions and, as
 such are involved in the compilation strategy.
@@ -2597,7 +2602,7 @@ operation $InterpreterPush$.
 The $HandleNew$, $HandlePutfield$, $HandleGetstatic$ and
 $HandlePutstatic$ actions are similar.
 
-Finally, the method invocation instructions (\texttt{invokespecial},
+Finally, method invocation instructions (\texttt{invokespecial},
 \texttt{invokestatic} and \texttt{invokevirtual}), require special
 handling by the virtual machine.
 Since the different method invocation instructions differ only in how
@@ -2636,10 +2641,10 @@ with $poppedArgs$.
 \end{circusaction}
 % TODO: is all this information necessary?
 The $HandleInvokestatic$ and $HandleInvokevirtual$ actions are
-similar, except that neither includes $CheckSuperclass$, $argsToPop?$
-does not include the extra \texttt{this} argument in
-$HandleInvokeStatic$, and $HandleInvokevirtual$ obtains the class
-identifier from the \texttt{this} identifier via the $getClassIDOf$
+similar, except that neither includes $CheckSuperclass$,
+$HandleInvokeStatic$ does not include a \texttt{this} argument in
+$argsToPop?$ , and $HandleInvokevirtual$ obtains the class identifier
+from the type of the \texttt{this} object using the $getClassIDOf$
 channel rather than from the instruction's parameter.
 
 The $Invoke$ action, shown in part below, has the form of an external
@@ -2830,6 +2835,7 @@ $cid$ and $mid$, and passes the appropriate number of arguments from
 $args$ to the action.
 The return value of each of the actions, if they return one, is
 captured in $retVal$ to be returned to $MainThread$ or $NotStarted$.
+{\setlength{\zedtab}{0.45cm}
 \begin{circusaction}
   ExecuteMethod \circdef \\
   \t1 \circval cid : ClassID; \circval mid : MethodID; \circval args : \seq Word; \circres retVal : Word \circspot \\
@@ -2839,7 +2845,7 @@ captured in $retVal$ to be returned to $MainThread$ or $NotStarted$.
   \t1 {} \circelse (cid,mid) = ({<}classID_n{>}, {<}methodID_{m_n}{>}) \circthen {} \\
   \t2 {<}classID_n{>}\_{<}methodID_{m_n}{>}(args~1,\dots,args~(methodArgs~{<}methodID_{m_n}{>}), retVal) \\
   \t1 \circif
-\end{circusaction}
+\end{circusaction}}
 
 The actions used by $ExecuteMethod$ represent C functions embedding
 the behaviour of the compiled methods.
@@ -2861,207 +2867,253 @@ Table~\ref{embedding-table}.
 \setlength{\belowdisplayskip}{0mm}
 \setlength{\abovedisplayshortskip}{0mm}
 \setlength{\belowdisplayshortskip}{0mm}
-\renewcommand{\arraystretch}{0.3}
+%\renewcommand{\arraystretch}{0.0}
 \rowcolors{2}{white}{lightgray}
-\begin{tabular}{p{3cm}p{4.8cm}p{4.2cm}}
+\begin{tabular}{p{3cm}p{5.2cm}p{4.2cm}}
 \hline
 \vspace{0.01cm} Construct \vspace{0.1cm} & \vspace{0.01cm} C code \vspace{0.1cm} & \vspace{0.01cm} \Circus{} equivalent \vspace{0.1cm} \\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function definition &
+\raggedright Function definition &
+\vspace{-0.4cm}                                                     
 \begin{lstlisting}
 void foo() {...}
 \end{lstlisting}
 &
+\vspace{-0.4cm}           
 \[
 Foo \circdef \cdots
-\] \\
+\] \\[-0.5cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function definition with argument &
+\raggedright Function definition with argument &
+\vspace{-0.4cm}
 \begin{lstlisting}
 void bar(int32_t x) {...}
 \end{lstlisting}
 &
+\vspace{-0.5cm}
 \[
   Bar \circdef \circval x : Word \circspot \cdots
-\] \\
+\] \\[-0.15cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function definition with return value &
+\raggedright Function definition with return value &
+\vspace{-0.4cm}
 \begin{lstlisting}
 int32_t baz() {...}
 \end{lstlisting}
 &
+\vspace{-0.5cm}
 \[
   Baz \circdef \circres retVal : Word \circspot \cdots
-\] \\
+\] \\[-0.15cm]
 % \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function definition with parameter and return value &
+\raggedright Function definition with parameter and return value &
+\vspace{-0.4cm}
 \begin{lstlisting}
 int32_t quux(int32_t x) {...}
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
   Quux \circdef \circval x : Word; \\
   \t1 \circres retVal : Word \circspot \cdots
 \] \\
 % \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function call &
+\raggedright Function call &
+\vspace{-0.4cm}
 \begin{lstlisting}
 foo();
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
 Foo
-\] \\
+\] \\[-0.5cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function call with argument &
+\raggedright Function call with argument &
+\vspace{-0.4cm}
 \begin{lstlisting}
 bar(x);
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
 Bar(x)
-\] \\
+\] \\[-0.15cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function call with return value &
+\raggedright Function call with return value &
+\vspace{-0.4cm}
 \begin{lstlisting}
 x = baz();
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
 Baz(x)
-\] \\
+\] \\[-0.15cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Function call with argument and return value &
+\raggedright Function call with argument and return value &
+\vspace{-0.4cm}
 \begin{lstlisting}
 y = quux(x);
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
 Quux(x,y)
-\] \\
+\] \\[-0.05cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Return statement &
+\raggedright Return statement &
+\vspace{-0.4cm}
 \begin{lstlisting}
 return;
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \begin{circus}
 \Skip
-\end{circus} \\
+\end{circus} \\[-0.5cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Return statement with value &
+\raggedright Return statement with value &
+\vspace{-0.4cm}
 \begin{lstlisting}
 return x;
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \begin{circus}
   retVal := x
-\end{circus} \\
+\end{circus} \\[-0.15cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Assignment &
+  \raggedright Assignment &             
+\vspace{-0.4cm}
 \begin{lstlisting}
 x = e;
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \begin{circus}
 x := e
-\end{circus} \\
+\end{circus} \\[-0.5cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Variable declaration &
+\raggedright  Variable declaration &
+\vspace{-0.4cm}
 \begin{lstlisting}
 int32_t x;
 \end{lstlisting}
-& \[\circvar x : Word \circspot \] \\
+&
+\vspace{-0.5cm}
+\[  
+  \circvar x : word \circspot
+\] \\[-0.5cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Variable declaration and initialisation &
+\raggedright Variable declaration and initialisation &
+\vspace{-0.4cm}
 \begin{lstlisting}
 int32_t x = e;
 \end{lstlisting}
-& \[\circvar x : Word \circspot x := e\] \\
+&
+\vspace{-0.5cm}
+\[
+  \circvar x : Word \circspot x := e
+\] \\[-0.15cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline If statement &
+\raggedright If statement &
+\vspace{-0.4cm}
 \begin{lstlisting}
 if (b) {...}
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
 \circif b \circthen \cdots \\
 {} \circelse \lnot b \circthen \Skip \\
 \circfi
-\] \\
+\] \\[-0.3cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline If-else statement &
+\raggedright If-else statement &
+\vspace{-0.4cm}
 \begin{lstlisting}
 if (b) {...} else {...}
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 \[
 \circif b \circthen \cdots \\
 {} \circelse \lnot b \circthen \cdots \\
 \circfi
-\] \\  
+\] \\[-0.3cm]  
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Infinite loop &
+\raggedright Infinite loop &
+\vspace{-0.4cm}
 \begin{lstlisting}
 while (1) {...}
 \end{lstlisting}
 &
+\vspace{-0.5cm}
 {
 \[
 \circmu X \circspot\cdots \circseq X
-\]}\\
+\]}\\[-0.5cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline While loop &
+\raggedright While loop &
+\vspace{-0.4cm}
 \begin{lstlisting}
 while (b) {...}
 \end{lstlisting}
 &
+\vspace{-0.5cm}
 {
-\def\arraystretch{1.1}
+%\def\arraystretch{1.1}
 \[
 \circmu X \circspot \\
   \t1 \circif b \circthen \cdots \circseq X \\
   \t1 {} \circelse \lnot b \circthen \Skip \\
   \t1 \circfi
-\]}\\  
+\]}\\[-0.3cm]  
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Do-while loop &
+\raggedright Do-while loop &
+\vspace{-0.4cm}
 \begin{lstlisting}
 do {...} while (b);
 \end{lstlisting}
 &
+\vspace{-0.5cm}
 {
-\def\arraystretch{1.1}
+%\def\arraystretch{1.1}
 \[
   \circmu X \circspot \cdots \circseq \\
   \t1 \circif b \circthen X \\
   \t1 {} \circelse \lnot b \circthen \Skip \\
   \t1 \circfi
-\]}\\  
+\]}\\[-0.3cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Field read &
+\raggedright Field read &
+\vspace{-0.4cm}
 \begin{lstlisting}
 y = ((C *) x)->f;
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 {
-\def\arraystretch{1.1}
+%\def\arraystretch{1.1}
 \[
   getField!x!C!f \then {} \\
   \t1 getFieldRet?value \then {} \\
   \t1 y := value
-  \]}\\  
+  \]}\\[-0.3cm]  
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\raggedright \hfill \newline Field write &
+\raggedright Field write &
+\vspace{-0.4cm}
 \begin{lstlisting}
 ((C *) x)->f = y;
 \end{lstlisting}
 &
+\vspace{-0.4cm}
 {
-\def\arraystretch{1.1}
+%\def\arraystretch{1.1}
 \[
   putField!x!C!f!y \then \Skip
-  \]}\\
+  \]}\\[-0.5cm]
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{tabular}}
 \caption{The \Circus{} representations of C constructs in our shallow

@@ -140,9 +140,9 @@ $Running$ action, and so we omit the \textbf{to} clause.
 The algorithm operates on each unresolved method call present in the
 choice in $Running$, constructing a list of them on
 line~\ref{algorithm-get-unresolved-method-calls}.
-This list is obtained using a function \Call{UnresolvedMethodCalls}{},
-which finds all the branches in the choice in $Running$ that end with
-a method invocation instruction ($HandleInvokespecialEPC$,
+This list is obtained using the \Call{UnresolvedMethodCalls}{}
+function, which finds all the branches in the choice in $Running$
+ending with a method invocation instruction ($HandleInvokespecialEPC$,
 $HandleInvokestaticEPC$ or $HandleInvokevirtualEPC$).
 The presence of such a method call at the end of a sequence of actions
 indicates that method call has not yet been resolved, since it would
@@ -172,11 +172,12 @@ $methodCall$.
 For each method call that needs resolving, we check if it can be
 resolved at this point in the compilation strategy.
 This is performed on line~\ref{algorithm-is-resolvable-check}, where
-the boolean value \Call{IsResolvable}{$methodCall$} is checked.
+the boolean \Call{IsResolvable}{$methodCall$} is checked.
 \Call{IsResolvable}{$mc$} is true if all the targets of the method
-call $methodCall$ are either special methods or non-special methods that are
-already complete and have been separated into their own actions (as
-described in Algorithm~\ref{separate-complete-methods-algorithm}).
+call $methodCall$ are either special methods or non-special methods
+that are already complete and have been separated into their own
+actions (as described in
+Algorithm~\ref{separate-complete-methods-algorithm}).
 
 % If the method call is resolvable, then we check whether there is a
 % single target for the method call or multiple targets.
@@ -439,7 +440,7 @@ method identifiers passed to $Invoke$.
   \setlength{\zedleftsep}{0cm}
   \renewcommand{\arraystretch}{1}
   \rowcolors{1}{white}{lightgray}
-  \begin{tabular}{p{6.5cm}p{7.7cm}}
+  \begin{tabular}{p{6.6cm}p{7.7cm}}
     \hline
     Conditions on $c$ and $m$ & $specialMethodAction(c, m)$ \\
     \hline

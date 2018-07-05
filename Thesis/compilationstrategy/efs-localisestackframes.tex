@@ -116,7 +116,7 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
   Given an action name $M$ and $n : \nat$, if
-  $arg1, \ldots, arg{<}n{>}$ are not free in $M$ and are distinct from
+  $arg1$, \ldots, $arg{<}n{>}$ are not free in $M$ and are distinct from
   $c$, $m$ and $args$, then
   \begin{circus}
     \begin{array}{l}
@@ -288,7 +288,7 @@ of the actions in the parametrised block shown above), begins with an
 $InterpreterNewStackFrame$ operation having $TPK$ as its $class?$ and
 $handleAsyncEvent$ as its $methodID?$.
 This operation is thus replaced with an $InitTPK\_handleAsyncEventSF$
-operation, which has the form shown in
+operation, of the form shown in
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}].
 % The values for $\ell$ and $s$ can thus be obtained from the
 % $methodLocals$ and $methodStackSize$ components of the $TPK$ class

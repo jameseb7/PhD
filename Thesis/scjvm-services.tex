@@ -731,9 +731,9 @@ occurring until it has finished.
 The priority associated with each interrupt can be obtained by the
 \texttt{get\-Interrupt\-Priority} operation.
 
-Interrupts can be disabled and re-enabled using the
-\texttt{disableInterrupts} and \texttt{enableInterrupts} operations.
-While interrupts are disabled no interrupt handlers can run, but it is
+Interrupts can be disabled and re-enabled using
+\texttt{disableInterrupts} and \texttt{enableInterrupts}.
+No interrupt handlers can run while interrupts are disabled, but it is
 implementation-defined as to whether or not interrupts fired while
 interrupts are disabled are lost.
 
