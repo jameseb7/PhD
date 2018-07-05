@@ -221,7 +221,8 @@ Sections~\ref{memory-manager-model-section}
 and~\ref{scheduler-model-section}.
 The channels used for communication between the CEE processes are
 summarised in Figure~\ref{cee-channel-table}, with the full channel
-declarations shown in Appendix~\ref{cee-model-channels}.
+declarations shown in Appendix~B of the extended version of this
+thesis~\cite{baxter2018-extended}.
 In addition to presenting the name and type for each channel, in the
 first two columns of the table.
 We also indicate which components of the CEE make use of the channel.
@@ -568,8 +569,8 @@ sequence of $ClassID$s.
 
 In what follows, we describe the definition of $Launcher$, focusing on
 the aspects relevant for the compilation.
-The complete definition can be found in
-Appendix~\ref{launcher-appendix}.
+The complete definition can be found in Appendix~B of the extended
+version of this thesis~\cite{baxter2018-extended}.
 
 The state of the $Launcher$ is divided into four parts.
 The first part contains the identifiers of the objects that form the
@@ -1668,8 +1669,8 @@ extracting information from the $constantPool$ for a given $Class$, in
 order to make specifying things about them easier.
 Since the functions are just abbreviations of data access operations,
 we omit them here.
-We recall that the definitions omitted here are given in
-Appendix~\ref{full-cee-model}.
+We recall that the definitions omitted here are given in Appendix~B of
+the extended version of this thesis~\cite{baxter2018-extended}.
 
 We also require a way of expressing the fact that one class is a
 subclass of another.
@@ -2043,8 +2044,8 @@ the object's identifier is returned via $newObjectRet$.
 \end{circusaction}
 
 We omit the definitions of the other actions of $Loop$ here. 
-The full model of the object manager can be found in
-Appendix~\ref{object-manager-appendix}.
+The full model of the object manager can be found in Appendix~B of the
+extended version of this thesis~\cite{baxter2018-extended}.
 
 Next, we discuss the $Interpreter$ process, which is the final
 component of $CEE$ and handles the execution of the bytecode
@@ -2061,8 +2062,8 @@ by the free type $Bytecode$, sketched below.
 $Bytecode$ has a constructor for each bytecode instruction, with any
 parameter to the instruction represented as a parameter of the
 constructor.
-The full definitions omitted here are in
-Appendix~\ref{interpreter-appendix}.
+The full definitions omitted here are in Appendix~B of the extended
+version of this thesis~\cite{baxter2018-extended}.
 \begin{zed}
   Bytecode ::= aconst\_null | dup | areturn | return | iadd | ineg \\
   \t1 | new \ldata CPIndex \rdata | iconst \ldata \nat \rdata | aload \ldata \nat \rdata | astore \ldata \nat \rdata | \dots
@@ -2452,7 +2453,8 @@ which uses the $InterpreterAconst\_null$ schema.
 The \Circus{} actions and Z schemas for each bytecode instruction are
 listed in Table~\ref{bytecode-model-table}.
 We omit the definitions of the Z schemas in our description here.
-They can be found in Appendix~\ref{interpreter-appendix}.
+They can be found in Appendix~B of the extended version of this
+thesis~\cite{baxter2018-extended}.
 Their contents are in line with the state updates for the bytecode
 instructions presented in Table~\ref{bytecode-subset-table}.
 
@@ -3272,9 +3274,10 @@ $update{<}cid{>}\_{<}fid{>}$ for the $ClassID$ $cid$ and $FieldID$
 $fid$ provided on the $putField$ channel.
 The $GetStatic$ and $PutStatic$ actions access and update the
 specified static field in $staticClassFields$.
-We omit the definitions of these actions here; their definitions are
-given in Appendix~\ref{struct-manager-appendix}, which shows the
-general form of the $StructMan_{cs}$ process.
+We omit the definitions of these actions here; their definitions can
+be found in Appendix~B of the extended version of this
+thesis~\cite{baxter2018-extended}, where we show the general form of
+the $StructMan_{cs}$ process.
 
 The $NewObject$ action is different in $StructMan_{cs}$ to that in
 $ObjMan$.

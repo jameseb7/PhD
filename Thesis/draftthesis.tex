@@ -54,6 +54,15 @@
 \newcommand{\IfFullModel}[1]{\ifFullModel #1 \fi}
 \newcommand{\IfNotFullModel}[1]{\ifFullModel \else #1 \fi}
 
+\newif\ifExtended
+
+%TC:macro \IfExtended [ignore]
+%TC:macro \IfNotExtended [text]
+\Extendedfalse
+
+\newcommand{\IfExtended}[1]{\ifExtended #1 \fi}
+\newcommand{\IfNotExtended}[1]{\ifExtended \else #1 \fi}
+
 \newcommand{\directsubclass}{\prec_{\mathrm{d}}}
 \newcommand{\directsubclassid}[1]{\prec_{\mathrm{D},#1}}
 \newcommand{\subclassid}[1]{\preceq_{#1}}
@@ -244,132 +253,16 @@ prefoothook={\qedsymbol\relax}
 
 \input{conclusion.tex}
 
-{\raggedright \printbibliography}
-
 \appendix
-
-\chapter{Full SCJVM Services Model}
-\label{full-scjvm-services-model}
 
 %TC:macro \IfFullModel [text]
 %TC:macro \IfNotFullModel [ignore]
 \FullModeltrue
-
-\section{Memory Manager}
-\input{../../SCJ-VM/James/memorymanager.zed}
-
-\section{Scheduler}
-\input{../../SCJ-VM/James/scheduler.zed}
-
-\section{Real-Time Clock}
-\input{../../SCJ-VM/James/realtimeclock.zed}
-
-\section{Complete SCJVM Services Model}
-\input{../../SCJ-VM/James/scjvmservices.zed}
-
-\chapter{Full Core Execution Environment Model}
-\label{full-cee-model}
-
-\section{Classes}
-\input{../../SCJ-VM/James/classes.zed}
-
-\section{Channel declarations}
-\label{cee-model-channels}
-
-\input{../../SCJ-VM/James/LIchans.zed}
-
-\input{../../SCJ-VM/James/memory_chans.zed}
-
-\section{Object Manager}
-\label{object-manager-appendix}
-\input{../../SCJ-VM/James/memory.zed}
-
-\section{Stack Frames}
-\input{../../SCJ-VM/James/stack_frames.zed}
-
-\section{Interpreter}
-\label{interpreter-appendix}
-
-\input{../../SCJ-VM/James/interpreter_thread.zed}
-
-\input{../../SCJ-VM/James/interpreter.zed}
-
-\section{Launcher}
-\label{launcher-appendix}
-\input{../../SCJ-VM/James/launcher.zed}
-
-\section{Complete Core Execution Environment}
-\input{../../SCJ-VM/James/complete_cee.zed}
-
-\section{Post-compilation Struct Manager}
-\label{struct-manager-appendix}
-\input{../../SCJ-VM/James/struct_manager.zed}
-
 \chapter{Compilation Rules}
 \label{compilation-rules-appendix}
 
 \input{compilationrules.tex}
 
-\chapter{Algebraic Laws}
-\label{algebraic-laws-appendix}
-\input{algebraiclaws.tex}
-
-%TC:ignore
-
-\chapter{Z/Eves Theorems and Proofs}
-\label{zeves-proofs}
-
-\section{Additional Toolkit Lemmas}
-\label{additional-lemmas}
-\normalsize
-
-\input{../../SCJ-VM/James/additional_lemmas.zed} 
-
-\section{Proofs of Additional Toolkit Lemmas}
-\label{additional-lemmas-proofs}
-\scriptsize
-
-\input{../../SCJ-VM/James/additional_lemmas_sets_proofs.zed}
-\input{../../SCJ-VM/James/additional_lemmas_relations_proofs.zed}
-\input{../../SCJ-VM/James/additional_lemmas_numbers_proofs.zed}
-
-\section{Memory Manager Theorems}
-\label{memory-manager-theorems}
-\normalsize
-
-\input{../../SCJ-VM/James/memorymanager_theorems.zed}
-
-\section{Proofs of Memory Manager Theorems}
-\label{memory-manager-proofs}
-\scriptsize
-
-\input{../../SCJ-VM/James/memorymanager_proofs.zed}
-
-\section{Stack Frames Theorems}
-\label{stack-frames-theorems-appendix}
-
-\input{../../SCJ-VM/James/stack_frames_theorems.zed}
-
-\section{Proofs of Stack Frames Theorems}
-\label{stack-frames-proofs-appendix}
-
-\input{../../SCJ-VM/James/stack_frames_proofs.zed}
-
-\section{Interpreter Theorems}
-\label{interpreter-theorems-appendix}
-
-\input{../../SCJ-VM/James/interpreter_thr_theorems.zed}
-
-\section{Proofs of Interpreter Theorems}
-\label{interpreter-proofs-appendix}
-
-\input{../../SCJ-VM/James/interpreter_thr_proofs.zed}
-
-%TC:endignore
-
-\normalsize
-\chapter{Compilation Rules Proofs}
-\label{compilation-rules-proofs-appendix}
-\input{compilationrules_proofs.tex}
+{\raggedright \printbibliography}
 
 \end{document}

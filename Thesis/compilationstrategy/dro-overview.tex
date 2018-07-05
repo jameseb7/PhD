@@ -228,9 +228,10 @@ In this rule, we represent by the schema $StructManObjectInit$ the
 result of applying the data refinement to the $ObjManObjectInit$
 schema.
 The rule splits this data operation into separate operations defined
-by simpler schemas, defined in Appendix~\ref{struct-manager-appendix},
-initialising each of the object struct types, offering a choice over
-each class identifier in $cs$ to determine which one should be used.
+by simpler schemas, which can be found in Appendix~B of the extended
+version of this thesis~\cite{baxter2018-extended}, initialising each
+of the object struct types, offering a choice over each class
+identifier in $cs$ to determine which one should be used.
 The $AllocateObject$ action that communicates with the memory manager
 to allocate space for the object is also supplied with constants
 indicating the size of each object struct type, rather than
