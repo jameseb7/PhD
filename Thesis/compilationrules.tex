@@ -2,12 +2,19 @@
 
 \subsection{Expand Bytecode}
 
-\PCExpansionRule*
+\begin{minipage}{\textwidth}
+  \PCExpansionRule*
+\end{minipage}
 
-\HandleInstructionRefinementRule*
+\begin{minipage}{\textwidth}
+  \HandleInstructionRefinementRule*
+\end{minipage}
 
-\CheckSynchronizedReturnSynchronizedRefinementRule*
+\begin{minipage}{\textwidth}
+  \CheckSynchronizedReturnSynchronizedRefinementRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$CheckSynchronizedReturn$-nonsync-refinement]{crule}{CheckSynchronizedReturnNonsynchronizedRefinementRule}
   \label{CheckSynchronizedReturn-nonsynchronized-refinement-rule}
   Given $i : ProgramAddress$,
@@ -36,15 +43,21 @@
     \t1 m \in c.synchronisedMethods \land m \notin c.staticMethods
   \end{displaymath}
 \end{restatable}
+\end{minipage}
 
 \subsection{Introduce Sequential Composition}
 
+\begin{minipage}{\textwidth}
 \SequenceIntroductionRule*
+\end{minipage}
 
 \subsection{Introduce Loops and Conditionals}
 
-\IfConditionalIntroductionRule*
+\begin{minipage}{\textwidth}
+  \IfConditionalIntroductionRule*
+\end{minipage}  
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[\texttt{if}-\texttt{else}-conditional-intro]{crule}{IfElseConditionalIntroductionRule}
   \label{if-else-introduction-rule}
   \setlength{\zedindent}{0.25cm}
@@ -96,7 +109,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[conditional-intro]{crule}{ConditionalIntroductionRule}
   \label{conditional-introduction-rule}
   \setlength{\zedindent}{0.25cm}
@@ -148,9 +163,13 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-\WhileLoopIntroductionRuleA*
+\begin{minipage}{\textwidth}
+  \WhileLoopIntroductionRuleA*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{crule}[\texttt{while}-loop-intro2]
   \label{while-introduction-rule2}
   \setlength{\zedindent}{0.2cm}
@@ -202,7 +221,9 @@
     \end{array}
   \end{circus}
 \end{crule}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[\texttt{do}-\texttt{while}-loop-intro]{crule}{DoWhileLoopIntroductionRule}
   \label{do-while-introduction-rule}
   \setlength{\zedindent}{0.2cm}
@@ -246,7 +267,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[infinite-loop-intro]{crule}{InfiniteLoopIntroductionRule}
   \label{infinite-loop-introduction-rule}
   Given $i : ProgramAddress$, if
@@ -283,9 +306,11 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 \subsection{Resolve Method Calls}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-invokespecial]{crule}{RefineInvokespecialRule}
   \label{refine-invokespecial-rule}
   \setlength{\zedindent}{0.25cm}
@@ -314,15 +339,25 @@
     \t1 i \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
   \end{displaymath}
 \end{restatable}
+\end{minipage}
 
-\RefineInvokestaticRule*
+\begin{minipage}{\textwidth}
+  \RefineInvokestaticRule*
+\end{minipage}
 
-\RefineInvokeVirtualMultiRule*
+\begin{minipage}{\textwidth}
+  \RefineInvokeVirtualMultiRule*
+\end{minipage}
 
-\ResolveSpecialMethodRule*
+\begin{minipage}{\textwidth}
+  \ResolveSpecialMethodRule*
+\end{minipage}
 
-\ResolveNormalMethodRule*
+\begin{minipage}{\textwidth}
+  \ResolveNormalMethodRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$CheckSynchronizedInvoke$-sync-refinement]{crule}{CheckSynchronizedInvokeSynchronizedRefinementRule}
   \label{CheckSynchronizedInvoke-synchronized-refinement-rule}
   \hfill \\
@@ -353,6 +388,7 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 % \begin{restatable}[resolve-special-method-branch]{crule}{ResolveSpecialMethodBranchRule}
 %   \label{resolve-special-method-branch-rule}
@@ -480,13 +516,16 @@
 
 \subsection{Refine Main Actions}
 
-\RunningRefinementRule*
+\begin{minipage}{\textwidth}
+  \RunningRefinementRule*
+\end{minipage}
 
 \section{Elimination of Frame Stack}
 
 \subsection{Remove Launcher Returns}
 \label{remove-launcher-returns-appendix-subsection}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[conditional-dist]{crule}{ReturnActionConditionalDist}
   \label{conditional-dist-rule}
   Given an action $X$,
@@ -506,6 +545,7 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
@@ -553,6 +593,7 @@
   \label{introduce-frameStack-assumptions-algorithm}
 \end{algorithm}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$InterpreterInitEPC$-$frameStack$-assump-intro]{crule}{InterpreterInitEPCFrameStackAssumpIntro}
   \label{InterpreterInitEPC-frameStack-assump-intro-rule}
   \begin{circus}
@@ -566,7 +607,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$frameStack$-assump-NewStackFrame-dist]{crule}{FrameStackAssumpNewStackFrameDist}
   \label{frameStack-assump-NewStackFrame-dist-rule}
   \begin{circus}
@@ -588,7 +631,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$frameStack$-assump-non-return-dist]{crule}{FrameStackAssumpNonReturnDist}
   \label{frameStack-assump-non-return-dist-rule}
   If $A$ is one of
@@ -622,7 +667,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$frameStack$-assump-return-dist-rule]{crule}{FrameStackAssumpReturnDist}
   \label{frameStack-assump-return-dist-rule}
   If $A$ is $HandleAreturn$ or $HandleReturn$, $B$ does not begin with
@@ -638,7 +685,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-alt-distl]{crule}{RestrictedAssumpAltDistl}
   \label{restricted-assump-alt-distl-rule}
   If no $A_i$ begins with $\{h\}$ then
@@ -648,7 +697,9 @@
     \{h\} \circseq \circif {} \circelse_{i} g_i \circthen \{h\} \circseq A_i \circfi
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-alt-distr]{crule}{RestrictedAssumpAltDistr}
   \label{restricted-assump-alt-distr-rule}
   If no $A_i$ begins with $\{h\}$ then
@@ -658,7 +709,9 @@
     \{h\} \circseq \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq \{h\}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-var-distl]{crule}{RestrictedAssumpVarDistl}
   \label{restricted-assump-var-distl-rule}
   If $A$ does not begin with $\{h\}$ then
@@ -668,7 +721,9 @@
     \{h\} \circseq (\circvar x : T \circspot \{h\} \circseq A)
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-var-distr]{crule}{RestrictedAssumpVarDistr}
   \label{restricted-assump-var-distr-rule}
   If $B$ does not begin with $\{h\}$ then
@@ -678,7 +733,9 @@
     (\circvar x : T \circspot A \circseq \{h\}) \circseq \{h\} \circseq B
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-output-prefix-distl]{crule}{RestrictedAssumpOutputPrefixDistl}
   \label{restricted-assump-output-prefix-distl-rule}
   If $A$ does not begin with $\{g\}$  then
@@ -686,7 +743,9 @@
     \{ g \} \circseq c!x \then A = \{ g \} \circseq c!x \then \{ g \} \circseq A
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-output-prefix-distr]{crule}{RestrictedAssumpOutputPrefixDistr}
   \label{restricted-assump-output-prefix-distr-rule}
   If $B$ does not begin with $\{g\}$ then
@@ -696,7 +755,9 @@
     (c!x \then A \circseq \{ g \}) \circseq \{ g \} \circseq B
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-input-prefix-distl]{crule}{RestrictedAssumpInputPrefixDistl}
   \label{restricted-assump-input-prefix-distl-rule}
   If $A$ does not begin with $\{g\}$ and $x$ is not free in $\{g\}$
@@ -707,7 +768,9 @@
     \{ g \} \circseq c?x \then \{ g \} \circseq A
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-input-prefix-distr]{crule}{RestrictedAssumpInputPrefixDistr}
   \label{restricted-assump-input-prefix-distr-rule}
   If $B$ does not begin with $\{g\}$ and $x$ is not free in $\{g\}$ then
@@ -717,7 +780,9 @@
     (c?x \then A \circseq \{ g \}) \circseq \{ g \} \circseq B
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-infinite-loop-distl]{crule}{RestrictedAssumpInfiniteLoopDistl}
   \label{restricted-assump-infinite-loop-distl-rule}
   If $A$ does not begin with $\{g\}$ and
@@ -728,7 +793,9 @@
     \{g\} \circseq (\circmu X \circspot \{g\} \circseq A \circseq X)
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-infinite-loop-distr]{crule}{RestrictedAssumpInfiniteLoopDistr}
   \label{restricted-assump-infinite-loop-distr-rule}
   If $B$ does not begin with $\{g\}$ then
@@ -738,7 +805,9 @@
     (\circmu X \circspot A \circseq \{g\} \circseq X) \circseq \{g\} \circseq B
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-mid-while-loop-distl]{crule}{RestrictedAssumpMidWhileLoopDistl}
   \label{restricted-assump-mid-while-loop-distl-rule}
   If $A$ does not begin with $\{g\}$,
@@ -761,7 +830,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-mid-while-loop-distr]{crule}{RestrictedAssumpMidWhileLoopDistr}
   \label{restricted-assump-mid-while-loop-distr-rule}
   If $C$ does not begin with $\{g\}$,
@@ -784,7 +855,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-do-while-loop-distl]{crule}{RestrictedAssumpDoWhileLoopDistl}
   \label{restricted-assump-do-while-loop-distl-rule}
   If $A$ does not begin with $\{g\}$ and
@@ -806,7 +879,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-do-while-loop-distr]{crule}{RestrictedAssumpDoWhileLoopDistr}
   \label{restricted-assump-do-while-loop-distr-rule}
   If $B$ does not begin with $\{g\}$ and
@@ -828,7 +903,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-while-loop-distl]{crule}{RestrictedAssumpWhileLoopDistl}
   \label{restricted-assump-while-loop-distl-rule}
   If $A$ does not begin with $\{g\}$ and
@@ -850,7 +927,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-while-loop-distr]{crule}{RestrictedAssumpWhileLoopDistr}
   \label{restricted-assump-while-loop-distr-rule}
   If $B$ does not begin with $\{g\}$ and
@@ -872,7 +951,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-extchoice-distl]{crule}{RestrictedAssumpExtchoiceDistl}
   \label{restricted-assump-extchoice-distl-rule}
   If $A$ and $B$ do not begin with $\{g\}$ then
@@ -886,7 +967,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-extchoice-distr]{crule}{RestrictedAssumpExtchoiceDistr}
   \label{restricted-assump-extchoice-distr-rule}
   If $C$ does not begin with $\{g\}$ then
@@ -900,7 +983,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-guard-dist]{crule}{RestrictedAssumpGuardDist}
   \label{restricted-assump-guard-dist-rule}
   If $A$ does not begin with $\{g\}$ then
@@ -914,7 +999,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[restricted-assump-assign-dist]{crule}{RestrictedAssumpAssignDist}
   \label{restricted-assump-assign-dist-rule}
   If $B$ does not begin with $\{g\}$ and $x$ is not free in $g$ then
@@ -928,10 +1015,13 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-
+\begin{minipage}{\textwidth}
 \RefineHandleReturnEPCEmptyFrameStackRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$HandleReturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleReturnEPCNonemptyFrameStackRule}
   \label{refine-HandleReturnEPC-nonempty-frameStack-rule}
   If $k > 1$ then
@@ -946,7 +1036,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$HandleAreturnEPC$-empty-$frameStack$]{crule}{RefineHandleAreturnEPCEmptyFrameStackRule}
   \label{refine-HandleAreturnEPC-empty-frameStack-rule}
   \begin{circus}
@@ -962,7 +1054,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$HandleAreturnEPC$-nonempty-$frameStack$]{crule}{RefineHandleAreturnEPCNonemptyFrameStackRule}
   \label{refine-HandleAreturnEPC-nonempty-frameStack-rule}
   If $k > 1$ then
@@ -977,11 +1071,14 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 \subsection{Localise Stack Frames}
 \label{localise-stack-frames-appendix-subsection}
 
-\ArgumentsIntroductionRule*
+\begin{minipage}{\textwidth}
+  \ArgumentsIntroductionRule*
+\end{minipage}
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
@@ -1011,7 +1108,9 @@
   \label{redefine-method-action-to-include-parameters-algorithm}
 \end{algorithm}
 
-\HandleReturnEPCStackFrameIntroductionRule*
+\begin{minipage}{\textwidth}
+  \HandleReturnEPCStackFrameIntroductionRule*
+\end{minipage}
 
 % \begin{restatable}[$InterpreterAreturn$-$stackFrame$-introduction]{crule}{HandleAreturnEPCStackFrameIntroductionRule}
 %   \label{HandleAreturnEPC-stackFrame-introduction-rule}
@@ -1085,6 +1184,7 @@
   \label{introduce-frameClass-assumptions-algorithm}
 \end{algorithm}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$stackFrame$-init-$frameClass$-assump-intro]{crule}{StackFrameInitFrameClassAssumpIntroRule}
   \label{stackFrame-init-frameClass-assump-intro-rule}
   \setlength{\zedindent}{0.5cm}
@@ -1113,7 +1213,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$frameClass$-assump-dist]{crule}{FrameClassAssumpDistRule}
   \label{frameClass-assump-dist-rule}
   If $A$ is one of
@@ -1143,9 +1245,13 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-\RefinePutfieldSFRule*
+\begin{minipage}{\textwidth}
+  \RefinePutfieldSFRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$GetfieldSF$]{crule}{RefineGetfieldSFRule}
   \label{refine-GetfieldSF-rule}
   \begin{circus}
@@ -1173,7 +1279,9 @@
     c.constantPool~cpi = FieldRef~(cid, fid)
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$PutstaticSF$]{crule}{RefinePutstaticSFRule}
   \label{refine-PutstaticSF-rule}
   \begin{circus}
@@ -1196,7 +1304,9 @@
     c.constantPool~cpi = FieldRef~(cid, fid)
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$GetstaticSF$]{crule}{RefineGetstaticSFRule}
   \label{refine-GetstaticSF-rule}
   \begin{circus}
@@ -1219,7 +1329,9 @@
     c.constantPool~cpi = FieldRef~(cid, fid)
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$NewSF$]{crule}{RefineNewSFRule}
   \label{refine-NewSF-rule}
   \begin{circus}
@@ -1243,6 +1355,7 @@
     c.constantPool~cpi = ClassRef~cid
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 \begin{algorithm}[H]
   \begin{algorithmic}[1]
@@ -1277,6 +1390,7 @@
   \label{introduce-operandStack-assumptions-algorithm}
 \end{algorithm}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$operandStack$-init-$frameClass$-assump-intro]{crule}{StackFrameInitOperandStackAssumpIntroRule}
   \label{stackFrame-init-operandStack-assump-intro-rule}
   \setlength{\zedindent}{0.1cm}
@@ -1305,7 +1419,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$operandStack$-assump-unchanged-dist]{crule}{OperandStackAssumpUnchangedDistRule}
   \label{operandStack-assump-unchanged-dist-rule}
   \setlength{\zedindent}{0.1cm}
@@ -1335,7 +1451,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$operandStack$-assump-increment-dist]{crule}{OperandStackAssumpIncrementDistRule}
   \label{operandStack-assump-increment-dist-rule}
   \setlength{\zedindent}{0.1cm}
@@ -1366,7 +1484,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$operandStack$-assump-decrement-dist]{crule}{OperandStackAssumpDecrementDistRule}
   \label{operandStack-assump-decrement-dist-rule}
   \setlength{\zedindent}{0.1cm}
@@ -1396,7 +1516,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$operandStack$-assump-$InvokeSF$-dist]{crule}{OperandStackAssumpInvokeSFDistRule}
   \label{operandStack-assump-InvokeSF-dist-rule}
   \setlength{\zedindent}{0.1cm}
@@ -1414,7 +1536,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$HandleAconst\_nullSF$-simulation]{crule}{HandleAconstNullSFSimulationRule}
   \label{HandleAconst_nullSF-simulation-rule}
   \begin{circus}
@@ -1428,7 +1552,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$HandleDupSF$-simulation]{crule}{HandleDupSFSimulationRule}
   \label{HandleDupSF-simulation-rule}
   \begin{circus}
@@ -1442,9 +1568,13 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-\HandleAloadSFSimulationRule*
+\begin{minipage}{\textwidth}
+  \HandleAloadSFSimulationRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$HandleAstoreSF$-simulation]{crule}{HandleAstoreSFSimulationRule}
   \label{HandleAstoreSF-simulation-rule}
   \begin{circus}
@@ -1458,7 +1588,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$HandleIaddSF$-simulation]{crule}{HandleIaddSFSimulationRule}
   \label{HandleIaddSF-simulation-rule}
   \begin{circus}
@@ -1472,7 +1604,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$HandleIconstSF$-simulation]{crule}{HandleIconstSFSimulationRule}
   \label{HandleIconstSF-simulation-rule}
   \begin{circus}
@@ -1486,7 +1620,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$HandleInegSF$-simulation]{crule}{HandleInegSFSimulationRule}
   \label{HandleInegSF-simulation-rule}
   \begin{circus}
@@ -1500,9 +1636,13 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-\InterpreterPopEPCSimulationRule*
+\begin{minipage}{\textwidth}
+  \InterpreterPopEPCSimulationRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$InterpreterPushEPC$-simulation]{crule}{InterpreterPushEPCSimulationRule}
   \label{InterpreterPushEPC-simulation-rule}
   \begin{circus}
@@ -1518,7 +1658,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$InterpreterPop2EPC$-simulation]{crule}{InterpreterPop2EPCSimulationRule}
   \label{InterpreterPop2EPC-simulation-rule}
   \begin{circus}
@@ -1535,13 +1677,21 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-\InvokeSFSimulationRule*
+\begin{minipage}{\textwidth}
+  \InvokeSFSimulationRule*
+\end{minipage}
 
-\StackFrameInitSimulationRule*
+\begin{minipage}{\textwidth}
+  \StackFrameInitSimulationRule*
+\end{minipage}
 
-\EliminateValueOneValueTwoConditional*
+\begin{minipage}{\textwidth}
+  \EliminateValueOneValueTwoConditional*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$getField$-$oid$-elim]{crule}{EliminateOidGetField}
   \label{eliminate-oid-getField-rule}
   \begin{circus}
@@ -1560,7 +1710,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$putField$-$oid$-$value$-elim]{crule}{EliminateOidValuePutField}
   \label{eliminate-oid-value-putField-rule}
   \begin{circus}
@@ -1578,7 +1730,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$putStatic$-$value$-elim]{crule}{EliminateValuePutStatic}
   \label{eliminate-value-putStatic-rule}
   \begin{circus}
@@ -1593,27 +1747,32 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
-\MethodParameterIntroductionRule*
+\begin{minipage}{\textwidth}
+  \MethodParameterIntroductionRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[$poppedArgs$-sync-elim]{crule}{PoppedArgsSyncElimRule}
-    \label{poppedArgs-sync-elim-rule}
-    \begin{circus}
-      \begin{array}{l}
-        (\circvar poppedArgs : \seq Word \circspot \\
-        poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
-        takeLock!(head~methodArgs) \\
-        {} \then takeLockRet \then \Skip \circseq \\
-        M(poppedArgs~1, \ldots, poppedArgs~n))
-      \end{array}
-      \circrefines_A
-      \begin{array}{l}
-        takeLock!arg_1 \\
-        {} \then takeLockRet \then \Skip \circseq \\
-        M(arg_1, \ldots, arg_n)
-      \end{array}
-    \end{circus}
-  \end{restatable}
+  \label{poppedArgs-sync-elim-rule}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot \\
+      poppedArgs := \langle arg_1, \ldots, arg_n \rangle \circseq \\
+      takeLock!(head~methodArgs) \\
+      {} \then takeLockRet \then \Skip \circseq \\
+      M(poppedArgs~1, \ldots, poppedArgs~n))
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      takeLock!arg_1 \\
+      {} \then takeLockRet \then \Skip \circseq \\
+      M(arg_1, \ldots, arg_n)
+    \end{array}
+  \end{circus}
+\end{restatable}
+\end{minipage}
 
 % not necessary if we don't eliminate the choice for invokevirtual
 % \begin{restatable}[$getClassIDOf$-$poppedArgs$-elim]{crule}{GetClassIDOfMethodParameterIntroductionRule}
@@ -1634,6 +1793,7 @@
 %   \end{circus}
 % \end{restatable}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[invokevirtual-$poppedArgs$-elim]{crule}{GetClassIDOfMultiMethodParameterIntroductionRule}
   \label{getClassIDOf-multi-method-parameter-introduction-rule}
   If, for each $i \in 1 \upto m$, $A_i$ matches
@@ -1696,6 +1856,7 @@
     \t1 M_i(arg_1, \ldots, arg_n)) \\
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 % \begin{restatable}[toplevel-$poppedArgs$-elimination]{crule}{ToplevelMethodParameterIntroductionRule}
 %   \label{toplevel-method-parameter-introduction-rule}
@@ -1719,9 +1880,11 @@
 %   \end{circus}
 % \end{restatable}
 
-\VarParameterConversionRule*
+\begin{minipage}{\textwidth}
+  \VarParameterConversionRule*
+\end{minipage}
 
-\begin{algorithm}[tbh!]
+\begin{algorithm}[H]
   \begin{algorithmic}[1]
      % introduce new method action
      \MatchIn{$%
@@ -1753,15 +1916,18 @@
   \label{redefine-method-action-to-exclude-parameters-algorithm}
 \end{algorithm}
 
-\FloatBarrier  
-
-\ArgumentVariableEliminationRule*
+\begin{minipage}{\textwidth}
+  \ArgumentVariableEliminationRule*
+\end{minipage}
 
 \section{Data Refinement of Objects}
 \label{data-refinement-of-objects-appendix-section}
 
-\RefineNewObjectRule*
+\begin{minipage}{\textwidth}
+  \RefineNewObjectRule*
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$GetField$]{crule}{RefineGetFieldRule}
   \label{refine-GetField-rule}
   \begin{circus}
@@ -1802,7 +1968,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$PutField$]{crule}{RefinePutFieldRule}
   \label{refine-PutField-rule}
   \setlength{\zedindent}{0.5cm}
@@ -1847,7 +2015,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$GetStatic$]{crule}{RefineGetStaticRule}
   \label{refine-GetStatic-rule}
   \setlength{\zedindent}{0.5cm}
@@ -1880,7 +2050,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[refine-$PutStatic$]{crule}{RefinePutStaticRule}
   \label{refine-PutStatic-rule}
   \setlength{\zedindent}{0.5cm}
@@ -1919,10 +2091,12 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
 \section{Algebraic Laws Used in the Compilation Strategy}
 \label{compilation-strategy-algebraic-laws-section}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[action-intro]{law}{ActionIntroLaw}
   \label{action-intro-law}
   Given an action name $N$ and action body $B$, if $N$ is not
@@ -1949,7 +2123,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[action-rename]{law}{ActionRenameLaw}
   \label{action-rename-law}
   Given action names $M$ and $N$, if $N$ is not referenced in the body
@@ -1982,7 +2158,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[alt-seq-dist]{law}{AltSeqDistLaw}
   \label{alt-seq-dist-law}
   \begin{circus}
@@ -1998,7 +2176,9 @@
     \{g\} \circrefines_A \Skip
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[copy-rule]{law}{CopyRuleLaw}
   \label{copy-rule-law}
   Give an action name $N$, if $N$ names an action in the current process then,
@@ -2008,6 +2188,7 @@
   where $B$ is a function that returns the body of an action given its
   name.
 \end{restatable}
+\end{minipage}
 
 \begin{minipage}{\textwidth}
   \begin{restatable}[forwards-data-refinement]{law}{ForwardsDataRefinementLaw}
@@ -2046,6 +2227,7 @@
 \end{restatable}
 \end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[process-param-elim]{law}{ProcessParamElimLaw}
   \label{process-param-elim-law}
   If $x$ is not referenced in the body of $P$, then
@@ -2069,7 +2251,9 @@
     \end{array}
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[rec-action-intro]{law}{RecActionIntroLaw}
   \label{rec-action-intro-law}
   Given an action $B$,
@@ -2077,7 +2261,9 @@
     (\circmu X \circspot A \circseq X) \circrefines_A (\circmu X \circspot A \circseq X) \circseq B
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[rec-rolling-rule]{law}{RecRollingRuleLaw}
   \label{rec-rolling-rule-law}
   Given action functions $F$ and $G$,
@@ -2085,10 +2271,13 @@
     (\circmu X \circspot F(G(X))) = F(\circmu X \circspot G(F(X)))
   \end{circus}
 \end{restatable}
+\end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[seq-unitl]{law}{SeqUnitlLaw}
   \label{seq-unitl-law}
   \begin{circus}
     \Skip \circseq A = A
   \end{circus}
 \end{restatable}
+\end{minipage}
