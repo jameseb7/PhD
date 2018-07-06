@@ -26,8 +26,9 @@ procedure \Call{LocaliseStackFrames}{}.
     \label{algorithm-arguments-introduction}
     \State \Call{RedefineMethodToIncludeParameters}{$methodName$}
     \label{algorithm-redefine-method-action-to-include-parameters}
-    \State \ApplyToFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{\Call{ActionBody}{$methodName$}}{$numArgs$}
+    \State \ApplyFor{Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]}{$numArgs$}
     \label{algorithm-HandleReturnEPC-stackFrame-introduction-rule}
+    \Statex $\t2${\bf to} {\Call{ActionBody}{$methodName$}}
     \EndFor
   \end{algorithmic}
   \caption{\Call{LocaliseStackFrames}{}}
@@ -110,7 +111,7 @@ We apply this rule everywhere it applies on
 line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
 
 \begin{figure}[thp]
-\begin{restatable}[$InterpreterReturn$-arguments-intro]{crule}{ArgumentsIntroductionRule}
+\begin{restatable}[$InterpreterReturn$-args-intro]{crule}{ArgumentsIntroductionRule}
   \label{arguments-introduction-rule}
   %\setlength{\zedtab}{0.4cm}
   %\setlength{\zedindent}{0pt}
