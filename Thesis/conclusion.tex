@@ -12,31 +12,37 @@ Section~\ref{future-work-section}.
 
 We have considered the safety-critical variant of Java and the virtual
 machines designed to run programs written in it.
-We have concluded that none of the virtual machines is formally
-verified and that many of them precompile programs to native code.
-Given the need for a formally verified virtual machine, we have stated
-our aim to specify a framework within which an SCJVM can be verified.
+None of the virtual machines is formally verified and that many of
+them precompile programs to native code.
+Given the need for a formally verified virtual machine, we have
+developed a framework within which an SCJVM can be verified.
 
 Having noted that SCJ virtual machines employ compilation, we have
 surveyed some of the work on compiler correctness, particularly those
 related to Java compilation.
-We established that two approaches to compiler correctness have been
-used:~the commuting-diagram approach and the algebraic approach.
-We decided to adopt the algebraic approach and chosen \Circus{} as a
+We have established that two approaches to compiler correctness have
+been used:~the commuting-diagram approach and the algebraic approach.
+We have adopted the algebraic approach and chosen \Circus{} as a
 specification language.
 
 To specify an SCJVM we have identified the requirements
-of the virtual machine services required to support SCJ programs.
+of the virtual machine services to support SCJ programs.
 We have also constructed a formal model of those requirements in the
 \Circus{} specification language.
 
 Contact with one of the authors of the SCJ specification has allowed
-us to obtain clarifications where the specification is unclear.
-The development of the formal model has helped in the
-identification of the areas that require clarification.
+us to obtain clarifications where the specification was unclear.
+The development of the formal model has helped in the identification
+of the areas that require clarification.
 It may be noted that the interface we have defined is not the only one
-that can support SCJ, but its overall functionality
-must be present in all SCJ virtual machines in some way.
+that can support SCJ, but its overall functionality must be present in
+all SCJ virtual machines in some way.
+The SCJ specification has been changed to reflect of many of these
+clarifications.
+In particular, the current thread during an interrupt, the backing
+store space required during mission setup, and the initialisation of
+the \texttt{Saflet} have all been clarified as a result of our contact
+with the authors of the SCJ specification.
 
 We have also created a formal model of the core execution environment
 that executes SCJ programs in an SCJVM.
@@ -46,11 +52,10 @@ model of an interpreter for that subset with the necessary
 infrastructure around it.
 
 Finally, we have specified a strategy for compiling SCJ bytecode to C.
-This strategy is specified using the algebraic approach, as a strategy
-to apply individual compilation rules, which are stated as algebraic
-laws, to transform our model of an SCJVM interpreter, loaded with an
-SCJ bytecode program, to a \Circus{} respresentation of the equivalent
-C code.
+This is a strategy to apply individual compilation rules, which are
+stated as algebraic laws, to transform our model of an SCJVM
+interpreter, loaded with an SCJ bytecode program, to a \Circus{}
+respresentation of the equivalent C code.
 Since the compilation rules are stated formally as \Circus{}
 refinement laws, we can, and have, written proofs of them.
 This allows us to be sure of their correctness, so that our
@@ -100,6 +105,10 @@ range of examples.
 This may involve further extension of the model and compilation
 strategy to consider instructions and features not covered by our
 work.
+These extensions would not involve significant changes to the
+strategy, since most of the instructions not included in our subset
+are similar to those in our subset.
+
 A further direction for future work to validate the strategy would be
 to mechanise the compilation rules and their proofs using an automated
 theorem prover, such as Isabelle/UTP.
@@ -108,9 +117,10 @@ reasoning about the strategy as whole.
 Code generation from such a mechanisation could also be used to
 produce an implementation of the strategy.
 
-Other possible directions for future work include the verification of
-an SCJ virtual machine using our framework or even the creation of a
-correct-by-construction virtual machine from our specification.
+Other possible directions for future work include the full
+verification of an SCJ virtual machine using our framework or even the
+creation of a correct-by-construction virtual machine from our
+specification.
 The option of deriving a correct virtual machine from our
 specification may be more desirable than verifying an existing one.
 This is because virtual machines can often be complex and therefore
@@ -120,6 +130,9 @@ uncover bugs, it may be a challenge to fix them.
 Also, the design of an existing virtual machine may not exactly meet
 the structure of our specification, requiring restructuring to allow
 the proof effort to begin.
+The work verifying the icecap scheduler in~\cite{freitas2016} shows
+this, since the tight coupling between components in icecap made
+modelling and verification challenging.
 
 On the other hand, the fact that \Circus{} allows for refinement means
 that a correct virtual machine can be constructed from our model in a
