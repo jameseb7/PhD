@@ -55,6 +55,15 @@
 \newcommand{\IfFullModel}[1]{\ifFullModel #1 \fi}
 \newcommand{\IfNotFullModel}[1]{\ifFullModel \else #1 \fi}
 
+\newif\ifExtended
+
+%TC:macro \IfExtended [text]
+%TC:macro \IfNotExtended [ignore]
+\Extendedtrue
+
+\newcommand{\IfExtended}[1]{\ifExtended #1 \fi}
+\newcommand{\IfNotExtended}[1]{\ifExtended \else #1 \fi}
+
 \newcommand{\directsubclass}{\prec_{\mathrm{d}}}
 \newcommand{\directsubclassid}[1]{\prec_{\mathrm{D},#1}}
 \newcommand{\subclassid}[1]{\preceq_{#1}}
