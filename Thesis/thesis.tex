@@ -218,7 +218,12 @@ prefoothook={\qedsymbol\relax}
   {\LARGE July 2018}
 \end{titlepage}
 
-\cleardoublepage
+\null
+\thispagestyle{empty}%
+\addtocounter{page}{-1}%
+\newpage
+
+\clearpage
 \phantomsection
 \addcontentsline{toc}{chapter}{Abstract}
 \begin{abstract}
@@ -261,7 +266,6 @@ prefoothook={\qedsymbol\relax}
   icecap, the only SCJVM that is open source and up-to-date with the
   SCJ standard.
 \end{abstract}
-\stepcounter{page}
 
 \cleardoublepage
 \phantomsection
