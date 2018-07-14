@@ -78,9 +78,9 @@ Java compiler and Java Virtual Machine (JVM) are correct.
 Work has been done on modelling virtual machines for Java, and on the
 formal correctness of compilers targeting those virtual machines.
 Some of the most complete work in that area was by St\"{a}rk, Schmid
-and B\"{o}rger~\cite{stark2001}, who present a model of the full Java
-language and virtual machine, along with a formally verified compiler,
-although for an older version of Java than is current.
+and B\"{o}rger~\cite{stark2001}, who presented a model of the full
+Java language and virtual machine, along with a formally verified
+compiler, although for an older version of Java than is current.
 Other work has also been done on modelling the JVM and Java
 compilation using refinement techniques~\cite{duran2010}.
 Additionally there has been work considering machine checked models of
@@ -106,7 +106,7 @@ is not suitable for running SCJ programs.
 A specialised virtual machine is required.
 
 In the case of virtual machines for embedded systems, the priorities
-are usually size and speed, which generally results in machines that
+are usually size and speed, which generally result in machines that
 are hard to verify.
 Moreover, virtual machines that rely on interpreting bytecode are
 unsuitable for real-time embedded systems as they are likely to be
@@ -115,7 +115,7 @@ An alternative method to run a Java program is to compile it to native
 code and some authors have suggested doing so either
 directly~\cite{schultz2003} or via C~\cite{varma2004}.
 There are several virtual machines that take this approach including
-Fiji VM~\cite{pizlo2009}, Icecap HVM~\cite{sondergaard2012} and
+Fiji VM~\cite{pizlo2009}, icecap HVM~\cite{sondergaard2012} and
 OVM~\cite{armbruster2007}.
 This allows correct running of an otherwise correct SCJ program to be
 viewed as a compiler verification problem.
@@ -141,8 +141,8 @@ compilation using refinement calculi~\cite{back1981, morgan1990,
 This approach appears to be less commonly used but has been applied to
 Java~\cite{duran2005, duran2010} and hardware description
 languages~\cite{perna2010, perna2011}.
-This approach is also quite amenable to automation as it relies on
-refinement laws that can be applied by a term rewriting system.
+It is also quite amenable to automation as it relies on refinement
+laws that can be applied by a term rewriting system.
 
 There is a clear need for formal verification of SCJ virtual machines
 due to the safety-critical nature of the systems involved and the fact

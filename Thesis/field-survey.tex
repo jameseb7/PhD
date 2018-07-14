@@ -308,7 +308,7 @@ research over the years in this area.
 Most of the work done follows a similar approach, which we term
 the commuting-diagram approach as it is based on showing that a
 particular diagram commutes.
-We discuss the commuting diagram approach in
+We discuss the commuting-diagram approach in
 Section~\ref{commuting-diagram-subsection}.
 
 An alternative approach to compiler verification is the algebraic
@@ -399,7 +399,7 @@ proof was feasible and could be completed relatively easily.
 A point to note is that Milner and Weyhrauch acknowledged the need for
 some way of structuring the proof in order to make it amenable to
 machine-checking.
-This gives further support to the algebraic commuting diagram approach
+This gives further support to the algebraic commuting-diagram approach
 advocated by Lockwood Morris.
 Indeed, Milner and Weyhrauch explicitly followed that approach as they
 were in discussions with Lockwood Morris.
@@ -424,7 +424,7 @@ The basic structure of the commuting diagram is a fairly natural
 approach to take, as seen by work such as that of the ProCoS
 project~\cite{buth1992}.
 
-Another piece of work that follows the commuting diagram approach is
+Another piece of work that follows the commuting-diagram approach is
 that of Polak~\cite{polak1981}, who states that he is more interested
 in verification of a ``real'' compiler rather than ``abstract code
 generating algorithms'', and shows the correctness of a compiler for a
@@ -435,7 +435,7 @@ earlier papers.
 It sets a precedent for a simpler verification approach based on
 considering the functions in the commuting diagram.
 
-The commuting diagram has also been used in recent work, some of the
+The commuting-diagram approach has also been used in recent work, some of the
 most successful of which is that of CompCert~\cite{leroy2009a,
   leroy2009b, leroy2012}.
 This is a project to create a fully verified realistic compiler for a
@@ -454,7 +454,7 @@ compilation function.
 This approach may be viewed as variant of the commuting-diagram
 approach in which the compilation function is derived from the source
 and target semantics and the relationship between them, rather than
-being verified by those elements of the commuting-diagram.
+being verified by those elements of the commuting diagram.
 
 \subsection{Algebraic Approach}
 \label{algebraic-approach-subsection}
@@ -572,9 +572,9 @@ $M[2]$ and $M[3]$ respectively.
 The temporary variable introduced to store the result of $y + z$ is
 similarly replaced with $M[4]$.
 
-Each of the assignment statements from is then refined by a normal
-form with an explicit program counter $P$, that is incremented as part
-of the assignment operation.
+Each of the assignment statements is then refined by a normal form
+with an explicit program counter $P$, that is incremented as part of
+the assignment operation.
 These normal forms are then combined together by the refinement rule
 for sequential composition to create the normal form of the full
 program.
@@ -683,7 +683,7 @@ Finally, Lochbihler~\cite{lochbihler2010} added threads to Jinja and
 showed correctness of compilation for Java concurrency.
 It is notable that this is the only work on Java compilation that
 properly addresses concurrency.
-All of these works follow the commuting diagram approach.
+All of these works follow the commuting-diagram approach.
 
 Though some work has been done on correct compilers for Java-like
 languages and many virtual machines for SCJ adopt an approach of
