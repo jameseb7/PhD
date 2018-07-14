@@ -50,8 +50,10 @@ unsuitable for real-time systems, for which strict guarantees about
 timing properties must be made.
 To address this issue the Real-Time Specification for Java
 (RTSJ)~\cite{gosling2000} was created.
-RTSJ extends Java with a scoped memory model and a more
-predictable scheduling system.
+RTSJ extends Java with a scoped memory model and a more predictable
+scheduling system.
+It also allows for garbage-collected heaps alongside the scoped memory
+model, using more predictable real-time garbage collectors~\cite{schoeberl2006,schoeberl2010,wallace1993}.
 
 While RTSJ addresses real-time requirements of embedded systems, many
 embedded systems are also safety-critical.
@@ -358,6 +360,9 @@ and proving that it is refined by an embedding of the C code, as shown
 in Figure~\ref{our-approach-figure}.
 The core services of an SCJVM, such as scheduling and memory
 management, must be available for both the source and target codes.
+This may be viewed as specialising the interpreter to the behaviour of
+a specific bytecode program, so our approach is, in part, an approach
+to verifying a program specialiser~\cite{jones1993}.
 
 For a low-level language, a deep embedding is the
 natural method for representing its semantics, since it is defined in
