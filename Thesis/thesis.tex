@@ -247,6 +247,7 @@ prefoothook={\qedsymbol\relax}
   This thesis contributes to the formal verification of SCJVMs that
   utilise ahead-of-time compilation by presenting a verification of
   compilation from Java bytecode to C.
+  
   The approach we adopt is an adaptation of the algebraic approach
   developed by Sampaio and Hoare.
   We start with a formal specification of an SCJVM executing the
@@ -263,8 +264,8 @@ prefoothook={\qedsymbol\relax}
   Additionally, our formal model of an SCJVM may be used as a
   specification for creating an interpreting SCJVM.
   To ensure the applicability of our results, we base our work on
-  icecap, the only SCJVM that is open source and up-to-date with the
-  SCJ standard.
+  icecap, the only currently available SCJVM that is open source and
+  up-to-date with the SCJ standard.
 \end{abstract}
 
 \cleardoublepage
@@ -304,15 +305,16 @@ Tools, and I am thankful to him for the time he took to explain these
 things.
 My thanks also go to the authors of the icecap HVM for their help in
 using it.
-I am thankful to Augusto Sampaio for his feedback on my use of
-the algebraic approach.
+I am thankful to Augusto Sampaio for his feedback on my use of the
+algebraic approach.
 I would also like to thank Pedro Ribeiro for his useful advice on the
 format of this thesis, and Alvaro Miyazawa for his help in putting
-supporting technical reports online.
+technical reports online.
 Heartfelt thanks go to Simon Foster for all his friendship throughout
 this PhD, for teaching me to use the Isabelle proof assistant, and for
 introducing me to the area of formal methods, without which I may
 never have done this PhD at all.
+
 This work has been funded by an EPSRC studentship, and I am grateful to
 EPSRC for their provision of the funding and to the University for
 deciding to allocate one of the studentships to me.
@@ -324,10 +326,10 @@ I would particularly like to thank my mother for proofreading this
 thesis.
 My thanks also go to all my friends for their support, particularly to
 the members of Trinity Church York and Wentworth Christian Union for
-all their support, encouragement and prayers.
+all their support, encouragement, and prayers.
 
 Finally, as a Christian, I acknowledge that all that happens is in the
-hand of God. 
+hands of God. 
 I am enormously thankful to him for all he has done in bringing me
 safely to this point. 
 Therefore, I commit this thesis to his sovereign care and ask that he
@@ -345,15 +347,26 @@ I declare that this thesis is a presentation of original work and I am
 the sole author. 
 This work has not previously been presented for an award at this, or
 any other, University. 
-All sources are acknowledged as References.
+All sources are acknowledged as references.
 The following material, presented in this thesis, has been previously
 published:
 
 \begin{refsegment}
   \raggedright
-  \nocite{baxter2015a,baxter2017,freitas2016}
+  \nocite{baxter2015a,baxter2017}
   \setlength{\bibitemsep}{0.5cm}
   \printbibliography[resetnumbers=true,segment=\therefsegment,heading=none]
+\end{refsegment}
+
+The following published material is not directly described in this
+thesis, but provides evidence of the context in which our work can be
+applied. We discuss it here.
+
+\begin{refsegment}
+  \raggedright
+  \nocite{freitas2016}
+  \setlength{\bibitemsep}{0.5cm}
+  \printbibliography[resetnumbers=3,segment=\therefsegment,heading=none]
 \end{refsegment}
 
 % end declaration page
