@@ -287,14 +287,14 @@ next instruction if it is false.
 \begin{restatable}[\texttt{if}-conditional-intro]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
   \setlength{\zedindent}{0.25cm}
-  \setlength{\zedtab}{0.65cm}
+  \setlength{\zedtab}{0.57cm}
   % \setlength{\abovedisplayskip}{0.1cm}
   % \setlength{\belowdisplayskip}{0.1cm}
   Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
   \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \\
     {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \circseq \{frameStack \neq \emptyset\}
   \end{circus}
   then
   \begin{circus}
@@ -317,9 +317,9 @@ next instruction if it is false.
       \circmu X \circspot \\
       \t1 \circif frameStack = \emptyset \circthen \Skip \\
       \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t2 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
+      \t3 (\circvar value1, value2 : Word \circspot P \circseq \\
       \t3 \circif b \circthen \Skip \\
       \t3 {} \circelse \lnot b \circthen pc := k \circseq Poll \circseq B \\
       \t3 \circfi) \circseq pc := j \\
@@ -398,11 +398,17 @@ conditional, representing a loop.
   \label{while-introduction-rule1}
   \setlength{\zedindent}{0.2cm}
   \setlength{\zedtab}{0.55cm}
-  Given $i : ProgramAddress$, if $i \neq j$ and
+  Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \\
     {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  and
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq C \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq C \circseq \{frameStack \neq \emptyset\}
   \end{circus}
   then
   \begin{circus}

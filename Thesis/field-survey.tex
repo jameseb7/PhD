@@ -103,7 +103,7 @@ Figure~\ref{phases-diagram}.
   \label{phases-diagram}
 \end{figure}
 
-The fist phase is initialisation, which consists of setting up the
+The first phase is initialisation, which consists of setting up the
 schedulable objects controlled by the mission and creating any data
 structures required for the mission.
 Then the mission is executed by starting each of the schedulable
@@ -178,8 +178,11 @@ It is not supported by standard JVMs as they do not provide memory
 outside of the heap for allocation and lack a notion of allocation
 context.
 The SCJ memory manager also needs to provide a means of accessing raw
-memory for the purposes of device access, but that section of the SCJ
-standard is not yet finalised so we will not cover it here.
+memory for the purposes of device access, which is mediated by
+accessor objects provided by the SCJ API.
+As this API was stabilised at a later stage in the development of the
+SCJ specification than its other features, we have not had opportunity
+to include it in this work.
 It can, however, be seen that any system of raw memory access is not
 supported by most standard JVMs.
 
@@ -219,7 +222,8 @@ The approach taken by the HVM is one of precompiling Java bytecode to
 C in order to allow for faster running programs with fewer memory
 resources.
 It includes an implementation of the SCJ libraries that covers most of
-SCJ level 2, though only for a single processor implementation.
+SCJ level 2, originally supporting only single processor programs but
+with multiprocessor support added later~\cite{zhao2015}.
 This implementation, however, cannot be easily decoupled from the
 virtual machine itself.
 
@@ -243,7 +247,7 @@ However, Fiji VM is not specifically targeted at SCJ and works with a
 range of libraries, including SCJ, RTSJ and the standard Java
 libraries.
 Fiji VM does have the advantage of high portability and multiprocessor
-support, which is lacking in many other SCJ virtual machines.
+support, which is lacking in some other SCJ virtual machines.
 
 The fact that Fiji VM works with the SCJ libraries and supports the
 scoped memory model means it can run SCJ programs.
@@ -266,7 +270,7 @@ programs; indeed, an SCJ implementation for OVM was later
 created~\cite{plsek2010}.
 However, OVM does not appear to have kept up with more recent changes
 to the draft SCJ standard.
-OVM is, like icecap HVM, but unlike Fiji VM, single processor.
+OVM is, unlike Fiji VM and the icecap HVM, single processor.
 
 \subsection{PERC Pico}
 
@@ -301,17 +305,17 @@ in the next section.
 
 Due to the importance of compiler correctness, there has been much
 research over the years in this area.
-Most of the work done follows a similar approach, which we will term
+Most of the work done follows a similar approach, which we term
 the commuting-diagram approach as it is based on showing that a
 particular diagram commutes.
-We will discuss the commuting diagram approach in
+We discuss the commuting diagram approach in
 Section~\ref{commuting-diagram-subsection}.
 
 An alternative approach to compiler verification is the algebraic
 approach developed in the early 90s.
 It is based on the concepts of refinement calculi designed for
 deriving software from specifications of behaviour.
-We will explain the algebraic approach in
+We explain the algebraic approach in
 Section~\ref{algebraic-approach-subsection} and discuss how it differs
 from the commuting-diagram approach.
 
@@ -368,14 +372,15 @@ homomorphisms, and the proof was performed using induction over the
 source language.
 This work laid the foundation for the study of compiler correctness.
 
-Burstall and Landin show correctness of a compiler for the same source
-and target languages as McCarthy and Painter; they use a more
+Burstall and Landin showed correctness of a compiler for the same
+source and target languages as McCarthy and Painter; they used a more
 algebraic approach that better matches what Lockwood Morris later
 suggested.
 Burstall and Landin's approach involved representing the source and
 target languages, and their meanings, as algebras, with the
 compilation functions as homomorphisms.
-They target several intermediate machines in the proof of correctness.
+They targeted several intermediate machines in the proof of
+correctness.
 Viewing the languages as algebras allows for simpler proofs as some of
 the arrows of the commuting diagram can be wholly or partially derived
 from the algebraic structure.
@@ -385,9 +390,9 @@ advocate the use of algebras and homomorphisms.
 The overall goal of pursuing formal proofs of compiler correctness, as
 proposed by McCarthy and Painter~\cite{mccarthy1967}, is to allow
 machine-checked proofs of program correctness.
-There has been work in that area, the earliest of which is that by
-Milner and Weyhrauch~\cite{milner1972} who show the correctness of an
-ALGOL-like language.
+There has been work in that area, the earliest of which was that by
+Milner and Weyhrauch~\cite{milner1972} who showed the correctness of
+an ALGOL-like language.
 The proof of correctness was partially mechanised in the LCF theorem
 prover~\cite{milner1972a} and the authors were of the opinion that the
 proof was feasible and could be completed relatively easily.
@@ -684,14 +689,14 @@ Though some work has been done on correct compilers for Java-like
 languages and many virtual machines for SCJ adopt an approach of
 compiling to native code, no work has been done on verifying that
 compilation to native code.
-Therefore, we will consider correctness of the compilation to native
-code as part of our work on SCJ virtual machines.
-We will follow the algebraic approach as it gives greater assurance of
+Therefore, in this thesis, we consider correctness of the compilation
+to native code as part of our work on SCJ virtual machines.
+We follow the algebraic approach as it gives greater assurance of
 correctness, as an additional function mapping source meanings to
 target meanings is not required, and a good level of modularity, as
 the compilation is split into separately proved rewrite rules.
 In order to represent the normal form we require a specification
-language and for that purpose will use \Circus{}, which is described
+language and for that purpose use \Circus{}, which is described
 in the next section.
 
 \section{\Circus{}}
@@ -709,8 +714,8 @@ Each process may have state, and is made up of actions that operate on
 that state and communicate over channels.
 
 We illustrate the concepts of \Circus{} using as an example the
-process for the real-time clock from some of the preliminary work on
-the specification of an SCJ virtual machine.
+process for the real-time clock from an early version of our
+specification of an SCJ virtual machine.
 The specification begins with a declaration of the channels that may
 be used in the following processes.
 Type declarations written in Z can also be included at the beginning
@@ -720,7 +725,7 @@ create a boolean datatype
 %
 \begin{zed}
   Time == \nat \\
-  Bool ::= True | False \\
+  Bool ::= True | False
 \end{zed}
 %
 We declare channels to represent interactions corresponding to calls
@@ -734,7 +739,7 @@ clock.
   \circchannel getTime, getPrecision, setAlarm : Time \\
   \circchannel clearAlarm \\
   \circchannel HWtick \\
-  \circchannel HWtime : Time \\
+  \circchannel HWtime : Time
 \end{circus}
 %
 We also specify a constant to represent the clock's precision using a
@@ -765,7 +770,7 @@ alarm must not be in the past.
 \begin{schema}{RTCState}
   currentTime  : Time \\
   alarmSet     : Bool \\
-  currentAlarm : Time \\
+  currentAlarm : Time
 \where
   alarmSet = True \implies \\
   \t1 currentAlarm \geq currentTime
@@ -781,6 +786,9 @@ Its final state is represented by variables obtained by placing a
 prime on the names of the state components.
 Here, the initialisation takes as input the initial time, represented
 by the variable $initTime?$.
+In Z schemas, inputs to operations are distinguished by ending with a
+question mark.
+Similarly, outputs are marked with an exclamation mark.
 The current time is defined to be equal to the initial time and no
 alarm is initially set.
 The initial time of the alarm is arbitrary, that is,
@@ -789,10 +797,10 @@ initialisation imposes no restrictions on it.
 %
 \begin{schema}{Init0}
   RTCState~' \\
-  initTime?{} : Time \\
+  initTime? : Time
 \where 
-  currentTime' = initTime?{} \\
-  alarmSet' = False \\
+  currentTime' = initTime? \\
+  alarmSet' = False
 \end{schema}
 %
 The action $Init$, defined below, uses a CSP prefixing to specify an
@@ -823,12 +831,12 @@ indicate an alarm is set in this case.
 %
 \begin{schema}{SetAlarm0}
   \Delta RTCState \\
-  newAlarm?{} : Time \\
+  newAlarm? : Time
 \where
-  newAlarm?{} \geq currentTime \\
+  newAlarm? \geq currentTime \\
   currentAlarm' = newAlarm?{} \\
   alarmSet' = True \\
-  currentTime' = currentTime \\
+  currentTime' = currentTime
 \end{schema}
 %
 In the second case, the new alarm is in the past and so the alarm is
@@ -838,9 +846,9 @@ The symbol $\Xi$ denotes that the state remains the same.
 %
 \begin{schema}{SetAlarm1}
   \Xi RTCState \\
-  newAlarm?{} : Time \\
+  newAlarm? : Time
 \where
-  newAlarm?{} < currentTime \\
+  newAlarm? < currentTime
 \end{schema}
 %
 The two Z schemas are combined using a logical disjunction, allowing
@@ -848,8 +856,7 @@ either to specify the behaviour when a request to set the alarm takes
 place.
 %
 \begin{circusaction}
-  SetAlarm \circdef setAlarm?newAlarm \\
-  \t1 \then\ \lschexpract SetAlarm0 \lor SetAlarm1 \rschexpract
+  SetAlarm \circdef setAlarm?newAlarm \then \lschexpract SetAlarm0 \lor SetAlarm1 \rschexpract
 \end{circusaction}
 %
 In addition to Z and CSP constructs, \Circus{} also has other
@@ -901,8 +908,39 @@ In this way several \Circus{} specifications of individual components
 can be combined to form a specification of the entire system.
 
 A detailed account of \Circus{} can be found in~\cite{oliveira2009}.
-In what follows, we explain the notation as needed.
+Table~\ref{circus-operators-table} summarises the \Circus{} constructs
+used in this thesis.
 
+\begin{table}
+  \centering
+  \begin{tabular}{p{11.3cm}l}
+    \hline
+    Construct & \Circus{} notation \\
+    \hline
+    Termination & $\Skip$ \\
+    Divergence (abortion) & $\Chaos$ \\
+    Assignment of expression $e$ to variable $x$ & $x := e$ \\
+    Prefixing of signal on channel $c$ to action $A$ & $c \then A$ \\
+    Prefixing of output on channel $c$ of expression $e$ to action $A$ & $c!e \then A$ \\
+    Prefixing of input on channel $c$ of variable $x$ to action $A$ & $c?x \then A$ \\
+    Variable block with variable $x$, of type $T$, and action $A$ & $\circvar x : T \circspot A$ \\
+    Value parameter block with parameter $x$, of type $T$, and action $A$ & $\circval x : T \circspot A$ \\
+    Result parameter block with parameter $x$, of type $T$, and action $A$ & $\circres x : T \circspot A$ \\
+    Instantiation of parameterised action $A$ with expression $e$ & $A(e)$ \\
+    Guarding of $A$ with predicate $g$ & $\lcircguard g \rcircguard \circguard A$ \\
+    Sequential composition of actions $A$ and $B$ & $A \circseq B$ \\
+    External choice of actions $A$ and $B$ & $A \extchoice B$ \\
+    Conditional choice of actions $A$ and $B$, with conditions $g$ and $h$ & $\circif g \circthen A \circelse h \circthen B \circfi$ \\
+    Parallel interleaving of processes $P$ and $Q$ & $P \interleave Q$ \\
+    Recursion with body given by action function $F$ & $\circmu X \circspot F(X)$ \\
+    Parallel composition of processes $P$ and $Q$, synchronising on the \endgraf \hspace{1cm} intersection of channel sets $cs1$ and $cs2$ & $P _{cs1}\!\!\parallel_{cs2} Q$ \\
+    Parallel composition of processes $P$ and $Q$, synchronising on the \endgraf \hspace{1cm} channel set $cs$ & $P \lpar cs \rpar Q$ \\
+    Hiding of channel set $cs$ in process $P$ & $P \circhide cs$ \\
+    \hline
+  \end{tabular}
+  \caption{Summary of \Circus{} notation}
+  \label{circus-operators-table}
+\end{table}
 
 % for the thesis add a more comprehensive description of Circus with a
 % description of process operators and tables of operator descriptions

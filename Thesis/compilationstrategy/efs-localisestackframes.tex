@@ -157,9 +157,9 @@ variables.
 For example, every call to the method action $TPK\_handleAsyncEvent$
 is preceded by an $InterpreterNewStackFrame$ operation and followed by
 an $InterpreterReturnEPC$ operation.
-The Rule~[\nameref{arguments-introduction-rule}] therefore applies to
-it and the number of arguments given as the $n$ parameter to the rule
-is $1$, since the SCJ method \texttt{handleAsyncEvent()} takes no
+The Rule~[\nameref{arguments-introduction-rule}] therefore applies to it
+and the number of arguments given as the $n$ parameter to the rule is
+$1$, since the SCJ method \texttt{handleAsyncEvent()} takes no
 explicit arguments, but is not static.
 Calls to $TPK\_handleAsyncEvent$ (the only one of which occurs in
 $ExecuteMethod$, since it is only called by the infrastructure), then
@@ -168,7 +168,7 @@ have the form shown below.
   (\circval arg1 : Word \circspot \\
       \t1 \lschexpract \exists methodArgs? == \langle arg1 \rangle @ \\
       \t2 InterpreterNewStackFrame[TPK/class?, handleAsyncEvent/methodID?] \rschexpract \circseq \\
-      \t2 TPK\_handleAsyncEvent \circseq \lschexpract InterpreterReturn \rschexpract \\
+      \t2 Poll \circseq TPK\_handleAsyncEvent \circseq \lschexpract InterpreterReturn \rschexpract \\
       )(methodArgs~1)
 \end{circus}
 
@@ -181,7 +181,7 @@ the \Call{RedefineMethodExcludingReturn}{} procedure used
 in the previous section.
 It is defined by
 Algorithm~\ref{redefine-method-action-to-include-parameters-algorithm}
-in Appendix~\ref{localise-stack-frames-appendix-subsection}.
+in Appendix~\ref{compilation-rules-appendix}.
 
 Having completely separated the method into its own, independent,
 action, we then introduce the stack frame variable for the method
@@ -298,19 +298,19 @@ Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}].
 After this rule has been applied, $TPK\_handleAsyncEvent$ is as shown
 in Figure~\ref{efs-localise-stack-frames-example-figure}.
 
-For brevity, we define new actions, which we refer to as $Handle*SF$
+For brevity, we define new actions, which we refer to as $Handle{*}SF$
 actions.
 These are not formally introduced as actions in the compilation
 strategy as they are an abbreviation used for presenting examples and
 stating compilation rules.
 They are refined to a different form later in the elimination of frame
 stack stage.
-The $Handle*SF$ actions are similar to the $Handle*EPC$ actions,
+The $Handle{*}SF$ actions are similar to the $Handle{*}EPC$ actions,
 except they have every reference to $last~frameStack$ (or
 $last~frameStack'$) replaced with a reference to $stackFrame$ (or
 $stackFrame'$), and have undergone the data refinement described
 above.
-We name them by replacing $EPC$ in the names of the $Handle*EPC$
+We name them by replacing $EPC$ in the names of the $Handle{*}EPC$
 actions with $SF$.
 Similarly, we define an $InvokeSF$ operation that performs the
 operation of $InterpreterStackFrameInvoke$ over $stackFrame$ instead

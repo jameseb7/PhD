@@ -1,11 +1,11 @@
 The first stage eliminates $pc$ from the state of each thread's
-process, $Thr(bc,cs,t)$, introducing the control flow constructs of C
+process, $Thr(bc,cs,instCS,t)$, introducing the control flow constructs of C
 as a result. 
 It is summarised by the following theorem.
 %
 \begin{thm}[Elimination of Program Counter]\label{epc-thm}
   \begin{circus}
-    Thr(bc,cs,t) \circrefines ThrCF_{bc,cs}(cs,t)
+    Thr(bc,cs,instCS,t) \circrefines ThrCF_{bc,cs}(cs,t)
   \end{circus}%
 \end{thm}
 %

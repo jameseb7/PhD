@@ -136,7 +136,7 @@ This equates the $BackingStoreManager$ fields in $ObjManState$ with
 those in $StructManState$, since management of backing stores is
 unaffected by the data refinement.
 
-\begin{figure}[t!]
+\begin{figure}[tp!]
 \begin{schema}{ObjectCI}
   ObjManState \\
   StructManState_1
@@ -239,7 +239,7 @@ This means the $GetObjectClassInfo$ schema, which determines the class
 information, can also be removed, eliminating reliance on $cs$ in the
 action.
 
-\begin{figure}[thp]
+\begin{figure}[t!]
   \begin{restatable}[refine-$NewObject$]{crule}{RefineNewObjectRule}
     \label{refine-NewObject-rule}
     \setlength{\zedtab}{0.6cm}
@@ -296,11 +296,10 @@ $PutField$, $GetStatic$ and $PutStatic$ actions respectively, are
 similar to Rule~[\nameref{refine-NewObject-rule}], refining the data
 operations that result from the data refinement to choices over class
 and field identifiers received on the channels for the operations.
-These rules can be found in
-Appendix~\ref{data-refinement-of-objects-appendix-section}.
-Note that, while $Init$ action of $ObjMan$ is refined in this stage,
-it does not require a separate rule, since the necessary refinement is
-performed by the data refinement alone.
+These rules can be found in Appendix~\ref{compilation-rules-appendix}.
+Note that, while the $Init$ action of $ObjMan$ is refined in this
+stage, it does not require a separate rule, since the necessary
+refinement is performed by the data refinement alone.
 
 After the refinement has been performed, we can eliminate the $cs$
 parameter of the process via an application of

@@ -12,6 +12,8 @@ must be removed from every action in $Thr$ simultaneously.
     \label{algorithm-eliminate-Skips}
     \State \ApplyFor{Law~[\nameref{process-param-elim-law}]}{$bc$}
     \label{algorithm-eliminate-bc-parameter}
+    \State \ApplyFor{Law~[\nameref{process-param-elim-law}]}{$instCS$}
+    \label{algorithm-eliminate-instCS-parameter}
   \end{algorithmic}
   \caption{\Call{RemovePCFromState}{}}
   \label{pc-elimination-algorithm}
@@ -114,17 +116,17 @@ Since the assignments leave all other state components unchanged, the
 data-refined $pc$ assignments have no effect, making them equivalent
 to $\Skip$.
 These $\Skip$ actions are then eliminated by applying
-Law~[\nameref{seq-unitl-law}] wherever possible, at
+Law~[\nameref{seq-unitl-law}] wherever possible, on
 line~\ref{algorithm-eliminate-Skips} of
 Algorithm~\ref{pc-elimination-algorithm}.
 
-Finally, we eliminate the $bc$ parameter to the process, since it is
-also no longer needed, using an application of
-Law~[\nameref{process-param-elim-law}], at
-line~\ref{algorithm-eliminate-bc-parameter}.
-This completes the refinement of $Thr(bc,cs,t)$ into
-$ThrCF_{bc,cs}(cs,t)$, referenced in
-Theorem~\ref{epc-thm}, which has its control flow
-introduced and does not include $pc$ in its state.
+Finally, we eliminate the $bc$ and $instCS$ parameters to the process,
+since they are also no longer needed, using application of
+Law~[\nameref{process-param-elim-law}], on
+lines~\ref{algorithm-eliminate-bc-parameter}
+and~\ref{algorithm-eliminate-instCS-parameter}.
+This completes the refinement of $Thr(bc,cs,instCS,t)$ into
+$ThrCF_{bc,cs}(cs,t)$, referenced in Theorem~\ref{epc-thm}, which has
+its control flow introduced and does not include $pc$ in its state.
 The next stage of the strategy operates on $ThrCF_{bc,cs}(cs,t)$ to
 eliminate the $frameStack$.

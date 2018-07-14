@@ -122,7 +122,7 @@ $Running$ action, and so we omit the \textbf{to} clause.
     \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]}{$target$}
     \EndTry
     \EndFor
-    \State \ApplyFor{Law~[\nameref{alt-seq-dist-law}]}{$methodCall$}
+    \State \ApplyTo{Rule~[\nameref{virtual-method-call-dist-rule}]}{$methodCall$}
     \label{algorithm-move-pc-assignments}
     \EndIf
     \If{\Call{HasSimpleSequence}{$methodCallAddress$}}
@@ -173,10 +173,10 @@ For each method call that needs resolving, we check if it can be
 resolved at this point in the compilation strategy.
 This is performed on line~\ref{algorithm-is-resolvable-check}, where
 the boolean \Call{IsResolvable}{$methodCall$} is checked.
-\Call{IsResolvable}{$mc$} is true if all the targets of the method
-call $methodCall$ are either special methods or non-special methods
-that are already complete and have been separated into their own
-actions (as described in
+\Call{IsResolvable}{$methodCall$} is true if all the targets of the
+method call $methodCall$ are either special methods or non-special
+methods that are already complete and have been separated into their
+own actions (as described in
 Algorithm~\ref{separate-complete-methods-algorithm}).
 
 % If the method call is resolvable, then we check whether there is a
@@ -260,7 +260,7 @@ expansion (Section~\ref{expand-bytecode-subsection}).
 \caption{Rule~[\nameref{refine-invokestatic-rule}]}
 \label{refine-invokestatic-rule-figure}
 \end{figure}
-Rule~[\nameref{refine-invokestatic-rule}] refines the
+Rule~[\nameref{refine-invokestatic-rule}] refines
 $HandleInvokeStaticEPC(cpi)$ to an action that pops the method's
 arguments from the stack using the $InterpreterStackFrameInvoke$
 operation and then behaves as the $Invoke$ action described in
@@ -357,8 +357,9 @@ class of the method to be invoked is determined from the class of the
 \texttt{this} object popped from the stack.
 % TODO: should we reference the fact that this is mentioned above?
 Since Java bytecode verification ensures that the class is assignable
-to $c$, we need only consider the identifiers of subclasses of
-$c$:~$c_1, \cdots , c_n$.
+to $c$, we need only consider the identifiers of subclasses of $c$,
+and these are further constrained by $instCS$, the classes that are
+actually instantiated in the program, to obtain the list of targets:~$c_1, \ldots , c_n$.
 We require that $n$ be greater than $1$, since this rule handles cases
 with multiple targets.
 
@@ -577,16 +578,6 @@ The second proviso of the rule ensures that the entry point, $k$, is
 that given in the class information provided by $ResolveMethod$ for
 the class identifier $c$ and method identifier $m$.
 
-The action containing the behaviour of the method is $M$, at the
-$pc = k$ branch of the choice in $Running$.
-The third proviso requires that the execution of $M$ must result in
-the top stack frame being popped and the $pc$ being set to the value
-stored in the next stack frame.
-This is needed to ensure that the method can be sequenced with the
-behaviour after it.
-It is true for all complete methods, since the return instructions
-establish the required property and any property may be assumed to
-hold after an infinite loop.
 \begin{figure}[thp]
 \begin{restatable}[resolve-normal-method]{crule}{ResolveNormalMethodRule}
   \label{resolve-normal-method-rule}
@@ -662,6 +653,17 @@ hold after an infinite loop.
 \label{resolve-normal-method-rule-figure}
 \end{figure}
 
+The action containing the behaviour of the method is $M$, at the
+$pc = k$ branch of the choice in $Running$.
+The third proviso requires that the execution of $M$ must result in
+the top stack frame being popped and the $pc$ being set to the value
+stored in the next stack frame.
+This is needed to ensure that the method can be sequenced with the
+behaviour after it.
+It is true for all complete methods, since the return instructions
+establish the required property and any property may be assumed to
+hold after an infinite loop.
+
 Rule~[\nameref{resolve-normal-method-rule}] applies only to those
 class and method identifiers that are not handled by
 Rule~[\nameref{resolve-special-method-rule}].
@@ -691,7 +693,7 @@ Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]
 refines $CheckSynchronizedInvoke$ to $\Skip$.
 
 In the case of dynamic dispatch, we iterate over each branch of the
-choice over the methods targets, in the loop beginning on
+choice over the method's targets, in the loop beginning on
 line~\ref{algorithm-targets-loop}, using the function
 \Call{Targets}{$methodCall$} to obtain a list of the possible targets
 of the method call $methodCall$.
@@ -712,8 +714,10 @@ Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}
 to the target, as in the case of static dispatch.
 After each of the targets has been resolved, the $pc$ assignment is
 moved outside the choice by an application of
-Law~[\nameref{alt-seq-dist-law}] on
-line~\ref{algorithm-move-pc-assignments}.
+Rule~[\nameref{virtual-method-call-dist-rule}] on
+line~\ref{algorithm-move-pc-assignments}, which distributes the action
+out of the conditional and moves it outside the variable block
+surrounding the conditional.
 
 In both the case of a single target and the case of multiple targets,
 we attempt to introduce a sequential composition with the instructions
@@ -772,12 +776,12 @@ After refining the action with
 Rule~[\nameref{refine-invokestatic-rule}], we resolve the method call
 using Rule~[\nameref{resolve-normal-method-rule}], since \texttt{f()}
 is not a special method.
-The first proviso of this rule ensures that it is applied with
+The second proviso of this rule ensures that it is applied with
 $k = 43$, since $TPK$ matches the class identifier $TPKClassID$ and
 contains information for the method identifier $f$.
-The second proviso is met, since $TPK\_f$ ends with
-$HandleAreturnEPC$, which pops the last frame from the $frameStack$
-and sets $pc$ to the stored value.
+The third proviso is met, since $TPK\_f$ ends with $HandleAreturnEPC$,
+which pops the last frame from the $frameStack$ and sets $pc$ to the
+stored value.
 After the application of Rule~[\nameref{resolve-normal-method-rule}],
 the sequence of actions has the form below, with the method invocation
 sequenced with the $TPK\_f$ action and an assignment $pc := 24$.
@@ -786,8 +790,8 @@ sequenced with the $TPK\_f$ action and an assignment $pc := 24$.
   \t2 {} \circelse pc = 23 \circthen (\circvar poppedArgs : \seq Word \circspot \\
   \t3 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
   \t3 \lschexpract InterpreterNewStackFrame[ \\
-  \t4 TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-  \t3 Poll \circseq TPK\_f \circseq pc := 24 \\
+  \t4 TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
+  \t3 Poll \circseq TPK\_f) \circseq pc := 24 \\
   \t2 {} \cdots {}
 \end{circusaction}
 A sequential composition can then be introduced with the instructions

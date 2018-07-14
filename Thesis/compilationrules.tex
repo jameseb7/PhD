@@ -40,7 +40,7 @@
     \exists c : Class; m : MethodID | \\
     \t1 c \in \ran cs \land m \in \dom c.methodEntry @ \\
     \t1 i \in c.methodEntry~m \upto c.methodEnd~m \land \\
-    \t1 m \in c.synchronisedMethods \land m \notin c.staticMethods
+    \t1 m \notin c.synchronisedMethods \lor m \in c.staticMethods
   \end{displaymath}
 \end{restatable}
 \end{minipage}
@@ -66,9 +66,9 @@
   % \setlength{\belowdisplayskip}{0.1cm}
   Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and 
   \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \\
     {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \circseq \{frameStack \neq \emptyset\}
   \end{circus}
   then
   \begin{circus}
@@ -120,9 +120,9 @@
   % \setlength{\belowdisplayskip}{0.1cm}
   Given $i : ProgramAddress$, if $i \neq j$, $i \neq k$, and
   \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \\
     {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \circseq \{frameStack \neq \emptyset\}
   \end{circus}
   then
   \begin{circus}
@@ -176,9 +176,15 @@
   \setlength{\zedtab}{0.58cm}
   Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \\
     {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \circseq \{frameStack \neq \emptyset\}
+  \end{circus}
+  and
+  \begin{circus}
+    \{frameStack \neq \emptyset\} \circseq B \circseq \\
+    {} = {} \\
+    \{frameStack \neq \emptyset\} \circseq B \circseq \{frameStack \neq \emptyset\}
   \end{circus}
   then
   \begin{circus}
@@ -230,9 +236,9 @@
   \setlength{\zedtab}{0.58cm}
   Given $i : ProgramAddress$, if $i \neq j$,
   \begin{circus}
-    \{frameStack \neq \emptyset\} \circseq A \\
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \\
     {} = {} \\
-    \{frameStack \neq \emptyset\} \circseq A \circseq \{frameStack \neq \emptyset\}
+    \{frameStack \neq \emptyset\} \circseq A \circseq P \circseq \{frameStack \neq \emptyset\}
   \end{circus}
   then
   \begin{circus}
@@ -500,15 +506,42 @@
       \t4 \lschexpract InterpreterNewStackFrame[ \\
       \t5 classInfo/class?, \\
       \t5 m/methodID?, \\
-      \t5 poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t5 poppedArgs/methodArgs?] \rschexpract \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
       \t3 {} \cdots {} \\
       \t3 {} \circelse cid = c_n \circthen A_n \\
-      \t3 \circfi \\
+      \t3 \circfi) \\
       \t2 {} \circelse pc = k \circthen M \\
       \t2 \cdots \\
       \t2 \circfi \circseq Poll \circseq X \\
       \t1 \circfi 
+    \end{array}
+  \end{circus}
+\end{restatable}
+\end{minipage}
+
+\begin{minipage}{\textwidth}
+\begin{restatable}[virtual-method-call-dist]{crule}{VirtualMethodCallDist}
+  \label{virtual-method-call-dist-rule}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedindent}{0cm}
+  \begin{circus}
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot P \\
+      getClassIDOf!(head~poppedArgs)?cid \then {} \\
+      \circif cid = c_1 \circthen A_1  \circseq pc := x \\
+      {} \cdots {} \\
+      {} \circelse cid = c_n \circthen A_\ell \circseq pc := x \\
+      \circfi)
+    \end{array}
+    \circrefines_A
+    \begin{array}{l}
+      (\circvar poppedArgs : \seq Word \circspot P \\
+      getClassIDOf!(head~poppedArgs)?cid \then {} \\
+      \circif cid = c_1 \circthen A_1 \\
+      {} \cdots {} \\
+      {} \circelse cid = c_n \circthen A_\ell \\
+      \circfi) \circseq pc := x
     \end{array}
   \end{circus}
 \end{restatable}
@@ -1174,7 +1207,7 @@
     $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distl-rule}] \\
     $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distr-rule}] \\
     $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}] \\
-    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}]
     % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distl-rule}] \\
     % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distr-rule}] \\
     % $\t1$ Rule~[\nameref{restricted-assump-guard-dist-rule}] \\
@@ -1380,7 +1413,7 @@
     $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distl-rule}] \\
     $\t1$ Rule~[\nameref{restricted-assump-do-while-loop-distr-rule}] \\
     $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}] \\
-    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}] \\
+    $\t1$ Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}]
     % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distl-rule}] \\
     % $\t1$ Rule~[\nameref{restricted-assump-extchoice-distr-rule}] \\
     % $\t1$ Rule~[\nameref{restricted-assump-guard-dist-rule}] \\
@@ -1522,7 +1555,7 @@
 \begin{restatable}[$operandStack$-assump-$InvokeSF$-dist]{crule}{OperandStackAssumpInvokeSFDistRule}
   \label{operandStack-assump-InvokeSF-dist-rule}
   \setlength{\zedindent}{0.1cm}
-  If $B$ does not begin with \[\{ \# stackFrame.operandStack = k-m \}\], then
+  If $B$ does not begin with \[\{ \# stackFrame.operandStack = k-m \},\] then
   \begin{circus}
     \begin{array}{l}
       \{ \# stackFrame.operandStack = k \} \circseq \\
@@ -2160,16 +2193,18 @@
 \end{restatable}
 \end{minipage}
 
-\begin{minipage}{\textwidth}
-\begin{restatable}[alt-seq-dist]{law}{AltSeqDistLaw}
-  \label{alt-seq-dist-law}
-  \begin{circus}
-    \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
-    =
-    \circif {} \circelse_{i} g_i \circthen A_i \circseq B \circfi
-  \end{circus}
-\end{restatable}
+% \begin{minipage}{\textwidth}
+% \begin{restatable}[alt-seq-dist]{law}{AltSeqDistLaw}
+%   \label{alt-seq-dist-law}
+%   \begin{circus}
+%     \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
+%     =
+%     \circif {} \circelse_{i} g_i \circthen A_i \circseq B \circfi
+%   \end{circus}
+% \end{restatable}
+% \end{minipage}
 
+\begin{minipage}{\textwidth}
 \begin{restatable}[assump-elim]{law}{AssumpElimLaw}
   \label{assump-elim-law}
   \begin{circus}

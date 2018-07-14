@@ -118,7 +118,7 @@ initialising $stackFrame$.
 The \Call{IntroduceFrameClassAssumptions}{} procedure is defined by
 Algorithm~\ref{introduce-frameClass-assumptions-algorithm}, which we
 omit here, but is included in
-Appendix~\ref{introduce-variables-appendix-subsection}.
+Appendix~\ref{compilation-rules-appendix}.
 
 We can then apply Rules~[\nameref{refine-PutfieldSF-rule}],
 [\nameref{refine-GetfieldSF-rule}],
@@ -143,7 +143,7 @@ Rule~[\nameref{refine-PutstaticSF-rule}],
 Rule~[\nameref{refine-GetstaticSF-rule}] and
 Rule~[\nameref{refine-NewSF-rule}] are similar so we omit them here.
 They can be found, along with the other compilation rules, in
-Appendix~\ref{introduce-variables-appendix-subsection}.
+Appendix~\ref{compilation-rules-appendix}.
 After these laws have been applied, we eliminate any remaining
 $frameClass$ assumptions by applying Law~[\nameref{assump-elim-law}]
 and Law~[\nameref{seq-unitl-law}] on
@@ -206,7 +206,7 @@ line~\ref{algorithm-introduce-operandStack-assumptions}.
 It is similar to \Call{IntroduceFrameClassAssumptions}{} and is
 defined by
 Algorithm~\ref{introduce-operandStack-assumptions-algorithm}, which is
-included in Appendix~\ref{introduce-variables-appendix-subsection}.
+included in Appendix~\ref{compilation-rules-appendix}.
 
 After an $operandStack$ assumption has been introduced before each
 data operation, the local data refinement is performed on
@@ -413,8 +413,7 @@ arbitrary.
 \end{figure}
 
 The simulation rules we have omitted here can be found with the rest
-of the compilation rules in
-Appendix~\ref{introduce-variables-appendix-subsection}.
+of the compilation rules in Appendix~\ref{compilation-rules-appendix}.
 These, together with the standard laws for distributing simulations
 through \Circus{} constructs, are sufficient to unambiguously define
 the local data refinement to be applied to the method.
@@ -546,8 +545,8 @@ the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
   \setlength{\belowdisplayshortskip}{0pt}
   \begin{circusaction}
     TPK\_handleAsyncEvent \circdef \circval arg1 : Word \circspot \\
-    \t1 \circvar var1 var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
-    \t1 var1 := arg1
+    \t1 \circvar var1 var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot \\
+    \t1 var1 := arg1 \circseq Poll \circseq \\
     \t1 newObject!thread!ConsoleConnectionClassID \\
     \t2 {} \then  newObjectRet!oid \then stack1 := oid \circseq Poll \circseq \\
     \t1 stack2 := stack1 \circseq Poll \circseq \\
@@ -642,7 +641,7 @@ This is performed, as with previous redefinitions of method actions,
 in a separate procedure,
 \Call{RedefineMethodActionToExcludeParameters}{}, defined by
 Algorithm~\ref{redefine-method-action-to-exclude-parameters-algorithm}
-in Appendix~\ref{introduce-variables-appendix-subsection}.
+in Appendix~\ref{compilation-rules-appendix}.
 This procedure is called on
 line~\ref{algorithm-redefine-method-action-to-exclude-parameters} of
 Algorithm~\ref{introduce-variables-algorithm}.

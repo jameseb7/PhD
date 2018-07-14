@@ -93,7 +93,6 @@ the other operations.
 This condition on $cs$ is reasonable since the bytecode instructions
 for each method should be at separate addresses in $bc$.
 
-% TODO: these proofs will be removed in the main thesis
 The statements of the theorems proved can be found in
 Appendix~\ref{stack-frames-theorems-appendix} and
 Appendix~\ref{interpreter-theorems-appendix}, with their corresponding
@@ -162,9 +161,8 @@ so we cannot ensure coverage.
 Our work on this has now been integrated into Isabelle/UTP itself.
 
 Some of the algebraic laws are applied directly in our strategy, and
-may be found in
-Appendix~\ref{compilation-strategy-algebraic-laws-section} after the
-compilation rules specific to each stage of the strategy.
+may be found at the end of Appendix~\ref{compilation-rules-appendix},
+after the compilation rules specific to each stage of the strategy.
 A full list of the algebraic laws used in this thesis, including both
 those used in our compilation strategy and those used in the proofs of
 the compilation rules, can be found in
@@ -354,7 +352,7 @@ application of some rules as indicated in the strategy, and which is
 reconstructed after the application of a compilation rule.
 The sequence of actions corresponding to entry point of a method whose
 control-flow graph consists of a single node are added to the
-\texttt{EPCModel} during method separation
+\texttt{ThrCFModel} during method separation
 (Algorithm~\ref{separate-complete-methods-algorithm}), with their $pc$
 assignments removed when they are added, to produce the result of
 Algorithm~\ref{pc-elimination-algorithm}.
@@ -385,14 +383,14 @@ first obtaining the return action with a \texttt{getReturnAction()}
 method, which corresponds to the \Call{ReturnAction}{} function
 referenced on line~\ref{algorithm-determine-return-action} of
 Algorithm~\ref{remove-launcher-returns-algorithm}.
-The return action is then introduced after infinite loops in the by a
+The return action is then introduced after infinite loops by a
 method \texttt{introduceReturnActions()}, which performs the
 exhaustive application of Law~[\nameref{rec-action-intro-law}] on
 line~\ref{algorithm-introduce-infinite-loop-returns}, and distributed
 using a method \texttt{returnActionDist()}, which performs the
 exhaustive application of Rule~[\nameref{conditional-dist-rule}] on
 line~\ref{algorithm-distribute-return}.
-The remainder of this stage is upon the $ExecuteMethod$, $Started$ and
+The remainder of this step is upon the $ExecuteMethod$, $Started$ and
 $MainThread$ actions, whose forms are known, so we simply output the
 resultant forms for them at the end of the application of the
 strategy.
@@ -424,7 +422,7 @@ parametrised block is moved inside the method by the procedure called
 on line~\ref{algorithm-redefine-method-action-to-include-parameters}.
 After this, the $InterpreterNewStackFrame$ operations are eliminated
 from the body of each method by a method
-\texttt{eliminateNewStackFrame()}, because they are moved into inside
+\texttt{eliminateNewStackFrame()}, because they are moved inside
 the methods whose references follow them and refined to stack frame
 initialisation operations.
 
@@ -575,7 +573,7 @@ Figure~\ref{program-infrastructure-compilation-figure}.
 % infrastructure than that which icecap implements in C.
 In our model, native methods are represented by special methods, which
 are called using channels, rather than bytecode invoke instructions.
-Our model of the infrastructure covers all the elements in the SCJ
+Our model of the infrastructure covers the elements in the SCJ
 standard. 
 In icecap, however, some are implemented in Java, and some are
 implemented in C. 
@@ -716,7 +714,7 @@ blocks for normal methods are handled by
 Rule~[\nameref{method-parameter-introduction-rule}] and
 Rule~[\nameref{poppedArgs-sync-elim-rule}].
 Eliminating $poppedArgs$ around special methods requires rules similar
-to these rules for to handle each individual special method.
+to these rules to handle each individual special method.
 The rules required are simple rules to substitute the value of
 $poppedArgs$ into the body of the action and then eliminate the
 variable block with the initialisation of $poppedArgs$.

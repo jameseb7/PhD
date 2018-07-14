@@ -50,21 +50,21 @@ unsuitable for real-time systems, for which strict guarantees about
 timing properties must be made.
 To address this issue the Real-Time Specification for Java
 (RTSJ)~\cite{gosling2000} was created.
-The RTSJ extends Java with a scoped memory model and a more
+RTSJ extends Java with a scoped memory model and a more
 predictable scheduling system.
 
-While the RTSJ addresses real-time requirements of embedded systems,
-many embedded systems are also safety-critical.
+While RTSJ addresses real-time requirements of embedded systems, many
+embedded systems are also safety-critical.
 For these conformance to certain standards, such as \mbox{DO-178C} and
 ISO~26262, is required.
 To support the development of safety-critical programs that meet these
 requirements in Java, the Safety-Critical Java (SCJ)
 specification~\cite{locke2013} has been created.
-SCJ is a subset of the RTSJ that removes the features that cannot be
+SCJ is a subset of RTSJ that removes the features that cannot be
 easily statically reasoned about, which means that features such as
 the garbage-collected heap and dynamic class loading are absent from
 SCJ.
-This facilitates the creation of SCJ programs that fulfil formal
+This facilitates creation of SCJ programs that fulfil formal
 specifications; indeed work has already been done on developing
 correct SCJ programs from formal specifications~\cite{cavalcanti2011,
   cavalcanti2013}.
@@ -123,7 +123,7 @@ viewed as a compiler verification problem.
 There has been much research into compiler correctness.
 Much of the work follows a commuting diagram approach, in which the
 compilation is shown to be consistent with transformation between the
-semantics of the source and target languages\cite{morris1973,
+semantics of the source and target languages~\cite{morris1973,
   thatcher1979}.
 This approach is apparent in much of the early work such as that of
 McCarthy and Painter~\cite{mccarthy1967}, as well as in more recent
@@ -168,7 +168,7 @@ developers and verifiers:
 \item a compilation strategy from Java bytecode to native C code,
 \item proofs for validation of the formal model and verification of
   the compilation strategy, and
-\item a mechanisation of the model and proofs.
+% \item a mechanisation of the model and proofs.
 \end{itemize}
 
 We follow the design of existing SCJ virtual machines to ensure that
@@ -207,9 +207,9 @@ other components of the work.
 
 The first component required is a specification of the requirements
 for an SCJ virtual machine.
-This specification will shape the rest of the work and there is at
-present no clear specification of what is required of an SCJ virtual
-machine or how it differs from a standard Java virtual machine.
+This specification shapes the rest of the work and there is at present
+no clear specification of what is required of an SCJ virtual machine
+or how it differs from a standard Java virtual machine.
 The specification of requirements needs to consider the requirements
 imposed, both explicitly and implicitly, on virtual machines by the
 SCJ specification~\cite{locke2013} as that provides the authoritative
@@ -227,13 +227,13 @@ be used in our work~\cite{bertelsen2000, jones1998, stark2001}.
 As many existing virtual machines for SCJ precompile programs to
 native code in order to allow faster execution on embedded systems, it
 seems wise to include that in our approach.
-We will focus on compilation of Java bytecode to C as that is the
-approach adopted by several existing virtual machines for embedded
-systems, including Fiji VM~\cite{pizlo2009} and icecap
+We focus on compilation of Java bytecode to C as that is the approach
+adopted by several existing virtual machines for embedded systems,
+including Fiji VM~\cite{pizlo2009} and icecap
 HVM~\cite{sondergaard2012}, and C is already widely used for embedded
 systems software.
 
-There are two main approaches to the specification and verification of
+There are two main approaches to specification and verification of
 compilers: the commuting diagram approach and the algebraic approach.
 The commuting diagram approach involves specifying the compiler as a
 function from the source language to the target language and showing
@@ -241,7 +241,7 @@ that it is consistent with transformation between the semantics of the
 source and target languages~\cite{morris1973, thatcher1979}.
 This approach has been used in much of the work on compiler
 correctness, including some of the earliest work~\cite{mccarthy1967}
-and recent work such as that of the CompCert project~\cite{leroy2009a,
+and more recent work such as that of the CompCert project~\cite{leroy2009a,
   leroy2009b}.
 
 The algebraic approach involves defining the source and target
@@ -275,8 +275,8 @@ facilitate proofs of its correctness.
 This is beneficial for both the parts of the SCJVM that are involved
 in the compilation and the parts are not.
 
-We have chosen \Circus{} as the specification
-language~\cite{oliveira2009} as it contains a wide variety of
+We have chosen \Circus{}~\cite{oliveira2009} as the specification
+language as it contains a wide variety of
 constructs that allow for specification of both data and behaviour,
 with a inbuilt notion of refinement, which we require for specifying
 the compilation strategy.
@@ -289,20 +289,20 @@ requires the specification language to have a well-defined semantics.
 \Circus{} has such a semantics, defined using the model of Unifying
 Theories of Programming (UTP)~\cite{hoare1998}.
 
-\subsection{Mechanisation}
+% \subsection{Mechanisation}
 
-To prevent mistakes in the proofs, it is helpful to mechanise the
-formal model and proofs.
-There are various systems that can be used for this, but we will focus
-on the proof assistant Isabelle~\cite{nipkow2002, nipkow2014}.
-It has existing mechanisations of \Circus{}~\cite{feliachi2012} and
-the UTP~\cite{foster2015}, and has been used in previous work
-verifying compilers for Java-like languages~\cite{klein2006,
-  strecker2002, lochbihler2010}, making it well placed for our work.
+% To prevent mistakes in the proofs, it is helpful to mechanise the
+% formal model and proofs.
+% There are various systems that can be used for this, but we will focus
+% on the proof assistant Isabelle~\cite{nipkow2002, nipkow2014}.
+% It has existing mechanisations of \Circus{}~\cite{feliachi2012} and
+% the UTP~\cite{foster2015}, and has been used in previous work
+% verifying compilers for Java-like languages~\cite{klein2006,
+%   strecker2002, lochbihler2010}, making it well placed for our work.
 
 \subsection{Summary}
 
-In conclusion, our objective is an approach verification of SCJVMs
+In conclusion, our objective is an approach to verification of SCJVMs
 consisting of mechanised formal models together with proofs of
 properties about them.
 These formal models will cover both the services that must be provided
@@ -327,7 +327,7 @@ code for the program.
 \begin{figure}
   \centering
   \begin{tikzpicture}
-    \draw (0cm,0.7cm) rectangle (10cm,3.5cm);
+    \draw (0cm,0cm) rectangle (10cm,3.5cm);
     \draw (5cm,3.2cm) node[align=center] {\scriptsize Specification Language};
 
     \draw (2cm,2cm)   circle[radius=1.2cm]               node[align=center] {\scriptsize Source\\\scriptsize Program};
@@ -370,20 +370,20 @@ code.
 \begin{figure}
   \centering
   \begin{tikzpicture}
-    \draw (0cm,0.4cm) rectangle (10cm,3.8cm);
-    \draw (5cm,3.5cm) node[align=center] {\scriptsize Specification Language (\Circus{})};
+    \draw (0cm,0cm) rectangle (10cm,4.3cm);
+    \draw (5cm,4cm) node[align=center] {\scriptsize Specification Language (\Circus{})};
 
-    \draw (2cm,2.5cm)   circle[radius=1.2cm] ++(0cm,0.6cm) node[align=center] {\scriptsize Core\\\scriptsize Execution\\\scriptsize Environment};
-    \draw (2cm,1.95cm)     circle[radius=0.6cm]               node[align=center] {\scriptsize Bytecode};
-    \draw (8cm,2.5cm)   circle[radius=1.2cm]               node[align=center] {\scriptsize C Code};
+    \draw (2cm,2.5cm)   circle[radius=1.4cm] ++(0cm,0.7cm) node[align=center] {\scriptsize Core\\\scriptsize Execution\\\scriptsize Environment};
+    \draw (2cm,1.8cm)     circle[radius=0.7cm]               node[align=center] {\scriptsize Bytecode};
+    \draw (8cm,2.5cm)   circle[radius=1.4cm]               node[align=center] {\scriptsize C Code};
 
-    \draw (1cm,0.5cm) rectangle (3cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
-    \draw (7cm,0.5cm) rectangle (9cm,1.3cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
+    \draw (1cm,0.3cm) rectangle (3cm,1.1cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
+    \draw (7cm,0.3cm) rectangle (9cm,1.1cm) node[pos=0.5,align=center] {\scriptsize SCJVM \\\scriptsize Services};
 
-    \path (3.2cm,2.5cm) edge[-latex]
+    \path (3.4cm,2.5cm) edge[-latex]
     node[align=center, above] {\Large $\sqsubseteq$}
     node[align=center, below] {\scriptsize Refinement\\\scriptsize Strategy\\\scriptsize (Compilation)}
-    (6.8cm,2.5cm);
+    (6.6cm,2.5cm);
 
     % \draw[-latex] (3cm,0.9cm) -- (7cm,0.9cm);
   \end{tikzpicture}
@@ -446,11 +446,23 @@ SCJ.
 This is followed by a survey of the existing virtual machines for
 Safety-Critical Java and the techniques used in verifying compilers.
 
-In Chapter~\ref{scjvm-services-chapter} we present an identification of the
-requirements of SCJ virtual machine services, with a formal model of
-those requirements in the \Circus{} specification language.
+In Chapter~\ref{scjvm-services-chapter} we present an identification
+of the requirements of SCJ virtual machine services, with a formal
+model of those requirements in the \Circus{} specification language.
 This is followed by a model of the an SCJ virtual machine core
-execution environment in Chapter~\ref{cee-chapter}.
+execution environment in Chapter~\ref{cee-chapter}, which includes the
+interpreter model that forms the starting point of our compilation
+strategy, and the C code embedding that is the target of our
+compilation strategy.
+
+Then, in Chapter~\ref{strategy-chapter} we present our strategy for
+transforming SCJ bytecode executing in our interpreter model to our
+shallow embedding of C.
+This is divided into three stages, each of which is described in its
+own section, and explained using a running example.
+After this, in Chapter~\ref{evaluation-chapter}, we evaluate our model
+and compilation strategy, and discuss how they are validated as
+correct.
 
 Finally, we conclude in Chapter~\ref{conclusions-chapter} by
 summarising our contributions and mentioning the wider context of this
