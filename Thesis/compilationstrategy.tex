@@ -17,13 +17,15 @@ described in Section~\ref{elimination-of-frame-stack-section}.
 Finally, the third stage of the strategy, which is called \emph{Data
   Refinement of Objects}, is described in
 Section~\ref{data-refinement-of-objects-section}.
-We then conclude with some final considerations in
+We then show how the stages fit together to show the compilation as a
+whole to be correct, in Section~\ref{main-theorem-proof-section}, and
+conclude with some final considerations in
 Section~\ref{compilation-final-considerations-section}.
 
 \section{Overview}
 \label{compilation-overview-section}
 
-Our compilation strategy refines the $CEE(bc,cs,sid, initOrder)$
+Our compilation strategy refines the $CEE(bc,cs,instCS,sid,initOrder)$
 process defined in Section~\ref{cee-interpreter-section} to obtain the
 $CCEE_{bc,cs}(sid, initOrder)$ process in
 Section~\ref{cee-c-code-section}.
@@ -32,8 +34,9 @@ presented in this chapter, is as follows.
 \begin{thm}[Compilation Strategy]\label{main-theorem}
   Given $bc$, $cs$ and $sid$, there are processes $StructMan_{cs}$ and
   $CProg_{bc,cs}$ such that,
+  \setlength{\zedindent}{0.5cm}
   \begin{circus}
-    CEE(bc,cs,sid,initOrder) \circrefines StructMan_{cs} \parallel
+    CEE(bc,cs,instCS,sid,initOrder) \circrefines StructMan_{cs} \parallel
     CProg_{bc,cs} \parallel Launcher(sid, initOrder).
   \end{circus}
 \end{thm}
@@ -79,7 +82,7 @@ In the final stage, \emph{Data Refinement of Objects}, the class
 information from $cs$ is used to create a representation of C structs.
 This means that $ObjMan$, which has a very abstract representation of
 objects, is transformed into $StructMan$.
-The process for each thread is then changed to access the structs for
+The operations on objects are then changed to access the structs for
 the objects in a more concrete way that represents the way struct
 fields are accessed in C code.
 

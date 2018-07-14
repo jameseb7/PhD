@@ -7,7 +7,7 @@ an SCJVM and a formal model of those requirements.
 For the purposes of our model, we consider an SCJVM to have the
 components illustrated in Figure~\ref{scjvm-services-fig}.
 An SCJVM is divided into two main parts:~the core execution
-environment and the SCJVM services that may make use of the services
+environment, and the SCJVM services, which may make use of the services
 of an underlying operating system or hardware abstraction layer.
 
 \begin{figure}[ht]
@@ -108,10 +108,11 @@ areas:
 \item the real-time clock, which provides an interface to the system real-time
   clock.
 \end{itemize}
-Each of these services is used either by the core execution environment or by
-the SCJ infrastructure; some of the services also rely on each other.  For
-example, the scheduler must update the allocation context in the memory manager
-when performing a thread switch.
+Each of these services is used either by the core execution
+environment or by the SCJ infrastructure.
+Some of the services also rely on each other. 
+For example, the real-time clock must communicate with the scheduler
+to trigger an interrupt handler when an alarm's time passes.
 
 A model of the core execution environment is presented in
 Chapter~\ref{cee-chapter}.
@@ -155,9 +156,9 @@ backing stores can be allocated.
 A backing store may thus have other backing stores nested within it,
 so that a possible memory layout is as shown in
 Figure~\ref{memory-fig}.
-In Figure~\ref{memory-fig}, we divide the two parts of each backing
-store by a dashed line, with the object allocation area below and the
-backing store area above.
+There, we divide the two parts of each backing store by a dashed line,
+with the object allocation area below and the backing store area
+above.
 
 \begin{figure*}[ht]
   \centering
@@ -265,6 +266,10 @@ The root backing store cannot be destroyed, so that there is always a
 fixed base for the layout of memory.
 The root backing store is used as the backing store for the immortal
 memory area.
+The root backing store initially has all its space available for
+object allocations, with no space to allocate nested backing stores.
+The infrastructure must reduce the object allocation space to match
+the space required by the \texttt{Safelet} during SCJVM startup.
 
 The operations of the memory manager API are summarised in
 Table~\ref{memory-manager-table}.
@@ -278,7 +283,7 @@ Table~\ref{memory-manager-table} as well.
 \begin{table*}[ht]
   \centering
   \footnotesize
-  \begin{tabular}{|l|p{3.1cm}|p{3.1cm}|p{3.9cm}|}
+  \begin{tabular}{|l|p{3.2cm}|p{3.2cm}|p{3.65cm}|}
     Operation & Inputs & Outputs & Error Conditions \\
     \hline
     \texttt{getRootBackingStore} &
@@ -304,14 +309,13 @@ Table~\ref{memory-manager-table} as well.
     \\\texttt{findBackingStore} &
     memory pointer &
     backing store identifier &
-    no backing store found
+    not in object space
     \\\texttt{allocateMemory} &
     backing store identifier \newline
     size in bytes &
     memory pointer &
     invalid identifier \newline
-    insufficient free memory \newline
-    no current allocation context
+    insufficient free memory
     \\\texttt{makeBackingStore} &
     backing store identifier \newline
     total size in bytes \newline
@@ -322,19 +326,15 @@ Table~\ref{memory-manager-table} as well.
     \\\texttt{clearBackingStore} &
     backing store identifier &
     (none) &
-    invalid identifier \newline
-    nested backing store in use
+    invalid identifier
     \\\texttt{resizeBackingStore} &
     backing store identifier \newline
     size in bytes &
     backing store identifier &
     invalid identifier \newline
-    backing store in use \newline
-    backing store is root \newline
     backing store not empty \newline
-    backing store not only child \newline
-    insufficient free space \newline
-    no space for memory overhead
+    new size too small \newline
+    new size too large                           
     \\\texttt{createStack} &
     size in bytes &
     stack identifier &
@@ -366,10 +366,13 @@ the amount of free space in the area for allocating nested
 backing stores.
 
 The backing store in which a particular memory address lies can also
-be queried.  
+be queried.
 This information can be obtained by the \texttt{find\-Backing\-Store}
 operation and is required by the infrastructure for obtaining the
 memory area of a given object.
+This operation fails if the address is not the address of an object,
+since this is intended for determining the backing store of an object
+pointer, not other addresses in a backing store.
 
 Allocation within backing stores is possible through the
 \texttt{allocate\-Memory} operation, which allocates blocks of memory
@@ -395,7 +398,7 @@ infrastructure for use when creating new memory areas.
 A new backing store is created nested within the specified backing
 store.
 The total size of the new backing store (including space for
-allocating nested backing stores) must be specified when in this
+allocating nested backing stores) must be specified when using this
 operation, along with the space required for object allocations.
 The infrastructure is responsible for storing the backing store
 identifier returned by \texttt{make\-Backing\-Store}.
@@ -426,16 +429,29 @@ within the mission have finished and the immortal memory should never
 be cleared.
 
 The last operation on backing stores is their resizing.
-This is provided for by \texttt{resize\-Backing\-Store}, which resizes
-the object allocation area of a backing store by moving the boundary
-between the object allocation area and the nested backing store area.
+This is provided for by the operation \texttt{resizeBackingStore},
+which resizes the object allocation area of a backing store by moving
+the boundary between the object allocation area and the nested backing
+store area.
 To ensure that this does not fragment existing used memory in the
-backing store, it is required that the backing store is empty (i.e. 
-it contains no objects or backing stores).
+backing store, it is required that either the backing store is empty
+(i.e.\ it contains no objects or backing stores), or it is entirely
+composed of space for object allocations.
 This is acceptable, since this operation is only needed for resizing
-of the mission memory inbetween missions and resizing of a nested
-private memory when it is reentered.
-In both these cases the memory area is cleared before being resized.
+of the mission memory inbetween missions, resizing of a nested private
+memory when it is reentered, and resizing the immortal memory during
+SCJVM startup.
+For resizing mission memory inbetween missions, it should be resized
+up to the maximum available size after the mission has finished
+(during which it has been cleared), and then resized down to the
+required size after the mission object has been obtained (during which
+it only contains object space as it covers the whole space available).
+Private memory areas are always cleared before being resized.
+The root backing store (used for immortal memory) is entirely composed
+of space for object allocations when the SCJVM starts, allowing this
+operation to be used in that case also.
+In the case where the backing store is not empty, the new size must be
+sufficient to contain any existing object allocations.
 
 These operations on backing stores each take a backing store
 identifier as input since the memory manager does not handle
@@ -643,7 +659,7 @@ is to facilitate the implementation of the SCJ control flow, which
 requires that threads all start together after mission initialisation
 has been completely finished.
 A backing store is provided when a thread is started to serve as the
-allocation context of the thread since the per-release memory of an
+allocation context of the thread, since the per-release memory of an
 event handler is only created as the handler thread is started.
 The backing store supplied is only used to set the backing store in
 the memory manager and core execution environment when the thread
@@ -652,8 +668,7 @@ starts and is not stored by the scheduler.
 The identifier of the currently running thread can be obtained through
 \texttt{get\-Current\-Thread}.
 This operation may be used by the infrastructure as part of obtaining
-the current schedulable object, but is mainly intended for use by the
-memory manager to discern the current allocation context.
+the current schedulable object.
 
 A thread can suspend itself, causing it to become blocked, and be
 resumed on command from another thread, causing it to become eligible
@@ -810,7 +825,7 @@ the system time through the \texttt{get\-System\-Time} operation.
 The SCJ API deals with time values in terms of
 milliseconds-nanoseconds pairs.
 That should also be the format for time values passed to and from the
-SCJVM though another format could be used.
+SCJVM, though another format could be used.
 The system time may be measured from January 1, 1970 or from the
 system start time (in case there is no reliable means of determining
 the date and time), and so may not correspond to wall-clock time.
@@ -868,11 +883,11 @@ The memory manager also handles allocation and freeing of stack space.
 In our formal model, we first declare the types and channels needed
 for the memory manager model, then build up the model in several
 layers, beginning with memory blocks that allow operations such as
-allocation, clearing, and resizing, then adding in the structure of
-backing stores that may contain other backing stores nested inside.
+allocation, clearing, and querying of their size, then adding in the
+structure of backing stores that may contain other backing stores
+nested inside.
 Afterwards, the global memory manager covering all the backing stores
-is specified, and thread handling considerations are taken into
-account.
+is specified.
 Finally, the stack memory management is defined, with the stack area
 based on the memory blocks model.
 In this section, we present a \Circus{} process that defines the
@@ -885,14 +900,10 @@ This concludes the specification of the memory manager.
 We have built the memory manager in several layers, first defining the
 concept of a memory block, in which allocations can occur and which is
 used as the basis for specifying backing stores and the stack space.
-We then specified backing stores, which are memory blocks that keep a
-record of other backing stores nested within them.
+We then specified backing stores, which are pairs of memory blocks
+that keep a record of other backing stores nested within them.
 The backing store operations have then been promoted to act over a
 global memory manager with a view of all backing stores.
-For the operation of allocating memory, which must work with the
-current allocation context, operations were added to track the current
-allocation context of each running thread and memory allocation was
-promoted to act upon it.
 Allocation and deallocation of space for stacks has also been
 specified, with the stack space treated as a memory block to allow
 memory for stacks to be allocated within it.
@@ -925,7 +936,7 @@ information required to begin execution of the thread.
 We specified the priority scheduler, which sorts the executable
 threads into queues by priority and selects the thread at the front of
 the highest non-empty priority queue to run.
-This includes the operation to create, start, destroy, suspend and
+This includes the operations to create, start, destroy, suspend and
 resume threads.
 A mechanism for locking objects to prevent interference has also been
 specified, with priority ceiling emulation as a mechanism for avoiding
@@ -946,7 +957,7 @@ The periodic clock interrupt from the hardware is handled by the SCJVM
 clock and used to manage alarms that trigger when a certain time is
 reached. 
 If an alarm is set, the interrupt is passed to the scheduler when the
-alarm triggers, the SCJ API implementation should attach an interrupt
+alarm triggers; the SCJ API implementation should attach an interrupt
 handler to it that simply calls the \texttt{triggerAlarm()} method of
 \texttt{Clock} for the real-time clock. 
 
@@ -1009,9 +1020,9 @@ Indeed, we have already partially subjected the memory manager model
 to proof using Z/Eves.
 The proofs we have performed are consistency proofs and proofs that
 functions are not applied outside their domain.
-We have performed these proofs for the first two parts of the memory
-manager model, covering memory blocks and backing stores, and also the
-global memory manager state.
+We have performed these proofs for the first part of the memory
+manager model, covering memory blocks, and also partially for backing
+stores.
 The theorems we have proved about the memory manager, along with their
 proofs and some additional lemmas about mathematical toolkit objects
 that we have proved in the course of our work, can be found in

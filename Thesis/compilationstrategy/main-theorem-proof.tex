@@ -1,23 +1,22 @@
 The three stages of our strategy, taken together, refine the abstract
-interpreting CEE into described in
-Section~\ref{cee-interpreter-section} to the concrete C CEE described
-in Section~\ref{cee-c-code-section}.
+interpreting CEE described in Section~\ref{cee-interpreter-section} to
+the concrete C CEE described in Section~\ref{cee-c-code-section}.
 This can be seen from the proof of Theorem~\ref{main-theorem}, shown
 below.
 
 \begin{crproof}[Theorem~\ref{main-theorem}]
   \begin{argue}
     \begin{array}{l}
-      CEE(bc,cs,sid,initOrder)
+      CEE(bc,cs,instCS,sid,initOrder)
     \end{array}\\
     = & Definition of $CEE$ \\
     \begin{array}{l}
-      ObjMan(cs) \parallel Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
+      ObjMan(cs) \parallel Interpreter(cs,bc,instCS) \parallel Launcher(sid,initOrder)
     \end{array}\\
     = & Definition of $Interpreter$ \\
     \begin{array}{l}
       ObjMan(cs) \parallel {} \\
-      \t1 (\Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, t)) \parallel {} \\
+      \t1 (\Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot Thr(bc, cs, instCS, t)) \parallel {} \\
       \t1 Launcher(sid,initOrder)
     \end{array}\\
     \circrefines & Theorem~\ref{epc-thm} \\

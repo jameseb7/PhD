@@ -148,7 +148,7 @@ These processes interact as shown in Figure~\ref{cee-model-fig}.
 The overall pattern of the interaction is unaffected by the
 compilation, that is, the model of the compiled code has the same
 overall flow of communication, although the components have different
-names and different channels are used for communication.
+names.
 
 \begin{figure}[ht]
   \centering
@@ -238,8 +238,8 @@ externally visible channels when the component processes are composed
 into the complete SCJVM model.
 % The fact that they are external channels is indicated by the use of
 % \textless{}ext.\textgreater{} in the final columns of the table.
-Some channels are marked with various symbols (*, \dag{}, \ddag{},
-\S{} and {}+{}) so that we can refer to them later in the text.
+Some channels are marked with various symbols (*, \dag{}, \S{} and
+{}+{}) so that we can refer to them later in the text.
 
 The types of values communicated by those channels are also used by
 the CEE processes.
@@ -310,13 +310,20 @@ in a different way to that of other methods.
       & $getCurrentACRet$ & $BackingStoreID$ & OM & L \\
       & $newObject$ & $ThreadID \cross ClassID$ & I/L & OM  \\
       & $newObjectRet$ & $ObjectID$ & OM & I/L  \\
-      \ddag & $getClassIDOf$ & $ObjectID \cross ClassID$ & I/L & OM  \\
-      \ddag & $getField$ & $ObjectID \cross ClassID \cross FieldID$ & I & OM \\
-      \ddag & $getFieldRet$ & $Word$ & OM & I \\
-      \ddag & $putField$ & $ObjectID \cross ClassID \cross FieldID \cross Word$ & I & OM \\
-      \ddag & $getStatic$ & $ClassID \cross FieldID$ & I & OM \\
-      \ddag & $getStaticRet$ & $Word$ & OM & I \\
-      \ddag & $putStatic$ & $ClassID \cross FieldID \cross Word$ & I & OM \\
+      % \ddag
+      & $getClassIDOf$ & $ObjectID \cross ClassID$ & I/L & OM  \\
+      % \ddag
+      & $getField$ & $ObjectID \cross ClassID \cross FieldID$ & I & OM \\
+      % \ddag
+      & $getFieldRet$ & $Word$ & OM & I \\
+      % \ddag
+      & $putField$ & $ObjectID \cross ClassID \cross FieldID \cross Word$ & I & OM \\
+      % \ddag
+      & $getStatic$ & $ClassID \cross FieldID$ & I & OM \\
+      % \ddag
+      & $getStaticRet$ & $Word$ & OM & I \\
+      % \ddag
+      & $putStatic$ & $ClassID \cross FieldID \cross Word$ & I & OM \\
       & $addThreadMemory$ & $ThreadID \cross BackingStoreID$ & I & OM \\
       & $removeThreadMemory$ & $ThreadID$ & I & OM \\       
       \hline
@@ -345,7 +352,7 @@ return channel with a *.
 % channel.
 The $executeMethod$ channel is used to signal to the interpreter that
 it should begin execution of a method on a given thread.
-The interpreter signals on $executeMethodRet$ channel when it has
+The interpreter signals on the $executeMethodRet$ channel when it has
 finished execution of the method.
 For methods executed on a thread other than the main thread, we use
 two further channels, $continue$ and $endThread$, to indicate whether
@@ -495,8 +502,8 @@ attached to classes rather than objects.
 
 The final channels used by the interpreter are the $addThreadMemory$
 and $removeThreadMemory$ channels.
-The $addThreadMemory$ is used to inform the object manager of a
-thread's initial allocation context when the thread starts.
+The $addThreadMemory$ channel is used to inform the object manager of
+a thread's initial allocation context when the thread starts.
 It carries the $ThreadID$ of the thread and the $BackingStoreID$ of
 the backing store that serves as the thread's initial allocation
 context.
@@ -504,36 +511,35 @@ When a thread has finished execution, it informs the object manager
 via the $removeThreadMemory$ channel, which carries the $ThreadID$ of
 the thread.
 
-As mentioned earlier, some channels used by the interpreter to
-communicate with the object manager are replaced with different
-channels during compilation.
-Those channels are marked with a \ddag{} in
-Table~\ref{cee-channel-table}.
-After compilation these channels are replaced with channels to obtain
-the struct representing the contents of an object and to store an
-object’s struct after updating it.
+% As mentioned earlier, some channels used by the interpreter to
+% communicate with the object manager are replaced with different
+% channels during compilation.
+% Those channels are marked with a \ddag{} in
+% Table~\ref{cee-channel-table}.
+% After compilation these channels are replaced with channels to obtain
+% the struct representing the contents of an object and to store an
+% object’s struct after updating it.
 
-Note that the $getClassIDOf$ channel is shared between the launcher
-and interpreter.
-After compilation, the interpreter accesses a struct field storing the
-$ClassID$ for an object.
-However, the launcher is unaffected by the compilation and is agnostic
-as to whether the program is in the form of bytecode or C code.
-Therefore, the launcher continues to use the $getClassIDOf$ channel
-after compilation, which represents a service offered by the object
-manager or struct manager to obtain the $ClassID$ by whatever means
-are appropriate to the form of the object.
-As an optimisation in an implementation, the launcher could be changed
-to access struct fields in the same way as the interpreter.
-We discuss the form of field accesses in the C code and the channels
-used for them in more detail in
-Sections~\ref{cee-struct-manager-subsection}
-and~\ref{cee-c-program-subsection}.
+% Note that the $getClassIDOf$ channel is shared between the launcher
+% and interpreter.
+% After compilation, the interpreter accesses a struct field storing the
+% $ClassID$ for an object.
+% However, the launcher is unaffected by the compilation and is agnostic
+% as to whether the program is in the form of bytecode or C code.
+% Therefore, the launcher continues to use the $getClassIDOf$ channel
+% after compilation, which represents a service offered by the object
+% manager or struct manager to obtain the $ClassID$ by whatever means
+% are appropriate to the form of the object.
+% As an optimisation in an implementation, the launcher could be changed
+% to access struct fields in the same way as the interpreter.
+% We discuss the form of field accesses in the C code and the channels
+% used for them in more detail in
+% Sections~\ref{cee-struct-manager-subsection}
+% and~\ref{cee-c-program-subsection}.
 
 %\input{../../SCJ-VM/James/LIchans.zed}
 
 %\input{../../SCJ-VM/James/memory_chans.zed}
-
 
 Next, in Section~\ref{cee-launcher-section}, we describe our model of
 the launcher.
@@ -732,8 +738,9 @@ It performs a number of actions in sequence, following the startup procedure for
   $safelet$, in $CreateSafelet$;
 \item calling the safelet's \texttt{immortalMemorySize()} and
   \texttt{globalBackingStoreSize()} methods, and checking that the
-  size of the root backing store matches the returned values,
-  in $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
+  size of the root backing store matches the returned values, resizing
+  it to match the result of the first method if possible, in
+  $CheckImmortalMemory$ and $CheckRemainingBackingStore$;
 \item calling the \texttt{initializeApplication()} method of the
   $safelet$, in $InitializeApplication$;
 \item creating the clock interrupt handler object, storing it in
@@ -815,7 +822,7 @@ $WaitForExecution$.
 $HandleSpecialMethodsMainLoop$ takes a value parameter,
 $memoryEntries$, which is a map recording how many times a memory area
 has been entered for each thread.
-It also takes a value parameter, $retVal$, which captures the return
+It also has a result parameter, $retVal$, which captures the return
 value from the execution of the method on the $main$ thread.
 It offers a choice of handling a memory-area entry, handling the
 corresponding memory-area exit, handling a special method that does
@@ -860,7 +867,7 @@ with the memory manager to determine its backing store.
 This backing store is then entered, via communication on the
 $enterBackingStore$ channel.
 The completion of the memory-area entering operation is then signalled
-to the $Interpreter$ via the $executeInAreaOf$ channel, so that the
+to the $Interpreter$ via the $executeInAreaOfRet$ channel, so that the
 \texttt{run()} method of the \texttt{Runnable} object can be executed.
 \begin{circusaction}
   ExecuteInAreaOf \circdef \circval thread : ThreadID \circspot \\
@@ -1057,7 +1064,10 @@ $oseh$ using the $executeMethod$ channel.
 After the method returns, the backing store is exited using the
 $exitBackingStore$ and the end of the thread's execution is signalled
 via the $endThread$ channel, since there are no further releases of
-the event handler. 
+the event handler.
+We do not consider the rescheduling of one-shot event handlers here,
+but it could be handled by having the rescheduling method as a special
+method.
 \begin{circusaction}
   OneShotHandlerExecution \circdef \circval oseh : ObjectID \circspot \circvar thread : ThreadID \circspot \\
   \t1 runThread?t \prefixcolon (t = schedulableThreads~oseh)?obj \prefixcolon (obj = oseh)?m \then thread := t \circseq \\
@@ -1100,7 +1110,7 @@ Table~\ref{cee-channel-table}.
 % section, become parameters of $CEE$.
 \begin{circus}
   CEE(cs,bc,instCS,sid,initOrder) \circdef \\
-  \t1 ObjMan(cs) \parallel Interpreter(cs,bc) \parallel Launcher(sid,initOrder)
+  \t1 ObjMan(cs) \parallel Interpreter(cs,bc,instCS) \parallel Launcher(sid,initOrder)
 \end{circus}
 $CEE$ is parametrised by values that characterise a particular
 program:~$bc$, recording the bytecode instructions, $cs$, recording
@@ -1214,92 +1224,84 @@ Table~\ref{bytecode-subset-table}.
   \label{bytecode-subset-table}
   
   \begin{supertabular}{llp{7.5cm}}
-    \texttt{aconst\_null} & (none) & 
-    Pushes a null object reference onto the operand stack.
-    \\
-    \texttt{aload} & local variable index &
-    Loads the value from a specified local variable and pushes it
+    \texttt{aconst\_null} & (none) & Pushes a null object reference
     onto the operand stack.
     \\
-    \texttt{areturn} & (none) &
-    Returns from the current method, pushing the value on top of the
-    current method's operand stack onto the operand stack of the
-    method returned to.
+    \texttt{aload} & local variable index & Loads the value from a
+    specified local variable and pushes it onto the operand stack.
     \\
-    \texttt{astore} & local variable index &
-    Pops a value from the operand stack and stores it in the specified
-    local variable.
+    \texttt{areturn} & (none) & Returns from the current method,
+    pushing the value on top of the current method's operand stack
+    onto the operand stack of the method returned to.
     \\
-    \texttt{dup} & (none) &
-    Duplicates the value on top of the operand stack.
+    \texttt{astore} & local variable index & Pops a value from the
+    operand stack and stores it in the specified local variable.
     \\
-    \texttt{getfield} & constant pool index &
-    Pops an object reference from the operand stack, gets the value of
-    the field specified by the identifier at the given constant pool
-    index for the referenced object, and pushes it onto the operand
+    \texttt{dup} & (none) & Duplicates the value on top of the operand
     stack.
     \\
-    \texttt{getstatic} & constant pool index &
-    Gets the value of the static field specified by the field and
-    class identifiers at the given constant pool index, and pushes it
-    onto the operand stack.
+    \texttt{getfield} & constant pool index & Pops an object reference
+    from the operand stack, gets the value of the field specified by
+    the identifier at the given constant pool index for the referenced
+    object, and pushes it onto the operand stack.
     \\
-    \texttt{goto} & program address &
-    Unconditionally branches to the given program address.
-    \\
-    \texttt{iadd} & (none) &
-    Pops two integer values from the operand stack, adds them, and
-    pushes the result onto the operand stack.
-    \\
-    \texttt{iconst} & integer value &
-    Pushes the given integer value onto the operand stack of the
-    current method.
-    \\
-    \texttt{if\_icmple} & program address &
-    Pops two integer values from the operand stack, and branches to
-    the given program address if the second value popped is less than
-    or equal to the first value.
-    \\
-    \texttt{ineg} & (none) &
-    Pops an integer value from the operand stack, negates it, and
-    pushes the negated value onto the operand stack.
-    \\
-    \texttt{invokespecial} & constant pool index &
-    Gets the method and class identifier at the given constant pool
-    index and invokes the specified method of the specified class (or,
-    if the specified class is a superclass of the current class, the
-    direct superclass of the current class), popping the method's
-    arguments, including a \texttt{this} object reference, from the
-    operand stack.
-    \\
-    \texttt{invokestatic} & constant pool index &
-    Gets the method and class identifier at the given constant pool
-    index and invokes the specified static method of the specified
-    class, popping the method's arguments from the operand stack.
-    \\
-    \texttt{invokevirtual} & constant pool index &
-    Gets the method and class identifier at the given constant pool
-    index, pops the arguments of the specified method, including a
-    \texttt{this} object reference, from the operand stack, and
-    invokes the specified method of the class of referenced object.
-    \\
-    \texttt{new} & constant pool index &
-    Allocates a new object of the class specified by the identifier at
-    the given constant pool index and pushes a reference to the new
-    object onto the operand stack.
-    \\
-    \texttt{putfield} & constant pool index &
-    Pops an object reference and value from the operand stack and
-    stores the value in the field specified by the identifier at the
-    given constant pool index for the referenced object.
-    \\
-    \texttt{putstatic} & constant pool index &
-    Pops a value from the operand stack and stores the value in the
+    \texttt{getstatic} & constant pool index & Gets the value of the
     static field specified by the field and class identifiers at the
-    given constant pool index.
+    given constant pool index, and pushes it onto the operand stack.
     \\
-    \texttt{return} & (none) &
-    Returns from a method with no return value.
+    \texttt{goto} & program address & Unconditionally branches to the
+    given program address.
+    \\
+    \texttt{iadd} & (none) & Pops two integer values from the operand
+    stack, adds them, and pushes the result onto the operand stack.
+    \\
+    \texttt{iconst} & integer value & Pushes the given integer value
+    onto the operand stack of the current method.
+    \\
+    \texttt{if\_icmple} & program address & Pops two integer values
+    from the operand stack, and branches to the given program address
+    if the second value popped is less than or equal to the first
+    value.
+    \\
+    \texttt{ineg} & (none) & Pops an integer value from the operand
+    stack, negates it, and pushes the negated value onto the operand
+    stack.
+    \\
+    \texttt{invokespecial} & constant pool index & Gets the method and
+    class identifier at the given constant pool index and invokes the
+    specified method of the specified class (or, if the specified
+    class is a superclass of the current class and the method is not a
+    constructor, the direct superclass of the current class), popping
+    the method's arguments, including a \texttt{this} object
+    reference, from the operand stack.
+    \\
+    \texttt{invokestatic} & constant pool index & Gets the method and
+    class identifier at the given constant pool index and invokes the
+    specified static method of the specified class, popping the
+    method's arguments from the operand stack.
+    \\
+    \texttt{invokevirtual} & constant pool index & Gets the method and
+    class identifier at the given constant pool index, pops the
+    arguments of the specified method, including a \texttt{this}
+    object reference, from the operand stack, and invokes the
+    specified method of the class of referenced object.
+    \\
+    \texttt{new} & constant pool index & Allocates a new object of the
+    class specified by the identifier at the given constant pool index
+    and pushes a reference to the new object onto the operand stack.
+    \\
+    \texttt{putfield} & constant pool index & Pops an object reference
+    and value from the operand stack and stores the value in the field
+    specified by the identifier at the given constant pool index for
+    the referenced object.
+    \\
+    \texttt{putstatic} & constant pool index & Pops a value from the
+    operand stack and stores the value in the static field specified
+    by the field and class identifiers at the given constant pool
+    index.
+    \\
+    \texttt{return} & (none) & Returns from a method with no return
+    value.
     \\
   \end{supertabular}
   \vspace{\textfloatsep}
@@ -1439,8 +1441,9 @@ This is justified as the bytecode instructions simply handle values as
 32-bit words, with the type information only used for typechecking
 during bytecode validation. 
 The code passed into the core execution environment is assumed to have
-already passed, which may be done by a separate
-component~\cite{klein2003, stark2001, coglio2000, xavier2003}). 
+already passed bytecode verification, which may have been done by a
+separate component~\cite{klein2003, stark2001, coglio2000,
+  xavier2003}. 
 Since many of the instructions behave the same for different types, we
 only include those instructions that handle values as object
 references.
@@ -1673,7 +1676,7 @@ We recall that the definitions omitted here are given in Appendix~B of
 the extended version of this thesis~\cite{baxter2018-extended}.
 
 We also require a way of expressing the fact that one class is a
-subclass of another.
+subclass of another (or implements a given interface).
 We say that a $Class$ binding, $c1$, is a direct subclass of another
 class, $c2$, written $c1 \directsubclass c2$, if the $this$ identifier
 of $c2$ is the $super$ identifier of $c1$ or one of its $interfaces$
@@ -1821,7 +1824,7 @@ class in $cs$.
 \begin{schema}{StaticFieldsInfo}
 	staticClassFields : (ClassID \cross FieldID) \pfun Word
 \where
-	dom staticClassFields = \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \}
+	\dom staticClassFields = \bigcup \{ cid : \dom cs @ \{cid\} \cross (cs~cid).staticFields \}
 \end{schema}
 
 These three parts are conjoined together to form the schema
@@ -1834,7 +1837,7 @@ backing store.
 \begin{schema}{ObjManState}
 	BackingStoreManager; ObjectInfo; StaticFieldsInfo
 \where
-	backingStoreMap \partition \dom objects \\
+	backingStoreMap \partition \dom objects
 \end{schema}
 
 The $ObjManState$ is initialised as described in $ObjManInit$ below.
@@ -1846,11 +1849,14 @@ The $backingStoreMap$ initially contains only $rootBS?$, which is the
 only backing store initially in existence, associated with an empty
 set of object identifiers.
 The $backingStoreStacks$ map is initialised to contain the $main$ and
-$idle$ thread, both with $rootBS?$ as their only backing store
+$idle$ threads, both with $rootBS?$ as their only backing store
 entered.
 The $rootBS$ identifier is set to be the same as the $rootBS?$ input.
 Every static field in $staticClassFields$ (whose domain is determined
 by the invariant of $StaticFieldsInfo$) is initially set to null.
+We do not consider the constant initial values provided for static
+fields in Java class files here, since they add little to the
+compilation strategy and can be emulated with class initialisers.
 % TODO: shouldn't we have initial values for these from the class files?
 \begin{schema}{ObjManInit}
 	ObjManState~' \\
@@ -2011,8 +2017,7 @@ object allocation ($NewObject$) are affected.
 $GetClassIDOf$ is also affected since an object's class identifier is
 stored as part of its structure.
 We also refine the static fields data structure, requiring the
-operations upon it ($AllocateStaticFields$, $GetStatic$, $PutStatic$)
-to be changed.
+operations upon it ($GetStatic$, $PutStatic$) to be changed.
 The management of allocation contexts is unaffected by the
 compilation, but is required for managing allocation of objects, so
 that they can be allocated in the correct backing store.
@@ -2024,13 +2029,12 @@ identifier communicated on the $newObject$ channel in the $cs$ map,
 and replaces its $fields$ with the union of its $fields$ and those of
 its superclasses, to account for field inheritance.
 The space for the object is then allocated in the action
-$AllocateObject$, also used by $AllocateStaticFields$, which
-communicates with the memory manager on the $MMallocateMemory$ and
-$MMallocateMemoryRet$ channels.
+$AllocateObject$, which communicates with the memory manager on the
+$MMallocateMemory$ and $MMallocateMemoryRet$ channels.
 The backing store used is the last backing store in
-$backingStoreStacks$ for $thread$ and size required for the object is
+$backingStoreStacks$ for $thread$ and the size required for the object is
 computed from the $class$ information returned by
-$GetObjectClassInfo$, via a $sizeOfObject$ function.
+$GetObjectClassInfo$, via the $sizeOfObject$ function.
 The idenitifier of the new object is stored in $objectID$.
 After a successful allocation, the object is added to the $objects$
 map with its fields initialised to $null$, in $ObjManObjectInit$, and
@@ -2054,8 +2058,8 @@ instructions themselves.
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
 
-The $Interpreter$ process is the final component of $CEE$ that we
-present. 
+The $Interpreter$ process is the final component of pre-compilation
+$CEE$ that we present. 
 It handles the execution of bytecode instructions:~those in the subset
 described in Section~\ref{cee-bytecode-subset-subsection}, represented
 by the free type $Bytecode$, sketched below.
@@ -2563,7 +2567,7 @@ shown below, the $frameStack$ is checked to determine whether the
 return value should be communicated to the $Launcher$.
 If $frameStack$ is empty then the method being returned from has been
 initiated via a signal on the $executeMethod$ channel, and so the
-return value is communicated back to the $Launcher$ via the
+return value is communicated back to the $Launcher$ via
 $executeMethodRet$. 
 If the $frameStack$ is not empty then nothing more needs to be done
 and the action terminates.
@@ -2695,7 +2699,7 @@ before continuing.
 In addition to the special methods handled in the $Launcher$, we also
 supply \texttt{read()} and \texttt{write()} methods for reading from
 and writing to some standard input and output devices. 
-These methods are handled using the \texttt{input} and \texttt{output}
+These methods are handled using the $input$ and $output$
 channels that communicate the values from and to the environment of
 the SCJVM.
 This is shown in the definition of the $InvokeRead$ action below,
@@ -2760,14 +2764,14 @@ below.
 The subscripts here indicate that the processes depend on the $bc$ and
 $cs$ constants used as inputs to the compilation strategy. 
 However, $bc$ and $cs$ are not parameters of the processes.
+The $instCS$ parameter is also removed, but it is related to $bc$ and
+so is not included as a separate subscript.
 We note that the $sid$ and $initOrder$ parameters to $Launcher$
 remain, since $Launcher$ is not transformed during the compilation
 strategy.
 
 The channels used for communication between these processes are the
-same as those in Table~\ref{cee-channel-table}, except that the
-$getField$, $getFieldRet$ and $putField$ channels are replaced with
-$getObject$, $getObjectRet$ and $putObject$ channels.
+same as those in Table~\ref{cee-channel-table}.
 We describe the $CProg_{bc,cs}$ process in
 Section~\ref{cee-c-program-subsection}.
 After that, in Section~\ref{cee-struct-manager-subsection},
@@ -2791,13 +2795,7 @@ $CThr_{bc,cs}$ has a similar structure to the $Thr$ process in
 Section~\ref{cee-interpreter-subsection}.
 However, the $pc$ and $frameStack$ components are eliminated from the
 state during compilation.
-The state of $CThr_{bc,cs}$ contains a single component, $stackID$,
-which may be $Uninitialised$ or $Initialised$ with a $StackID$ for the
-C thread's stack.
-Since there is no explicit stack in C, we only need to ensure there is
-a stack identifier in $stackID$ so space for the thread's stack has
-been allocated.
-The $stackID$ is initially set to $Uninitialised$.
+The state of $CThr_{bc,cs}$ is thus empty.
 
 The $Running$ action and creation of stack frames (in $MainThread$ and
 $Started$) are replaced with an $ExecuteMethod$ action that
@@ -2858,7 +2856,7 @@ of \Circus{}.
 The representation of these constructs is summarised in
 Table~\ref{embedding-table}.
 
-\begin{table}[p]
+\begin{table}[pt]
 \centering
 {\scriptsize
 \lstset{language=C,keywordstyle=\sffamily\bfseries,basicstyle=\ttfamily}
@@ -2873,7 +2871,7 @@ Table~\ref{embedding-table}.
 \rowcolors{2}{white}{lightgray}
 \begin{tabular}{p{3cm}p{5.2cm}p{4.2cm}}
 \hline
-\vspace{0.01cm} Construct \vspace{0.1cm} & \vspace{0.01cm} C code \vspace{0.1cm} & \vspace{0.01cm} \Circus{} equivalent \vspace{0.1cm} \\
+Construct & C code & \Circus{} equivalent \\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function definition &
 \vspace{-0.4cm}                                                     
@@ -3193,7 +3191,7 @@ They begin with a $classID$ component containing the class identifier
 of the object, so that polymorphic method calls can be made by choice
 over the object's class.
 There is then a component for each of the fields
-${<}fieldID_1{>}, \dots, {<}fieldID_{m_k}{>}$, each of type $Word$.
+${<}fieldID_{k,1}{>}, \dots, {<}fieldID_{k,m_k}{>}$, each of type $Word$.
 \begin{schema}{{<}classID_k{>}Obj}
   classID : ClassID \\
   {{<}fieldID_{k,1}{>}} : Word \\
@@ -3267,9 +3265,9 @@ are refined to operate on the struct types described in this section.
 $GetField$ simply applies the $cast{<}cid{>}$ function for the
 $classID$ value $cid$ provided on the $getField$ channel to the object
 corresponding to the $ObjectID$ provided on the $getField$ channel,
-and returns the requested field of the resultant struct on the
+and returns the requested field of the resultant struct on
 $getFieldRet$.
-Similarly, $PutField$ updates the specified object using the
+Similarly, $PutField$ updates the specified object using
 $update{<}cid{>}\_{<}fid{>}$ for the $ClassID$ $cid$ and $FieldID$
 $fid$ provided on the $putField$ channel.
 The $GetStatic$ and $PutStatic$ actions access and update the
@@ -3371,9 +3369,10 @@ discussion about how command-line arguments are passed to an SCJ
 program. 
 As a result, a \texttt{String[]} argument has been added to the
 \texttt{initializeApplication()} method of \texttt{Safelet}.
-We have not included this in our model as it is not yet in a publicly
-available version of the SCJ specification and none of our examples
-require command line parameters.
+We have not included this in our model as it did not appear in a
+publicly available version of the SCJ specification in time to be
+integrated into our model and none of our examples require command
+line parameters.
 
 Some of our consultations with the SCJ expert group have provided
 clarification that we used to shape our model but did not result in
