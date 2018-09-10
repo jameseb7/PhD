@@ -394,10 +394,9 @@
       \end{array}\\
       \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
       \begin{array}{l}
-        \{ pc = i \} \circseq
         (\circvar variableIndex : \nat \circspot        
         variableIndex := lvi \circseq \\
-        \t2 \lschexpract \exists \Delta StackFrame @
+        \t1 \lschexpract \exists \Delta StackFrame @
         StackFrameALOAD \land PromoteStackFrameOp \rschexpract)
       \end{array}\\
       = & Lemma~\ref{Handle-schema-refinement-lemma} \\
@@ -408,7 +407,7 @@
         StackFrameALOAD \land PromoteStackFrameOpEPC \rschexpract \circseq \\
         \t1 pc := i + 1)
       \end{array}\\
-      = & Law~[\nameref{copy-rule-law}] and defintion of $InterpreterAloadEPC$ \\
+      = & Law~[\nameref{copy-rule-law}] and definition of $InterpreterAloadEPC$ \\
       \begin{array}{l}
         (\circvar variableIndex : \nat \circspot \\       
         \t1 variableIndex := lvi \circseq
@@ -428,7 +427,7 @@
         \lschexpract InterpreterAloadEPC \rschexpract)(lvi) \circseq
         pc := i + 1
       \end{array}\\
-      = & Law~[\nameref{copy-rule-law}] and defintion of $HandleAloadEPC$ \\
+      = & Law~[\nameref{copy-rule-law}] and definition of $HandleAloadEPC$ \\
       \begin{array}{l}
         HandleAloadEPC(lvi) \circseq
         pc := i + 1
@@ -473,11 +472,11 @@
     \begin{circus}
       \begin{array}{l}
         \{ pc = i \} \circseq HandleInstruction_{bc}
-      \end{array}\\
-      
+      \end{array}
+      \circrefines_A
       \begin{array}{l}
         handleAction~(bc~i)
-      \end{array}\\
+      \end{array}
     \end{circus}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Case 7: ineg
@@ -486,11 +485,11 @@
     \begin{circus}
       \begin{array}{l}
         \{ pc = i \} \circseq HandleInstruction_{bc}
-      \end{array}\\
+      \end{array}
       \circrefines_A
       \begin{array}{l}
         handleAction~(bc~i)
-      \end{array}\\
+      \end{array}
     \end{circus}
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Case 8: goto
@@ -798,15 +797,45 @@
       \begin{array}{l}
         \{ pc = i \} \circseq
         \{ pc \in \dom bc \land bc~pc = areturn\} \circseq
-        \lschexpract InterpreterAreturn \rschexpract
+        HandleAreturn
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and defintion of $HandleAreturn$ \\
+      \begin{array}{l}
+        \{ pc = i \} \circseq
+        \{ pc \in \dom bc \land bc~pc = areturn\} \circseq
+        (\circvar returnValue : Word \circspot \\
+        \t1 \lcircguard pc \in \dom bc \land bc~pc = areturn \rcircguard \circguard {} \\ 
+        \t1 CheckSynchronizedReturn \circseq \lschexpract InterpreterAreturn \rschexpract \circseq \\
+        \t1 CheckLauncherReturn(returnValue))
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl-law}]\\
+      \begin{array}{l}
+        \{ pc = i \} \circseq
+        (\circvar returnValue : Word \circspot \{ pc \in \dom bc \land bc~pc = areturn\} \circseq \\
+        \t1 \lcircguard pc \in \dom bc \land bc~pc = areturn \rcircguard \circguard {} \\ 
+        \t1 CheckSynchronizedReturn \circseq \lschexpract InterpreterAreturn \rschexpract \circseq \\
+        \t1 CheckLauncherReturn(returnValue))
+      \end{array}\\
+      = & Law~[\nameref{assump-guard-elim1-law}] \\
+      \begin{array}{l}
+        \{ pc = i \} \circseq
+        (\circvar returnValue : Word \circspot \{ pc \in \dom bc \land bc~pc = areturn\} \circseq \\ 
+        \t1 CheckSynchronizedReturn \circseq \lschexpract InterpreterAreturn \rschexpract \circseq \\
+        \t1 CheckLauncherReturn(returnValue))
       \end{array}\\
       \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
       \begin{array}{l}
-        \lschexpract InterpreterAreturn \rschexpract
+        (\circvar returnValue : Word \circspot CheckSynchronizedReturn \circseq \lschexpract InterpreterAreturn \rschexpract \circseq \\
+        \t1 CheckLauncherReturn(returnValue))
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl}] \\
+      \begin{array}{l}
+        CheckSynchronizedReturn \circseq (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn \rschexpract \circseq \\
+        \t1 CheckLauncherReturn(returnValue))
       \end{array}\\
       = & Law~[\nameref{copy-rule-law}] and definition of $HandleAreturnEPC$ \\
       \begin{array}{l}
-        HandleAreturnEPC
+        CheckSynchronizedReturn \circseq HandleAreturnEPC
       \end{array}\\
       = & Definition of $handleAction$ and case assumption $bc~i = areturn$ \\
       \begin{array}{l}
@@ -1054,7 +1083,7 @@
       \begin{array}{l}
         (\circval cpIndex : \nat \circspot \\
         \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
-        \t2 newObject!thread!(classOf~cpIndex) \then \circseq newObjectRet?oid \then {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
         \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \\
         \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \Chaos \\
         \t1 \circfi)(cpi) \circseq pc := i + 1
@@ -1362,6 +1391,7 @@
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~((putfield\inv)~(bc~pc)) \circseq \\
+        \t2 \circvar cid : ClassID \circspot cid := (classOf~currentClass~((putfield\inv)~(bc~pc))) \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1379,6 +1409,7 @@
         \t2 \circvar fid : FieldID \circspot \\
         \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
         \t2 fid := fieldOf~currentClass~((putfield\inv)~(bc~pc)) \circseq \\
+        \t2 \circvar cid : ClassID \circspot cid := (classOf~currentClass~((putfield\inv)~(bc~pc))) \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1396,6 +1427,58 @@
         \t2 \circvar fid : FieldID \circspot \\
         \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
         \t2 fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot cid := (classOf~currentClass~((putfield\inv)~(bc~pc))) \circseq \\
+        \t2 \circvar oid : ObjectID; value : Word \circspot \\
+        \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
+        \t2 putField!oid!cid!fid!value \then \Skip \\
+        \t1 {} \circelse cpIndex \notin fieldRefIndices~currentClass \circthen {} \\
+        \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \Chaos \\
+        \t1 \circfi)
+      \end{array}\\
+      = & Law~[\nameref{assump-assign-dist-law}] \\
+      \begin{array}{l}
+        \{ pc = i \} \circseq
+        (\circvar cpIndex : \nat \circspot \\
+        \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi\} \circseq cpIndex := cpi \circseq \\
+        \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
+        \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
+        \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
+        \t2 \circvar cid : ClassID \circspot cid := (classOf~currentClass~((putfield\inv)~(bc~pc))) \circseq \\
+        \t2 \circvar oid : ObjectID; value : Word \circspot \\
+        \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
+        \t2 putField!oid!cid!fid!value \then \Skip \\
+        \t1 {} \circelse cpIndex \notin fieldRefIndices~currentClass \circthen {} \\
+        \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \Chaos \\
+        \t1 \circfi)
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl-law}] \\
+      \begin{array}{l}
+        \{ pc = i \} \circseq
+        (\circvar cpIndex : \nat \circspot \\
+        \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi\} \circseq cpIndex := cpi \circseq \\
+        \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
+        \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
+        \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
+        \t2 cid := (classOf~currentClass~((putfield\inv)~(bc~pc))) \circseq \\
+        \t2 \circvar oid : ObjectID; value : Word \circspot \\
+        \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
+        \t2 putField!oid!cid!fid!value \then \Skip \\
+        \t1 {} \circelse cpIndex \notin fieldRefIndices~currentClass \circthen {} \\
+        \t2 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \Chaos \\
+        \t1 \circfi)
+      \end{array}\\
+      = & Law~[\nameref{assump-assign-subst-law}] \\
+      \begin{array}{l}
+        \{ pc = i \} \circseq
+        (\circvar cpIndex : \nat \circspot \\
+        \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi\} \circseq cpIndex := cpi \circseq \\
+        \t1 \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
+        \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
+        \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot \{ pc \in \dom bc \land bc~pc = putfield~cpi \land cpIndex = cpi \} \circseq \\
+        \t2 cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1410,6 +1493,8 @@
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot
         fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1422,6 +1507,8 @@
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot
         fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1434,6 +1521,8 @@
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot
         fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1445,6 +1534,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \{ pc = i \} \circseq \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1456,6 +1547,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1467,6 +1560,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq \{ pc = i \} \circseq \\
+        \t2 \circvar cid : ClassID \circspot
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1477,7 +1572,35 @@
       \begin{array}{l}
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
+        \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar oid : ObjectID; value : Word \circspot \\
+        \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
+        \t2 putField!oid!cid!fid!value \then \Skip \\
+        \t1 {} \circelse cpIndex \notin fieldRefIndices~currentClass \circthen \{ pc = i \} \circseq \Chaos \\
+        \t1 \circfi)
+      \end{array}\\
+      = & Law~[\nameref{assump-assign-dist-law}] \\
+      \begin{array}{l}
+        (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
+        \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
+        \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
+        \t2 \{ pc = i \} \circseq \circvar oid : ObjectID; value : Word \circspot \\
+        \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
+        \t2 putField!oid!cid!fid!value \then \Skip \\
+        \t1 {} \circelse cpIndex \notin fieldRefIndices~currentClass \circthen \{ pc = i \} \circseq \Chaos \\
+        \t1 \circfi)
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl-law}] \\
+      \begin{array}{l}
+        (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
+        \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \{ pc = i \} \circseq \\
         \t2 \lschexpract InterpreterPop \hide (pc,pc') \rschexpract \circseq \lschexpract InterpreterPop[oid!/value!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1489,6 +1612,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \{ pc = i \} \circseq \\
         \t2 \lschexpract (\exists \Delta StackFrame @ \\
         \t3 StackFramePop \land PromoteStackFrameOp) \hide (pc,pc') \rschexpract \circseq \\
@@ -1503,6 +1628,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \{ pc = i \} \circseq \\
         \t2 \lschexpract \exists \Delta StackFrame @ \\
         \t3 StackFramePop \land (PromoteStackFrameOp \hide (pc,pc')) \rschexpract \circseq \\
@@ -1517,6 +1644,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract \exists \Delta StackFrame @ \\
         \t3 StackFramePop \land (PromoteStackFrameOp \hide (pc,pc')) \rschexpract \circseq \\
@@ -1531,6 +1660,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract \exists \Delta StackFrame @ \\
         \t3 StackFramePop \land (PromoteStackFrameOp \hide (pc,pc')) \rschexpract \circseq \\
@@ -1545,6 +1676,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract \exists \Delta StackFrame @ \\
         \t3 StackFramePop \land (PromoteStackFrameOp \hide (pc,pc')) \land pc' = pc \rschexpract \circseq \\
@@ -1559,6 +1692,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract \exists \Delta StackFrame @ \\
         \t3 StackFramePop \land PromoteStackFrameOpEPC \rschexpract \circseq \\
@@ -1573,6 +1708,8 @@
         (\circvar cpIndex : \nat \circspot \{ pc = i \} \circseq cpIndex := cpi \circseq \{ pc = i \} \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen \circvar fid : FieldID \circspot \\
         \t2 \{ pc = i \} \circseq fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot \{ pc = i \} \circseq
+        cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract IntepreterPopEPC \rschexpract \circseq
         \lschexpract IntepreterPopEPC[oid!/value!] \rschexpract \circseq \\
@@ -1585,6 +1722,7 @@
         (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract IntepreterPopEPC \rschexpract \circseq
         \lschexpract IntepreterPopEPC[oid!/value!] \rschexpract \circseq \\
@@ -1597,6 +1735,7 @@
         (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract IntepreterPopEPC \rschexpract \circseq
         \lschexpract IntepreterPopEPC[oid!/value!] \rschexpract \circseq \\
@@ -1609,6 +1748,7 @@
         (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract InterpreterPushEPC[value!/value1!,oid!/value2!] \rschexpract \circseq \\
         \t2 putField!oid!cid!fid!value \then \Skip \\
@@ -1620,6 +1760,7 @@
         (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract IntepreterPopEPC \rschexpract \circseq
         \lschexpract IntepreterPopEPC[oid!/value!] \rschexpract \circseq \\
@@ -1632,6 +1773,7 @@
         (\circval cpIndex : \nat \circspot \\
         \t1 \circif cpIndex \in fieldRefIndices~currentClass \circthen {} \\
         \t2 \circvar fid : FieldID \circspot fid := fieldOf~currentClass~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot cid := classOf~currentClass~cpIndex \circseq \\
         \t2 \circvar oid : ObjectID; value : Word \circspot \\
         \t2 \lschexpract IntepreterPopEPC \rschexpract \circseq
         \lschexpract IntepreterPopEPC[oid!/value!] \rschexpract \circseq \\
@@ -2397,4 +2539,327 @@
   Thus
   $\{ pc = i \} \circseq HandleInstruction \circrefines_A
   handleAction~(bc~i)$ so the rule holds.
+\end{crproof}
+
+\begin{crproof}[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+        {} \circelse pc = i \circthen CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-assump-intro-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+        {} \circelse pc = i \circthen \{ pc = i \} \circseq CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law} and assumption of rule] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 \{ \exists c : Class; m : MethodID | \\
+      \t2 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t2 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t2 m \in c.synchronisedMethods \land m \notin c.staticMethods \} \circseq \\
+      \t1 CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law} and definition of $CheckSynchronizedReturn$] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 \{ \exists c : Class; m : MethodID | \\
+      \t2 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t2 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t2 m \in c.synchronisedMethods \land m \notin c.staticMethods \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \{ \exists c : Class; m : MethodID | \\
+      \t3 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t3 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t3 m \in c.synchronisedMethods \land m \notin c.staticMethods \} \circseq \\
+      \t2 \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[Definition of $GetCurrentMethod$] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \{ \exists c : Class; m : MethodID | \\
+      \t3 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t3 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t3 m \in c.synchronisedMethods \land m \notin c.staticMethods \} \circseq \\
+      \t2 \lschexpract [\Xi InterpreterState; methodID! : MethodID | \\
+      \t3 methodID! = (\mu m : \dom currentClass.methodEntry | \\
+      \t4 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m)] \rschexpract \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] and schema calculus \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \lschexpract [\Xi InterpreterState; methodID! : MethodID | \\
+      \t3 methodID! = (\mu m : \dom currentClass.methodEntry | \\
+      \t4 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m)] \rschexpract \circseq \\
+      \t2 \{methodID \in currentClass.synchronisedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \} \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Definition of $GetCurrentMethod$ \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \{methodID \in currentClass.synchronisedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \} \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \{methodID \in currentClass.synchronisedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \} \circseq \\
+      \t2 releaseLock!((last~frameStack).localVariables~1) \\
+      \t2 {} \then releaseLockRet \then \Skip) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen (\circvar methodID : MethodID \circspot \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t1 releaseLock!((last~frameStack).localVariables~1) \\
+      \t1 {} \then releaseLockRet \then \Skip) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-schema-intro-law}] and definition of $GetCurrentMethod$ \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen releaseLock!((last~frameStack).localVariables~1) \\
+      \t1 {} \then releaseLockRet \then \Skip) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+  \end{argue}
+\end{crproof}
+
+
+\begin{crproof}[\nameref{CheckSynchronizedReturn-nonsynchronized-refinement-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+        {} \circelse pc = i \circthen CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+    \end{array}\\
+    = & Law~[\nameref{alt-assump-intro-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+        {} \circelse pc = i \circthen \{ pc = i \} \circseq CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law} and assumption of rule] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 \{ \exists c : Class; m : MethodID | \\
+      \t2 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t2 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t2 m \notin c.synchronisedMethods \lor m \in c.staticMethods \} \circseq \\
+      \t1 CheckSynchronizedReturn \circseq A \\
+        {} \cdots {} \\
+        \circfi
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law} and definition of $CheckSynchronizedReturn$] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 \{ \exists c : Class; m : MethodID | \\
+      \t2 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t2 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t2 m \notin c.synchronisedMethods \lor m \in c.staticMethods \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \{ \exists c : Class; m : MethodID | \\
+      \t3 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t3 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t3 m \notin c.synchronisedMethods \lor m \in c.staticMethods \} \circseq \\
+      \t2 \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[Definition of $GetCurrentMethod$] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \{ \exists c : Class; m : MethodID | \\
+      \t3 c \in \ran cs \land m \in \dom c.methodEntry @ \\
+      \t3 p \in c.methodEntry~m \upto c.methodEnd~m \land \\
+      \t3 m \notin c.synchronisedMethods \lor m \in c.staticMethods \} \circseq \\
+      \t2 \lschexpract [\Xi InterpreterState; methodID! : MethodID | \\
+      \t3 methodID! = (\mu m : \dom currentClass.methodEntry | \\
+      \t4 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m)] \rschexpract \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] and schema calculus \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \lschexpract [\Xi InterpreterState; methodID! : MethodID | \\
+      \t3 methodID! = (\mu m : \dom currentClass.methodEntry | \\
+      \t4 pc \in currentClass.methodEntry~m \upto currentClass.methodEnd~m)] \rschexpract \circseq \\
+      \t2 \{methodID \notin currentClass.synchronisedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \} \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Definition of $GetCurrentMethod$ \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \{methodID \notin currentClass.synchronisedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \} \circseq \\
+      \t2 \circif methodID \in currentClass.synchronizedMethods \\
+      \t3 {} \land methodID \notin currentClass.staticMethods \circthen {} \\
+      \t3 releaseLock!((last~frameStack).localVariables~1) \\
+      \t3 {} \then releaseLockRet \then \Skip \\
+      \t2 {} \circelse methodID \notin currentClass.synchronizedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \circthen \Skip \\
+      \t2 \circfi) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \{ pc = i \} \circseq \\
+      \t1 (\circvar methodID : MethodID \circspot \\
+      \t2 \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t2 \{methodID \notin currentClass.synchronisedMethods \\
+      \t3 {} \lor methodID \in currentClass.staticMethods \} \circseq \\
+      \t2 \Skip) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen (\circvar methodID : MethodID \circspot \lschexpract GetCurrentMethod \rschexpract \circseq \\
+      \t1 \Skip) \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-schema-intro-law}] and definition of $GetCurrentMethod$ \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen \Skip \circseq A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+    = & Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circif {} \cdots {} \\
+      {} \circelse pc = i \circthen A \\
+      {} \cdots {} \\
+      \circfi
+    \end{array}
+  \end{argue}
 \end{crproof}

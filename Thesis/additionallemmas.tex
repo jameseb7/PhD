@@ -297,34 +297,31 @@
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \circif frameStack = \emptyset \circthen \Skip \\
-      {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t1 \circif {} \cdots \\
-      \t1 {} \circelse pc = i \circthen A \circseq \\
-      \t2 \circif b \circthen B \\
-      \t2 \circelse \lnot b \circthen C \circseq Poll \circseq \\
-      \t3 \circif {} \cdots \\
-      \t3 {} \circelse pc = i \circthen E \\
-      \t3 {} \cdots {} \\
-      \t3 {} \circelse pc = j \circthen D \\
-      \t3 {} \cdots {} \\
-      \t3 \circfi \\
-      \t2 \circfi \\
-      \t1 {} \cdots {} \\
-      \t1 {} \circelse pc = j \circthen D \\
-      \t1 {} \cdots {} \\
-      \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
-      \t2 \circif frameStack = \emptyset \circthen \Skip \\
-      \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
-      \t3 \circif {} \cdots \\
-      \t3 {} \circelse pc = i \circthen E \\
-      \t3 {} \cdots {} \\
-      \t3 {} \circelse pc = j \circthen D \\
-      \t3 {} \cdots {} \\
-      \t3 \circfi \circseq Poll \circseq X \\
-      \t2 \circfi \\
-      \circfi
-    \end{array}
+        \circif frameStack = \emptyset \circthen \Skip \\
+        {} \circelse frameStack \neq \emptyset \circthen {} \\
+        \t1 \circif {} \cdots \\
+        \t1 {} \circelse pc = i \circthen A \circseq Poll \circseq \\
+        \t2 \circif {} \cdots \\
+        \t2 {} \circelse pc = i \circthen C \\
+        \t2 {} \cdots {} \\
+        \t2 {} \circelse pc = j \circthen B \\
+        \t2 {} \cdots {} \\
+        \t2 \circfi \\
+        \t1 {} \cdots {} \\
+        \t1 {} \circelse pc = j \circthen B \\
+        \t1 {} \cdots {} \\
+        \t1 \circfi \circseq Poll \circseq \circmu X \circspot \\
+        \t2 \circif frameStack = \emptyset \circthen \Skip \\
+        \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
+        \t3 \circif {} \cdots \\
+        \t3 {} \circelse pc = i \circthen C \\
+        \t3 {} \cdots {} \\
+        \t3 {} \circelse pc = j \circthen B \\
+        \t3 {} \cdots {} \\
+        \t3 \circfi \circseq Poll \circseq X \\
+        \t2 \circfi \\
+        \circfi
+      \end{array}
   \end{circus}
   \begin{crproof}
     \begin{argue}
@@ -681,7 +678,7 @@
         \t3 \circfi \circseq Poll \circseq X \\
         \t2 \circfi \\
         \circfi
-      \end{array}\\
+      \end{array}
     \end{argue}
   \end{crproof}
 \end{lem}

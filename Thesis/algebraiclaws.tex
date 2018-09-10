@@ -28,7 +28,16 @@ proofs of our compilation rules.
 \end{law}
 
 % proved in Isabelle
-\AltSeqDistLaw*
+\begin{minipage}{\textwidth}
+\begin{restatable}[alt-seq-dist]{law}{AltSeqDistLaw}
+  \label{alt-seq-dist-law}
+  \begin{circus}
+    \circif {} \circelse_{i} g_i \circthen A_i \circfi \circseq B
+    =
+    \circif {} \circelse_{i} g_i \circthen A_i \circseq B \circfi
+  \end{circus}
+\end{restatable}
+\end{minipage}
 
 % proved in Isabelle
 \begin{law}[alt-assump-intro]
