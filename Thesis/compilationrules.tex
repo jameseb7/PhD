@@ -705,7 +705,7 @@
 \begin{minipage}{\textwidth}
 \begin{restatable}[$frameStack$-assump-return-dist-rule]{crule}{FrameStackAssumpReturnDist}
   \label{frameStack-assump-return-dist-rule}
-  If $A$ is $HandleAreturn$ or $HandleReturn$, $B$ does not begin with
+  If $A$ is $HandleAreturnEPC$ or $HandleReturnEPC$, $B$ does not begin with
   $\{\# frameStack = k\}$, and $k > 0$ then
   \begin{circus}
     \begin{array}{l}
@@ -819,7 +819,7 @@
 \begin{restatable}[restricted-assump-infinite-loop-distl]{crule}{RestrictedAssumpInfiniteLoopDistl}
   \label{restricted-assump-infinite-loop-distl-rule}
   If $A$ does not begin with $\{g\}$ and
-  $\{g\} \circseq A \circrefines_A A \circseq \{g\} $ then
+  $\{g\} \circseq A \circrefines_A A \circseq \{g\}$ then
   \begin{circus}
     \{g\} \circseq (\circmu X \circspot A \circseq X)
     \circrefines_A
