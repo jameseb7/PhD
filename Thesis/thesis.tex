@@ -16,7 +16,7 @@
 \usepackage[color,cntglobally]{circus}
 \usepackage{mathdots}
 \usepackage{multicol}
-\usepackage{listings}
+\usepackage[savemem]{listings}
 \usepackage{vwcol}
 \usepackage{fixltx2e}
 \usepackage{comment}
@@ -30,6 +30,8 @@
 \usepackage[normalem]{ulem}
 \usepackage{tikz-uml}
 \usepackage{titling}
+\usepackage{lscape}
+\usepackage{pdflscape}
 
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
@@ -193,10 +195,9 @@ prefoothook={\qedsymbol\relax}
 %TC:group zproof 0 displaymath 
 %TC:group algorithm 0 float
 %TC:group argue 0 displaymath
-
-
   
 \begin{document}
+
 \begin{titlepage}
   \centering{}
   \hfill
@@ -394,6 +395,11 @@ applied. We discuss it here.
 \label{compilation-rules-appendix}
 
 \input{compilationrules.tex}
+
+\chapter{C Code of Examples}
+\label{example-c-code-appendix}
+
+\input{examplecode.tex}
 
 {\raggedright \printbibliography[resetnumbers=true]}
 
