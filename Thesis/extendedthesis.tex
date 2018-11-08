@@ -247,6 +247,105 @@ prefoothook={\qedsymbol\relax}
 
 \tableofcontents
 
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{List of Tables}
+\listoftables
+
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{List of Figures}
+\listoffigures
+
+% acknowledgements page
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Acknowledgements}
+\chapter*{Acknowledgements}
+
+Firstly, I would like to thank my supervisor, Ana Cavalcanti, for all
+her advice on the work and comments on this thesis as it developed,
+and for always replying to emails promptly when I required help.
+My thanks also go to Andy Wellings, for the clarifications of the
+Safety Critical Java specification that he offered and for bringing
+the issues I raised to the attention of the expert group developing
+that specification.
+I would also like to thank my assessor, Colin Runciman, for his
+comments on drafts of the thesis and suggestions of related
+literature.
+
+Leo Freitas gave great help with the use of Z/EVES and Community Z
+Tools, and I am thankful to him for the time he took to explain these
+things.
+My thanks also go to the authors of the icecap HVM for their help in
+using it.
+I am thankful to Augusto Sampaio for his feedback on my use of the
+algebraic approach.
+I would also like to thank Pedro Ribeiro for his useful advice on the
+format of this thesis, and Alvaro Miyazawa for his help in putting
+technical reports online.
+Heartfelt thanks go to Simon Foster for all his friendship throughout
+this PhD, for teaching me to use the Isabelle proof assistant, and for
+introducing me to the area of formal methods, without which I may
+never have done this PhD at all.
+
+This work has been funded by an EPSRC studentship, and I am grateful to
+EPSRC for their provision of the funding and to the University for
+deciding to allocate one of the studentships to me.
+
+My parents have given me a great amount of support and encouragement
+over the years, and I am particularly grateful to them for how they
+have supported me while I have been busy writing this thesis. 
+I would particularly like to thank my mother for proofreading this
+thesis.
+My thanks also go to all my friends for their support, particularly to
+the members of Trinity Church York and Wentworth Christian Union for
+all their support, encouragement, and prayers.
+
+Finally, as a Christian, I acknowledge that all that happens is in the
+hands of God. 
+I am enormously thankful to him for all he has done in bringing me
+safely to this point. 
+Therefore, I commit this thesis to his sovereign care and ask that he
+alone may be glorified in all things.
+
+% end acknowledgements page
+
+% declaration page
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Declaration}
+\chapter*{Declaration}
+
+I declare that this thesis is a presentation of original work and I am
+the sole author. 
+This work has not previously been presented for an award at this, or
+any other, University. 
+All sources are acknowledged as references.
+The following material, presented in this thesis, has been previously
+published:
+
+\begin{refsection}
+  \raggedright
+  \nocite{baxter2015a,baxter2017}
+  \setlength{\bibitemsep}{0.5cm}
+  \printbibliography[resetnumbers=true,heading=none]
+\end{refsection}
+
+The following published material is not directly described in this
+thesis, but provides evidence of the context in which our work can be
+applied. We discuss it here.
+
+\begin{refsection}
+  \raggedright
+  \nocite{freitas2016}
+  \setlength{\bibitemsep}{0.5cm}
+  \printbibliography[resetnumbers=3,heading=none]
+\end{refsection}
+
+% end declaration page
+\begin{refsection}
+
 \input{introduction.tex}
 
 \input{field-survey.tex}
@@ -388,5 +487,8 @@ prefoothook={\qedsymbol\relax}
 \chapter{Compilation Rules Proofs}
 \label{compilation-rules-proofs-appendix}
 \input{compilationrules_proofs.tex}
+
+{\raggedright \printbibliography[resetnumbers=true]}
+\end{refsection}
 
 \end{document}
