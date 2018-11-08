@@ -2869,7 +2869,7 @@ Table~\ref{embedding-table}.
 \setlength{\belowdisplayshortskip}{0mm}
 %\renewcommand{\arraystretch}{0.0}
 \rowcolors{2}{white}{lightgray}
-\begin{tabular}{p{3cm}p{5.2cm}p{4.2cm}}
+\begin{tabular}{p{2.6cm}p{5.6cm}p{4.2cm}}
 \hline
 Construct & C code & \Circus{} equivalent \\
 \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2898,7 +2898,7 @@ void bar(int32_t x) {...}
 \raggedright Function definition with return value &
 \vspace{-0.4cm}
 \begin{lstlisting}
-int32_t baz() {...}
+void baz(int32_t * retVal) {...}
 \end{lstlisting}
 &
 \vspace{-0.5cm}
@@ -2909,7 +2909,8 @@ int32_t baz() {...}
 \raggedright Function definition with parameter and return value &
 \vspace{-0.4cm}
 \begin{lstlisting}
-int32_t quux(int32_t x) {...}
+void quux(int32_t x,
+   int32_t * retVal) {...}
 \end{lstlisting}
 &
 \vspace{-0.4cm}
@@ -2943,7 +2944,7 @@ Bar(x)
 \raggedright Function call with return value &
 \vspace{-0.4cm}
 \begin{lstlisting}
-x = baz();
+baz(&x);
 \end{lstlisting}
 &
 \vspace{-0.4cm}
@@ -2954,7 +2955,7 @@ Baz(x)
 \raggedright Function call with argument and return value &
 \vspace{-0.4cm}
 \begin{lstlisting}
-y = quux(x);
+quux(x, &y);
 \end{lstlisting}
 &
 \vspace{-0.4cm}
@@ -2976,7 +2977,8 @@ return;
 \raggedright Return statement with value &
 \vspace{-0.4cm}
 \begin{lstlisting}
-return x;
+*retVal = x;
+return;
 \end{lstlisting}
 &
 \vspace{-0.4cm}
@@ -2993,7 +2995,7 @@ x = e;
 \vspace{-0.4cm}
 \begin{circus}
 x := e
-\end{circus} \\[-0.5cm]
+\end{circus} \\[-0.05cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright  Variable declaration &
 \vspace{-0.4cm}
@@ -3004,7 +3006,7 @@ int32_t x;
 \vspace{-0.5cm}
 \[  
   \circvar x : word \circspot
-\] \\[-0.5cm]
+\] \\[-0.05cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Variable declaration and initialisation &
 \vspace{-0.4cm}
@@ -3015,7 +3017,7 @@ int32_t x = e;
 \vspace{-0.5cm}
 \[
   \circvar x : Word \circspot x := e
-\] \\[-0.15cm]
+\] \\[0cm]
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright If statement &
 \vspace{-0.4cm}
@@ -3090,7 +3092,7 @@ do {...} while (b);
 \raggedright Field read &
 \vspace{-0.4cm}
 \begin{lstlisting}
-y = ((C *) x)->f;
+y = ((C *) (uintptr_t)  x)->f;
 \end{lstlisting}
 &
 \vspace{-0.4cm}
@@ -3105,7 +3107,7 @@ y = ((C *) x)->f;
 \raggedright Field write &
 \vspace{-0.4cm}
 \begin{lstlisting}
-((C *) x)->f = y;
+((C *) (uintptr_t) x)->f = y;
 \end{lstlisting}
 &
 \vspace{-0.4cm}
@@ -3142,9 +3144,17 @@ If a function has a return value, it is represented with a result
 parameter of the \Circus{} action, usually named $retVal$, with an
 assignment to that parameter at the end of the action representing
 return statements.
-We follow guidelines for safety-critical uses of C variants, such as
-MISRA-C~\cite{MISRA}, and use a single return statement at the end of
-a function.
+In the C code resulting from our strategy, we represent these result
+parameters using pointers passed into the function, rather than C
+return values.
+This better represents the semantics corresponding \Circus{} code.
+Also, while we do not consider them in our compilation strategy, it
+may be noted that this approach scales well to \texttt{long} values,
+which occupy two variables.
+We follow guidelines for safety-critical uses of C
+variants, such as MISRA-C~\cite{MISRA}, and use a single return
+statement at the end of a function.
+
 A function with both a return value and arguments has its value
 parameters (representing the arguments) followed by the result
 parameter (representing the return value).
@@ -3158,6 +3168,16 @@ Restricting ourselves to variables at the start of functions ensures
 the code our strategy generates is compatible with older versions of
 C.
 
+The types of parameters and variables in our \Circus{} model is
+$Word$, representing the type of 32-bit JVM words.
+The corresponding type we use in C is \texttt{int32\_t}, the type of
+32-bit signed integers provided by C99.
+This matches the behaviour of icecap, which uses its own
+\texttt{int32} type defined to be the same as \texttt{int32\_t}.
+We note that we do not need to address general issues of mapping
+between C types and \Circus{} types here, since all the variables and
+stack slots in the JVM are of the same fixed-width type.
+
 Finally, we model accesses to structs representing objects using
 communications with the struct manager.
 These use the same channels as in the interpreter model, but the
@@ -3170,6 +3190,11 @@ accesses are included in the channel communications so, with the
 semantics conferred by the struct manager, they can be translated to
 the corresponding C code by a simple lexical transformation, as shown
 in Table~\ref{embedding-table}.
+Note that we also perform a cast to \texttt{uintptr\_t}, the unsigned
+inter type from C99 with the same width as a pointer, to ensure the
+cast is performed correctly on systems where pointers are not 32-bit.
+This matches icecap, where a cast to a \texttt{pointer} type, defined
+in the same way as \texttt{uintptr\_t} is performed.
 Accesses to static fields are performed similarly, using the
 $getStatic$ and $putStatic$ channels to represent accesses to a global
 static fields struct. 
