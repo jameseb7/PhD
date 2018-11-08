@@ -68,7 +68,88 @@ SCJ is a subset of the RTSJ that leaves out the features from standard
 Java that are difficult to certify such as the garbage collector.
 SCJ also provides annotations that allow memory usage to be more
 easily checked.
-We discuss SCJ in more detail in the next section.
+In the next section, we describe RTSJ in more detail, following which
+we discuss SCJ.
+
+\section{The Real-Time Specification for Java}
+
+RTSJ extends the scheduling and memory management models of Java with
+features that permit more predictable execution.
+In particular, RTSJ adds two types of schedulable objects to the
+threads of Java:~real-time threads and asynchronous event handlers.
+These are scheduled by a real-time priority scheduling system in which
+each schedulable object has a priority and the highest priority object
+that is eligible to run at each point in time is the object that runs.
+This allows for simpler reasoning about order of execution and allows
+for more urgent tasks to preempt less urgent tasks.
+
+The real-time threads of RTSJ run continously from when they are
+started or repeatedly at regular intervals, unless they are
+interrupted by another schedulable object, or suspended waiting for a
+lock on an object.
+Asynchronous event handlers allow for code to execute in response to
+an event, which may be triggered by another schedulable object or by
+some external happening.
+Timers can also be used to trigger execution an asynchronous event
+handler at specific time intervals.
+
+RTSJ also provides mechanisms for preventing priority inversion, which
+is a situation in which a lower-priority schedulable object holding a
+lock on a resource required by a higher-priority schedulable object
+prevents the higher-priority schedulable object from executing, while
+the lower-priority schedulable object is itself blocked by other
+higher-priority schedulable objects.
+In particular, RTSJ supports priority ceiling emulation, in which a
+schedulable object is raised to the highest priority necessary to
+ensure it has priority over all threads that require the resource, and
+priority inheritance, in which the higher-priority schedulable object
+lifts the lower-priority schedulable object's priority when it
+requires the resource.
+
+Since interruption by the garbage collector can make predicting
+execution time difficult, RTSJ also provides for real-time threads and
+event handlers that do not use the heap.
+Such schedulable objects cannot allocate on the heap or access objects
+allocated on the the heap, but also cannot be interrupted by the
+garbage collector.
+As alternatives to the heap for such schedulable objects, RTSJ
+provides immortal memory, in which allocated objects exist for the
+duration of the program, and scoped memory areas, which can be entered
+and exited as needed, with objects in the memory area being
+deallocated when the memory area is exited.
+These memory management methods allow for better predictability
+concerning when objects are deallocated and avoid the hard-to-predict
+interruptions associated with a garbage collector.
+
+The additional features provided by RTSJ require support in the JVM
+used to execute an RTSJ program, since the JVM must have an
+appropriate scheduler and must offer memory outside the heap.
+Several RTSJ virtual machines (RTSJVMs) have thus been created to run
+RTSJ programs.
+These include JamaicaVM~\cite{aicas2017}, jRate~\cite{angelo2002},
+FijiVM~\cite{pizlo2009}, OVM~\cite{armbruster2007} and
+Sun-Microsystems' Java for Real-Time Systems (Java
+RTS)~\cite{mcenery2007}.
+Many RTSJVMs appear to no longer be maintained, including Sun's Java
+RTS.
+We also note that, since SCJ is based on RTSJ, some RTSJVMs also
+function as JVMs, and so we discuss them in more detail later.
+% jRate (angelo2002), FijiVM (pizlo2009), OVM (armbruster2007), JamaicaVM (aicas2017)
+% general RTSJVMS (mcenery2007) including:
+% - Sun-Microsystems' Java for Real-Time Systems (Java RTS)
+% - IBM's Websphere Real Time
+% JamaicaVM real-time garbage collection (siebert2007)
+
+Since many of the features offered by RTSJ are quite complex, and they
+are offered alongside standard Java alternatives such as
+(non-real-time) Java threads and the garbage-collected, RTSJ programs
+are hard to verify to the level required for safety-critical
+certifications.
+SCJ thus restricts the features of RTSJ to better facilitate such
+certification.
+In the next section, we discuss SCJ in more detail, describing how SCJ
+programs are structured and how the features of RTSJ are restricted in
+SCJ to permit certification.
 
 \section{Safety-Critical Java}
 \label{scj-section}
@@ -118,14 +199,13 @@ handlers that are released either periodically, at set intervals of
 time, aperiodically, in response to a release request, or once at a
 specific point in time (though handlers that are released once can
 have a new release time set, allowing them to be released again).
-At level 2 real-time threads are also allowed, which run continuously
-from when they start until they finish, unless they are suspended or
-interrupted by another schedulable object.
-
-Each schedulable object has a priority and the highest priority object
-that is eligible to run at each point in time is the object that runs.
-This allows for simpler reasoning about order of execution and allows
-for more urgent tasks to preempt less urgent tasks.
+At level 2 real-time threads are also allowed.
+These schedulable objects are scheduled according to a priority
+scheduler as in RTSJ, but SCJ only permits priority ceiling emulation
+as a mechanism for avoiding priority inversion.
+% , which run continuously
+% from when they start until they finish, unless they are suspended or
+% interrupted by another schedulable object.
 
 SCJ allows for assigning schedulable objects to ``scheduling
 allocation domains'', where each domain consists of one or more
@@ -172,11 +252,14 @@ Figure~\ref{stacks-areas-diagram}.
   \label{stacks-areas-diagram}
 \end{figure}
 
-This system of memory areas makes it easy to predict when memory is
-freed.
-It is not supported by standard JVMs as they do not provide memory
-outside of the heap for allocation and lack a notion of allocation
-context.
+This system of memory areas in SCJ is based on the immortal memory and
+scoped memory of RTSJ, but it is fitted to the mission model of SCJ
+and explicitly excludes the possibility of allocating in a
+garbage-collected heap.
+This thus makes it easy to predict when memory is freed.
+However, it is not supported by standard JVMs as they do not provide
+memory outside of the heap for allocation and lack a notion of
+allocation context.
 The SCJ memory manager also needs to provide a means of accessing raw
 memory for the purposes of device access, which is mediated by
 accessor objects provided by the SCJ API.
