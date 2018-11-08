@@ -847,8 +847,100 @@ signal exceptions in the icecap code) to pass the return value.
 This is a somewhat inconsistent approach to passing the return values,
 but it perhaps makes best use of space for small values.
 
+There is a lot of exeception handling code in icecap that is not
+present in our code, since we do not handle exceptions.
+The extra code that is present in icecap includes extra varibles to
+hold exception information, checks for null pointers before array
+accesses and method calls, checks after method calls to determine if
+an exception was thrown by the method, exception handler code at the
+end of the function, and return values communicated to indicate if an
+exception has been thrown.
+As we have already seen, the return values for signalling exceptions
+are also used to pass small return values of the method.
+We omit the return values completely in our code, since we do not need
+to signal exceptions, but our system of passing method return values
+frees up the function return value for use as part of an exception
+handling system in future work.
 
-In what follows, we describe and discuss the examples in more detail.
+There is also a difference in how control flow constructs appear in
+our code and icecap's code.
+Jumps in the bytecode are translated by icecap using \texttt{goto}
+statements in C.
+This allows bytecode instructions to be translated more directly, but
+it means the resulting code is not fully MISRA-C compliant.
+In our compilation strategy, we avoid the use of \texttt{goto} by
+considering the control-flow graph of each method and introducing
+structures such as loops and conditionals.
+This has the added advantage of making the resulting code more
+readable and, since we have have certainty that this transformation
+does not change the semantics of the code, it is not necessary to use
+the most direct translation as icecap does.
+
+Differences in the code arising from the different API provided for
+our code versus icecap also show themselves in the generated code.
+Arrays operations in icecap are translated using C array accesses but,
+since we do not have arrays, we model them as objects.
+It is expected that future work that adds handling of arrays to our
+compilation strategy would produce code similar to that of icecap.
+There are also some places where \texttt{static} fields holding
+constant values for memory sizes are additionally declared
+\texttt{final} in our code, where in icecap they merely hold the same
+value as a \texttt{final} field.
+This means accesses to these fields appear in the icecap code, but the
+values of the fields are inlined in our code.
+However, from \texttt{static} field accesses in our SCJ API
+implementation (such as in \texttt{devices\_Console\_read} for each of
+the examples), we see that they are translated in the same way in our
+code as in icecap:~by an access to a field of a global struct
+containing class fields.
+
+Finally, there is also a difference in how virtual method call targets
+are chosen in our code versus that of icecap.
+In icecap, the superclasses of the target object are searched to
+determine which method should be executed, whereas in our code a
+choice is made over the class of the target object, with the
+superclasses searched at compile time.
+Our approach means the work of searching for the class containing the
+definition need not be performed at runtime, but results in several
+conditional branches with the same body for classes that have a common
+superclass.
+As a future optimisation in our code, such branches could be merged
+and a switch statement could be used for a more efficient choice over
+classes.
+The icecap code also removes the search entirely if there is only a
+single possible target.
+Such a transformation could be made in our strategy, although fully
+applying it involves eliminating the $getClassIDOf$ communication used
+to get the class identifier used in the choice.
+As explained in
+Section~\ref{compilation-final-considerations-section}, this requires
+operating on multiple processes and so we leave it to future work.
+In any case, the different approaches to selecting the target method
+appear to yield the same target.
+
+Overall, our code seems similar to that of icecap, although we omit
+exception handling, do not require an explicit stack and recover
+control flow constructs.
+These differences are justified in that they are more suited to the
+particular code we are considering (since we expect the code to have
+been verified to not throw exceptions, do not require interaction with
+interpreted code, and wish to maintain compatibility with MISRA-C).
+We also note that confidence in the well-formedness our code is
+further provided by the fact that it is compiled without errors or
+warnings by GCC 7.3.0, using the command \mbox{\texttt{gcc -c -Wall
+    -pedantic}}.
+The choice of warning flags for this compilation matches those used by
+icecap when launching an icecap program from within Eclipse.
+We note that our code can only be compiled, and not linked, as
+creating a SCJVM services implementation to link to our program code
+is outside the scope of this work.
+
+In what follows, we describe each of the examples and discuss points
+of our translation to C code that are particularly relevant to each
+example.
+While our overall comparison above focusses on the program code, we do
+also make some reference in the following discussion to the SCJ API
+implementation where it better illustrates some of our points.
 
 \subsection{\texorpdfstring{\texttt{PersistentSignal}}{PersistentSignal}}
 \label{persistent-signal-subsection}
@@ -860,8 +952,8 @@ These communicate through an instance of a third class,
 \texttt{PersisentSignal}, after which the example is named.
 The \texttt{PersisentSignal} class contains a boolean flag, with
 \texttt{synchronized} methods to read, set and clear it.
-\texttt{Producer} releases clear the \texttt{PersistentSignal} flag, and then signals
-for the \texttt{Worker} to release.
+\texttt{Producer} releases clear the \texttt{PersistentSignal} flag,
+and then signals for the \texttt{Worker} to release.
 The \texttt{Worker} sets the \texttt{PersistentSignal} flag during its
 release and the \texttt{Producer} checks the flag to see if the
 \texttt{Worker} has finished its release.
@@ -905,41 +997,29 @@ The objects locked on are the same in our code as for icecap:~the
 first argument on the stack when calling the method, and the first
 local variable when returning from the method.
 
-There are some differences, most of which apply to all the examples
-discussed in this section.
-The code from icecap has extra code to throw and handle exceptions,
-which we do not consider in our model since SCJ code can be checked to
-ensure exceptions will not be thrown.
-Handling of exceptions in our strategy is a possibility for future
-work, although it is not necessary for any of our examples.
+% There are some differences, most of which apply to all the examples
+% discussed in this section.
+% The code from icecap has extra code to throw and handle exceptions,
+% which we do not consider in our model since SCJ code can be checked to
+% ensure exceptions will not be thrown.
+% Handling of exceptions in our strategy is a possibility for future
+% work, although it is not necessary for any of our examples.
 
-Jumps in the bytecode are translated by icecap using \texttt{goto}
-statements in C.
-This allows bytecode instructions to be translated more directly, but
-it means the resulting code is not fully MISRA-C compliant.
-In our compilation strategy, we avoid the use of \texttt{goto} by
-considering the control-flow graph of each method and introducing
-structures such as loops and conditionals.
-This has the added advantage of making the resulting code more
-readable and, since we have have certainty that this transformation
-does not change the semantics of the code, it is not necessary to use
-the most direct translation as icecap does.
-
-The icecap code uses many additional variables, most of which are used
-to temporarily hold values indicating whether an exception has been
-thrown.
-It also has a stack pointer variable, which is passed to each method
-(in addition to the method's arguments) and used, in addition to the
-other variables, to hold some values so that the compiled code can be
-mixed with interpreted code.
-As this feature is not required in our work, we do not include a stack
-pointer in the code generated by our compilation strategy.
-The cases where extra variables are eliminated in our strategy are
-matched by icecap, such as comparing variables representing stack
-slots directly in conditionals, rather than copying them into
-intermediate variables, which are removed by
-Rule~[\nameref{eliminate-value1-value2-conditional-rule}] in our
-strategy.
+% The icecap code uses many additional variables, most of which are used
+% to temporarily hold values indicating whether an exception has been
+% thrown.
+% It also has a stack pointer variable, which is passed to each method
+% (in addition to the method's arguments) and used, in addition to the
+% other variables, to hold some values so that the compiled code can be
+% mixed with interpreted code.
+% As this feature is not required in our work, we do not include a stack
+% pointer in the code generated by our compilation strategy.
+% The cases where extra variables are eliminated in our strategy are
+% matched by icecap, such as comparing variables representing stack
+% slots directly in conditionals, rather than copying them into
+% intermediate variables, which are removed by
+% Rule~[\nameref{eliminate-value1-value2-conditional-rule}] in our
+% strategy.
 
 \subsection{\texorpdfstring{\texttt{Buffer}}{Buffer}}
 \label{buffer-subsection}
@@ -979,15 +1059,18 @@ times it has been released and does not allocate the object or store
 it in the buffer if it has been released more than a set number of
 times.
 
-The code generated from this example has many of the same
-characteristics we have already described for the
-\texttt{PersistentSignal} example.
-In particular, the methods of the buffer are synchronized, so
-synchronisations are produced in the code around calls to such
-methods.
-In addition, we make some further considerations related to the how
-the use of the \texttt{executeInOuterArea()} method is represented in
-the code.
+% The code generated from this example has many of the same
+% characteristics we have already described for the
+% \texttt{PersistentSignal} example.
+% In particular, the methods of the buffer are synchronized, so
+% synchronisations are produced in the code around calls to such
+% methods.
+% In addition, we make some further considerations related to the how
+% the use of the \texttt{executeInOuterArea()} method is represented in
+% the code.
+We make some consideration related to the how the use of the
+\texttt{executeInOuterArea()} method is represented in the code, since
+it provides a good example of how method calls are translated.
 The call to \texttt{executeInOuterArea()} itself is a simple static
 method call in both the code generated by icecap and the code
 generated by our strategy, since the SCJ API does not differ between
@@ -1090,12 +1173,10 @@ call to the \texttt{release()} method of
 The corresponding icecap code simplifies this to a direct call to the
 \texttt{release()} method of \texttt{AperiodicEventHandler}, omitting
 the unnecessary choice.
-Such a transformation could be made in our strategy, although fully
-applying it involves eliminating the $getClassIDOf$ communication used
-to get the class identifier used in the choice.
-As explained in
-Section~\ref{compilation-final-considerations-section}, this requires
-operating on multiple processes and so we leave it to future work.
+This is an example of the case discussed earlier where we cannot
+eliminate the choice in our code without operating on multiple
+processes, so applying such a simplification in our strategy is left
+to future work.
 Note that the fact that there are multiple instances of
 \texttt{Button} and \texttt{FireHandler} makes no difference to either
 the code from icecap or the code from our strategy.
