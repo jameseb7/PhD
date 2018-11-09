@@ -349,6 +349,21 @@ Table~\ref{memory-manager-table} as well.
   \label{memory-manager-table}
 \end{table*}
 
+The memory manager operations presented here are intended to support
+implementation of the SCJ memory API, rather than directly implement
+the API iteslf.
+Implementation of the SCJ API operations is part of the core execution
+environment (CEE), and so is described in Chapter~\ref{cee-chapter}.
+For example, the backing store operations presented here take a
+backing store as input, since tracking of the current memory area
+(with its underlying backing store) is handled by the CEE and so
+memory area entering operations are implemented there.
+Similarly, the memory manager presented here allows for allocating raw
+blocks of memory rather than allocating objects, since the structure
+of objects is defined by the CEE, and hence the operation of creating
+a new object is defined there using the memory allocation operation
+presented here.
+
 The root backing store is always available to the SCJ infrastructure
 through the \texttt{get\-Root\-Backing\-Store} operation.
 An SCJ program, on the other hand, does not have direct access to the
