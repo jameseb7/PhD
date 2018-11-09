@@ -288,10 +288,26 @@ for allocation in memory areas and preemptive scheduling is required
 for SCJ.
 Although SCJ is a relatively recent development there have been
 various virtual machines created for SCJ or variations of SCJ,
-including icecap HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009},
+including JamaicaVM~\cite{aicas2017}, icecap
+HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009},
 OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and
 PERC Pico~\cite{atego2015, richard2010}.
 These are each described in the following subsections.
+
+\subsection{JamaicaVM}
+
+JamaicaVM is an RTSJ virtual machine developed by aicas. 
+Due to aicas' participation in the expert group developing SCJ and the
+fact JamaicaVM is a very mature RTSJ implementation, it is used as the
+basis for the SCJ reference implementation, and is thus also an SCJVM.
+JamaicaVM supports both interpreting of Java bytecode and compilation
+to native code via C.
+When creating compiled code, JamaicaVM can perform profiling to
+improve the performance of the generated code.
+While JamaicaVM is a well-developed implementation of RTSJ and the
+reference implementation for SCJ, it is proprietary and so we cannot
+easily analyse its operation at the level of detail required for
+formal specification.
 
 \subsection{icecap HVM and
   \texorpdfstring{HVM\textsubscript{TP}}{HVMTP}}
@@ -370,18 +386,34 @@ code that uses the correct scoped memory.
 PERC Pico does not support the current SCJ standard, though it has
 been suggested that it could be modified to do so~\cite{nilsen2011}.
 
+\subsection{JOP}
+
+The Java Optimized Processor (JOP)~\cite{schoeberl2008} is a
+hardware-based implementation of a JVM, with time-predictability as a
+design goal.
+It allows for efficient execution of Java bytecode programs while aslo
+allowing analysis of real-time properties, particularly worst-case
+execution time.
+Because of this, it is well-suited to the applications that SCJ is
+aimed at and so an implementation of SCJ on JOP has been
+created~\cite{rivas2014}.
+This means that JOP forms an alternative SCJVM approach to that of
+ahead-of-time compilation.
+We focus instead on ahead-of-time compilation because, from the
+preceding discussion it appears to be widely applied, and there is a
+lot of scope for error during the compilation, motivating the need for
+formal verification techniques to ensure it is correct.
+
 To summarise, as far as we are aware there is one publicly available
-virtual machine that has kept up with the developing SCJ
-specification, the icecap HVM.
+ahead-of-time compiling virtual machine that has kept up with the
+developing SCJ specification, the icecap HVM.
 This is and, typically, virtual machines for SCJ will be, designed to
 be very small and fast so as to be able to run on embedded systems.
-
-As can be seen from the preceding discussion, a common technique to
-run Java programs on embedded systems is to precompile them to native
-code.
-This means compiler correctness techniques must be considered in
-verification of such a virtual machine; these techniques are discussed
-in the next section.
+As stated above, we focus on the common technique of running Java
+programs on embedded systems by precompiling them to native code.
+This means we must consider compiler correctness techniques to verify
+such a virtual machine; these techniques are discussed in the next
+section.
 
 \section{Compiler Correctness}
 \label{compiler-correctness-section}
