@@ -1,19 +1,19 @@
 \documentclass[a4paper,11pt,twoside,openright]{report}
 
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage[hidelinks]{hyperref}
+\usepackage[color,cntglobally]{circus}
 \usepackage[table]{xcolor}
 \usepackage{array}
 \usepackage[in]{fullpage}
-\usepackage[hidelinks]{hyperref}
 \usepackage{tikz}
-\usepackage{amsmath}
-\usepackage{amsthm}
 \usepackage{parskip}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4,defernumbers=true]{biblatex}
 \usepackage{placeins}
-\usepackage[color,cntglobally]{circus}
 \usepackage{mathdots}
 \usepackage{multicol}
 \usepackage[savemem]{listings}
@@ -33,6 +33,80 @@
 \usepackage{lscape}
 \usepackage{pdflscape}
 
+\makeatletter
+\renewcommand{\boolean}{\zordop{\csym@boolean}}
+\makeatother
+
+\CountDefsfalse
+
+\definecolor{black}{rgb}{0,0,0}
+\definecolor{ZedBoxColor}{rgb}{0,0,0}
+\definecolor{AnnotationColor}{rgb}{0,0,0}
+\definecolor{ZedColor}{rgb}{0,0,0}
+
+\newcommand{\resetZColors}{
+  \colorlet{ZedBoxColor}{black}
+  \colorlet{AnnotationColor}{black}
+  \colorlet{ZedColor}{black}
+}
+
+\newcommand{\setZColors}[1]{
+  \colorlet{ZedBoxColor}{#1}
+  \colorlet{AnnotationColor}{#1}
+  \colorlet{ZedColor}{#1}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% DEFINITIONS TO MARK CHANGES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\usepackage{tocloft}
+\usepackage{fmtcount}
+\usepackage[]{imakeidx}
+
+\newif\ifShowChanges
+\ShowChangestrue
+
+\makeindex[title=Index of Changes, name=changes, columns=1]
+\newlistof{changes}{s}{\listchangename}
+
+\providecolor{added}{rgb}{0,0.5,0}
+\providecolor{changed}{rgb}{0.5,0.5,0}
+\providecolor{deleted}{rgb}{0.5,0,0}
+
+\newcommand{\added}[1]{{\ifShowChanges\setZColors{added}\color{added}{}\fi#1}}
+\newcommand{\changed}[1]{{\ifShowChanges\setZColors{changed}\color{changed}{}\fi#1}}
+\newcommand{\deleted}[1]{{\ifShowChanges\setZColors{deleted}\color{deleted}\sout{#1}\fi}}
+
+%\newcommand{\BH}[2]{\large\textbf{\hyperlink{#1}{#2\textsuperscript{#1}}}\normalsize}
+%\newcommand{\xindex}[2]{\expandafter\index\expandafter[changes]\expandafter{\pageref{#1}#2}}
+\newcommand{\erasenumber}[1]{}
+\newrobustcmd{\removecomma}[1]{}
+\newcommand{\addchange}[1]{%
+  \ifShowChanges
+  \refstepcounter{changes}
+  \label{change\arabic{changes}}
+  \index[changes]{\expandafter\sortgref\arabic{changes}\sortgref@{
+      \hyperref[change\arabic{changes}]{%
+        [Change \arabic{changes}]
+        Page \pageref{change\arabic{changes}}
+      }: {#1}}\removecomma|erasenumber}
+%  \xindex{\arabic{changes}}{@\arabic{changes}: #1}
+%  \index[changes]{Comment \textbf{C\expandafter\sortgref#1\sortgref}|BH{\arabic{changes}}}%
+  [Change \arabic{changes}]%
+  \fi
+}%
+
+\def\sortgref#1\sortgref{%
+	\ignoresort{\ifnum#1<10 00\else\ifnum #1<100 0\fi\fi#1}#1%
+}
+\protected\def\ignoresort#1{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
 \usetikzlibrary{graphs}
@@ -44,11 +118,6 @@
 \date{}
 
 \bibliography{literature} 
-
-\CountDefsfalse
-\definecolor{ZedBoxColor}{rgb}{0,0,0}
-\definecolor{AnnotationColor}{rgb}{0,0,0}
-\definecolor{ZedColor}{rgb}{0,0,0}
 
 \newif\ifFullModel
 
@@ -404,5 +473,10 @@ applied. We discuss it here.
 
 {\raggedright \printbibliography[resetnumbers=true]}
 \end{refsection}
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Index of Changes}
+\printindex[changes]
 
 \end{document}
