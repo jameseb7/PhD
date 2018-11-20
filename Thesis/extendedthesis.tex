@@ -1,19 +1,19 @@
 \documentclass[a4paper,11pt]{report}
 
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage[hidelinks]{hyperref}
+\usepackage[color,cntglobally]{circus}
 \usepackage[table]{xcolor}
 \usepackage{array}
 \usepackage[in]{fullpage}
-\usepackage[hidelinks]{hyperref}
 \usepackage{tikz}
-\usepackage{amsmath}
-\usepackage{amsthm}
 \usepackage{parskip}
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
 \usepackage{placeins}
-\usepackage[color,cntglobally]{circus}
 \usepackage{mathdots}
 \usepackage{multicol}
 \usepackage{listings}
@@ -29,6 +29,10 @@
 \usepackage{letltxmacro}
 \usepackage[normalem]{ulem}
 \usepackage{tikz-uml}
+
+\makeatletter
+\renewcommand{\boolean}{\zordop{\csym@boolean}}
+\makeatother
 
 \usetikzlibrary{calc}
 \usetikzlibrary{arrows}
@@ -490,5 +494,10 @@ applied. We discuss it here.
 
 {\raggedright \printbibliography[resetnumbers=true]}
 \end{refsection}
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Index of Changes}
+\printindex[changes]
 
 \end{document}
