@@ -349,6 +349,9 @@ Table~\ref{memory-manager-table} as well.
   \label{memory-manager-table}
 \end{table*}
 
+\addchange{Added a paragraph to clarify the relationship between the
+  SCJVM services memory manager and the SCJ memory operations}
+\added{
 The memory manager operations presented here are intended to support
 implementation of the SCJ memory API, rather than directly implement
 the API iteslf.
@@ -363,6 +366,7 @@ blocks of memory rather than allocating objects, since the structure
 of objects is defined by the CEE, and hence the operation of creating
 a new object is defined there using the memory allocation operation
 presented here.
+}
 
 The root backing store is always available to the SCJ infrastructure
 through the \texttt{get\-Root\-Backing\-Store} operation.
@@ -1017,6 +1021,50 @@ reliance on \Circus{} to specify interaction with interrupts.
 The real-time clock model is mainly made up of \Circus{} actions with
 few Z schemas, though it is also a smaller component than the other
 two due to the small number of services it provides.
+
+\addchange{Added comparison of our memory manager model to
+  implementations of the SCJ memory manager}
+\added{
+Note that our model is written as an abstract specification, so it
+contains invariants and allows for nondeterminism that need not be
+present in an implementation, but which are useful for reasoning about
+the model.
+As an example of this, consider that the memory manager model consists
+of 583 lines of code (as measured in \Circus{} \LaTeX{} syntax,
+ignoring blank lines and comments), whereas icecap's
+\texttt{vm.Memory} class\footnote{The \texttt{vm.Memory} class can be
+  found at
+  \url{https://github.com/scj-devel/hvm-scj/blob/master/icecapSDK/src/vm/Memory.java}},
+which contains the code for backing store operations, consists of just
+238 lines of code (ignoring blank lines and comments).
+The SCJ memory manager implementation on JOP described
+in~\cite{schoeberl2011a}
+is even smaller, containing just 148 lines of code (ignoring blank
+lines and comments)\footnote{The class containing the JOP SCJ
+  memory manager implementation can be found at
+  \url{https://github.com/jop-devel/jop/blob/master/java/target/src/common/com/jopdesign/sys/Memory.java}}.
+
+The reason these files are smaller than our memory manager model
+is that our memory manager contains invariants specifying the
+relationship of the different components of the memory manager,
+particularly the invariants of $GlobalMemoryManager$ and
+$GlobalStoresManager$ which specify the relationships between backing
+stores.
+Note that since \texttt{vm.Memory} from icecap represents a single
+backing store, icecap does not require a class analogous to
+$GlobalMemoryManager$, since each memory area can reference its
+backing store directly without looking it up in a global map from
+backing store identifiers to backing stores.
+However, the inclusion of the $GlobalMemoryManager$ in our model
+allows us to specify the global structure of backing stores and ensure
+that each of the operations preserve that structure.
+Our memory manager model also includes nondeterminism, such as
+avoiding specifying at which end of a backing store nested backing
+stores should be allocated, which results in a slightly more verbose
+specification in terms of sets of memory, but avoids unduly
+constraining an implementation.
+Similar considerations apply to the other parts of our model.
+}
 
 Overall, the division of the SCJVM services into the three areas we
 have chosen appears to give a good separation between the components
