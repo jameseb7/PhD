@@ -68,6 +68,11 @@ SCJ is a subset of the RTSJ that leaves out the features from standard
 Java that are difficult to certify such as the garbage collector.
 SCJ also provides annotations that allow memory usage to be more
 easily checked.
+\addchange{Added section describing RTSJ}
+\deleted{
+We discuss SCJ in more detail in the next section.
+}
+\added{
 In the next section, we describe RTSJ in more detail, following which
 we discuss SCJ.
 
@@ -150,6 +155,7 @@ certification.
 In the next section, we discuss SCJ in more detail, describing how SCJ
 programs are structured and how the features of RTSJ are restricted in
 SCJ to permit certification.
+}
 
 \section{Safety-Critical Java}
 \label{scj-section}
@@ -199,13 +205,26 @@ handlers that are released either periodically, at set intervals of
 time, aperiodically, in response to a release request, or once at a
 specific point in time (though handlers that are released once can
 have a new release time set, allowing them to be released again).
+\addchange{Changed discussion of threads in SCJ to account for
+  information already given for RTSJ}
+\deleted{
+At level 2 real-time threads are also allowed, which run continuously
+from when they start until they finish, unless they are suspended or
+interrupted by another schedulable object.
+}
+\added{
 At level 2 real-time threads are also allowed.
 These schedulable objects are scheduled according to a priority
 scheduler as in RTSJ, but SCJ only permits priority ceiling emulation
 as a mechanism for avoiding priority inversion.
-% , which run continuously
-% from when they start until they finish, unless they are suspended or
-% interrupted by another schedulable object.
+}
+
+\deleted{
+Each schedulable object has a priority and the highest priority object
+that is eligible to run at each point in time is the object that runs.
+This allows for simpler reasoning about order of execution and allows
+for more urgent tasks to preempt less urgent tasks.  
+}
 
 SCJ allows for assigning schedulable objects to ``scheduling
 allocation domains'', where each domain consists of one or more
@@ -252,6 +271,14 @@ Figure~\ref{stacks-areas-diagram}.
   \label{stacks-areas-diagram}
 \end{figure}
 
+\addchange{Changed description of memory areas in SCJ to refer to
+  information already given for RTSJ}
+\deleted{
+It is not supported by standard JVMs as they do not provide memory
+outside of the heap for allocation and lack a notion of allocation
+context.
+}
+\added{
 This system of memory areas in SCJ is based on the immortal memory and
 scoped memory of RTSJ, but it is fitted to the mission model of SCJ
 and explicitly excludes the possibility of allocating in a
@@ -260,6 +287,7 @@ This thus makes it easy to predict when memory is freed.
 However, it is not supported by standard JVMs as they do not provide
 memory outside of the heap for allocation and lack a notion of
 allocation context.
+}
 The SCJ memory manager also needs to provide a means of accessing raw
 memory for the purposes of device access, which is mediated by
 accessor objects provided by the SCJ API.
@@ -294,6 +322,8 @@ OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and
 PERC Pico~\cite{atego2015, richard2010}.
 These are each described in the following subsections.
 
+\addchange{Added section on JamaicaVM}
+\added{
 \subsection{JamaicaVM}
 
 JamaicaVM is an RTSJ virtual machine developed by aicas. 
@@ -308,6 +338,7 @@ While JamaicaVM is a well-developed implementation of RTSJ and the
 reference implementation for SCJ, it is proprietary and so we cannot
 easily analyse its operation at the level of detail required for
 formal specification.
+}
 
 \subsection{icecap HVM and
   \texorpdfstring{HVM\textsubscript{TP}}{HVMTP}}
@@ -386,6 +417,8 @@ code that uses the correct scoped memory.
 PERC Pico does not support the current SCJ standard, though it has
 been suggested that it could be modified to do so~\cite{nilsen2011}.
 
+\addchange{Added section on JOP}
+\added{
 \subsection{JOP}
 
 The Java Optimized Processor (JOP)~\cite{schoeberl2008} is a
@@ -403,7 +436,10 @@ We focus instead on ahead-of-time compilation because, from the
 preceding discussion it appears to be widely applied, and there is a
 lot of scope for error during the compilation, motivating the need for
 formal verification techniques to ensure it is correct.
+}
 
+\addchange{Rewrote summary at the end of description of SCJVMs to account for new additions}
+\changed{
 To summarise, as far as we are aware there is one publicly available
 ahead-of-time compiling virtual machine that has kept up with the
 developing SCJ specification, the icecap HVM.
@@ -414,6 +450,7 @@ programs on embedded systems by precompiling them to native code.
 This means we must consider compiler correctness techniques to verify
 such a virtual machine; these techniques are discussed in the next
 section.
+}
 
 \section{Compiler Correctness}
 \label{compiler-correctness-section}
