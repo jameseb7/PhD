@@ -44,16 +44,16 @@
 \definecolor{AnnotationColor}{rgb}{0,0,0}
 \definecolor{ZedColor}{rgb}{0,0,0}
 
-\newcommand{\resetZColors}{
-  \colorlet{ZedBoxColor}{black}
-  \colorlet{AnnotationColor}{black}
-  \colorlet{ZedColor}{black}
+\newcommand{\resetZColors}{%
+  \colorlet{ZedBoxColor}{black}%
+  \colorlet{AnnotationColor}{black}%
+  \colorlet{ZedColor}{black}%
 }
 
-\newcommand{\setZColors}[1]{
-  \colorlet{ZedBoxColor}{#1}
-  \colorlet{AnnotationColor}{#1}
-  \colorlet{ZedColor}{#1}
+\newcommand{\setZColors}[1]{%
+  \colorlet{ZedBoxColor}{#1}%
+  \colorlet{AnnotationColor}{#1}%
+  \colorlet{ZedColor}{#1}%
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -83,18 +83,18 @@
 \newcommand{\erasenumber}[1]{}
 \newrobustcmd{\removecomma}[1]{}
 \newcommand{\addchange}[1]{%
-  \ifShowChanges
-  \refstepcounter{changes}
-  \label{change\arabic{changes}}
-  \index[changes]{\expandafter\sortgref\arabic{changes}\sortgref@{
+  \ifShowChanges%
+  \refstepcounter{changes}%
+  \label{change\arabic{changes}}%
+  \index[changes]{\expandafter\sortgref\arabic{changes}\sortgref@{%
       \hyperref[change\arabic{changes}]{%
-        [Change \arabic{changes}]
-        Page \pageref{change\arabic{changes}}
-      }: {#1}}\removecomma|erasenumber}
+        [Change \arabic{changes}]%
+        Page \pageref{change\arabic{changes}}%
+      }: {#1}}\removecomma|erasenumber}%
 %  \xindex{\arabic{changes}}{@\arabic{changes}: #1}
 %  \index[changes]{Comment \textbf{C\expandafter\sortgref#1\sortgref}|BH{\arabic{changes}}}%
   [Change \arabic{changes}]%
-  \fi
+  \fi%
 }%
 
 \def\sortgref#1\sortgref{%
