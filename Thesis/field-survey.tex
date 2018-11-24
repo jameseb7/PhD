@@ -94,8 +94,8 @@ interrupted by another schedulable object, or suspended waiting for a
 lock on an object.
 Asynchronous event handlers allow for code to execute in response to
 an event, which may be triggered by another schedulable object or by
-some external happening.
-Timers can also be used to trigger execution an asynchronous event
+some external factor such as the hardware or operating system.
+Timers can also be used to trigger execution of an asynchronous event
 handler at specific time intervals.
 
 RTSJ also provides mechanisms for preventing priority inversion, which
@@ -135,10 +135,11 @@ These include JamaicaVM~\cite{aicas2017}, jRate~\cite{angelo2002},
 FijiVM~\cite{pizlo2009}, OVM~\cite{armbruster2007} and
 Sun-Microsystems' Java for Real-Time Systems (Java
 RTS)~\cite{mcenery2007}.
-Many RTSJVMs appear to no longer be maintained, including Sun's Java
+Many RTSJVMs appear to be no longer maintained, including Sun's Java
 RTS.
 We also note that, since SCJ is based on RTSJ, some RTSJVMs also
-function as JVMs, and so we discuss them in more detail later.
+function as JVMs, and so we discuss them in more detail in
+Section~\ref{virtual-machines-section}.
 % jRate (angelo2002), FijiVM (pizlo2009), OVM (armbruster2007), JamaicaVM (aicas2017)
 % general RTSJVMS (mcenery2007) including:
 % - Sun-Microsystems' Java for Real-Time Systems (Java RTS)
@@ -150,11 +151,11 @@ are offered alongside standard Java alternatives such as
 (non-real-time) Java threads and the garbage-collected, RTSJ programs
 are hard to verify to the level required for safety-critical
 certifications.
-SCJ thus restricts the features of RTSJ to better facilitate such
+SCJ thus restricts the features of RTSJ to facilitate such
 certification.
 In the next section, we discuss SCJ in more detail, describing how SCJ
 programs are structured and how the features of RTSJ are restricted in
-SCJ to permit certification.
+SCJ.
 }
 
 \section{Safety-Critical Java}
@@ -215,7 +216,7 @@ interrupted by another schedulable object.
 \added{
 At level 2 real-time threads are also allowed.
 These schedulable objects are scheduled according to a priority
-scheduler as in RTSJ, but SCJ only permits priority ceiling emulation
+scheduler as in RTSJ, but SCJ permits only priority ceiling emulation
 as a mechanism for avoiding priority inversion.
 }
 
@@ -291,9 +292,9 @@ allocation context.
 The SCJ memory manager also needs to provide a means of accessing raw
 memory for the purposes of device access, which is mediated by
 accessor objects provided by the SCJ API.
-As this API was stabilised at a later stage in the development of the
-SCJ specification than its other features, we have not had opportunity
-to include it in this work.
+As this \added{part of the} API was stabilised at a later stage in the
+development of the SCJ specification than its other features, we have
+not had opportunity to include it in this work.
 It can, however, be seen that any system of raw memory access is not
 supported by most standard JVMs.
 
@@ -316,10 +317,11 @@ for allocation in memory areas and preemptive scheduling is required
 for SCJ.
 Although SCJ is a relatively recent development there have been
 various virtual machines created for SCJ or variations of SCJ,
-including JamaicaVM~\cite{aicas2017}, icecap
+including \added{JamaicaVM~\cite{aicas2017},} icecap
 HVM~\cite{sondergaard2012}, Fiji VM~\cite{pizlo2009},
-OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014} and
-PERC Pico~\cite{atego2015, richard2010}.
+OVM~\cite{armbruster2007}, HVM\textsubscript{TP}~\cite{luckow2014},
+PERC Pico~\cite{atego2015, richard2010} and
+\added{JOP~\cite{schoeberl2008, rivas2014}}.
 These are each described in the following subsections.
 
 \addchange{Added section on JamaicaVM}
@@ -328,8 +330,9 @@ These are each described in the following subsections.
 
 JamaicaVM is an RTSJ virtual machine developed by aicas. 
 Due to aicas' participation in the expert group developing SCJ and the
-fact JamaicaVM is a very mature RTSJ implementation, it is used as the
-basis for the SCJ reference implementation, and is thus also an SCJVM.
+fact that JamaicaVM is a very mature RTSJ implementation, it is used
+as the basis for the SCJ reference implementation, and is thus also an
+SCJVM.
 JamaicaVM supports both interpreting of Java bytecode and compilation
 to native code via C.
 When creating compiled code, JamaicaVM can perform profiling to
@@ -433,9 +436,7 @@ created~\cite{rivas2014}.
 This means that JOP forms an alternative SCJVM approach to that of
 ahead-of-time compilation.
 We focus instead on ahead-of-time compilation because, from the
-preceding discussion it appears to be widely applied, and there is a
-lot of scope for error during the compilation, motivating the need for
-formal verification techniques to ensure it is correct.
+preceding discussion, it appears to be a more widely applied approach.
 }
 
 \addchange{Rewrote summary at the end of description of SCJVMs to account for new additions}
