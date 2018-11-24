@@ -627,15 +627,38 @@ private backing stores they contain, $privateMemoryMap$.
   perReleaseMemories : ThreadID \finj BackingStoreID \\
   privateMemoryMap : BackingStoreID \finj BackingStoreID
 \where
-  \cdots
+  immortalMemory \neq null \implies immortalMemory \in \dom backingStores \\
+  missionMemory \neq null \implies missionMemory \in \dom backingStores \\
+  \ran perReleaseMemories \subseteq \ran backingStores \\
+  backingStores\inv \limg \ran perReleaseMemories \rimg \\
+  \t1 {} \cap \{ immortalMemory, missionMemory \} = \emptyset \\
+  immortalMemory \neq missionMemory \\
+  id~BackingStoreID \cap privateMemoryMap\plus = \emptyset \\
+  \lnot backingStores\limg \{ immortalMemory, missionMemory \} \rimg \\
+  \t1 {} \cup \ran perReleaseMemories \\
+  \t2 {} \subseteq \ran privateMemoryMap
 \end{schema}
 Each of the maps in $MemoryAreaManager$ is injective, since each
 memory-area object has a distinct backing store and memory areas
 cannot share a nested private memory area.
-The invariants of $MemoryAreaManager$ are elided above. 
-They ensure that each memory-area object has a corresponding backing
-store in $backingStores$, and that areas that are not private do not
-appear in $privateMemoryMap$.
+\deleted{ The invariants of $MemoryAreaManager$ are elided above. 
+  They ensure that each memory-area object has a corresponding backing
+  store in $backingStores$, and that areas that are not private do not
+  appear in $privateMemoryMap$.
+}
+\added{
+The invariant of $MemoryAreaManager$ requires that the
+$immortalMemory$ and $missionMemory$, when they are initialised, as
+well as each of the $perReleaseMemories$, must have a corresponding
+backing store in $backingStores$.
+It also requires that $immortalMemory$ and $missionMemory$ are not in
+$perReleaseMemories$ and are not equal to one another.
+Together with the injectivity requirement on $perReleaseMemories$,
+this ensures each memory area is distinct.
+Finally, the invariant requires that private memories cannot be nested
+inside themselves, and that $immortalMemory$, $missionMemory$ and all
+the $perReleaseMemories$ are not nested private memories.
+}
 
 The third part of the state is specified in the $SchedulableManager$
 schema below.
@@ -660,10 +683,11 @@ registered as being part of the current mission.
   schedulableSizes : ObjectID \ffun (\nat \cross \nat \cross \nat) \\
   registeredObjects : \finset ObjectID
 \where
-  \cdots
+  \dom schedulableThreads = \dom schedulableTypes = \dom schedulableSizes \\
+  registeredObjects \subseteq \dom schedulableThreads
 \end{schema}
-The invariant of $SchedulableManager$ is elided above.
-It ensures the maps all have the same domain and that
+The invariant of $SchedulableManager$ \deleted{is elided above.  
+It} ensures the maps all have the same domain and that
 $registeredObjects$ is a subset of the map domains.
 
 The final part of the state is described by the $AlarmManager$ schema
@@ -2900,7 +2924,7 @@ void bar(int32_t x) {...}
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function definition with return value &
 \vspace{-0.4cm}
-\changed{
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 void baz(int32_t * retVal) {...}
 \end{lstlisting}
@@ -2913,7 +2937,7 @@ void baz(int32_t * retVal) {...}
 % \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function definition with parameter and return value &
 \vspace{-0.4cm}
-\changed{
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 void quux(int32_t x,
    int32_t * retVal) {...}
@@ -2950,7 +2974,7 @@ Bar(x)
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function call with return value &
 \vspace{-0.4cm}
-\changed{
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 baz(&x);
 \end{lstlisting}
@@ -2963,7 +2987,7 @@ Baz(x)
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function call with argument and return value &
 \vspace{-0.4cm}
-\changed{
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 quux(x, &y);
 \end{lstlisting}
@@ -2987,7 +3011,7 @@ return;
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Return statement with value &
 \vspace{-0.4cm}
-\changed{
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 *retVal = x;
 return;
@@ -3104,7 +3128,7 @@ do {...} while (b);
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Field read &
 \vspace{-0.4cm}
-\moved{                          
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 y = ((C *) (uintptr_t)  x)->f;
 \end{lstlisting}
@@ -3121,7 +3145,7 @@ y = ((C *) (uintptr_t)  x)->f;
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Field write &
 \vspace{-0.4cm}
-\moved{                          
+{\ifShowChanges\setZColors{changed}\color{changed}{}\fi
 \begin{lstlisting}
 ((C *) (uintptr_t) x)->f = y;
 \end{lstlisting}
