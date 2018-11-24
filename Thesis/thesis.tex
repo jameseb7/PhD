@@ -73,10 +73,12 @@
 \providecolor{added}{rgb}{0,0.5,0}
 \providecolor{changed}{rgb}{0.5,0.5,0}
 \providecolor{deleted}{rgb}{0.5,0,0}
+\providecolor{moved}{rgb}{0,0,0.5}
 
 \newcommand{\added}[1]{{\ifShowChanges\setZColors{added}\color{added}{}\fi#1}}
 \newcommand{\changed}[1]{{\ifShowChanges\setZColors{changed}\color{changed}{}\fi#1}}
 \newcommand{\deleted}[1]{{\ifShowChanges\setZColors{deleted}\color{deleted}\sout{#1}\fi}}
+\newcommand{\moved}[1]{{\ifShowChanges\setZColors{moved}\color{moved}{}\fi#1}}
 
 %\newcommand{\BH}[2]{\large\textbf{\hyperlink{#1}{#2\textsuperscript{#1}}}\normalsize}
 %\newcommand{\xindex}[2]{\expandafter\index\expandafter[changes]\expandafter{\pageref{#1}#2}}
