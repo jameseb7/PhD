@@ -2900,9 +2900,11 @@ void bar(int32_t x) {...}
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function definition with return value &
 \vspace{-0.4cm}
+\changed{
 \begin{lstlisting}
 void baz(int32_t * retVal) {...}
 \end{lstlisting}
+}
 &
 \vspace{-0.5cm}
 \[
@@ -2911,10 +2913,12 @@ void baz(int32_t * retVal) {...}
 % \hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function definition with parameter and return value &
 \vspace{-0.4cm}
+\changed{
 \begin{lstlisting}
 void quux(int32_t x,
    int32_t * retVal) {...}
 \end{lstlisting}
+}
 &
 \vspace{-0.4cm}
 \[
@@ -2946,9 +2950,11 @@ Bar(x)
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function call with return value &
 \vspace{-0.4cm}
+\changed{
 \begin{lstlisting}
 baz(&x);
 \end{lstlisting}
+}
 &
 \vspace{-0.4cm}
 \[
@@ -2957,9 +2963,11 @@ Baz(x)
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Function call with argument and return value &
 \vspace{-0.4cm}
+\changed{
 \begin{lstlisting}
 quux(x, &y);
 \end{lstlisting}
+}
 &
 \vspace{-0.4cm}
 \[
@@ -2979,10 +2987,12 @@ return;
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Return statement with value &
 \vspace{-0.4cm}
+\changed{
 \begin{lstlisting}
 *retVal = x;
 return;
 \end{lstlisting}
+}
 &
 \vspace{-0.4cm}
 \begin{circus}
@@ -3094,9 +3104,11 @@ do {...} while (b);
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Field read &
 \vspace{-0.4cm}
+\moved{                          
 \begin{lstlisting}
 y = ((C *) (uintptr_t)  x)->f;
 \end{lstlisting}
+}
 &
 \vspace{-0.4cm}
 {
@@ -3109,9 +3121,11 @@ y = ((C *) (uintptr_t)  x)->f;
 %\hline %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \raggedright Field write &
 \vspace{-0.4cm}
+\moved{                          
 \begin{lstlisting}
 ((C *) (uintptr_t) x)->f = y;
 \end{lstlisting}
+}
 &
 \vspace{-0.4cm}
 {
@@ -3147,6 +3161,9 @@ If a function has a return value, it is represented with a result
 parameter of the \Circus{} action, usually named $retVal$, with an
 assignment to that parameter at the end of the action representing
 return statements.
+\addchange{Added text to explain changes to C code based on work on
+  the prototype}
+\added{
 In the C code resulting from our strategy, we represent these result
 parameters using pointers passed into the function, rather than C
 return values.
@@ -3155,6 +3172,7 @@ code.
 Also, while we do not consider them in our compilation strategy, it
 may be noted that this approach scales well to \texttt{long} values,
 which occupy two variables.
+}
 We follow guidelines for safety-critical uses of C variants, such as
 MISRA-C~\cite{MISRA}, and use a single return statement at the end of
 a function.
@@ -3168,6 +3186,7 @@ Restricting ourselves to variables at the start of functions ensures
 the code our strategy generates is compatible with older versions of
 C.
 
+\added{
 The types of parameters and variables in our \Circus{} model is
 $Word$, representing the type of 32-bit JVM words.
 The corresponding type we use in C is \texttt{int32\_t}, the type of
@@ -3177,6 +3196,7 @@ This matches the behaviour of icecap, which uses its own
 We note that we do not need to address general issues of mapping
 between C types and \Circus{} types here, since all the variables and
 stack slots in the JVM are of the same fixed-width type.
+}
 
 Finally, we model accesses to structs representing objects using
 communications with the struct manager.
@@ -3191,11 +3211,13 @@ semantics conferred by the struct manager, they can be translated to
 the corresponding C code by a simple lexical transformation, as shown
 in Table~\ref{embedding-table}.
 
+\added{
 Note that we also perform a cast to \texttt{uintptr\_t}, the unsigned
 integer type from C99 with the same width as a pointer, to ensure the
 cast is performed correctly on systems where pointers are not 32-bit.
 This matches icecap, where a cast to a \texttt{pointer} type, defined
 in the same way as \texttt{uintptr\_t} is performed.
+}
 Accesses to static fields are performed similarly, using the
 $getStatic$ and $putStatic$ channels to represent accesses to a global
 static fields struct. 
