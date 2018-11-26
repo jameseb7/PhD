@@ -2925,6 +2925,15 @@ Within the action, the constructs of C are represented by constructs
 of \Circus{}. 
 The representation of these constructs is summarised in
 Table~\ref{embedding-table}.
+\addchange{Added mention of how the \Circus{} code can be converted to
+  C, and cross-referenced to section on the prototype}
+\added{
+The \Circus{} code resulting from our compilation strategy can be
+converted to C by matching the patterns shown in
+Table~\ref{embedding-table} over the \Circus{} syntax tree, and indeed we
+do so in a prototype implementation of our compilation strategy,
+described in Section~\ref{tool-support-section}.
+}
 
 \begin{table}[pt]
 \centering
