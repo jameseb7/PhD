@@ -1488,14 +1488,57 @@ typechecking and so should not be used for SCJ.
 The requirement for all classes to be loaded at startup greatly
 simplifies the semantics of several instructions, since dynamic class
 loading does not need to be considered.
-It also means that method lookup tables can be precomputed.
-This means that the semantics of the \texttt{invokevirtual} and
-\texttt{invokeinterface} instructions are the same, since they both
-invoke a method on an object, using the object's class as the class
-for method lookup.
-They, therefore, do not both need to be included and so we have not
-included the \texttt{invokeinterface} instruction, since it exists
-only to optimise method lookup.
+\addchange{Added more explanation of the simplifications that are
+  permitted since dynamic class loading is not allowed}
+\added{
+It also means that many run-time errors pertaining to method and field
+resolution can checked ahead-of-time to make sure they are not thrown.
+This means checks to make sure methods and fields exist, and that they
+have the correct access modifiers, do not need to be included in the
+run-time semantics of the instructions in our subset.
+}
+
+\addchange{Clarified why \texttt{invokevirtual} and
+  \texttt{invokeinterface} are treated as having the same semantics}
+\deleted{ It also means that method lookup tables can be precomputed.
+  This means that the semantics of the \texttt{invokevirtual} and
+  \texttt{invokeinterface} instructions are the same, since they both
+  invoke a method on an object, using the object's class as the class
+  for method lookup.
+  They, therefore, do not both need to be included and so we have not
+  included the \texttt{invokeinterface} instruction, since it exists
+  only to optimise method lookup.
+}
+\added{
+The \texttt{invokevirtual} and \texttt{invokeinterface} instructions
+exist as separate bytecodes in order to facilitate efficient method
+dispatch using method lookup tables.
+For methods defined in classes, invoked by \texttt{invokevirtual}, the
+methods of each class can simply be appended to the lookup table of
+its superclass, since there is a linear inheritance hierarchy.
+Methods defined in interfaces can be inserted at any point in the
+inheritance hierarchy, and so must be defined in separate method
+tables, using an approach such as that described in~\cite{alpern2001}.
+The separate \texttt{invokevirtual} and \texttt{invokeinterface}
+instructions allow implementations to easily determine which method
+table should be used.
+However, the JVM specification does not require the use of method
+tables as a method of method lookup so the semantics of the
+\texttt{invokevirtual} and \texttt{invokeinterface} instructions given
+in the JVM specification are actually quite similar, differing only in
+the types of methods they operate over, which can be checked
+ahead-of-time when we have all classes available.
+The \texttt{invokevirtual} instruction also provides for special
+methods called \emph{signature-polymorphic methods}, but these form
+part of the infrastructure for the \texttt{invokedynamic} instruction
+and are not included in SCJ, so we do not include handling of them in
+our semantics.
+Given these considerations and the fact that our model of an SCJVM is
+a specification that does not require any specific implementation,
+such as method tables, we treat \texttt{invokevirtual} and
+\texttt{invokeinterface} the same and only include
+\texttt{invokevirtual} in our subset.
+}
 
 In terms of concurrency considerations, we are assuming our SCJVM to
 be single processor, and so we do not need to have more than one
