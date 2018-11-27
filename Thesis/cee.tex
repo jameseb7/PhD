@@ -2720,7 +2720,8 @@ $argsToPop?$ , and $HandleInvokevirtual$ obtains the class identifier
 from the type of the \texttt{this} object using the $getClassIDOf$
 channel rather than from the instruction's parameter.
 
-The $Invoke$ action, shown in part below, has the form of an external
+\addchange{Inserted full definition of $Invoke$}
+The $Invoke$ action, shown \deleted{in part} below, has the form of an external
 choice over actions for each of the special methods supported by the
 SCJVM, plus an $InvokeOther$ action for handling non-special methods
 implemented in bytecode.
@@ -2729,13 +2730,24 @@ of the special method prefixed with $Invoke$ (e.g.
 $InvokeResumeThread$ for the \texttt{resumeThread()} method).
 The parameters passed to $Invoke$ are passed on to
 each of the actions in the external choice.
+\changed{
 \begin{circusaction}
-  Invoke \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word \circspot \\
-  \t1 InvokeResumeThread(classID, method, args) \\
-  \t1 {} \extchoice InvokeSuspend(classID, method) \extchoice \cdots \\
+  Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word \circspot \\
+  \t1 InvokeSetPriorityCeiling(classID, method, args) \\
+  \t1 {} \extchoice InvokeRegister(classID, method, args) \\
+  \t1 {} \extchoice InvokeEnterPrivateMemory(classID, method, args) \\
+  \t1 {} \extchoice InvokeExecuteInAreaOf(classID, method, args) \\
+  \t1 {} \extchoice InvokeExecuteInOuterArea(classID, method, args) \\
+  \t1 {} \extchoice InvokeExitMemory(classID, method, args) \\
+  \t1 {} \extchoice InvokeInitAperiodicEventHandler(classID, method, args) \\
+  \t1 {} \extchoice InvokeInitPeriodicEventHandler(classID, method, args) \\
+  \t1 {} \extchoice InvokeInitOneShotEventHandlerAbs(classID, method, args) \\
+  \t1 {} \extchoice InvokeInitOneShotEventHandlerRel(classID, method, args) \\
+  \t1 {} \extchoice InvokeWrite(classID, method, args) \\
+  \t1 {} \extchoice InvokeRead(classID, method) \\
   \t1 {} \extchoice InvokeOther(classID, method, args)
 \end{circusaction}
+}
 
 Within the special-method actions, there is a guard ensuring the
 action is taken when the class and method identifiers are those for
@@ -2781,7 +2793,8 @@ stack as the return value for the method.
 The $InvokeWrite$ action is similar, writing the method argument to
 the $output$ channel.
 
-The $InvokeOther$ action, shown in part below, describes the handling
+\addchange{Inserted full definition of $InvokeOther$}
+The $InvokeOther$ action, shown \deleted{in part} below, describes the handling
 of non-special methods.
 It begins with a guard that is the conjunction of the negation of the
 guards for the invocation actions for the special methods.
@@ -2794,17 +2807,41 @@ similar to $CheckSynchronizedReturn$, but takes the class information,
 method idenifier and method arguments as inputs, and performs its
 communication on the $takeLock$ channel. 
 A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
+\changed{
 \begin{circusaction}
   InvokeOther \circdef \\
   \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
-  \t1 \lcircguard ((classID,resumeThreadClass) \notin subclassRel~cs \lor methodID \neq resumeThreadID) \\
-  \t2 {} \land \cdots \\
+  \t1 \lcircguard ((classID, setPriorityCeilingClass) \notin subclassRel~cs \\
+  \t3 {} \lor methodID \neq setPriorityCeilingID) \\
+
+  \t2 {} \land ((classID,managedSchedulableClass) \notin subclassRel~cs \\
+  \t3 {} \lor methodID \neq registerID) \\
+
+  \t2 {} \land ((classID,managedMemoryClass) \notin subclassRel~cs \\
+  \t3 {} \lor methodID \notin   \{enterPrivateMemoryHelperID, executeInAreaOfHelperID, \\
+  \t4 executeInOuterAreaHelperID, exitMemoryID\}) \\
+
+  \t2 {} \land ((classID,aperiodicEventHandlerClass) \notin subclassRel~cs \\
+  \t3 {} \lor methodID \neq initAPEHID) \\
+
+  \t2 {} \land ((classID,periodicEventHandlerClass) \notin subclassRel~cs \\
+  \t3 {} \lor methodID \neq initPEHID) \\
+
+  \t2 {} \land ((classID,oneShotEventHandlerClass) \notin subclassRel~cs \lor \\
+  \t3 {} methodID \neq initOSEHAbsID) \\
+
+  \t2 {} \land ((classID,oneShotEventHandlerClass) \notin subclassRel~cs \lor \\
+  \t3 {} methodID \neq initOSEHRelID) \\
+
+  \t2 {} \land ((classID, readClass) \notin subclassRel~cs \lor methodID \neq readID) \\
+
   \t2 {} \land ((classID, writeClass) \notin subclassRel~cs \lor methodID \neq writeID) \rcircguard \circguard {} \\
+
   \t1 \circvar class : Class \circspot \lschexpract ResolveMethod[cs/cs?] \rschexpract \circseq \\
   \t1 CheckSynchronizedInvoke(class, methodID, methodArgs) \circseq \\
   \t1 \lschexpract InterpreterNewStackFrame \rschexpract
 \end{circusaction}
-
+}
 This concludes our description of the handling of bytecode
 instructions, and of our description of the CEE before the application
 of the compilation strategy.
