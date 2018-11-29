@@ -1215,6 +1215,18 @@ described in Section~\ref{cee-interpreter-subsection}.
 We model a subset of Java bytecode sufficient to express a wide
 variety of SCJ programs and illustrate how further features may be
 added, but small enough to permit effective reasoning.
+\addchange{Added text to clarify what is meant by ``effective reasoning''}
+\added{
+In particular, each of the bytecode instructions included in our
+subset must be handled by the compilation rules defined in
+Chapter~\ref{strategy-chapter}.
+More compilation rules would require more effort to define and prove,
+but the additional compilation rules would be similar to those already
+defined and so would add little to our strategy.
+We thus restrict our subset to those instructions that represent the
+main features of Java bytecode.
+}
+
 The subset has been chosen by considering the bytecode generated from
 a simple SCJ program and removing instructions similar to those
 already in the subset.
