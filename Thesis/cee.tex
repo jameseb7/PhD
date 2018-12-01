@@ -1535,7 +1535,7 @@ The separate \texttt{invokevirtual} and \texttt{invokeinterface}
 instructions allow implementations to easily determine which method
 table should be used.
 However, the JVM specification does not require the use of method
-tables as a method of method lookup so the semantics of the
+tables to implement method lookup so the semantics of the
 \texttt{invokevirtual} and \texttt{invokeinterface} instructions given
 in the JVM specification are actually quite similar, differing only in
 the types of methods they operate over, which can be checked
