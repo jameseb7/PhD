@@ -427,7 +427,7 @@ been suggested that it could be modified to do so~\cite{nilsen2011}.
 The Java Optimized Processor (JOP)~\cite{schoeberl2008} is a
 hardware-based implementation of a JVM, with time-predictability as a
 design goal.
-It allows for efficient execution of Java bytecode programs while aslo
+It allows for efficient execution of Java bytecode programs while also
 allowing analysis of real-time properties, particularly worst-case
 execution time.
 Because of this, it is well-suited to the applications that SCJ is
@@ -436,7 +436,9 @@ created~\cite{rivas2014}.
 This means that JOP forms an alternative SCJVM approach to that of
 ahead-of-time compilation.
 We focus instead on ahead-of-time compilation because, from the
-preceding discussion, it appears to be a more widely applied approach.
+preceding discussion, it appears to be a more widely applied approach,
+since all of the 5 SCJVMs discussed above use ahead-of-time
+compilation to some language, with 3 of those compiling to C.
 }
 
 \addchange{Rewrote summary at the end of description of SCJVMs to account for new additions}
