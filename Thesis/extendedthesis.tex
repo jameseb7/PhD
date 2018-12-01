@@ -495,9 +495,11 @@ applied. We discuss it here.
 {\raggedright \printbibliography[resetnumbers=true]}
 \end{refsection}
 
+\ifShowChanges
 \clearpage
 \phantomsection
 \addcontentsline{toc}{chapter}{Index of Changes}
 \printindex[changes]
+\fi
 
 \end{document}
