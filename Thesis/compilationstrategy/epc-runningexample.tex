@@ -52,44 +52,7 @@ interesting insight into our compilation strategy.
 As previously explained, extending the bytecode set considered to deal
 with arrays is not difficult.
 
-We have also written the example as an SCJ program, with the algorithm
-as the body of an aperiodic event handler, \texttt{TPK}, one or more
-instances of which can be registered as part of a mission and released
-during mission execution.
-As already mentioned, each release of the handler causes its
-\texttt{handleAsyncEvent()} method to be executed.
-This method creates an instance of a \texttt{ConsoleConnection}
-(line~\ref{example-ConsoleConnection-line}), which is the only
-standard input/output connection required by SCJ.
-Instances of \texttt{InputStream} and \texttt{OutputStream} are then
-obtained from the \texttt{ConsoleConnection}
-(lines~\ref{example-InputStream-line}
-and~\ref{example-OutputStream-line}).
-
-After the input and output streams have been obtained, we enter a for
-loop (line~\ref{example-for-loop-line}) in which an integer is read
-from the \texttt{InputStream}, a static method \texttt{f()} is applied
-to it, and the result is output if it is less than 400, otherwise, 0
-is output.
-The method \texttt{f()} takes an integer as input, multiplies it by 3
-and adds 5 to it.
-
-The \texttt{TPK} class is part of a larger program that includes other
-classes, including a \texttt{Safelet}, a \texttt{MissionSequencer}, a
-\texttt{Mission}, and the classes that make up the SCJ API.
-% Considering these classes in our example would make the example much
-% larger and more complex, while not introducing any more interesting
-% aspects for the strategy to consider.
-We omit a presentation of these classes, though it should be noted
-that they are part of the complete example.
-For compilation, they need to go through a similar refinement to that
-we illustrate for the $TPK$ class.
-This adds little complexity to the strategy since the bytecode array
-is acted upon consistently for all classes, and the current class of a
-given bytecode instruction can always be determined from its address
-in the array.
-
-\begin{figure}[pt!]
+\begin{figure}[p!]
   \begin{center}
   \setlength{\linewidth}{12cm}
   \begin{tabular}{p{9.5cm}p{4.5cm}}
@@ -222,6 +185,43 @@ in the array.
   \label{example-model-figure}
 \end{figure}%
 
+We have also written the example as an SCJ program, with the algorithm
+as the body of an aperiodic event handler, \texttt{TPK}, one or more
+instances of which can be registered as part of a mission and released
+during mission execution.
+As already mentioned, each release of the handler causes its
+\texttt{handleAsyncEvent()} method to be executed.
+This method creates an instance of a \texttt{ConsoleConnection}
+(line~\ref{example-ConsoleConnection-line}), which is the only
+standard input/output connection required by SCJ.
+Instances of \texttt{InputStream} and \texttt{OutputStream} are then
+obtained from the \texttt{ConsoleConnection}
+(lines~\ref{example-InputStream-line}
+and~\ref{example-OutputStream-line}).
+
+After the input and output streams have been obtained, we enter a for
+loop (line~\ref{example-for-loop-line}) in which an integer is read
+from the \texttt{InputStream}, a static method \texttt{f()} is applied
+to it, and the result is output if it is less than 400, otherwise, 0
+is output.
+The method \texttt{f()} takes an integer as input, multiplies it by 3
+and adds 5 to it.
+
+The \texttt{TPK} class is part of a larger program that includes other
+classes, including a \texttt{Safelet}, a \texttt{MissionSequencer}, a
+\texttt{Mission}, and the classes that make up the SCJ API.
+% Considering these classes in our example would make the example much
+% larger and more complex, while not introducing any more interesting
+% aspects for the strategy to consider.
+We omit a presentation of these classes, though it should be noted
+that they are part of the complete example.
+For compilation, they need to go through a similar refinement to that
+we illustrate for the $TPK$ class.
+This adds little complexity to the strategy since the bytecode array
+is acted upon consistently for all classes, and the current class of a
+given bytecode instruction can always be determined from its address
+in the array.
+
 The Java code must be run through a Java compiler to generate the
 corresponding bytecode, which then defines the $bc$ and $cs$ constants
 of our model.
@@ -239,7 +239,7 @@ The generation of object structures from this field information is
 discussed in more detail in
 Section~\ref{data-refinement-of-objects-section}.
 
-\begin{figure}[tp!]
+\begin{figure}[p!]
   \begin{center}
     % \setlength{\linewidth}{12cm}
     \begin{minipage}{7.5cm}
@@ -367,11 +367,7 @@ Section~\ref{data-refinement-of-objects-section}.
   \label{example-superclasses-model-figure}
 \end{figure}%
 
-Applying the bytecode expansion on
-line~\ref{algorithm-expand-bytecode} of Algorithm~\ref{epc-algorithm}
-yields the $Running$ action shown in
-Figure~\ref{bytecode-expansion-example-figure}.
-\begin{figure}[tp!]
+\begin{figure}[p!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
   \setlength{\zedleftsep}{0.1cm}
@@ -465,6 +461,11 @@ Figure~\ref{bytecode-expansion-example-figure}.
   \caption{The $Running$ action after bytecode expansion}
   \label{bytecode-expansion-example-figure}
 \end{figure}
+
+Applying the bytecode expansion on
+line~\ref{algorithm-expand-bytecode} of Algorithm~\ref{epc-algorithm}
+yields the $Running$ action shown in
+Figure~\ref{bytecode-expansion-example-figure}.
 This step copies $HandleInstruction$ into $Running$, and converts it
 to a choice of actions based on the value of the program counter,
 $pc$, mirroring the contents of the $bc$ map for each value.
@@ -748,12 +749,33 @@ algorithm.
 It is done with a simple application of the copy rule, replacing the
 actions at the entry points of the split methods with references to
 newly created method actions.
-This can be seen in
-Figure~\ref{method-call-resolution-example-figure}, where the $TPK\_f$
-action has been created by copying the sequence of actions for the
-\texttt{f()} method of \texttt{TPK} from the $pc = 43$ case.
+This can be seen in Figure~\ref{TPK_f-separation-example-figure},
+where the $TPK\_f$ action has been created by copying the sequence of
+actions for the \texttt{f()} method of \texttt{TPK} from the $pc = 43$
+case of Figure~\ref{forward-sequence-introduction-example-figure}.
 As this step is relatively simple, we do not explain it in a separate
 section.
+\begin{figure}[tp!]
+  \setlength{\zedindent}{0cm}
+  \setlength{\zedtab}{0.3cm}
+  \setlength{\zedleftsep}{0cm}
+  \setlength{\abovedisplayskip}{0cm}
+  \setlength{\belowdisplayskip}{0cm}
+  \addchange{Moved $TPK\_f$ action to its own figure}
+  \moved{
+  \begin{circus}
+    TPK\_f \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 45 \circseq Poll \circseq \\
+    \t1 HandleIaddEPC \circseq pc := 46 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 47 \circseq Poll \circseq \\
+    \t1 HandleIaddEPC \circseq pc := 48 \circseq Poll \circseq HandleIconstEPC(5) \circseq pc := 49 \circseq Poll \circseq \\
+    HandleIaddEPC \circseq pc := 50 \circseq Poll \circseq HandleAreturnEPC
+  \end{circus}
+  }
+  \added{
+  \caption{The $TPK\_f$ method action after it has been separated}
+  \label{TPK_f-separation-example-figure}
+  }
+\end{figure}
+
 \begin{figure}[tp!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
@@ -925,27 +947,6 @@ section.
   \label{method-call-resolution-example-figure}
 \end{figure}
 
-\begin{figure}[tp!]
-  \setlength{\zedindent}{0cm}
-  \setlength{\zedtab}{0.3cm}
-  \setlength{\zedleftsep}{0cm}
-  \setlength{\abovedisplayskip}{0cm}
-  \setlength{\belowdisplayskip}{0cm}
-  \addchange{Moved $TPK\_f$ action to its own figure}
-  \moved{
-  \begin{circus}
-    TPK\_f \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 45 \circseq Poll \circseq \\
-    \t1 HandleIaddEPC \circseq pc := 46 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 47 \circseq Poll \circseq \\
-    \t1 HandleIaddEPC \circseq pc := 48 \circseq Poll \circseq HandleIconstEPC(5) \circseq pc := 49 \circseq Poll \circseq \\
-    HandleIaddEPC \circseq pc := 50 \circseq Poll \circseq HandleAreturnEPC
-  \end{circus}
-  }
-  \added{
-  \caption{The $TPK\_f$ method action after it has been separated}
-  \label{TPK_f-separation-example-figure}
-  }
-\end{figure}
-
 Calls to methods with separate actions can then be resolved,
 sequencing the method invocation instruction with a call to the
 \Circus{} action representing its body and the instructions following
@@ -1083,7 +1084,7 @@ procedures.
   \caption{The $Running$ action after all the methods are separated}
   \label{final-method-separation-example-figure}
 \end{figure}
-  
+
 As mentioned previously, these steps are then repeated, in the loop
 beginning at line~\ref{algorithm-method-loop} of
 Algorithm~\ref{epc-algorithm} to introduce the loops and conditionals
@@ -1095,11 +1096,24 @@ separated out in this way.
 This always terminates, since we do not allow recursion, and so there
 are no loops in the dependencies between methods.
 
+\added{
+At the end of the loop in Algorithm~\ref{epc-algorithm}, when all
+loops and conditionals have been introduced, all the methods have been
+separated out, and all method calls have been resolved, the actions at
+$pc = 0$ are separated into a $TPK\_APEHinit$ action, and the actions
+at $pc = 7$ are separated into a $TPK\_handleAsyncEvent$ action.
+These actions are shown in
+Figure~\ref{method-separation-handleAsyncEvent-example-figure}.
+The $Running$ action at this point in the strategy is then as shown in
+Figure~\ref{final-method-separation-example-figure}.
+}
+\deleted{
 The $Running$ action of our example at the end of the loop in
 Algorithm~\ref{epc-algorithm}, when all loops and conditionals have
 been introduced, all the methods have been separated out, and all
 method calls have been resolved, is shown in
 Figure~\ref{final-method-separation-example-figure}.
+}
 At this point, the choice over the $pc$ value maps entry points of
 methods onto the actions representing those methods, with the other
 $pc$ values now redundant.
