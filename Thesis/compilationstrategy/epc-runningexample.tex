@@ -1,6 +1,6 @@
 We explain the strategy in detail with an example, the Java code for
 which is shown in Figure~\ref{example-code-figure}.
-\begin{figure}[tp]
+\begin{figure}[tb!]
   \begin{center}
   \begin{minipage}{14cm}
   \begin{lstlisting}[basicstyle=\ttfamily\footnotesize,keywordstyle=\bf\footnotesize,language=Java,numbers=left,numberstyle=\tiny,stepnumber=1, numbersep=5pt,escapeinside={(*@}{@*)}]
@@ -89,24 +89,7 @@ is acted upon consistently for all classes, and the current class of a
 given bytecode instruction can always be determined from its address
 in the array.
 
-The Java code must be run through a Java compiler to generate the
-corresponding bytecode, which then defines the $bc$ and $cs$ constants
-of our model.
-Their values for our example are shown in
-Figure~\ref{example-model-figure}, along with $TPK$ class information.
-While most of the compilation of the methods of \texttt{TPK} depends
-only on the data in the $TPK$ class information, the object data for
-instances of \texttt{TPK} includes fields from its superclasses.
-In particular, the fields for \texttt{TPK} are contributed by the
-\texttt{AperiodicEventHandler} and \texttt{ManagedEventHandler}
-classes (the superclasses of \texttt{ManagedEventHandler} do not
-contribute any fields), whose $Class$ data structures are presented in
-Figure~\ref{example-superclasses-model-figure}.
-The generation of object structures from this field information is
-discussed in more detail in
-Section~\ref{data-refinement-of-objects-section}.
-
-\begin{figure}[p]
+\begin{figure}[pt!]
   \begin{center}
   \setlength{\linewidth}{12cm}
   \begin{tabular}{p{9.5cm}p{4.5cm}}
@@ -238,6 +221,23 @@ Section~\ref{data-refinement-of-objects-section}.
   \caption{The \Circus{} code corresponding to our example program}
   \label{example-model-figure}
 \end{figure}%
+
+The Java code must be run through a Java compiler to generate the
+corresponding bytecode, which then defines the $bc$ and $cs$ constants
+of our model.
+Their values for our example are shown in
+Figure~\ref{example-model-figure}, along with $TPK$ class information.
+While most of the compilation of the methods of \texttt{TPK} depends
+only on the data in the $TPK$ class information, the object data for
+instances of \texttt{TPK} includes fields from its superclasses.
+In particular, the fields for \texttt{TPK} are contributed by the
+\texttt{AperiodicEventHandler} and \texttt{ManagedEventHandler}
+classes (the superclasses of \texttt{ManagedEventHandler} do not
+contribute any fields), whose $Class$ data structures are presented in
+Figure~\ref{example-superclasses-model-figure}.
+The generation of object structures from this field information is
+discussed in more detail in
+Section~\ref{data-refinement-of-objects-section}.
 
 \begin{figure}[tp!]
   \begin{center}
