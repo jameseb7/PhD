@@ -403,23 +403,23 @@ This covers each of the four cases shown above.
   \item $n$ has no predecessors in $G$, $H$ has only one end node, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ except those going to or from
-      $n$,
+    \item $G'$ contains the edges of $G$ and the edges of $H$ except
+      those going to or from $n$,
     \item $G'$ contains edges from the end node of $H$ to the
       successors of $n$ in $G$, and
     \item the root node of $G'$ is the root node of $H$;
     \end{itemize}
-  \item $n$ has no successors in $G$, and
+  \item $n$ has no successors in $G$, $n$ is not the root node of $G$, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ except those going to or from
-      $n$,
+    \item $G'$ contains the edges of $G$ and the edges of $H$ except
+      those going to or from $n$,
     \item $G'$ contains edges from the predecessors $n$ in $G$ to the
       root node of $H$, and
-    \item the root node of $G'$ is the root node of $G$, or, if $n$ is
-      the root node of $G$, the root node of $H$;
+    \item the root node of $G'$ is the root node of $G$;
     \end{itemize}
-  \item $H$ has a single end node and
+  \item $H$ has a single end node, $n$ is not the root node or an end
+    node of $G$, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
     \item $G'$ contains the edges of $G$ and the edges of $H$ except
@@ -428,22 +428,20 @@ This covers each of the four cases shown above.
       the root node of $H$,
     \item $G'$ contains edges from the end node of $H$ to the
       successors of $n$ in $G$, and
-    \item the root node of $G'$ is the root node of $G$, or, if $n$ is
-      the root node of $G$, the root node of $H$;
+    \item the root node of $G'$ is the root node of $G$;
     \end{itemize}
-  \item $n$ has a single successor in $G$, $H$ has a single end
-    node, and
+  \item $n$ has a single successor in $G$, $n$ is not the root node of
+    $G$, $H$ has a single end node, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$ and
       the end node of $H$,
-    \item $G'$ contains the edges of $G$ except those going to or from
-      $n$,
+    \item $G'$ contains the edges of $G$ and the edges of $H$ except
+      those going to or from $n$ or the end node of $H$,
     \item $G'$ contains edges from the predecessors of the end node of
       $H$ to the successor of $n$ in $G$
     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
       the root node of $H$, and
-    \item the root node of $G'$ is the root node of $G$, or, if $n$ is
-      the root node of $G$, the root node of $H$.
+    \item the root node of $G'$ is the root node of $G$.
     \end{itemize}
   \end{itemize}
 \end{defn}
