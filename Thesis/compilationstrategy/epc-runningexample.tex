@@ -610,6 +610,13 @@ Figure~\ref{forward-sequence-introduction-example-figure}, where the
 choice over $pc$ has sequences of instructions collected together at
 the point where they start, up to the point at which a more complex
 control flow (such as a method call, conditional or a loop) occurs.
+\addchange{Clarified why some branches in figures are not shown}
+\added{
+In this figure, and the other figures in this chapter, we omit the
+branches of the choice in $Running$ that cannot be reached from the
+start of a method, since the instructions in those branches are
+collected into other branches.
+}
 The introduction of sequential composition is described in more detail
 in Section~\ref{introduce-forward-sequence-subsection}, where we
 define the \Call{IntroduceSequentialComposition}{} procedure.
@@ -754,6 +761,13 @@ This can be seen in Figure~\ref{TPK_f-separation-example-figure},
 where the $TPK\_f$ action has been created by copying the sequence of
 actions for the \texttt{f()} method of \texttt{TPK} from the $pc = 43$
 case of Figure~\ref{forward-sequence-introduction-example-figure}.
+\addchange{Added mention of reference to $TPK\_f$ shown earlier in
+  Figure~\ref{loop-and-conditional-introduction-example-figure}}
+\added{
+The $pc = 43$ branch itself is replaced with a reference to this
+$TPK\_f$ action, as can be seen in
+Figure~\ref{loop-and-conditional-introduction-example-figure}.
+}
 As this step is relatively simple, we do not explain it in a separate
 section.
 \begin{figure}[tp!]
