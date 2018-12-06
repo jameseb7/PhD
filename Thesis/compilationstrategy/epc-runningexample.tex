@@ -207,38 +207,6 @@ is output.
 The method \texttt{f()} takes an integer as input, multiplies it by 3
 and adds 5 to it.
 
-The \texttt{TPK} class is part of a larger program that includes other
-classes, including a \texttt{Safelet}, a \texttt{MissionSequencer}, a
-\texttt{Mission}, and the classes that make up the SCJ API.
-% Considering these classes in our example would make the example much
-% larger and more complex, while not introducing any more interesting
-% aspects for the strategy to consider.
-We omit a presentation of these classes, though it should be noted
-that they are part of the complete example.
-For compilation, they need to go through a similar refinement to that
-we illustrate for the $TPK$ class.
-This adds little complexity to the strategy since the bytecode array
-is acted upon consistently for all classes, and the current class of a
-given bytecode instruction can always be determined from its address
-in the array.
-
-The Java code must be run through a Java compiler to generate the
-corresponding bytecode, which then defines the $bc$ and $cs$ constants
-of our model.
-Their values for our example are shown in
-Figure~\ref{example-model-figure}, along with $TPK$ class information.
-While most of the compilation of the methods of \texttt{TPK} depends
-only on the data in the $TPK$ class information, the object data for
-instances of \texttt{TPK} includes fields from its superclasses.
-In particular, the fields for \texttt{TPK} are contributed by the
-\texttt{AperiodicEventHandler} and \texttt{ManagedEventHandler}
-classes (the superclasses of \texttt{ManagedEventHandler} do not
-contribute any fields), whose $Class$ data structures are presented in
-Figure~\ref{example-superclasses-model-figure}.
-The generation of object structures from this field information is
-discussed in more detail in
-Section~\ref{data-refinement-of-objects-section}.
-
 \begin{figure}[pt!]
   \begin{center}
     % \setlength{\linewidth}{12cm}
@@ -367,7 +335,7 @@ Section~\ref{data-refinement-of-objects-section}.
   \label{example-superclasses-model-figure}
 \end{figure}%
 
-\begin{figure}[t!]
+\begin{figure}[tp!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
   \setlength{\zedleftsep}{0.1cm}
@@ -462,42 +430,45 @@ Section~\ref{data-refinement-of-objects-section}.
   \label{bytecode-expansion-example-figure}
 \end{figure}
 
-Applying the bytecode expansion on
-line~\ref{algorithm-expand-bytecode} of Algorithm~\ref{epc-algorithm}
-yields the $Running$ action shown in
-Figure~\ref{bytecode-expansion-example-figure}.
-This step copies $HandleInstruction$ into $Running$, and converts it
-to a choice of actions based on the value of the program counter,
-$pc$, mirroring the contents of the $bc$ map for each value.
+The \texttt{TPK} class is part of a larger program that includes other
+classes, including a \texttt{Safelet}, a \texttt{MissionSequencer}, a
+\texttt{Mission}, and the classes that make up the SCJ API.
+% Considering these classes in our example would make the example much
+% larger and more complex, while not introducing any more interesting
+% aspects for the strategy to consider.
+We omit a presentation of these classes, though it should be noted
+that they are part of the complete example.
+For compilation, they need to go through a similar refinement to that
+we illustrate for the $TPK$ class.
+This adds little complexity to the strategy since the bytecode array
+is acted upon consistently for all classes, and the current class of a
+given bytecode instruction can always be determined from its address
+in the array.
 
-The actions that make up $HandleInstruction$ are also replaced with
-actions that incorporate instruction parameters from the $bc$ map, and
-have $pc$ updates separated from stack updates.
-This can be seen in Figure~\ref{bytecode-expansion-example-figure},
-where, for instance, in the $pc = 0$ case, $aload~0$ has been
-converted to $HandleAloadEPC(0) \circseq pc := 1$, with the parameter,
-$0$, to the bytecode instruction becoming a parameter of the new
-instruction handling action $HandleAloadEPC$, and the update to $pc$
-placed after the data operation.
+The Java code must be run through a Java compiler to generate the
+corresponding bytecode, which then defines the $bc$ and $cs$ constants
+of our model.
+Their values for our example are shown in
+Figure~\ref{example-model-figure}, along with $TPK$ class information.
+While most of the compilation of the methods of \texttt{TPK} depends
+only on the data in the $TPK$ class information, the object data for
+instances of \texttt{TPK} includes fields from its superclasses.
+In particular, the fields for \texttt{TPK} are contributed by the
+\texttt{AperiodicEventHandler} and \texttt{ManagedEventHandler}
+classes (the superclasses of \texttt{ManagedEventHandler} do not
+contribute any fields), whose $Class$ data structures are presented in
+Figure~\ref{example-superclasses-model-figure}.
+The generation of object structures from this field information is
+discussed in more detail in
+Section~\ref{data-refinement-of-objects-section}.
 
-The reason for making parameters of the bytecode instructions into
-parameters of the handling actions is to remove the need to reference
-the bytecode instructions in the $bc$ map, as that involves use of the
-$pc$ value, which we seek to remove in this stage.
-This also has the benefit of fully incorporating $bc$ into the $Thr$
-process, ensuring all the information required to introduce C code
-constructs is available directly in \Circus{}.
-This makes stating compilation laws simpler, and is described in more
-detail in Section~\ref{expand-bytecode-subsection}, where we define
-the \Call{ExpandBytecode}{} procedure.
-
-\begin{figure}[tp!]
+\begin{figure}[t!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
   \setlength{\zedleftsep}{0.1cm}
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\belowdisplayskip}{0cm}
-  \small
+  \scriptsize
   \addchange{Changed
     Figure~\ref{forward-sequence-introduction-example-figure} to
     include all nodes reachable from the start of a method}
@@ -592,6 +563,35 @@ the \Call{ExpandBytecode}{} procedure.
   \label{forward-sequence-introduction-example-figure}
 \end{figure}
 
+Applying the bytecode expansion on
+line~\ref{algorithm-expand-bytecode} of Algorithm~\ref{epc-algorithm}
+yields the $Running$ action shown in
+Figure~\ref{bytecode-expansion-example-figure}.
+This step copies $HandleInstruction$ into $Running$, and converts it
+to a choice of actions based on the value of the program counter,
+$pc$, mirroring the contents of the $bc$ map for each value.
+
+The actions that make up $HandleInstruction$ are also replaced with
+actions that incorporate instruction parameters from the $bc$ map, and
+have $pc$ updates separated from stack updates.
+This can be seen in Figure~\ref{bytecode-expansion-example-figure},
+where, for instance, in the $pc = 0$ case, $aload~0$ has been
+converted to $HandleAloadEPC(0) \circseq pc := 1$, with the parameter,
+$0$, to the bytecode instruction becoming a parameter of the new
+instruction handling action $HandleAloadEPC$, and the update to $pc$
+placed after the data operation.
+
+The reason for making parameters of the bytecode instructions into
+parameters of the handling actions is to remove the need to reference
+the bytecode instructions in the $bc$ map, as that involves use of the
+$pc$ value, which we seek to remove in this stage.
+This also has the benefit of fully incorporating $bc$ into the $Thr$
+process, ensuring all the information required to introduce C code
+constructs is available directly in \Circus{}.
+This makes stating compilation laws simpler, and is described in more
+detail in Section~\ref{expand-bytecode-subsection}, where we define
+the \Call{ExpandBytecode}{} procedure.
+
 On line~\ref{algorithm-introduce-forward-sequence} of the
 Algorithm~\ref{epc-algorithm}, sequential composition is introduced
 for instructions that do not affect the sequential flow of the
@@ -636,39 +636,6 @@ of instructions that form the bodies of the loops and the branches of
 conditionals, introduction of loops and conditionals can only be
 performed on methods that have no unresolved method calls.
 
-In our example, \texttt{handleAsyncEvent()} is the only method that
-needs loops and conditionals introducing but, since it also contains
-method calls that break up the body of a loop, we must wait until its
-method calls have been resolved before introducing loops and
-conditionals.
-For this reason, we perform method call resolution, and loop and
-conditional introduction repeatedly until all method calls are
-resolved and the resulting complete methods have all been separated
-out.
-This is expressed in Algorithm~\ref{epc-algorithm} by the while loop
-on line~\ref{algorithm-method-loop}.
-
-Introduction of loops and conditionals to the body of a method with no
-unresolved method calls occurs on
-line~\ref{algorithm-introduce-loops-and-conditionals} of the
-algorithm.
-To introduce loops and conditionals we consider the control flow graph
-of the method again, though it is now much simpler than the control
-flow graph used for sequence introduction, since straight sequences of
-instructions have already been combined together.
-Patterns representing conditionals and loops are then identified using
-the control flow graph and the corresponding constructs are
-introduced.
-As loops and conditionals are introduced, nodes in the control flow
-graph are merged until the graph consists of a single node, which is
-the starting point of the method, containing the complete method body.
-
-The result of introducing loops and conditionals in
-\texttt{handleAsyncEvent()} after method call resolution is shown in
-Figure~\ref{loop-and-conditional-introduction-example-figure}.
-The process of introducing loops and conditionals is described in more
-detail in Section~\ref{introduce-loops-and-conditionals-subsection},
-where we define the \Call{IntroduceLoopsAndConditionals}{} procedure.
 \begin{figure}[tp!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
@@ -741,6 +708,40 @@ where we define the \Call{IntroduceLoopsAndConditionals}{} procedure.
   \caption{The $Running$ action after loop and conditional introduction}
   \label{loop-and-conditional-introduction-example-figure}
 \end{figure}
+
+In our example, \texttt{handleAsyncEvent()} is the only method that
+needs loops and conditionals introducing but, since it also contains
+method calls that break up the body of a loop, we must wait until its
+method calls have been resolved before introducing loops and
+conditionals.
+For this reason, we perform method call resolution, and loop and
+conditional introduction repeatedly until all method calls are
+resolved and the resulting complete methods have all been separated
+out.
+This is expressed in Algorithm~\ref{epc-algorithm} by the while loop
+on line~\ref{algorithm-method-loop}.
+
+Introduction of loops and conditionals to the body of a method with no
+unresolved method calls occurs on
+line~\ref{algorithm-introduce-loops-and-conditionals} of the
+algorithm.
+To introduce loops and conditionals we consider the control flow graph
+of the method again, though it is now much simpler than the control
+flow graph used for sequence introduction, since straight sequences of
+instructions have already been combined together.
+Patterns representing conditionals and loops are then identified using
+the control flow graph and the corresponding constructs are
+introduced.
+As loops and conditionals are introduced, nodes in the control flow
+graph are merged until the graph consists of a single node, which is
+the starting point of the method, containing the complete method body.
+
+The result of introducing loops and conditionals in
+\texttt{handleAsyncEvent()} after method call resolution is shown in
+Figure~\ref{loop-and-conditional-introduction-example-figure}.
+The process of introducing loops and conditionals is described in more
+detail in Section~\ref{introduce-loops-and-conditionals-subsection},
+where we define the \Call{IntroduceLoopsAndConditionals}{} procedure.
 
 After loops and conditionals have been introduced, methods that are
 then complete can be copied into separate actions.
@@ -1062,12 +1063,13 @@ procedures.
 %   \label{method-separation-handleAsyncEvent-example-figure}
 % \end{figure}
 
-\begin{figure}[p!]
+\begin{figure}[t!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
   \setlength{\zedleftsep}{0cm}
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\belowdisplayskip}{0cm}
+  \small
   \begin{circus}
     Running \circdef \\
     \t1 \circif frameStack = \emptyset \circthen \Skip \\
@@ -1083,6 +1085,54 @@ procedures.
   \end{circus}
   \caption{The $Running$ action after all the methods are separated}
   \label{final-method-separation-example-figure}
+\end{figure}
+
+\begin{figure}[t!]
+  \setlength{\zedindent}{0cm}
+  \setlength{\abovedisplayskip}{0cm}
+  \setlength{\belowdisplayskip}{0cm}
+  \small
+  \begin{circusaction}
+    ExecuteMethod \circdef \\
+    \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
+    \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \\
+    \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
+    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \\
+    \t1 {} \cdots {} \\
+    \t1 \circfi
+  \end{circusaction}
+  \begin{circusaction}
+    MainThread \circdef \\
+    \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
+    \t1 \circblockbegin
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq Poll \circseq X \\
+    {} \extchoice {} \\
+    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
+    \circblockend
+  \end{circusaction}
+  \begin{circusaction}
+    Started \circdef \\
+    \t1 \circblockbegin
+    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq Poll \circseq \\
+    \t1 \circblockbegin
+    continue?t \prefixcolon (t = thread) \then Started \\
+    {} \extchoice {} \\
+    endThread?t \prefixcolon (t = thread) \then \Skip
+    \circblockend \\
+    {} \extchoice {} \\
+    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq Started \\
+    {} \extchoice {} \\
+    endThread?t \prefixcolon (t = thread) \then \Skip
+    \circblockend \circseq \\
+    \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
+    \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
+  \end{circusaction}
+  \caption{The $ExecuteMethod$, $MainThread$, and $Started$ actions
+    after main action refinement}
+  \label{refine-main-actions-example-figure}
 \end{figure}
 
 As mentioned previously, these steps are then repeated, in the loop
@@ -1116,56 +1166,8 @@ methods onto the actions representing those methods, with the other
 $pc$ values now redundant.
 }
 
-\begin{figure}[pt!]
-  \setlength{\zedindent}{0cm}
-  \setlength{\abovedisplayskip}{0cm}
-  \setlength{\belowdisplayskip}{0cm}
-  \begin{circusaction}
-    ExecuteMethod \circdef \\
-    \t1 \circval classID : ClassID; \circval methodID : MethodID; \circval methodArgs : \seq Word \circspot \\
-    \t1 \circif (classID, methodID) = (TPKClassID, APEHinit) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_APEHinit \\
-    \t1 {} \circelse (classID, methodID) = (TPKClassID, handleAsyncEvent) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_handleAsyncEvent \\
-    \t1 {} \circelse (classID, methodID) = (TPKClassID, f) \circthen {} \\
-    \t2 InterpreterNewStackFrame[TPK/class?] \circseq TPK\_f \\
-    \t1 {} \cdots {} \\
-    \t1 \circfi
-  \end{circusaction}
-  \vspace{-0.5cm}
-  \begin{circusaction}
-    MainThread \circdef \\
-    \t1 setStack?t \prefixcolon (t = thread) ?stack \then frameStackID := Initialised~stack \circseq \circmu X \circspot \\
-    \t1 \circblockbegin
-    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq Poll \circseq X \\
-    {} \extchoice {} \\
-    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq X
-    \circblockend
-  \end{circusaction}
-  \vspace{-0.5cm}
-  \begin{circusaction}
-    Started \circdef \\
-    \t1 \circblockbegin
-    executeMethod? t \prefixcolon (t = thread)?c?m?a \then ExecuteMethod(c,m,a) \circseq Poll \circseq \\
-    \t1 \circblockbegin
-    continue?t \prefixcolon (t = thread) \then Started \\
-    {} \extchoice {} \\
-    endThread?t \prefixcolon (t = thread) \then \Skip
-    \circblockend \\
-    {} \extchoice {} \\
-    CEEswitchThread?from?to \prefixcolon (from = thread) \then Blocked \circseq Started \\
-    {} \extchoice {} \\
-    endThread?t \prefixcolon (t = thread) \then \Skip
-    \circblockend \circseq \\
-    \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
-    \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
-  \end{circusaction}
-  \caption{The $ExecuteMethod$, $MainThread$, and $Started$ actions
-    after main action refinement}
-  \label{refine-main-actions-example-figure}
-\end{figure}
 
-\begin{figure}
+\begin{figure}[t!]
   \setlength{\zedtab}{0.4cm}
   \setlength{\zedindent}{0pt}
   \setlength{\zedleftsep}{0pt}
@@ -1176,7 +1178,7 @@ $pc$ values now redundant.
   \addchange{Inserted full defintion of $TPK\_handleAsyncEvent$ in
     Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}}
   \changed{
-  \small
+  \scriptsize
   \begin{circus}
     TPK\_handleAsyncEvent \circdef \\
     \t1 HandleNewEPC(27) \circseq Poll \circseq HandleDupEPC \circseq Poll \circseq HandleAconst\_nullEPC \circseq \\
