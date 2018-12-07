@@ -546,7 +546,7 @@ the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
   \begin{circusaction}
     TPK\_handleAsyncEvent \circdef \circval arg1 : Word \circspot \\
     \t1 \circvar var1 var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot \\
-    \t1 var1 := arg1 \circseq Poll \circseq \\
+    \t1 var2 := arg1 \circseq Poll \circseq \\
     \t1 newObject!thread!ConsoleConnectionClassID \\
     \t2 {} \then  newObjectRet!oid \then stack1 := oid \circseq Poll \circseq \\
     \t1 stack2 := stack1 \circseq Poll \circseq \\
@@ -563,15 +563,15 @@ the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
     % \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
     % \t1 var3 := stack1 \circseq Poll \circseq \\
     % \t1 stack1 := 0 \circseq Poll \circseq \\
-    \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
-    \t1 stack1 := var4 \circseq Poll \circseq \\
+    \t1 var5 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 stack1 := var5 \circseq Poll \circseq \\
     \t1 stack2 := 10 \circseq Poll \circseq \\
     \t1 \circmu Y \circspot \\
     \t2 \circif stack1 \leq stack2 \circthen Poll \circseq \\
-    \t3 stack1 := var2 \circseq Poll \circseq \\
+    \t3 stack1 := var3 \circseq Poll \circseq \\
     \t3 getClassIDOf!stack1?cid \then ConsoleInput\_read(stack1, stack1) \circseq Poll \circseq \\
     \t3 TPK\_f(stack1, stack1) \circseq Poll \circseq \\
-    \t3 var5 := stack1 \circseq Poll \circseq \\
+    \t3 var6 := stack1 \circseq Poll \circseq \\
     \t3 {} \cdots {} \\
     % \t3 stack1 := var5 \circseq Poll \circseq \\
     % \t3 stack2 := 400 \circseq Poll \circseq \\
@@ -588,7 +588,7 @@ the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
     % \t3 stack2 := 1 \circseq Poll \circseq \\
     % \t3 stack1 := stack1 + stack2 \circseq Poll \circseq \\
     % \t3 var4 := stack1 \circseq Poll \\
-    \t3 stack1 := var4 \circseq Poll \circseq \\
+    \t3 stack1 := var5 \circseq Poll \circseq \\
     \t3 stack2 := 10 \circseq Poll \circseq Y \\
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
@@ -700,6 +700,7 @@ method.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
+  \small
   \begin{circusaction}
     TPK\_handleAsyncEvent \circdef \circval var1 : Word \circspot \\
     \t1 \circvar var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
@@ -708,49 +709,48 @@ method.
     \t1 stack2 := stack1 \circseq Poll \circseq \\
     \t1 stack3 := null \circseq Poll \circseq \\
     \t1 ConsoleConnection\_CCinit(stack2, stack3) \circseq Poll \circseq \\
-    \t1 var1 := stack1 \circseq Poll \circseq \\
-    \t1 {} \cdots {} \\
-    % \t1 stack1 := var1 \circseq Poll \circseq \\
-    % \t1 getClassIDOf!stack1?cid \\
-    % \t2 {} \then ConsoleConnection\_openInputStream(stack1, stack1) \circseq Poll \circseq \\
-    % \t1 var2 := stack1 \circseq Poll \circseq \\
-    % \t1 stack1 := var1 \circseq Poll \circseq \\
-    % \t1 getClassIDOf!stack1?cid \\
-    % \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
-    % \t1 var3 := stack1 \circseq Poll \circseq \\
+    \t1 var2 := stack1 \circseq Poll \circseq \\
+    \t1 stack1 := var2 \circseq Poll \circseq \\
+    \t1 getClassIDOf!stack1?cid \\
+    \t2 {} \then ConsoleConnection\_openInputStream(stack1, stack1) \circseq Poll \circseq \\
+    \t1 var3 := stack1 \circseq Poll \circseq \\
+    \t1 stack1 := var2 \circseq Poll \circseq \\
+    \t1 getClassIDOf!stack1?cid \\
+    \t2 {} \then ConsoleConnection\_openOutputStream(stack1, stack1) \circseq Poll \circseq \\
+    \t1 var4 := stack1 \circseq Poll \circseq \\
     \t1 stack1 := 0 \circseq Poll \circseq \\
-    \t1 var4 := stack1 \circseq Poll \circseq Poll \circseq \\
-    \t1 stack1 := var4 \circseq Poll \circseq \\
+    \t1 var5 := stack1 \circseq Poll \circseq Poll \circseq \\
+    \t1 stack1 := var5 \circseq Poll \circseq \\
     \t1 stack2 := 10 \circseq Poll \circseq \\
     \t1 \circmu Y \circspot \\
     \t2 \circif stack1 \leq stack2 \circthen Poll \circseq \\
-    \t3 stack1 := var2 \circseq Poll \circseq \\
+    \t3 stack1 := var3 \circseq Poll \circseq \\
     \t3 getClassIDOf!stack1?cid \then {} \\
     \t4 \circif cid = ConsoleInputClassID \circthen ConsoleInput\_read(stack1, stack1) \circseq \\
     \t4 \circfi \circseq Poll \circseq \\
     \t3 TPK\_f(stack1, stack1) \circseq Poll \circseq \\
-    \t3 var5 := stack1 \circseq Poll \circseq \\
-    \t3 stack1 := var5 \circseq Poll \circseq \\
+    \t3 var6 := stack1 \circseq Poll \circseq \\
+    \t3 stack1 := var6 \circseq Poll \circseq \\
     \t3 stack2 := 400 \circseq Poll \circseq \\
     \t3 \circif stack1 \leq stack2 \circthen Poll \circseq \\
-    \t4 stack1 := var3 \circseq Poll \circseq \\
-    \t4 stack2 := var5 \circseq Poll \circseq \\
+    \t4 stack1 := var4 \circseq Poll \circseq \\
+    \t4 stack2 := var6 \circseq Poll \circseq \\
     \t4 getClassIDOf!stack1?cid \then {} \\
     \t5 \circif cid = ConsoleOutputClassID \circthen ConsoleOutput\_write(stack1, stack2) \\
-    \t5 \circfi
+    \t5 \circfi \\
     \t3 {} \circelse stack1 > stack2 \circthen Poll \circseq \\
     \t4 {} \cdots {} \\
-    % \t4 stack1 := var3 \circseq Poll \circseq \\
+    % \t4 stack1 := var4 \circseq Poll \circseq \\
     % \t4 stack2 := 0 \circseq Poll \circseq \\
     % \t4 getClassIDOf!stack1?cid \then {} \\
     % \t5 \circif cid = ConsoleOutputClassID \circthen ConsoleOutput\_write(stack1, stack2) \\
     % \t5 \circfi
     \t3 \circfi \circseq Poll \circseq \\
-    \t3 stack1 := var4 \circseq Poll \circseq \\
+    \t3 stack1 := var5 \circseq Poll \circseq \\
     \t3 stack2 := 1 \circseq Poll \circseq \\
     \t3 stack1 := stack1 + stack2 \circseq Poll \circseq \\
     \t3 var4 := stack1 \circseq Poll \\
-    \t3 stack1 := var4 \circseq Poll \circseq \\
+    \t3 stack1 := var5 \circseq Poll \circseq \\
     \t3 stack2 := 10 \circseq Poll \circseq Y \\
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
@@ -769,67 +769,64 @@ method.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
-  \begin{lstlisting}[basicstyle=\ttfamily,keywordstyle=\bf,language=C,
+  \addchange{Corrected C code in
+    Figure~\ref{efs-introduce-variables-c-code-figure}}
+  \begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle=\bf,language=C,
     numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,
-    escapeinside={(*@}{@*)}]
+    escapeinside={(*@}{@*)}, tabsize=2]
 void TPK_handleAsyncEvent(int32_t var1) {
-    int32_t var2, var3, var4, var5, var6;
-    int32_t stack1, stack2, stack3;
-
-    stack1 = newObject(ConsoleConnectionClassID);
-    stack2 = stack1;
-    stack3 = 0;
-    ConsoleConnection_CCinit(stack2, stack3);
-    var1 = stack1;
-    
-    (*@
-    % stack1 = var1;
-    % stack1 = ConsoleConnection_openInputStream(stack1);
-    % var2 = stack1;
-    
-    % stack1 = var1;
-    % stack1 = ConsoleConnection_openOutputStream(stack1);
-    % var3 = stack1;
-    @*)...
-
-    stack1 = 0; (*@ \label{C-code-unnecessary-assignment} @*)
-    var4 = stack1;
-    stack1 = var4; (*@ \label{C-code-unnecessary-assignment-end} @*)
-    stack2 = 10;
-    while (stack1 <= stack2) {
-        stack1 = var2;
-        if (stack1->classID = ConsoleInputClassID) {
-            stack1 = ConsoleInput_read(stack1);
-        }
-        stack1 = TPK_f(stack1);
-        var5 = stack1;
-        
-        stack1 = var5;
-        stack2 = 400;
-        if (stack1 <= stack2) {  
-            stack1 = var3;
-            stack2 = var5;
-            if (stack1->classID = ConsoleOutputClassID) {
-                ConsoleOutput_write(stack1, stack2);
-            }
-        } else {
-            (*@
-            % stack1 = var3;
-            % stack2 = 0;
-            % if (stack1->classID = ConsoleOutputClassID) {
-            %     ConsoleOutput_write(stack1, stack2);
-            % }
-            @*)...
-        }
-          
-        stack1 = var4;
-        stack2 = 1;
-        stack1 = stack1 + stack2;
-        var4 = stack1;
-
-        stack1 = var4;
-        stack2 = 10;
-    }
+	int32_t var2, var3, var4, var5, var6;
+	int32_t stack1, stack2, stack3;
+	stack1 = newObject(ConsoleConnectionID);
+	stack2 = stack1;
+	stack3 = 0;
+	ConsoleConnection_init(stack2, stack3);
+	var2 = stack1;
+	stack1 = var2;
+	if (((Object*) ((uintptr_t)stack1))->classID == ConsoleConnectionID) {
+		ConsoleConnection_openInputStream(stack1, &stack1);
+	}
+	var3 = stack1;
+	stack1 = var2;
+	if (((Object*) ((uintptr_t)stack1))->classID == ConsoleConnectionID) {
+		ConsoleConnection_openOutputStream(stack1, &stack1);
+	}
+	var4 = stack1;
+	stack1 = 0; (*@ \label{C-code-unnecessary-assignment} @*)
+	var5 = stack1;
+	stack1 = var5; (*@ \label{C-code-unnecessary-assignment-end} @*) 
+	stack2 = 10;
+	while (stack1 <= stack2) {
+		stack1 = var3;
+		if (((Object*) ((uintptr_t)stack1))->classID == ConsoleInputID) {
+			ConsoleInput_read(stack1, &stack1);
+		}
+		TPK_(stack1, &stack1);
+		var6 = stack1;
+		stack1 = var6;
+		stack2 = 400;
+		if (stack1 <= stack2) {
+			stack1 = var4;
+			stack2 = var6;
+			if (((Object*) ((uintptr_t)stack1))->classID == ConsoleOutputID) {
+				ConsoleOutput_write(stack1, stack2);
+			}
+		} else {
+			(*@        
+			% stack1 = var4;
+			% stack2 = 0;
+			% if (((java_lang_Object*)  ((uintptr_t)stack1))->classID == javax_safetycritical_io_ConsoleOutputID) {
+			% 	javax_safetycritical_io_ConsoleOutput_write_I_V(stack1, stack2);
+			% }
+                @*)...      
+		}
+		stack1 = var5;
+		stack2 = 1;
+		stack1 = stack2 + stack1;
+		var5 = stack1;
+		stack1 = var5;
+		stack2 = 10;
+	}
 }
 \end{lstlisting}
   \caption{The C code corresponding to $TPK\_handleAsyncEvent$}
