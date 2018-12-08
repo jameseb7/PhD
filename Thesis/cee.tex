@@ -635,9 +635,8 @@ private backing stores they contain, $privateMemoryMap$.
   \t1 {} \cap \{ immortalMemory, missionMemory \} = \emptyset \\
   immortalMemory \neq missionMemory \\
   id~BackingStoreID \cap privateMemoryMap\plus = \emptyset \\
-  \lnot backingStores\limg \{ immortalMemory, missionMemory \} \rimg \\
-  \t1 {} \cup \ran perReleaseMemories \\
-  \t2 {} \subseteq \ran privateMemoryMap
+  (backingStores\limg \{ immortalMemory, missionMemory \} \rimg \\
+  \t1 {} \cup \ran perReleaseMemories) \cap \ran privateMemoryMap = \{\}
 \end{schema}
 Each of the maps in $MemoryAreaManager$ is injective, since each
 memory-area object has a distinct backing store and memory areas
@@ -659,6 +658,15 @@ this ensures each memory area is distinct.
 Finally, the invariant requires that private memories cannot be nested
 inside themselves, and that $immortalMemory$, $missionMemory$ and all
 the $perReleaseMemories$ are not nested private memories.
+The first of these is specified by taking the transitive closure of
+$privateMemoryMap$ to obtain the mapping from backing stores to
+backing stores that are (directly or indirectly) nested within them.
+This is then required to be disjoint from the identity map from a
+backing store to itself.
+The second of these properties is specified in a similar way, stating
+that the backing stores corresponding to $immortalMemory$,
+$missionMemory$ and the $perReleaseMemories$ must be disjoint from
+those in the range of $privateMemoryMap$.
 }
 
 The third part of the state is specified in the $SchedulableManager$
@@ -1214,15 +1222,22 @@ described in Section~\ref{cee-interpreter-subsection}.
 
 We model a subset of Java bytecode sufficient to express a wide
 variety of SCJ programs and illustrate how further features may be
-added, but small enough to permit effective reasoning.
-\addchange{Added text to clarify what is meant by ``effective reasoning''}
+added\deleted{, but small enough to permit effective reasoning}.
+\addchange{Added text to clarify why a subset has been used}
 \added{
-In particular, each of the bytecode instructions included in our
-subset must be handled by the compilation rules defined in
+Additional instructions would be similar to those already defined and
+so would add little value to our work.
+The semantics of any additional instructions and the compilation rules
+required for them can be obtained from the semantics of the
+instructions in our subset and the compilation rules defined in
 Chapter~\ref{strategy-chapter}.
-More compilation rules would require more effort to define and prove,
-but the additional compilation rules would be similar to those already
-defined and so would add little to our strategy.
+Indeed, our prototype implementation of our compilation strategy,
+described in Section~\ref{tool-support-section}, implements some
+additional instructions to better support the examples described in
+Section~\ref{examples-section}.
+For example, many Java bytecode instructions differ only in the types
+they operate over, so such instructions are handled in the same way by
+our compilation strategy.
 We thus restrict our subset to those instructions that represent the
 main features of Java bytecode.
 }
@@ -1534,6 +1549,7 @@ tables, using an approach such as that described in~\cite{alpern2001}.
 The separate \texttt{invokevirtual} and \texttt{invokeinterface}
 instructions allow implementations to easily determine which method
 table should be used.
+
 However, the JVM specification does not require the use of method
 tables to implement method lookup so the semantics of the
 \texttt{invokevirtual} and \texttt{invokeinterface} instructions given
@@ -3290,16 +3306,19 @@ assignment to that parameter at the end of the action representing
 return statements.
 \addchange{Added text to explain changes to C code based on work on
   the prototype}
-\added{
+%\added{
 In the C code resulting from our strategy, we represent these result
 parameters using pointers passed into the function, rather than C
 return values.
-This better represents the semantics corresponding to the \Circus{}
-code.
+We follow this representation rather than that of of icecap, since
+icecap passes values using a stack represented by a pointer passed to
+each function.
+That approach is used in icecap to provide for interaction between
+interpreted and compiled code, which we do not require in our code.
 Also, while we do not consider them in our compilation strategy, it
 may be noted that this approach scales well to \texttt{long} values,
 which occupy two variables.
-}
+%}
 We follow guidelines for safety-critical uses of C variants, such as
 MISRA-C~\cite{MISRA}, and use a single return statement at the end of
 a function.
@@ -3313,6 +3332,7 @@ Restricting ourselves to variables at the start of functions ensures
 the code our strategy generates is compatible with older versions of
 C.
 
+\addchange{Added explanation of types used in our C code}
 \added{
 The types of parameters and variables in our \Circus{} model is
 $Word$, representing the type of 32-bit JVM words.
@@ -3338,12 +3358,18 @@ semantics conferred by the struct manager, they can be translated to
 the corresponding C code by a simple lexical transformation, as shown
 in Table~\ref{embedding-table}.
 
+\addchange{Added explanation of \texttt{uintptr\_t} cast in struct
+  accesses}
 \added{
-Note that we also perform a cast to \texttt{uintptr\_t}, the unsigned
-integer type from C99 with the same width as a pointer, to ensure the
-cast is performed correctly on systems where pointers are not 32-bit.
+Note that our C code for accesses to structs involves a cast from
+\texttt{int32\_t} to a pointer type.
+In order to ensure this cast is performed correctly on systems where
+pointers are not 32-bit, we also perform a cast to
+\texttt{uintptr\_t}, the unsigned integer type from C99 with the same
+width as a pointer.
 This matches icecap, where a cast to a \texttt{pointer} type, defined
-in the same way as \texttt{uintptr\_t} is performed.
+in the same way as \texttt{uintptr\_t} is performed as part of struct
+accesses.
 }
 Accesses to static fields are performed similarly, using the
 $getStatic$ and $putStatic$ channels to represent accesses to a global
@@ -3598,20 +3624,19 @@ corresponding C code performs the same when evaluated.
 }
 \added{
 Our compilation strategy consists of individual compilation rules,
-which are proved from laws of known correctness, as explained in
-Section~\ref{proofs-of-laws-section}.
+which are proved from laws whose corrctness has been previously
+established, as explained in Section~\ref{proofs-of-laws-section}.
 We can thus have confidence that the semantics of the C code that
 results from the strategy has the same semantics as the bytecode input
 to our interpreter model.
-Since we also produce a prototype implementation of this compilation
-strategy, described in Section~\ref{tool-support-section}, we can
-easily produce the ouput of the strategy and compare it to the
-corresponding code produced by icecap, indeed we do so for some
+In addition, since we also produce a prototype implementation of this
+compilation strategy, described in Section~\ref{tool-support-section},
+we can easily produce the ouput of the strategy and compare it to the
+corresponding code produced by icecap; indeed we do so for some
 examples in Section~\ref{examples-section}.
-This allows us to ensure that the C code produced is sensible and
-hence, since the generated C code corresponds to the semantics of the
-bytecode in the intepreter model, validates the semantics in our
-interpreter model as correct.
+Since the generated C code corresponds to the semantics of the
+bytecode in the intepreter model, this validates the semantics in our
+interpreter model.
 }
 % explain that the transformations of the strategy are provably
 % correct (reference proofs-of-laws-section.
