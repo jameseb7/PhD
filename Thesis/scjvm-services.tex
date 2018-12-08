@@ -1030,9 +1030,9 @@ two due to the small number of services it provides.
   implementations of the SCJ memory manager}
 \added{
 Note that our model is written as an abstract specification, so it
-contains invariants and allows for nondeterminism that need not be
-present in an implementation, but which are useful for reasoning about
-the model.
+records invariants and allows for nondeterminism that need not be
+present in an implementation, but are useful for reasoning about the
+model.
 As an example of this, we note that the memory manager model consists
 of 583 lines of code (as measured in \Circus{} \LaTeX{} syntax,
 ignoring blank lines and comments), whereas icecap's
@@ -1042,20 +1042,18 @@ ignoring blank lines and comments), whereas icecap's
 which contains the code for backing store operations, consists of just
 238 lines of code (ignoring blank lines and comments).
 The SCJ memory manager implementation on JOP described
-in~\cite{schoeberl2011a}
-is even smaller, containing just 148 lines of code (ignoring blank
-lines and comments)\footnote{The class containing the JOP SCJ
-  memory manager implementation can be found at
+in~\cite{schoeberl2011a} is even smaller, containing just 148 lines of
+code (ignoring blank lines and comments)\footnote{The class containing
+  the JOP SCJ memory manager implementation can be found at
   \url{https://github.com/jop-devel/jop/blob/master/java/target/src/common/com/jopdesign/sys/Memory.java}}.
 
-The reason these files are smaller than our memory manager model is
-that our memory manager contains invariants specifying the
-relationship of the different components of the memory manager,
-particularly the invariants of $GlobalMemoryManager$ and
-$GlobalStoresManager$, which specify the relationships between backing
-stores.
-Note that \texttt{vm.Memory} from icecap represents a single backing
-store, corresponding to the $BackingStore$ type in our model.
+The reason these implementations are smaller than our model is that we
+have invariants specifying the relationship of the different
+components of the memory manager, particularly the invariants of
+$GlobalMemoryManager$ and $GlobalStoresManager$, which specify the
+relationships between backing stores.
+In addition, \texttt{vm.Memory} from icecap represents a single
+backing store, corresponding to the $BackingStore$ type in our model.
 The $GlobalMemoryManager$ is not explicitly implemented in icecap;
 instead the $stores$ map (which is a component of
 $GlobalMemoryManager$) corresponds to the set of pointers to all the
@@ -1064,19 +1062,19 @@ pointers forming the range of the map.
 The mapping specified by the $stores$ map thus captures the implicit
 mapping between a pointer and the object to which it points.
 The $childRelation$ component of the $GlobalMemoryManager$ exists only
-to specify the structure of $stores$, so it is not present in icecap,
-while the $rootBackingStore$ identifier corresponds to the
+to specify the structure of $stores$, so it is not present in icecap
+either, while the $rootBackingStore$ identifier corresponds to the
 \texttt{vm.Memory} pointer stored in the \texttt{ImmortalMemory}.
 While its explicit inclusion in icecap is not necessary, the inclusion
 of the $GlobalMemoryManager$ in our model allows us to specify the
 global structure of backing stores and ensure that each of the
 operations preserve that structure.
 
-Our memory manager model also includes nondeterminism, such as
-avoiding specifying at which end of a backing store nested backing
-stores should be allocated, which results in a slightly more verbose
-specification in terms of sets of memory, but avoids unduly
-constraining an implementation.
+Our memory manager model also includes nondeterminism.
+For example, we avoid specifying at which end of a backing store
+nested backing stores should be allocated.
+This results in a more verbose specification in terms of sets
+of memory, but avoids unduly constraining an implementation.
 Similar considerations apply to the other parts of our model.
 }
 
