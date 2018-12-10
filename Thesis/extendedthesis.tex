@@ -12,11 +12,11 @@
 \usepackage{algorithmicx}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
-\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4]{biblatex}
+\usepackage[backend=bibtex,style=numeric-comp,sorting=nyt,sortcites=true,maxnames=4,defernumbers=true]{biblatex}
 \usepackage{placeins}
 \usepackage{mathdots}
 \usepackage{multicol}
-\usepackage{listings}
+\usepackage[savemem]{listings}
 \usepackage{vwcol}
 \usepackage{fixltx2e}
 \usepackage{comment}
@@ -29,6 +29,9 @@
 \usepackage{letltxmacro}
 \usepackage[normalem]{ulem}
 \usepackage{tikz-uml}
+\usepackage{titling}
+\usepackage{lscape}
+\usepackage{pdflscape}
 
 \makeatletter
 \renewcommand{\boolean}{\zordop{\csym@boolean}}
@@ -434,6 +437,11 @@ applied. We discuss it here.
 \label{compilation-rules-appendix}
 
 \input{compilationrules.tex}
+
+\chapter{C Code of Examples}
+\label{example-c-code-appendix}
+
+\input{examplecode.tex}
 
 \chapter{Algebraic Laws}
 \label{algebraic-laws-appendix}
