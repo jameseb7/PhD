@@ -543,6 +543,9 @@ the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
+  \addchange{Corrected variable numbering error in
+    Figure\protect~\protect\ref{efs-introduce-variables-mid-example-figure}}
+  \changed{
   \begin{circusaction}
     TPK\_handleAsyncEvent \circdef \circval arg1 : Word \circspot \\
     \t1 \circvar var1 var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot \\
@@ -593,6 +596,7 @@ the $arg1, \ldots, arg{<}n{>}$ parameters for the method.
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
   \end{circusaction}
+  }
   \caption{$TPK\_handleAsyncEvent$ after its variables have been introduced}
   \label{efs-introduce-variables-mid-example-figure}
 \end{figure}
@@ -701,6 +705,9 @@ method.
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
   \small
+  \addchange{Corrected variable numbering error in
+    Figure\protect~\protect\ref{efs-introduce-variables-example-figure}}
+  \changed{
   \begin{circusaction}
     TPK\_handleAsyncEvent \circdef \circval var1 : Word \circspot \\
     \t1 \circvar var2, var3, var4, var5, var6 : Word \circspot \circvar stack1, stack2, stack3 : Word \circspot Poll \circseq \\
@@ -755,6 +762,7 @@ method.
     \t2 {} \circelse stack1 > stack2 \circthen \Skip \\
     \t2 \circfi \circseq Poll
   \end{circusaction}
+  }
   \caption{$TPK\_handleAsyncEvent$ at the end of the Introduce
     Variables step}
   \label{efs-introduce-variables-example-figure}
@@ -770,8 +778,8 @@ method.
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
   \addchange{Corrected C code in
-    Figure~\ref{efs-introduce-variables-c-code-figure}}
-  \begin{lstlisting}[basicstyle=\ttfamily\small,keywordstyle=\bf,language=C,
+    Figure\protect~\protect\ref{efs-introduce-variables-c-code-figure}}
+  \begin{lstlisting}[basicstyle=\ttfamily\small\ifShowChanges\setZColors{changed}\color{changed}{}\fi,keywordstyle=\bf,language=C,
     numbers=left,numberstyle=\scriptsize,stepnumber=1, numbersep=5pt,
     escapeinside={(*@}{@*)}, tabsize=2]
 void TPK_handleAsyncEvent(int32_t var1) {

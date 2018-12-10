@@ -87,6 +87,8 @@
 \newcommand{\addchange}[1]{%
   \ifShowChanges%
   \refstepcounter{changes}%
+  [Change \arabic{changes}]%
+  \phantomsection%
   \label{change\arabic{changes}}%
   \index[changes]{\expandafter\sortgref\arabic{changes}\sortgref@{%
       \hyperref[change\arabic{changes}]{%
@@ -95,7 +97,6 @@
       }: {#1}}\removecomma|erasenumber}%
 %  \xindex{\arabic{changes}}{@\arabic{changes}: #1}
 %  \index[changes]{Comment \textbf{C\expandafter\sortgref#1\sortgref}|BH{\arabic{changes}}}%
-  [Change \arabic{changes}]%
   \fi%
 }%
 
