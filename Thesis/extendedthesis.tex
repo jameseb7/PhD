@@ -50,6 +50,11 @@
 
 \CountDefsfalse
 
+\definecolor{black}{rgb}{0,0,0}
+\definecolor{ZedBoxColor}{rgb}{0,0,0}
+\definecolor{AnnotationColor}{rgb}{0,0,0}
+\definecolor{ZedColor}{rgb}{0,0,0}
+
 % definitions for compatibility with the change tracking mechanism
 \newcommand{\added}[1]{#1}
 \newcommand{\changed}[1]{#1}
@@ -494,12 +499,5 @@ applied. We discuss it here.
 
 {\raggedright \printbibliography[resetnumbers=true]}
 \end{refsection}
-
-\ifShowChanges
-\clearpage
-\phantomsection
-\addcontentsline{toc}{chapter}{Index of Changes}
-\printindex[changes]
-\fi
 
 \end{document}
