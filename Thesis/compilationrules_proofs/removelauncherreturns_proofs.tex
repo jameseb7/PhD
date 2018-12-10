@@ -1,0 +1,909 @@
+\begin{crproof}[\nameref{InterpreterInitEPC-frameStack-assump-intro-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \lschexpract InterpreterInitEPC \rschexpract
+    \end{array}\\
+    \circrefines_A & Definition of $InterpreterInitEPC$ \\
+    \begin{array}{l}
+      \lschexpract [InterpreterStateEPC~' | frameStack' = \langle\rangle] \rschexpract
+    \end{array}\\
+    \circrefines_A &  schema calculus \\
+    \begin{array}{l}
+      \lschexpract [InterpreterStateEPC~' | frameStack' = \langle\rangle \land \# frameStack = 0] \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{schema-assump-intro-law}] \\
+    \begin{array}{l}
+      \lschexpract [InterpreterStateEPC~' | frameStack' = \langle\rangle \land \# frameStack' = 0 ] \rschexpract \circseq \{ \# frameStack = 0 \}
+    \end{array}\\
+    \circrefines_A & schema calculus \\
+    \begin{array}{l}
+      \lschexpract [InterpreterStateEPC~' | frameStack' = \langle\rangle ] \rschexpract \circseq \{ \# frameStack = 0 \}
+    \end{array}\\
+    \circrefines_A & Definition of $InterpreterInitEPC$ \\
+    \begin{array}{l}
+      \lschexpract InterpreterInitEPC \rschexpract \circseq \{ \# frameStack = 0 \}
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+
+\begin{crproof}[\nameref{frameStack-assump-NewStackFrame-dist-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
+      \lschexpract InterpreterNewStackFrame[c/class?,m/methodID?,args/methodArgs?] \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
+      \{\# frameStack = k\} \circseq \\
+      \lschexpract InterpreterNewStackFrame[c/class?,m/methodID?,args/methodArgs?] \rschexpract
+    \end{array}\\
+    = & Definition of $InterpreterNewStackFrame$ \\
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
+      \{\# frameStack = k\} \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 \exists numLocals? : \nat | numLocals? = c.methodLocals~m @ \\
+      \t1 \exists stackSize? : \nat | stackSize? = c.methodStackSize~m @ \\
+      \t1 \exists StackFrame~' | StackFrameInit[args/initLocals?] @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle \land \\
+      \t1 currentClass' = class?]\rschexpract
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 \exists numLocals? : \nat | numLocals? = c.methodLocals~m @ \\
+      \t1 \exists stackSize? : \nat | stackSize? = c.methodStackSize~m @ \\
+      \t1 \exists StackFrame~' | StackFrameInit[args/initLocals?] @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle \land \\
+    \t1 currentClass' = class?]\rschexpract \circseq \\
+      \{ \# frameStack = k + 1\}
+    \end{array}\\
+    =  & Definition of $InterpreterNewStackFrame$ \\
+    \begin{array}{l}
+      \{\# frameStack = k\} \circseq \\
+      \lschexpract InterpreterNewStackFrame[c/class?,m/methodID?,args/methodArgs?] \rschexpract \circseq \\
+      \{ \# frameStack = k + 1\}
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+
+\begin{crproof}[\nameref{frameStack-assump-non-return-dist-rule}]
+  \raggedright
+  We consider each case separately:
+  \begin{itemize}
+  \item $A = \Skip$
+    \begin{argue}
+      \begin{array}{l}
+      \{\# frameStack = k\} \circseq \Skip \circseq B
+      \end{array}\\
+      = & Law~[\nameref{seq-unitr-law}]\\
+      \begin{array}{l}
+      \{\# frameStack = k\} \circseq B
+      \end{array}\\
+      = & Law~[\nameref{assump-assump-intro-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+      = & Law~[\nameref{seq-unitr-law}]\\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \Skip \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+    \end{argue}
+  \item $A = Poll$
+    \begin{argue}
+      \begin{array}{l}
+      \{\# frameStack = k\} \circseq Poll \circseq B
+      \end{array}\\
+      = & Law~[\nameref{assump-assump-intro-law}] \\
+      \begin{array}{l}
+      \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq Poll \circseq B
+      \end{array}\\
+      \circrefines_A & Lemma~\ref{Poll-assumption-distribution-lemma} \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq Poll \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+    \end{argue}
+  \item $A = HandleAconst\_nullEPC$
+    \begin{argue}
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq HandleAconst\_nullEPC \circseq B
+      \end{array}\\
+      = & Law~[\nameref{assump-assump-intro-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq HandleAconst\_nullEPC \circseq B
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and definition of $HandleAconst\_nullEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq \lschexpract InterpreterAconst\_nullEPC \rschexpract \circseq B
+      \end{array}\\
+      = & Definition of $InterpreterAconst\_nullEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq \\
+        \lschexpract \exists \Delta StackFrame @ StackFrameACONST\_NULL \land PromoteStackFrameOpEPC \rschexpract \circseq B
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-schema-dist-law}] and defintion of $PromoteStackFrameOpEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \\
+        \lschexpract \exists \Delta StackFrame @ StackFrameACONST\_NULL \land PromoteStackFrameOpEPC \rschexpract \circseq \\
+       \{\# frameStack = k\} \circseq B
+      \end{array}\\
+      = & Definition of $InterpreterAconst\_nullEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \lschexpract InterpreterAconst\_nullEPC \rschexpract \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and definition of $HandleAconst\_nullEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq HandleAconst\_nullEPC \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+    \end{argue}
+  \item $A = HandleDupEPC$ is similar to the
+    $A = HandleAconst\_nullEPC$, since $InterpreterDupEPC$ is defined
+    in terms of $PromoteStackFrameOpEPC$, as for
+    $InterpreterAconst\_nullEPC$
+  \item $A = HandleAloadEPC(lvi)$
+    \begin{argue}
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq HandleAloadEPC(lvi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{assump-assump-intro-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq HandleAloadEPC(lvi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and definition of $HandleAloadEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq \\
+        (\circval variableIndex : \nat \circspot
+        \lschexpract InterpreterAloadEPC \rschexpract)(lvi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{val-def-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq \{\# frameStack = k\} \circseq \\
+        (\circvar variableIndex : \nat \circspot
+        variableIndex := lvi \circseq
+        \lschexpract InterpreterAloadEPC \rschexpract) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq 
+        (\circvar variableIndex : \nat \circspot
+        \{\# frameStack = k\} \circseq \\
+        variableIndex := lvi \circseq
+        \lschexpract InterpreterAloadEPC \rschexpract) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{assump-assign-dist-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq 
+        (\circvar variableIndex : \nat \circspot
+        variableIndex := lvi \circseq \\
+        \{\# frameStack = k\} \circseq
+        \lschexpract InterpreterAloadEPC \rschexpract) \circseq B
+      \end{array}\\
+      \circrefines_A & Similar to $A = HandleAconst\_nullEPC$ case \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq 
+        (\circvar variableIndex : \nat \circspot
+        variableIndex := lvi \circseq \\
+        \lschexpract InterpreterAloadEPC \rschexpract \circseq \{\# frameStack = k\}) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extr-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq 
+        (\circvar variableIndex : \nat \circspot
+        variableIndex := lvi \circseq \\
+        \lschexpract InterpreterAloadEPC \rschexpract) \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+      = & Law~[\nameref{val-def-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq 
+        (\circval variableIndex : \nat \circspot
+        \lschexpract InterpreterAloadEPC \rschexpract)(lvi) \circseq \\
+        \{\# frameStack = k\} \circseq B
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and definition of $HandleAloadEPC$ \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq HandleAloadEPC(lvi) \circseq \{\# frameStack = k\} \circseq B
+      \end{array}\\
+    \end{argue}
+  \item $A = HandleAstoreEPC(lvi)$ is similar to the
+    $A = HandleAloadEPC(lvi)$ case
+  \item $A = HandleIaddEPC$ is similar to the
+    $A = HandleAconst\_nullEPC$ case, since $InterpreterIaddEPC$ is defined
+    in terms of $PromoteStackFrameOpEPC$, as for
+    $InterpreterAconst\_nullEPC$
+  \item $A = HandleIconstEPC(n)$ is similar to the
+    $A = HandleAloadEPC(lvi)$ case
+  \item $HandleInegEPC$ is similar to the $A = HandleAconst\_nullEPC$,
+    since $InterpreterInegEPC$ is defined in terms of
+    $PromoteStackFrameOpEPC$, as for $InterpreterAconst\_nullEPC$
+  \item $A = \lschexpract InterpreterPopEPC \rschexpract$ is similar
+    to the $A = HandleAconst\_nullEPC$ case, since
+    $InterpreterPopEPC$ is defined in terms of
+    $PromoteStackFrameOpEPC$, as for $InterpreterAconst\_nullEPC$
+  \item $A = \lschexpract InterpreterPushEPC \rschexpract$ is similar
+    to the $A = HandleAconst\_nullEPC$ case, since $InterpreterPushEPC$
+    is defined in terms of $PromoteStackFrameOpEPC$, as for
+    $InterpreterAconst\_nullEPC$
+  \item $\lschexpract \exists argsToPop? 
+    == m @ InterpreterStackFrameInvoke \rschexpract$ is similar to the
+    $A = HandleAconst\_nullEPC$ case, since
+    $InterpreterStackFrameInvoke$ is defined in terms of
+    $PromoteStackFrameOpEPC$, as for $InterpreterAconst\_nullEPC$
+  \item $HandleNewEPC(cpi)$
+    \begin{argue}
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (HandleNewEPC)(cpi) \circseq B
+      \end{array}\\
+      \circrefines_A & Similar to start of proof of the $A = HandleAloadEPC(lvi)$ case \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{assump-alt-dist-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen \{\# frameStack = k\} \circseq \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \{\# frameStack = k\} \circseq \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-output-prefix-dist-move-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then {} \\
+        \t2 (\{\# frameStack = k\} \circseq newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract) \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \{\# frameStack = k\} \circseq \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-input-prefix-dist-move-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 (\{\# frameStack = k\} \circseq \lschexpract InterpreterPushEPC[oid/value?] \rschexpract) \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \{\# frameStack = k\} \circseq \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      \circrefines_A & Similar to $A = HandleAconst\_nullEPC$ case \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 (\lschexpract InterpreterPushEPC[oid/value?] \rschexpract \circseq \{\# frameStack = k\}) \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \{\# frameStack = k\} \circseq \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{input-prefix-seq-assoc-law}] and Law~[\nameref{output-prefix-seq-assoc-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \circseq \{\# frameStack = k\} \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \{\# frameStack = k\} \circseq \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{seq-zerol-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \circseq \{\# frameStack = k\} \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \Chaos \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{seq-zerol-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \circseq \{\# frameStack = k\} \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \Chaos \circseq \{\# frameStack = k\} \\
+        \t1 \circfi) \circseq B
+      \end{array}\\
+      = & Law~[\nameref{alt-seq-dist-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{\# frameStack = k\} \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \Chaos  \\
+        \t1 \circfi \circseq \{\# frameStack = k\}) \circseq B
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (\circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
+        \t1 \circif cpIndex \in classRefIndices~currentClass \circthen {} \\
+        \t2 newObject!thread!(classOf~cpIndex) \then newObjectRet?oid \then {} \\
+        \t2 \lschexpract InterpreterPushEPC[oid/value?] \rschexpract \\
+        \t1 {} \circelse cpIndex \notin classRefIndices~currentClass \circthen \Chaos  \\
+        \t1 \circfi \circseq \{\# frameStack = k\}) \circseq B
+      \end{array}\\
+      \circrefines_A & Similar to end of proof of the $A = HandleAloadEPC(lvi)$ case \\
+      \begin{array}{l}
+        \{\# frameStack = k\} \circseq
+        (HandleNewEPC)(cpi) \circseq
+        \{\# frameStack = k\} \circseq B
+      \end{array}\\
+    \end{argue}
+  \item $HandleGetfieldEPC(cpi)$
+  \item $HandlePutfieldEPC(cpi)$
+  \item $HandleGetstaticEPC(cpi)$
+  \item $HandlePutstaticEPC(cpi)$
+  \end{itemize}
+\end{crproof}
+
+\begin{crproof}[\nameref{frameStack-assump-return-dist-rule}]
+  We consider the two cases separately:
+  \begin{itemize}
+    \item HandleAreturnEPC
+  \begin{argue}
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq HandleAreturnEPC \circseq B
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq \{ \# frameStack = k \} \circseq HandleAreturnEPC \circseq B
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $HandleAreturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC \rschexpract \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \{ \# frameStack = k \} \circseq \\
+      \t1 \lschexpract InterpreterAreturnEPC \rschexpract \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Definition of $InterpreterAreturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \{ \# frameStack = k \} \circseq \\
+      \t1 \lschexpract [\Delta InterpreterState | \\
+      \t2 frameStack \neq \langle\rangle \land front~frameStack \neq \langle\rangle \land \\
+      \t2 \exists returnValue : Word @ \\
+      \t3 (\exists \Delta StackFrame | StackFramePop[returnValue/value!] @ \\
+      \t4 \theta StackFrame = last~frameStack) \land \\
+      \t3 (\exists \Delta StackFrame | StackFramePush[returnValue/value?] @ \\
+      \t4 \theta StackFrame = last~(front~frameStack) \land \\
+      \t4 frameStack' = (front~(front~frameStack)) \cat \langle \theta StackFrame~' \rangle \land \\
+      \t4 pc' = (last~frameStack').storedPC \land \\
+      \t4 currentClass' = (last~frameStack').frameClass)] \\
+      \t2 \lor [\Delta InterpreterState; returnValue! : Word | \\
+      \t3 \# frameStack = 1 \land \\
+      \t3 (\exists \Delta StackFrame | StackFramePop[returnValue!/value!] @ \\
+      \t4 \theta StackFrame = last~frameStack) \land \\
+      \t3 frameStack' = front~frameStack] \rschexpract \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] and schema calculus \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract [\Delta InterpreterState | \\
+      \t2 frameStack \neq \langle\rangle \land front~frameStack \neq \langle\rangle \land \\
+      \t2 \exists returnValue : Word @ \\
+      \t3 (\exists \Delta StackFrame | StackFramePop[returnValue/value!] @ \\
+      \t4 \theta StackFrame = last~frameStack) \land \\
+      \t3 (\exists \Delta StackFrame | StackFramePush[returnValue/value?] @ \\
+      \t4 \theta StackFrame = last~(front~frameStack) \land \\
+      \t4 frameStack' = (front~(front~frameStack)) \cat \langle \theta StackFrame~' \rangle \land \\
+      \t4 pc' = (last~frameStack').storedPC \land \\
+      \t4 currentClass' = (last~frameStack').frameClass)] \\
+      \t2 \lor [\Delta InterpreterState; returnValue! : Word | \\
+      \t3 \# frameStack = 1 \land \\
+      \t3 (\exists \Delta StackFrame | StackFramePop[returnValue!/value!] @ \\
+      \t4 \theta StackFrame = last~frameStack) \land \\
+      \t3 frameStack' = front~frameStack] \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Definition of $InterpreterAreturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $CheckLauncherReturn$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 (\circval returnValue : Word \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)(returnValue)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{var-rename-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 (\circval returnValue : Word \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)(retVal)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 (\circvar returnValue : Word \circspot returnValue := retVal \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-dist-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \Skip \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{assump-output-prefix-dist-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \\
+      \t4 {} \then (\{ \# frameStack = k-1 \} \circseq \Skip) \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \Skip \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{seq-unitr-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \\
+      \t4 {} \then \{ \# frameStack = k-1 \} \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \{ \# frameStack = k-1 \} \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \\
+      \t4 {} \then (\Skip \circseq \{ \# frameStack = k-1 \}) \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \circseq \{ \# frameStack = k-1 \} \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{output-prefix-seq-assoc-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \\
+      \t4 {} \then \Skip \circseq \{ \# frameStack = k-1 \} \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \circseq \{ \# frameStack = k-1 \} \\
+      \t2 \circfi)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{alt-seq-dist-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi \circseq \{ \# frameStack = k-1 \})) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extr-law}]\\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot \{ \# frameStack = k-1 \} \circseq returnValue := retVal \circseq \\
+      \t2 \{ \# frameStack = k-1 \} \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen \{ \# frameStack = k-1 \} \circseq \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)) \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circvar returnValue : Word \circspot returnValue := retVal \circseq \\
+      \t2 \circif frameStack = \emptyset \circthen {} \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)) \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar retVal : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC[retVal/returnValue, retVal'/returnValue'] \rschexpract \circseq \\
+      \t1 (\circval returnValue : Word \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen {} \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)(retVal)) \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+    = & Law~[\nameref{var-rename-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC \rschexpract \circseq \\
+      \t1 (\circval returnValue : Word \circspot \\
+      \t2 \circif frameStack = \emptyset \circthen {} \\
+      \t3 executeMethodRet!thread!returnValue \then \Skip \\
+      \t2 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t2 \circfi)(returnValue)) \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $CheckLauncherReturn$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterAreturnEPC \rschexpract \circseq \\
+      \t1 (CheckLauncherReturn)(returnValue)) \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $HandleAreturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq HandleAreturnEPC \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+  \end{argue}
+
+
+
+  \item HandleReturnEPC
+  \begin{argue}
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq HandleReturnEPC \circseq B
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq \{ \# frameStack = k \} \circseq HandleReturnEPC \circseq B
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $HandleReturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \{ \# frameStack = k \} \circseq \\
+      \t1 \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Definition of $InterpreterReturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \{ \# frameStack = k \} \circseq \\
+      \t1 \lschexpract [\Delta InterpreterState | \\
+      \t2 frameStack \neq \langle\rangle \land \\
+      \t2 frameStack' = (front~frameStack) \land \\
+      \t2 frameStack' \neq \langle\rangle \implies \\
+      \t3 pc' = (last~frameStack').storedPC \land \\
+      \t3 currentClass' = (last~frameStack').frameClass] \rschexpract \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] and schema calculus \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract [\Delta InterpreterState | \\
+      \t2 frameStack \neq \langle\rangle \land \\
+      \t2 frameStack' = (front~frameStack) \land \\
+      \t2 frameStack' \neq \langle\rangle \implies \\
+      \t3 pc' = (last~frameStack').storedPC \land \\
+      \t3 currentClass' = (last~frameStack').frameClass] \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    = & Definition of $InterpreterReturnEPC$ \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq (\circvar returnValue : Word \circspot \\
+      \t1 \lschexpract InterpreterReturnEPC \rschexpract \circseq \\
+      \t1 \{ \# frameStack = k-1 \} \circseq \\
+      \t1 CheckLauncherReturn(returnValue)) \circseq B
+    \end{array}\\
+    \circrefines_A & Similar to end of the proof of the previous case \\
+    \begin{array}{l}
+      \{ \# frameStack = k \} \circseq HandleReturnEPC \circseq \{ \# frameStack = k-1 \} \circseq B
+    \end{array}\\
+  \end{argue}
+\end{itemize}
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-alt-distl-rule}]\hfill\\
+    This follows directly from Law~[\nameref{assump-alt-dist-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-alt-distr-rule}]\hfill\\
+  This follows directly from Law~[\nameref{alt-seq-dist-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-var-distl-rule}]\hfill\\
+  This follows directly from Law~[\nameref{var-seq-extl-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-var-distr-rule}]\hfill\\
+  This follows directly from Law~[\nameref{var-seq-extr-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-output-prefix-distl-rule}]\hfill\\
+  This follows directly from Law~[\nameref{assump-output-prefix-dist-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-output-prefix-distr-rule}]\hfill\\
+  This follows directly from Law~[\nameref{output-prefix-seq-assoc-law}.
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-input-prefix-distl-rule}]\hfill\\
+  This follows directly from Law~[\nameref{assump-input-prefix-dist-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-input-prefix-distr-rule}]\hfill\\
+  This follows directly from Law~[\nameref{input-prefix-seq-assoc-law}].
+\end{crproof}
+
+\pagebreak
+\begin{crproof}[\nameref{restricted-assump-infinite-loop-distl-rule}]
+    There are two cases. 
+    If $A$ is not productive (i.e.\ it does not communicate on any
+    channels), then recursion $\circmu X \circspot A \circseq X$ is
+    equivalent to $\Chaos$.
+    Since $\{g\}$ does not communicate on any channel,
+    $\{g\} \circseq A$ is also not productive, so in this case we have:
+    \begin{circus}
+      \{g\} \circseq (\circmu X \circspot A \circseq X)
+      =
+      \{g\} \circseq \Chaos
+      =
+      \{g\} \circseq (\circmu X \circspot \{g\} \circseq A \circseq X)
+    \end{circus}
+    
+    If $A$ is productive then the proviso of
+    Law~[\nameref{assump-rec-distl-law}] is met and, from the provisio
+    of the rule, we have, for all $X$:
+    \begin{circus}
+      \{g\} \circseq A \circseq X \circrefines_A A \circseq \{g\} \circseq X
+    \end{circus}
+    So the result follows from an application of
+    Law~[\nameref{assump-assump-intro-law}]
+    and
+    Law~[\nameref{assump-rec-distl-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-infinite-loop-distr-rule}]\hfill\\
+  From Law~[\nameref{assump-elim-law}] and
+  Law~[\nameref{seq-unitl-law}], we have, for all $X$:
+    \begin{circus}
+      \{g\} \circseq A \circseq X \circseq \{g\} \circrefines_A A \circseq X \circseq \{g\}
+    \end{circus}
+    So the result follows from an application of
+    Law~[\nameref{assump-assump-intro-law}]
+    and 
+    Law~[\nameref{rec-assump-distr-law}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-mid-while-loop-distl-rule}]
+  As with the proof of
+  Rule~[\nameref{restricted-assump-infinite-loop-distl-rule}], there
+  are multiple cases to consider.
+  If $A$ and $B$ do not communicate on any channels, then we must
+  consider whether the loop on the left-hand-side of the rule
+  terminates or not.
+  If it does not, then the loop is equivalent to
+  $A \circseq \circif h \circthen B \circseq \Chaos \circelse \lnot
+  h \circthen \Skip \circfi$, since the recursion would become
+  $\Chaos$.
+  In this case, the inclusion of the assumption, as in the loop on
+  the right-hand-side of the rule, would not affect its termination,
+  so would be equivalent to
+  $\{g\} \circseq A \circseq \circif h \circthen B \circseq \Chaos
+  \circelse \lnot h \circthen \Skip \circfi$.
+  We thus have,
+  \begin{argue}
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot A \circseq \\
+        \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Above reasoning \\
+    \begin{array}{l}
+      \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq \Chaos \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      \{g\} \circseq \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq \Chaos \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    = & Above reasoning \\
+    \begin{array}{l}
+      \{g\} \circseq (\circmu X \circspot \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}\\
+  \end{argue}
+  
+  If $A$ and $B$ do not communicate on any channels but the loop
+  does terminate, then we can, for a given initial value, unroll the
+  loop a finite number of times to reach a state where the loop
+  terminates.
+  We can then distribute the assumption through the loop using the
+  assumptions of the rule and Law~[\nameref{assump-alt-dist-law}],
+  and then roll the loop back together, with the assumption at the
+  start to yield the desired result.
+  
+  The remaining case is if $A$ or $B$ does communicate on some
+  channels, then we can apply Law~[\nameref{assump-rec-distl-law}],
+  since, for all $X$:
+  \begin{argue}
+    \begin{array}{l}
+      \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] \\
+    \begin{array}{l}
+      \{g\} \circseq \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & Assumption of rule \\
+    \begin{array}{l}
+      \{g\} \circseq A \circseq \{g\} \circseq \\
+      \t1 \circif h \circthen B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-dist-move-law}] \\
+    \begin{array}{l}
+      \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen \{g\} \circseq B \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \{g\} \circseq \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & Assumption of rule \\
+    \begin{array}{l}
+      \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \{g\} \circseq \Skip \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{g\} \circseq A \circseq \\
+      \t1 \circif h \circthen B \circseq \{g\} \circseq X \\
+      \t1 {} \circelse \lnot h \circthen \Skip \\
+      \t1 \circfi
+    \end{array}\\
+  \end{argue}
+  So the desired result follows from an application of
+  Law~[\nameref{assump-assump-intro-law}] and
+  Law~[\nameref{assump-rec-distl-law}].
+\end{crproof}
+  
+\begin{crproof}[\nameref{restricted-assump-mid-while-loop-distr-rule}]\hfill\\
+    We have, for all $X$:
+    \begin{argue}
+      \begin{array}{l}
+        \{g\} \circseq A \circseq \\
+        \t1 \circif h \circthen B \circseq \{g\} \circseq X \circseq \{g\} \\
+        \t1 {} \circelse \lnot h \circthen \Skip \\
+        \t1 \circfi
+      \end{array}\\
+      \circrefines_A & Proviso of rule \\
+      \begin{array}{l}
+        A \circseq \{g\} \circseq \\
+        \t1 \circif h \circthen B \circseq \{g\} \circseq X \circseq \{g\} \\
+        \t1 {} \circelse \lnot h \circthen \Skip \\
+        \t1 \circfi
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-alt-dist-move-law}] \\
+      \begin{array}{l}
+        A \circseq \\
+        \t1 \circif h \circthen \{g\} \circseq B \circseq \{g\} \circseq X \circseq \{g\} \\
+        \t1 {} \circelse \lnot h \circthen  \{g\} \circseq \Skip \\
+        \t1 \circfi
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+      \begin{array}{l}
+        A \circseq \\
+        \t1 \circif h \circthen B \circseq \{g\} \circseq X \circseq \{g\} \\
+        \t1 {} \circelse \lnot h \circthen \{g\} \circseq \Skip \\
+        \t1 \circfi
+      \end{array}\\
+      = & Law~[\nameref{seq-unitl-law}] and Law~[\nameref{seq-unitr-law}] \\
+      \begin{array}{l}
+        A \circseq \\
+        \t1 \circif h \circthen B \circseq \{g\} \circseq X \circseq \{g\} \\
+        \t1 {} \circelse \lnot h \circthen \Skip \circseq \{g\} \\
+        \t1 \circfi
+      \end{array}\\
+      = Law~[\nameref{alt-seq-dist-law}] \\
+      \begin{array}{l}
+        A \circseq \\
+        \t1 \circif h \circthen B \circseq \{g\} \circseq X \\
+        \t1 {} \circelse \lnot h \circthen \Skip \\
+        \t1 \circfi \circseq \{g\}
+      \end{array}\\
+    \end{argue}
+    So the result follows from an application of
+    Law~[\nameref{assump-assump-intro-law}]
+    and 
+    Law~[\nameref{rec-assump-distr-law}].
+  \end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-do-while-loop-distl-rule}]\hfill\\
+  This follows from similar reasoning as for Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-do-while-loop-distr-rule}]\hfill\\
+  This follows from similar reasoning as for Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-while-loop-distl-rule}]\hfill\\
+  This follows from similar reasoning as for Rule~[\nameref{restricted-assump-mid-while-loop-distl-rule}].
+\end{crproof}
+
+\begin{crproof}[\nameref{restricted-assump-while-loop-distr-rule}]\hfill\\
+  This follows from similar reasoning as for Rule~[\nameref{restricted-assump-mid-while-loop-distr-rule}].
+\end{crproof}
+
