@@ -343,7 +343,7 @@ and adds 5 to it.
   \setlength{\belowdisplayskip}{0cm}
   \scriptsize
   \begin{minipage}{0.5\textwidth}
-  \addchange{Expanded Figure~\ref{bytecode-expansion-example-figure}
+  \addchange{Expanded Figure\protect~\protect\ref{bytecode-expansion-example-figure}
     to include all bytecode instructions and split it into two columns
     to fit the page}
   \changed{
@@ -470,7 +470,7 @@ Section~\ref{data-refinement-of-objects-section}.
   \setlength{\belowdisplayskip}{0cm}
   \scriptsize
   \addchange{Changed
-    Figure~\ref{forward-sequence-introduction-example-figure} to
+    Figure\protect~\protect\ref{forward-sequence-introduction-example-figure} to
     include all nodes reachable from the start of a method}
   \changed{
   \begin{circus}
@@ -650,7 +650,7 @@ performed on methods that have no unresolved method calls.
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\belowdisplayskip}{0cm}
   \addchange{Changed
-    Figure~\ref{loop-and-conditional-introduction-example-figure} to
+    Figure\protect~\protect\ref{loop-and-conditional-introduction-example-figure} to
     include all the instructions in each block}
   \changed{
   \scriptsize
@@ -761,13 +761,11 @@ This can be seen in Figure~\ref{TPK_f-separation-example-figure},
 where the $TPK\_f$ action has been created by copying the sequence of
 actions for the \texttt{f()} method of \texttt{TPK} from the $pc = 43$
 case of Figure~\ref{forward-sequence-introduction-example-figure}.
-\addchange{Added mention of reference to $TPK\_f$ shown earlier in
-  Figure~\ref{loop-and-conditional-introduction-example-figure}}
-\added{
-The $pc = 43$ branch itself is replaced with a reference to this
+\addchange{Added mention of reference to $TPK\protect\_f$ shown earlier in
+  Figure\protect~\protect\ref{loop-and-conditional-introduction-example-figure}}
+\added{The $pc = 43$ branch itself is replaced with a reference to this
 $TPK\_f$ action, as can be seen in
-Figure~\ref{loop-and-conditional-introduction-example-figure}.
-}
+Figure~\ref{loop-and-conditional-introduction-example-figure}.}
 As this step is relatively simple, we do not explain it in a separate
 section.
 \begin{figure}[tp!]
@@ -776,7 +774,7 @@ section.
   \setlength{\zedleftsep}{0cm}
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\belowdisplayskip}{0cm}
-  \addchange{Moved $TPK\_f$ action to its own figure}
+  \addchange{Moved $TPK\protect\_f$ action to its own figure}
   \moved{
   \begin{circus}
     TPK\_f \circdef HandleAloadEPC(0) \circseq pc := 44 \circseq Poll \circseq HandleAloadEPC(0) \circseq pc := 45 \circseq Poll \circseq \\
@@ -786,7 +784,7 @@ section.
   \end{circus}
   }
   \added{
-  \caption{The $TPK\_f$ method action after it has been separated}
+  \caption{The $TPK\_f$ method action after it has been separated}  
   \label{TPK_f-separation-example-figure}
   }
 \end{figure}
@@ -798,7 +796,7 @@ section.
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\belowdisplayskip}{0cm}
   \addchange{Changed
-    Figure~\ref{method-call-resolution-example-figure} to
+    Figure\protect~\protect\ref{method-call-resolution-example-figure} to
     include the full content of all nodes reachable from the start of
     a method}
   \changed{
@@ -1015,7 +1013,7 @@ procedures.
 %   \setlength{\zedleftsep}{0cm}
 %   \setlength{\abovedisplayskip}{0cm}
 %   \setlength{\belowdisplayskip}{0cm}
-%   \addchange{Inserted full definition of $TPK\_handleAsyncEvent$ and
+%   \addchange{Inserted full definition of $TPK\protect\_handleAsyncEvent$ and
 %     separated it into its own figure}
 %   \changed{
 %   \scriptsize
@@ -1166,6 +1164,9 @@ Algorithm~\ref{epc-algorithm}, when all loops and conditionals have
 been introduced, all the methods have been separated out, and all
 method calls have been resolved, is shown in
 Figure~\ref{final-method-separation-example-figure}.
+\addchange{Changed explanation of
+  Figure\protected~\protected\ref{final-method-separation-example-figure}
+  to reflect changes}
 \added{
 At this point, the actions at $pc = 0$ have been separated into a
 $TPK\_APEHinit$ action, and the actions at $pc = 7$ have been
@@ -1189,8 +1190,8 @@ $pc$ values now redundant.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
-  \addchange{Inserted full defintion of $TPK\_handleAsyncEvent$ in
-    Figure~\ref{pc-elimination-HandleAsyncEvent-example-figure}}
+  \addchange{Inserted full defintion of $TPK\protect\_handleAsyncEvent$ in
+    Figure\protect~\protect\ref{pc-elimination-HandleAsyncEvent-example-figure}}
   \changed{
   \scriptsize
   \begin{circus}

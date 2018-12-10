@@ -1479,8 +1479,14 @@ As a simplifying assumption, we consider that all values consist of
 only a single virtual machine word.
 This means that \texttt{long} and \texttt{double} values are not
 handled.
+
+\addchange{Remove statement about how \texttt{long} values in SCJ API
+  methods are handled, since they are handled normally in the
+  prototype}
+\deleted{
 Any SCJ API methods that take \texttt{long} or \texttt{double}
 arguments are viewed as taking \texttt{int} or \texttt{float} instead.
+}
 The reason for this assumption is that handling of two word values
 makes little difference at the level of the formal model and our
 approach can be easily extended to deal with more types.
@@ -3304,7 +3310,7 @@ assignment to that parameter at the end of the action representing
 return statements.
 \addchange{Added text to explain changes to C code based on work on
   the prototype}
-%\added{
+\added{
 In the C code resulting from our strategy, we represent these result
 parameters using pointers passed into the function, rather than C
 return values.
@@ -3316,7 +3322,7 @@ interpreted and compiled code, which we do not require in our code.
 Also, while we do not consider them in our compilation strategy, it
 may be noted that this approach scales well to \texttt{long} values,
 which occupy two variables.
-%}
+}
 We follow guidelines for safety-critical uses of C variants, such as
 MISRA-C~\cite{MISRA}, and use a single return statement at the end of
 a function.
@@ -3356,8 +3362,8 @@ semantics conferred by the struct manager, they can be translated to
 the corresponding C code by a simple lexical transformation, as shown
 in Table~\ref{embedding-table}.
 
-\addchange{Added explanation of \texttt{uintptr\_t} cast in struct
-  accesses}
+\addchange{Added explanation of \texttt{uintptr\protect\_t} cast in
+  struct accesses}
 \added{
 Note that our C code for accesses to structs involves a cast from
 \texttt{int32\_t} to a pointer type.
