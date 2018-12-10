@@ -1,3 +1,6 @@
+{\setlength{\zedleftsep}{0cm}
+\setlength{\zedindent}{0cm}
+
 
 \begin{crproof}[\nameref{refine-invokestatic-rule}]
   \begin{argue}
@@ -119,7 +122,8 @@
       \t1 \circif cpi \in methodRefIndices~currentClass \circthen {} \\
       \t2 \{ cpIndex = cpi \} \circseq  mid := methodOf~currentClass~cpi \circseq \{ cpIndex = cpi \} \circseq \\
       \t2 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t2 \{ cpIndex = cpi \} \circseq Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
+      \t2 \{ cpIndex = cpi \} \circseq \\
+      \t2 Invoke(classOf~currentClass~cpIndex, mid, poppedArgs, \true) \\
       \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
       \t1 \circfi)
     \end{array}\\
@@ -158,7 +162,7 @@
       \t1 {} \circelse cpi \notin methodRefIndices~currentClass \circthen \Chaos \\
       \t1 \circfi)
     \end{array}\\
-    = & Law~[\nameref{assump-assump-intro-law}], invariant of $InterpreterState$, and global assumption of passing bytecode verification \\
+    = & Law~[\nameref{assump-assump-intro-law}], $InterpreterState$ invariant, and bytecode constraints \\
     \begin{array}{l}
       \{ pc = i \} \circseq \{ cpi \in methodRefIndices~currentClass \} \circseq \\
       \t1 (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
@@ -191,7 +195,8 @@
     = & Law~[\nameref{assump-assump-intro-law}], invariant of $InterpreterState$, and definition of $c$ and $m$ \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
@@ -199,7 +204,8 @@
     = & Law~[\nameref{assump-assign-dist-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq  \{ mid = m \} \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~mid @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
@@ -207,7 +213,8 @@
     = & Law~[\nameref{assump-seq-subst-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq  \{ mid = m \} \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
@@ -215,7 +222,8 @@
     \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 \{ mid = m \} \circseq Invoke(classOf~currentClass~cpi, mid, poppedArgs, \true))
@@ -223,7 +231,8 @@
     = & Law~[\nameref{assump-seq-subst-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 \{ mid = m \} \circseq Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
@@ -231,7 +240,8 @@
     \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
@@ -239,7 +249,8 @@
     \circrefines_A & Law~[\nameref{assump-assign-dist-law}] and Law~[\nameref{assump-schema-dist-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
@@ -248,28 +259,34 @@
     = & Law~[\nameref{assump-assump-intro-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ c = classOf~currentClass~cpi \} \circseq \\
       \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
     \end{array}\\
     = & Law~[\nameref{assump-seq-subst-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \\
+      \t1 \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
       \t1 Invoke(classOf~currentClass~cpi, m, poppedArgs, \true))
     \end{array}\\
     = & Law~[\nameref{assump-seq-subst-law}] \\
     \begin{array}{l}
       \{ pc = i \} \circseq (\circvar mid : MethodID; poppedArgs : \seq Word \circspot \\
-      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
+      \t1 \{ cpi \in methodRefIndices~currentClass \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \\
       \t1 mid := methodOf~currentClass~cpi \circseq \\
       \t1 \lschexpract \exists argsToPop? == methodArguments~m @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
+      \t1 \{ currentClass.constantPool~cpi = MethodRef~(c,m) \} \\
+      \t1 \circseq \{ c = classOf~currentClass~cpi \} \circseq \\
       \t1 Invoke(c, m, poppedArgs, \true))
     \end{array}\\
     \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
@@ -318,10 +335,12 @@
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
       \t3 {} \circelse pc = i \circthen A \circseq \\
-      \t4 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot \\
+      \t5 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
-      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t6 classInfo/class?, \\
+      \t6 m/methodID?, \\
+      \t6 poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
       \t3 {} \circelse pc = k \circthen M \\
       \t3 \cdots \\
@@ -340,10 +359,12 @@
       \t2 Invoke(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot \\
+      \t4 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
-      \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t5 classInfo/class?, \\
+      \t5 m/methodID?, \\
+      \t5 poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t3 Poll \circseq M \circseq pc := j + 1 \\
       \t2 {} \circelse pc = k \circthen M \\
       \t2 \cdots \\
@@ -355,10 +376,12 @@
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
       \t3 {} \circelse pc = i \circthen A \circseq \\
-      \t4 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot \\
+      \t5 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
-      \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
+      \t6 classInfo/class?, \\
+      \t6 m/methodID?, \\
+      \t6 poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
       \t3 {} \circelse pc = k \circthen M \\
       \t3 \cdots \\
@@ -374,7 +397,8 @@
       \t1 {} \circelse pc = i \circthen A \circseq \{ pc = j \} \circseq \\
       \t2 \circvar poppedArgs : \seq Word \circspot \\
       \t2 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-      \t2 (\circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word; \circval static : \boolean \circspot \\
+      \t2 (\circval classID : ClassID; \circval method : MethodID; \\
+      \t4 \circval args : \seq Word; \circval static : \boolean \circspot \\
       \t3 InvokeResumeThread(classID, method, args, static) \\
       \t3 {} \extchoice InvokeSuspend(classID, method, static) \\
       \t3 {} \extchoice InvokeRegister(classID, method, args, static) \\
@@ -391,8 +415,8 @@
       \t3 {} \extchoice InvokeOther(classID, method, args, static))(c, m, poppedArgs, s) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot \\
+      \t4 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
       \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t3 Poll \circseq M \circseq pc := j + 1 \\
@@ -406,8 +430,8 @@
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
       \t3 {} \circelse pc = i \circthen A \circseq \\
-      \t4 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot \\
+      \t5 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
       \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
@@ -445,8 +469,8 @@
       \t3 {} \extchoice InvokeOther(classID, method, args, static)) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot \\
+      \t4 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
       \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t3 Poll \circseq M \circseq pc := j + 1 \\
@@ -460,8 +484,8 @@
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
       \t3 {} \circelse pc = i \circthen A \circseq \\
-      \t4 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot \\
+      \t4 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
       \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
@@ -499,8 +523,8 @@
       \t3 {} \extchoice InvokeOther(c, m, poppedArgs, s)) \circseq Poll \circseq \\
       \t2 \circif \cdots \\
       \t2 {} \circelse pc = i \circthen A \circseq \\
-      \t3 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t3 (\circvar poppedArgs : \seq Word \circspot \\
+      \t4 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t4 \lschexpract InterpreterNewStackFrame[\\
       \t5 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t3 Poll \circseq M \circseq pc := j + 1 \\
@@ -514,8 +538,8 @@
       \t2 {} \circelse frameStack \neq \emptyset \circthen {} \\
       \t3 \circif \cdots \\
       \t3 {} \circelse pc = i \circthen A \circseq \\
-      \t4 (\circvar poppedArgs : \seq Word \circspot
-      \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+      \t4 (\circvar poppedArgs : \seq Word \circspot \\
+      \t4 \lschexpract \exists argsToPop? == e @ InterpreterStackFrameInvoke \rschexpract \circseq \\
       \t5 \lschexpract InterpreterNewStackFrame[\\
       \t6 classInfo/class?, m/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
       \t4 Poll \circseq M \circseq pc := j + 1 \\
@@ -2305,3 +2329,4 @@
   \end{argue}
 \end{crproof}
 
+}
