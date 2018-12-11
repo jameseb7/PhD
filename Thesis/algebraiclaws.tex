@@ -270,7 +270,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law c.28 in Marcel's thesis
+% Law C.28 in Marcel's thesis
 \begin{law}[schema-assump-intro]
   \label{schema-assump-intro-law}
   \begin{circus}
@@ -490,7 +490,16 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Corollary 3.1 in Marcel's thesis and the deifinition of hiding
+% From Law C.139 in Marcel's thesis
+\begin{law}[var-subst]
+  If $y$ is not free in $A$
+  \label{var-subst-law}
+  \begin{circus}
+    A(x) = \circvar y : T \circspot y := x \circseq A(y)
+  \end{circus}
+\end{law}
+
+% From Corollary 3.1 in Marcel's thesis and the definition of hiding
 \begin{law}[schema-hide-var-conv]
   \label{schema-hide-var-conv-law}
   If $x$ and $x'$ have type $T$ in $S$ then,
@@ -542,6 +551,14 @@ proofs of our compilation rules.
     \circvar x : T \circspot c?y \then A
     =
     c?y \then (\circvar x : T \circspot A)
+  \end{circus}
+\end{law}
+
+% Law[assign-seq-col] in Alvaro's thesis
+\begin{law}[assign-seq-col]
+  \label{assign-seq-col-law}
+  \begin{circus}
+    (x := e_1 \circseq x := e_2) = x := e_2[e_1/x]
   \end{circus}
 \end{law}
 
@@ -720,6 +737,14 @@ proofs of our compilation rules.
     \circif \circelse_i g_i \circthen \circvar x : T \circspot A_i \circfi
     =
     \circvar x : T \circspot \circif \circelse_i g_i \circthen A_i \circfi 
+  \end{circus}
+\end{law}
+
+% trivial consequence of definition of sequential composition
+\begin{law}[assign-elim]
+  \label{assign-elim-law}
+  \begin{circus}
+    x := x = \Skip
   \end{circus}
 \end{law}
 

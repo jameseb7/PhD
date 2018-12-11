@@ -1,0 +1,763 @@
+\begin{crproof}[\nameref{arguments-introduction-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?, args/methodArgs?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & schema calculus \\
+    \begin{array}{l}
+      \lschexpract \exists methodArgs? == args @ \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & assumption $\# args = n$ and $args$ is a sequence \\
+    \begin{array}{l}
+      \lschexpract \exists methodArgs? == \langle args~1, \ldots, args~n \rangle @ \\
+      \t1 \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] $n$ times and assumption of rule \\
+    \begin{array}{l}
+      \circvar arg1 : Word \circspot arg1 := args~1 \circseq \\
+      {} \cdots {} \\
+      \circvar arg{<}n{>} \circspot arg{<}n{>} := args~n \circseq  \\
+      \lschexpract \exists methodArgs? == \langle args~1, \ldots, args~n \rangle @ \\
+      \t1 \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{assign-assump-intro-law}] $n$ times \\
+    \begin{array}{l}
+      \circvar arg1 : Word \circspot arg1 := args~1 \circseq \{ arg1 = args~1 \} \circseq \\
+      {} \cdots {} \\
+      \circvar arg{<}n{>} \circspot arg{<}n{>} := args~n \circseq \{ arg{<}n{>} = args~n \} \circseq  \\
+      \lschexpract \exists methodArgs? == \langle args~1, \ldots, args~n \rangle @ \\
+      \t1 \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{var-seq-extl-law}], Law~[\nameref{assump-assign-dist-law}], Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitr-law}]\\
+    \begin{array}{l}
+      \circvar arg1 : Word \circspot arg1 := args~1 \circseq \\
+      {} \cdots {} \\
+      \circvar arg{<}n{>} \circspot arg{<}n{>} := args~n \circseq \\
+      \{ arg1 = args~1 \} \circseq \cdots \circseq \{ arg{<}n{>} = args~n \} \circseq \\
+      \lschexpract \exists methodArgs? == \langle args~1, \ldots, args~n \rangle @ \\
+      \t1 \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Symmetricity of equality and Law~[\nameref{assump-seq-subst-law}] $n$ times \\
+    \begin{array}{l}
+      \circvar arg1 : Word \circspot arg1 := args~1 \circseq \\
+      {} \cdots {} \\
+      \circvar arg{<}n{>} \circspot arg{<}n{>} := args~n \circseq \\
+      \{ arg1 = args~1 \} \circseq \cdots \circseq \{ arg{<}n{>} = args~n \} \circseq \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t1 \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitr-law}] \\
+    \begin{array}{l}
+      \circvar arg1 : Word \circspot arg1 := args~1 \circseq \\
+      {} \cdots {} \\
+      \circvar arg{<}n{>} \circspot arg{<}n{>} := args~n \circseq \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t1 \lschexpract InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] $n$ times \\
+    \begin{array}{l}
+      (\circval arg1, \ldots, arg{<}n{>} : Word \circspot \\
+      \t1 \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      \t1 Poll \circseq M \circseq \lschexpract InterpreterReturn \rschexpract \\
+      )(args~1, \ldots, args~n)
+    \end{array}
+  \end{argue}
+\end{crproof}
+
+\begin{crproof}[\nameref{HandleReturnEPC-stackFrame-introduction-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}], where $i$ is some unused variable name \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~\nameref{assign-assump-intro-law} \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \{ i = \# frameStack + 1 \} \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-subst-law}] and $last~s = s~(\# s)$ \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \{ last~frameStack = frameStack~(i-1) \} \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      \{ last~frameStack = frameStack~i \} \circseq \\
+      A \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      \{ last~frameStack = frameStack~i \} \circseq \\
+      A[frameStack~i/last~frameStack] \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{var-subst-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      \{ last~frameStack = frameStack~i \} \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot stackFrame := frameStack~i \circseq \\
+      A[stackFrame/last~frameStack]) \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot stackFrame := frameStack~i \circseq \\
+      A[stackFrame/last~frameStack]) \circseq \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq A[stackFrame/last~frameStack]) \circseq \\
+      \lschexpract InterpreterReturn \rschexpract
+    \end{array}\\
+    = & Definition of $InterpreterReturn$ \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq A[stackFrame/last~frameStack]) \circseq \\
+      \lschexpract [\Delta InterpreterState |
+        frameStack \neq \langle\rangle \land frameStack' = (front~frameStack)]	
+    \end{array}\\
+    = & Law~[\nameref{assign-schema-conv-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq A[stackFrame/last~frameStack]) \circseq \\
+      \{frameStack \neq \langle\rangle\} \circseq frameStack := (front~frameStack)	
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq A[stackFrame/last~frameStack]) \circseq \\
+      frameStack := (front~frameStack)	
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extr-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq A[stackFrame/last~frameStack] \circseq \\
+      frameStack := (front~frameStack))
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-dist-law}] and $frameStack$ is not free in $A[stackFrame/last~frameStack]$ \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t2 InterpreterNewStackFrame[c/class?, m/methodID?] \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Definition of $InterpreterNewStackFrame$ \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      \t1 [\Delta InterpreterState; methodArgs? : \seq Word | \\
+      \t2 m \in \dom c.methodEntry \land \\
+      \t2 \exists numLocals? : \nat | numLocals? = c.methodLocals~m @ \\
+      \t2 \exists stackSize? : \nat | stackSize? = c.methodStackSize~m @ \\
+      \t2 \exists StackFrame~' | StackFrameInit[methodArgs?/initLocals?,c/class?] @ \\
+      \t3 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Definition of $StackFrameInit$ and schema calculus \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 \exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Schema calculus \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 \exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Schema calculus and definition of $last~frameStack'$ \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 \exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle \land \\
+      \t2 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack'.localVariables \\
+      \t2 \# last~frameStack'.localVariables = c.methodLocals~m \\
+      \t2 last~frameStack'.operandStack = \langle\rangle \\
+      \t2 last~frameStack'.stackSize = c.methodStackSize~m \\
+      \t2 last~frameStack'.frameClass = c]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Schema calculus to reduce scope of existential quantifier \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle) \land \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack'.localVariables \\
+      \t1 \# last~frameStack'.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack'.operandStack = \langle\rangle \\
+      \t1 last~frameStack'.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack'.frameClass = c]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle) \land \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack'.localVariables \\
+      \t1 \# last~frameStack'.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack'.operandStack = \langle\rangle \\
+      \t1 last~frameStack'.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack'.frameClass = c]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assign-assump-intro-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \{ i = \# frameStack + 1 \}\\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle) \land \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack'.localVariables \\
+      \t1 \# last~frameStack'.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack'.operandStack = \langle\rangle \\
+      \t1 last~frameStack'.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack'.frameClass = c]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{schema-assump-intro-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \{ i = \# frameStack + 1 \} \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle) \land \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack'.localVariables \\
+      \t1 \# last~frameStack'.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack'.operandStack = \langle\rangle \\
+      \t1 last~frameStack'.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack'.frameClass = c]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \{ \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack.localVariables \\
+      \t1 \# last~frameStack.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack.operandStack = \langle\rangle \\
+      \t1 last~frameStack.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack.frameClass = c \} \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Schema calculus \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \{ i = \# frameStack + 1 \} \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \{ \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack.localVariables \\
+      \t1 \# last~frameStack.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack.operandStack = \langle\rangle \\
+      \t1 last~frameStack.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack.frameClass = c \} \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \{ last~frameStack = frameStack~i \} \circseq \\
+      \{ \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack.localVariables \\
+      \t1 \# last~frameStack.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack.operandStack = \langle\rangle \\
+      \t1 last~frameStack.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack.frameClass = c \} \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \{ last~frameStack = frameStack~i \land \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix last~frameStack.localVariables \\
+      \t1 \# last~frameStack.localVariables = c.methodLocals~m \\
+      \t1 last~frameStack.operandStack = \langle\rangle \\
+      \t1 last~frameStack.stackSize = c.methodStackSize~m \\
+      \t1 last~frameStack.frameClass = c \} \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-subst-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \{\langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix (frameStack~i).localVariables \\
+      \t1 \# (frameStack~i).localVariables = c.methodLocals~m \\
+      \t1 (frameStack~i).operandStack = \langle\rangle \\
+      \t1 (frameStack~i).stackSize = c.methodStackSize~m \\
+      \t1 (frameStack~i).frameClass = c \} \circseq \\
+      stackFrame := frameStack~i \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assign-schema-conv-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC; \Xi InterpreterStateFS; \\
+      \t1 arg1?, \ldots, arg{<}n{>}? : Word | \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix (frameStack~i).localVariables \\
+      \t1 \# (frameStack~i).localVariables = c.methodLocals~m \\
+      \t1 (frameStack~i).operandStack = \langle\rangle \\
+      \t1 (frameStack~i).stackSize = c.methodStackSize~m \\
+      \t1 (frameStack~i).frameClass = c \land \\
+      \t1 stackFrame' = frameStack~i] \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{schema-refinement-law}] \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC; \Xi InterpreterStateFS; \\
+      \t1 arg1?, \ldots, arg{<}n{>}? : Word | \\
+      \t1 \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix stackFrame'.localVariables \\
+      \t1 \# stackFrame'.localVariables = c.methodLocals~m \\
+      \t1 stackFrame'.operandStack = \langle\rangle \\
+      \t1 stackFrame'.stackSize = c.methodStackSize~m \\
+      \t1 stackFrame'.frameClass = c \land \\
+      \t1  = frameStack~i] \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Definition of $Init{<}c{>}\_{<}m{>}SF$ \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-dist-law}] and $frameStack$ not written by $Init{<}c{>}\_{<}m{>}SF$ \\
+    \begin{array}{l}
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \circvar i : \nat \circspot i := \# frameStack + 1 \circseq \\
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \lschexpract [\Delta InterpreterState | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 (\exists StackFrame~' | \\
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix localVariables' \\
+      \t2 \# localVariables' = c.methodLocals~m \\
+      \t2 operandStack' = \langle\rangle \\
+      \t2 stackSize' = c.methodStackSize~m \\
+      \t2 frameClass' = c @ \\
+      \t2 frameStack' = frameStack \cat \langle \theta StackFrame~' \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Schema calculus \\
+    \begin{array}{l}
+      \lschexpract \exists tmp : StackFrameEPC @ \\
+      \t1 [tmp, tmp' : StackFrameEPC |
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t2 \# tmp'.localVariables = c.methodLocals~m \\
+      \t2 tmp'.operandStack = \langle\rangle \\
+      \t2 tmp'.stackSize = c.methodStackSize~m \\
+      \t2 tmp'.frameClass = c] \comp \\
+      \t1 [\Delta InterpreterState; tmp : StackFrameEPC | \\
+      \t2 m \in \dom c.methodEntry \land \\
+      \t2 frameStack' = frameStack \cat \langle tmp \rangle)]
+      % \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
+      %\t2 InterpreterNewStackFrame[c/class?, m/methodID?]
+      \rschexpract \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{schema-hide-var-conv-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t2 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t2 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t2 \# tmp'.localVariables = c.methodLocals~m \\
+      \t2 tmp'.operandStack = \langle\rangle \\
+      \t2 tmp'.stackSize = c.methodStackSize~m \\
+      \t2 tmp'.frameClass = c] \comp \\
+      \t1 [\Delta InterpreterState; tmp : StackFrameEPC | \\
+      \t2 m \in \dom c.methodEntry \land \\
+      \t2 frameStack' = frameStack \cat \langle tmp \rangle)] \rschexpract) \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{schema-comp-seq-conv-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract \circseq \\
+      \lschexpract [\Delta InterpreterState; tmp : StackFrameEPC | \\
+      \t1 m \in \dom c.methodEntry \land \\
+      \t1 frameStack' = frameStack \cat \langle tmp \rangle)] \rschexpract) \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assign-schema-conv-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract \circseq \\
+      \{ m \in \dom c.methodEntry \} \circseq \\
+      frameStack := frameStack \cat \langle tmp \rangle) \circseq \\
+      frameStack := (front~frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extr-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract \circseq \\
+      \{ m \in \dom c.methodEntry \} \circseq \\
+      frameStack := frameStack \cat \langle tmp \rangle \circseq \\
+      frameStack := (front~frameStack)) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-col-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract \circseq \\
+      \{ m \in \dom c.methodEntry \} \circseq \\
+      frameStack := front~(frameStack \cat \langle tmp \rangle)) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Simplification \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract \circseq \\
+      \{ m \in \dom c.methodEntry \} \circseq \\
+      frameStack := frameStack) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assign-elim-law}] and Law~[\nameref{seq-unitr-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract \circseq \\
+      \{ m \in \dom c.methodEntry \}) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitr-law}] \\
+    \begin{array}{l}
+      (\circvar tmp : StackFrameEPC \circspot \\
+      \lschexpract [tmp, tmp' : StackFrameEPC |
+      \t1 \# \langle arg1, \ldots, arg{<}n{>} \rangle \leq c.methodLocals~m \\
+      \t1 \langle arg1, \ldots, arg{<}n{>} \rangle \prefix tmp'.localVariables \\
+      \t1 \# tmp'.localVariables = c.methodLocals~m \\
+      \t1 tmp'.operandStack = \langle\rangle \\
+      \t1 tmp'.stackSize = c.methodStackSize~m \\
+      \t1 tmp'.frameClass = c] \rschexpract) \circseq \\
+      (\circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack]) \\	
+    \end{array}\\
+    = & Law~[\nameref{var-schema-intro-law}] \\
+    \begin{array}{l}
+      \circvar stackFrame : StackFrameEPC \circspot \\
+      \lschexpract Init{<}c{>}\_{<}m{>}SF \rschexpract \circseq A[stackFrame/last~frameStack] \\	
+    \end{array}\\
+  \end{argue}
+\end{crproof}
