@@ -116,9 +116,11 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
   %\setlength{\zedtab}{0.4cm}
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
-  Given an action name $M$ and $n : \nat$, if
-  $arg1$, \ldots, $arg{<}n{>}$ are not free in $M$ and are distinct from
-  $c$, $m$ and $args$, then
+  Given an action name $M$ and $n : \nat$, if $arg1$, \ldots,
+  $arg{<}n{>}$ are not free in $M$\addchange{Added needed provisio to
+  Rule\protect~[\protect\nameref{arguments-introduction-rule}]}\deleted{and are distinct from $c$,
+  $m$ and $args$, then}\added{, are distinct from $c$, $m$ and $args$,
+  and $\# args = n$}, then
   \begin{circus}
     \begin{array}{l}
       \lschexpract InterpreterNewStackFrame[ \\
@@ -199,14 +201,15 @@ with the number of arguments, $numArgs$, passed to it.
   \setlength{\zedindent}{0.5cm}
   %\setlength{\zedleftsep}{0pt}
   Given $n : \nat$, if the only occurrences of $frameStack$ in $A$ are
-  in the expression $last~frameStack$ and the length of $frameStack$
-  does not change throughout $A$, then
+  in the expression $last~frameStack$, the length of $frameStack$ does
+  not change throughout $A$, and $stackFrame$ is not free in $A$,
+  then
   \begin{circus}
     \begin{array}{l}
       \lschexpract \exists methodArgs? == \langle arg1, \ldots, arg{<}n{>} \rangle @ \\
       \t2 InterpreterNewStackFrame[ \\
       \t3 c/class?, \\
-      \t3 m/methodID? \rschexpract \circseq \\
+      \t3 m/methodID?] \rschexpract \circseq \\
       A \circseq \lschexpract InterpreterReturn \rschexpract
     \end{array}
     \circrefines_A
@@ -222,7 +225,7 @@ with the number of arguments, $numArgs$, passed to it.
     arg1?, \ldots, arg{<}n{>}? : Word \\
     stackFrame' : StackFrameEPC
   \where
-    \langle arg1?, \ldots, arg{<}n{>}? \rangle \subseteq stackFrame'.localVariables \\
+    \langle arg1?, \ldots, arg{<}n{>}? \rangle \prefix stackFrame'.localVariables \\
     \# stackFrame'.localVariables = c.methodLocals~m \\
     stackFrame'.operandStack = \langle\rangle \\
     stackFrame'.frameClass = c \\
