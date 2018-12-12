@@ -249,7 +249,17 @@ proofs of our compilation rules.
   \begin{circus}
     (\circval x : T \circspot A)(e)
     =
-    (\circvar x : T \circspot x := e \circspot A)
+    (\circvar x : T \circspot x := e \circseq A)
+  \end{circus}
+\end{law}
+
+% Definition B.38 in Marcel's thesis
+\begin{law}[res-def]
+  \label{res-def-law}
+  \begin{circus}
+    (\circres x : T \circspot A)(y)
+    =
+    (\circres x : T \circspot A \circseq y := x)
   \end{circus}
 \end{law}
 

@@ -1750,3 +1750,198 @@ then,
     \end{argue}
   \end{crproof}
 \end{lem}
+
+\begin{lem}[$class$-assump-$AllocateObject$-dist]
+  \label{class-assump-AllocateObject-dist-lemma}
+  If $g$ only references $class$, then
+  \begin{circus}
+    \{ g \} \circseq AllocateObject(t, s, o)
+    \circrefines_A
+    AllocateObject(t, s, o) \circseq \{ g \}
+  \end{circus}
+  \begin{crproof}
+    \begin{argue}
+      \begin{array}{l}
+        \{ g \} \circseq AllocateObject(t, s, o)
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and definition of $AllocateObject$ \\
+      \begin{array}{l}
+        \{ g \} \circseq \\
+        (\circval thread : ThreadID; \circval size : \nat; \circres objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos)(t, s, o)
+      \end{array}\\
+      = & Law~[\nameref{val-def-law}] and Law~[\nameref{res-def-law}] \\
+      \begin{array}{l}
+        \{ g \} \circseq \\
+        (\circvar thread : ThreadID; size : \nat \circspot thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{assump-assign-dist-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \{ g \} \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extl-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \{ g \} \circseq \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-output-prefix-dist-move-law}] and Law~[\nameref{assump-input-prefix-dist-move-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then \{ g \} \circseq \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{assump-extchoice-distr-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (\{ g \} \circseq MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 \{ g \} \circseq MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-input-prefix-dist-move-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then (\{ g \} \circseq \Skip) \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then (\{ g \} \circseq \Chaos)) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{seq-unitr-law}] and Law~[\nameref{seq-unitl-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then (\Skip \circseq \{ g \}) \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then (\{ g \} \circseq \Chaos)) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{seq-zerol-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then (\Skip \circseq \{ g \}) \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then (\{ g \} \circseq \Chaos \circseq \{ g \})) \circseq \\
+        \t1 o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{extchoice-seq-distr-law}], Law~[\nameref{input-prefix-seq-assoc-law}] and Law~[\nameref{output-prefix-seq-assoc-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then (\{ g \} \circseq \Chaos)) \circseq \\
+        \t1 \{ g \} \circseq o := objectID)
+      \end{array}\\
+      = & Law~[\nameref{assump-assign-dist-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then (\{ g \} \circseq \Chaos)) \circseq \\
+        \t1 \{ g \} \circseq o := objectID \circseq \{ g \})
+      \end{array}\\
+      = & Law~[\nameref{var-seq-extr-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot \\
+        \t1 \{ g \} \circseq thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then (\{ g \} \circseq \Chaos)) \circseq \\
+        \t1 \{ g \} \circseq o := objectID) \circseq \{ g \}
+      \end{array}\\
+      \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+      \begin{array}{l}
+        (\circvar thread : ThreadID; size : \nat \circspot thread, size := t, s \circseq \\
+        \t1 \circvar objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos) \circseq \\
+        \t1 o := objectID) \circseq \{ g \}
+      \end{array}\\
+      = & Law~[\nameref{val-def-law}] and Law~[\nameref{res-def-law}] \\
+      \begin{array}{l}
+        (\circval thread : ThreadID; \circval size : \nat; \circres objectID : ObjectID \circspot \\
+        \t1  MMallocateMemory!(last~(backingStoreStacks~thread))!size \then {} \\
+        \t1  MMallocateMemoryRet?objectID \then {} \\
+        \t1 (MMreport?r \prefixcolon (r = MMokay) \then \Skip \\
+        \t1 {} \extchoice {} \\
+        \t1 MMreport?r \prefixcolon (r \neq MMokay) \then \Chaos))(t, s, o) \circseq \{ g \}
+      \end{array}\\
+      = & Law~[\nameref{copy-rule-law}] and definition of $AllocateObject$ \\
+      \begin{array}{l}
+        AllocateObject(t, s, o) \circseq \{ g \}
+      \end{array}\\
+    \end{argue}
+  \end{crproof}
+\end{lem}

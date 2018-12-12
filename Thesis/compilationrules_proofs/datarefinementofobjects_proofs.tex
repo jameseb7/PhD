@@ -1,0 +1,278 @@
+\begin{crproof}[\nameref{refine-NewObject-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \lschexpract GetObjectClassInfo \rschexpract \circseq \\
+      AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \lschexpract StructManObjectInit \rschexpract \circseq \\
+      newObjectRet!objectID \then \Skip
+    \end{array}\\
+    = & Definition of $GetObjectClassInfo$ \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t1 \theta Class = cs~classID? \land \\
+      \t1 fields' = {} \\
+      \t2 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t1 class! = \theta Class~'] \rschexpract \circseq \\
+      AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \lschexpract StructManObjectInit \rschexpract \circseq \\
+      newObjectRet!objectID \then \Skip
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{schema-pre-assump-intro-law}] \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \{ classID \in \dom cs \} \circseq \\
+      \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t1 \theta Class = cs~classID? \land \\
+      \t1 fields' = {} \\
+      \t2 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t1 class! = \theta Class~']  \rschexpract \circseq \\
+      AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \lschexpract StructManObjectInit \rschexpract \circseq \\
+      newObjectRet!objectID \then \Skip
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-subst-law}] and $\dom cs = {<}classID_1{>}, \ldots, {<}classID_n{>}$ \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \{ \bigvee cid \in \{{<}classID_1{>}, \ldots, {<}classID_n{>}\} @ classID = cid \} \circseq \\
+      \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t1 \theta Class = cs~classID? \land \\
+      \t1 fields' = {} \\
+      \t2 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t1 class! = \theta Class~']  \rschexpract \circseq \\
+      AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \lschexpract StructManObjectInit \rschexpract \circseq \\
+      newObjectRet!objectID \then \Skip
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-intro-law}] \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen \{ classID = {<}classID_1{>} \} \circseq \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen \{ classID = {<}classID_n{>} \} \circseq \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-schema-dist-law}] and assumption of rule \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ sizeOfObject~class = sizeof{<}classID_1{>}Obj \\
+      \t2 {} \land class.fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\} \} \circseq \\
+      \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ sizeOfObject~class = sizeof{<}classID_n{>}Obj \land thisClassID~class = cid \\
+      \t2 {} \land class.fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{n,m_n}{>}\} \} \circseq \\
+      \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    = & Law~[\nameref{assump-conj-law}] \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\}  \land thisClassID~class = cid \} \circseq \\
+      \t1 \{ sizeOfObject~class = sizeof{<}classID_1{>}Obj \} \\
+      \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{n,m_n}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \{ sizeOfObject~class = sizeof{<}classID_n{>}Obj \} \circseq \\
+      \t1 AllocateObject(thread, sizeOfObject~class, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \{ sizeOfObject~class = sizeof{<}classID_1{>}Obj \} \\
+      \t1 AllocateObject(thread, sizeof{<}classID_1{>}Obj, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{n,m_n}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \{ sizeOfObject~class = sizeof{<}classID_n{>}Obj \} \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_n{>}Obj, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_1{>}Obj, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{n,m_n}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_n{>}Obj, objectID) \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    \circrefines_A & Lemma~\ref{class-assump-AllocateObject-dist-lemma} \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_1{>}Obj, objectID) \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_n{>}Obj, objectID) \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{n,m_n}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    = & Definition of $StructManObjectInit$ \\
+    \begin{array}{l}
+      \circvar thread : ThreadID; classID : ClassID \circspot \\
+      \circvar objectID : ObjectID; class : Class \circspot \\
+      newObject?t?c \then thread, classID := t, c \circseq \\
+      \circif classID = {<}classID_1{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_1{>}Obj, objectID) \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{1,1}{>}, \ldots, {<}fieldID_{1,m_1}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \t1 {} \cdots {} \\
+      {} \circelse classID = {<}classID_n{>} \circthen {} \\
+      \t1 \lschexpract [cs : ClassID \pfun Class; classID? : ClassID; class! : Class |
+      classID? \in \dom cs \land \\
+      \t2 \exists \Delta Class | (\Xi Class) \hide (fields,fields') @ \\
+      \t3 \theta Class = cs~classID? \land \\
+      \t3 fields' = {} \\
+      \t4 \bigcup \{ cid : \dom cs | (classID?,cid) \in subclassRel~cs @ (cs~cid).fields \} \land \\
+      \t3 class! = \theta Class~']  \rschexpract \circseq \\
+      \t1 AllocateObject(thread, sizeof{<}classID_n{>}Obj, objectID) \circseq \\
+      \t1 \{ class.fields = \{{<}fieldID_{n,1}{>}, \ldots, {<}fieldID_{n,m_n}{>}\} \land thisClassID~class = cid \} \circseq \\
+      \t1 \lschexpract StructManObjectInit \rschexpract \circseq \\
+      \circfi \circseq newObjectRet!objectID \then \Skip
+    \end{array}\\
+    
+  \end{argue}
+\end{crproof}
