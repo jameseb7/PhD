@@ -282,7 +282,7 @@ action.
         \t1 \theta Class = cs~{<}classID_k{>} \land \\
         \t1 fields' = \bigcup \{ cid : \dom cs | ({<}classID_k{>},cid) \in subclassRel~cs @ (cs~cid).fields \} \land  \\
         %\t1 \exists class? == \theta Class~' @ ObjManObjectInit \\
-        \t1 sizeof{<}classID_k{>}Obj = \theta Class~'\\
+        \t1 sizeof{<}classID_k{>}Obj = sizeOfObject~(\theta Class~') \\
     \end{circus}
   \end{restatable}
   \caption{Rule~[\nameref{refine-NewObject-rule}]}
