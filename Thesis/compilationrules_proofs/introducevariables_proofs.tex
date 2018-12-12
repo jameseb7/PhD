@@ -1,0 +1,1199 @@
+\begin{crproof}[\nameref{refine-PutfieldSF-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      PutfieldSF(cpi)
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $PutfieldSF$ \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      (\circval cpIndex : \nat \circspot \\
+        \t1 \circif cpIndex \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+        \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpIndex \circseq  \\
+        \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpIndex \circseq \\
+        \t2 \circvar oid : ObjectID; value : Word \circspot \\
+        \t2 \lschexpract IntepreterPop \rschexpract \circseq
+        \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+        \t2 putField!oid!cid!fid!value \then \Skip \\
+        \t1 {} \circelse cpIndex \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+        \t1 \circfi)(cpi)
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
+      \t1 \circif cpIndex \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+      \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpIndex \circseq  \\
+      \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpIndex \circseq \\
+      \t2 \circvar oid : ObjectID; value : Word \circspot \\
+      \t2 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t2 putField!oid!cid!fid!value \then \Skip \\
+      \t1 {} \circelse cpIndex \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assign-assump-intro-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpIndex \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+      \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpIndex \circseq  \\
+      \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpIndex \circseq \\
+      \t2 \circvar oid : ObjectID; value : Word \circspot \\
+      \t2 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t2 putField!oid!cid!fid!value \then \Skip \\
+      \t1 {} \circelse cpIndex \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-guard-replace-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \{ cpIndex = cpi \} \circseq \\
+      \t1 \circif cpi \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+      \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpIndex \circseq  \\
+      \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpIndex \circseq \\
+      \t2 \circvar oid : ObjectID; value : Word \circspot \\
+      \t2 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t2 putField!oid!cid!fid!value \then \Skip \\
+      \t1 {} \circelse cpi \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+      \t1 \circfi
+    \end{array}\\
+     = & Law~[\nameref{assump-alt-dist-remove-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
+      \t1 \circif cpi \in fieldRefIndices~(stackFrame.frameClass) \circthen \{ cpIndex = cpi \} \circseq \\
+      \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpIndex \circseq  \\
+      \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpIndex \circseq \\
+      \t2 \circvar oid : ObjectID; value : Word \circspot \\
+      \t2 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t2 putField!oid!cid!fid!value \then \Skip \\
+      \t1 {} \circelse cpi \notin fieldRefIndices~(stackFrame.frameClass) \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-seq-subst-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
+      \t1 \circif cpi \in fieldRefIndices~(stackFrame.frameClass) \circthen \{ cpIndex = cpi \} \circseq \\
+      \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \t2 \circvar oid : ObjectID; value : Word \circspot \\
+      \t2 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t2 putField!oid!cid!fid!value \then \Skip \\
+      \t1 {} \circelse cpi \notin fieldRefIndices~(stackFrame.frameClass) \circthen \{ cpIndex = cpi \} \circseq \Chaos \\
+      \t1 \circfi
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar cpIndex : \nat \circspot cpIndex := cpi \circseq \\
+      \t1 \circif cpi \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+      \t2 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \t2 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \t2 \circvar oid : ObjectID; value : Word \circspot \\
+      \t2 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t2 putField!oid!cid!fid!value \then \Skip \\
+      \t1 {} \circelse cpi \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+      \t1 \circfi
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circif cpi \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+      \t1 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \t1 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \t1 \circvar oid : ObjectID; value : Word \circspot \\
+      \t1 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t1 putField!oid!cid!fid!value \then \Skip \\
+      {} \circelse cpi \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] and assumption of rule \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \{cpi \in fieldRefIndices~(stackFrame.frameClass)\} \circseq \\
+      \circif cpi \in fieldRefIndices~(stackFrame.frameClass) \circthen {} \\
+      \t1 \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \t1 \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \t1 \circvar oid : ObjectID; value : Word \circspot \\
+      \t1 \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      \t1 putField!oid!cid!fid!value \then \Skip \\
+      {} \circelse cpi \notin fieldRefIndices~(stackFrame.frameClass) \circthen \Chaos \\
+      \circfi
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \{cpi \in fieldRefIndices~(stackFrame.frameClass)\} \circseq \\
+      \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid!fid!value \then \Skip \\  
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid : FieldID \circspot fid := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \circvar cid : ClassID \circspot cid := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid!fid!value \then \Skip \\  
+    \end{array}\\
+    =  & Law~[\nameref{var-rename-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot fid1 := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{assump-assump-intro-law}] and assumption of rule \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      \circvar fid1 : FieldID \circspot fid1 := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fieldOf~(stackFrame.frameClass)~cpi \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Definition of $fieldOf$ \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := (stackFrame.frameClass.constantPool \comp FieldRef\inv {} \comp second)~cpi \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Simplification \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := (FieldRef\inv {} \comp second)~(stackFrame.frameClass.constantPool~cpi) \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-subst-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := (FieldRef\inv {} \comp second)~(FieldRef~(cid, fid)) \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Simplification \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-dist-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      \circvar cid1 : ClassID \circspot cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      cid1 := classOf~(stackFrame.frameClass)~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Definition of $classOf$ \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      cid1 := (stackFrame.frameClass.constantPool \comp {}\\
+      \t1 (ClassRef\inv  {}\cup (FieldRef\inv {} \comp first) \cup (MethodRef\inv {} \comp first)))~cpi \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Simplification \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      cid1 := ((ClassRef\inv  {}\cup (FieldRef\inv {} \comp first) \cup (MethodRef\inv {} \comp first)))~\\
+      \t1 (stackFrame.frameClass.constantPool~cpi) \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{assump-assign-subst-law}] \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      cid1 := ((ClassRef\inv  {}\cup (FieldRef\inv {} \comp first) \cup (MethodRef\inv {} \comp first)))~(FieldRef~(cid, fid)) \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Simplification \\
+    \begin{array}{l}
+      \{stackFrame.frameClass = c\} \circseq \\
+      \circvar fid1 : FieldID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot \\
+      \{ stackFrame.frameClass.constantPool~cpi = FieldRef~(cid, fid) \} \circseq \\
+      cid1 := cid \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      \circvar fid1 : FieldID \circspot fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := cid \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid1!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-subst-law}] \\
+    \begin{array}{l}
+      \circvar fid1 : FieldID \circspot fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := cid \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid1!fid!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-subst-law}] \\
+    \begin{array}{l}
+      \circvar fid1 : FieldID \circspot fid1 := fid \circseq  \\
+      \circvar cid1 : ClassID \circspot cid1 := cid \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid!fid!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \circvar cid1 : ClassID \circspot cid1 := cid \circseq \\
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid!fid!value \then \Skip \\  
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \circvar oid : ObjectID; value : Word \circspot \\
+      \lschexpract IntepreterPop \rschexpract \circseq
+      \lschexpract IntepreterPop[oid!/value!] \rschexpract \circseq \\
+      putField!oid!cid!fid!value \then \Skip \\  
+    \end{array}\\
+  \end{argue}
+\end{crproof}
+
+\begin{crproof}[\nameref{HandleAloadSF-simulation-rule}]
+  This rule expresses a simulation, rather than a refinement, so we
+  need to show that the proviso of
+  Law~[\nameref{forwards-data-refinement-law}] holds for the given
+  actions. 
+  We thus need to show that, for local state $L$,
+  %\forall S_1; S_2; S_2'; L @ CI \land A_2 \implies (\exists S_1'; L' @ A_1 \land CI' )
+  \begin{circus}
+    \forall stackFrame : StackFrameEPC; var1, \ldots, var{<}\ell{>}, stack1, \ldots, stack{<}s{>} : Word \circspot \\
+    \forall var1', \ldots, var{<}\ell{>}', stack1', \ldots, stack{<}s{>}' : Word; L \circspot \\
+    \t1 V{<}\ell{>}S{<}s{>}CI \land (stack{<}k+1{>} := var{<}lvi+1{>}) \\
+    {} \implies {} \\
+    (\exists stackFrame' : StackFrameEPC \circspot \\
+    \t1 (\{\# stackFrame.operandStack = k\} \circseq HandleAloadSF(lvi)) \land V{<}\ell{>}S{<}s{>}CI'.
+  \end{circus}
+  First, we note that, from the definitions in~\cite{oliveira2006},
+  \begin{argue}
+    \begin{array}{l}
+      stack{<}k+1{>} := var{<}lvi+1{>} \\
+    \end{array}\\
+    = & Definition of assignment \\
+    \begin{array}{l}
+      \mathbf{R}(true \vdash tr' = tr \land \lnot wait' \land var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \\
+      \t1 {} \land stack1' = stack1 \land \cdots \land stack{<}k+1{>}' = var{<}lvi+1{>} \\
+      \t1 {} \land \cdots \land stack{<}s{>}' = stack{<}s{>})
+    \end{array}
+  \end{argue}
+  and
+  \begin{argue}
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq HandleAloadSF(lvi) \\
+    \end{array}\\
+    = & Definition of HandleAloadSF \\
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      (\circval variableIndex : \nat \circspot \\
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC; variableIndex? : \nat | \\
+      \t1 \# stackFrame.operandStack < stackFrame.stackSize \land \\
+      \t1 variableIndex? < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(variableIndex?+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize] \rschexpract)(lvi) \\
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      (\circvar variableIndex : \nat \circspot variableIndex := lvi \\
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC; variableIndex? : \nat | \\
+      \t1 \# stackFrame.operandStack < stackFrame.stackSize \land \\
+      \t1 variableIndex? < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(variableIndex?+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize] \rschexpract) \\
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-subst-law}] \\
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      (\circvar variableIndex : \nat \circspot variableIndex := lvi \\
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC | \\
+      \t1 \# stackFrame.operandStack < stackFrame.stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize] \rschexpract) \\
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      \{\# stackFrame.operandStack = k\} \circseq \\
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC | \\
+      \t1 \# stackFrame.operandStack < stackFrame.stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize] \rschexpract \\
+    \end{array}\\
+    = & Law~[\nameref{assump-schema-absorb-law}] \\
+    \begin{array}{l}
+      \lschexpract [stackFrame, stackFrame' : StackFrameEPC | \\
+      \t1 \# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackFrame.stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize] \rschexpract \\
+    \end{array}\\
+    = & Definition of schema actions \\
+    \begin{array}{l}
+      \mathbf{R}(\exists stackFrame' : StackFrameEPC @ \\
+      \t1 \# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackFrame.stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize \\
+      \t1 \vdash \# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t1 \lnot wait' \land tr' = tr) \\
+    \end{array}\\
+    = & One point rule \\
+    \begin{array}{l}
+      \mathbf{R}(\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \\
+      \t1 \vdash \# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t1 \lnot wait' \land tr' = tr) \\
+    \end{array}\\
+    = & Eliminate preconditions from postcondition \\ % utp_des_core.design_export_pre in Isabelle/UTP
+    \begin{array}{l}
+      \mathbf{R}(\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \\
+      \t1 \vdash stackFrame'.operandStack = \\
+      \t2 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t1 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t1 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t1 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t1 \lnot wait' \land tr' = tr) \\
+    \end{array}\\
+    = & Reintroduce preconditions as implication \\ % Proved in Isabelle
+    \begin{array}{l}
+      \mathbf{R}(\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \\
+      \t1 \vdash (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \implies {} \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr) \\
+    \end{array}\\
+  \end{argue}
+  
+  We apply Law~[\nameref{simulation-decomposition-law}], so we need only to prove that
+  \begin{circus}
+    \lnot true \land V{<}\ell{>}S{<}s{>}CI \\
+    {} \implies {} \\
+    \exists stackFrame' : StackFrameEPC @ \\
+    \t1 \lnot (\# stackFrame.operandStack = k \land \\
+    \t1 \# stackFrame.operandStack < stackSize \land \\
+    \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI'
+  \end{circus}
+  and
+  \begin{circus}
+    tr' = tr \land wait' \land var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \\
+    \t1 {} \land stack1' = stack1 \land \cdots \land stack{<}k+1{>}' = var{<}lvi+1{>} \\
+    \t1 {} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land V{<}\ell{>}S{<}s{>}CI \\
+    {} \implies {} \\
+    \exists stackFrame' : StackFrameEPC @ \\
+    \t1 ((\# stackFrame.operandStack = k \land \\
+    \t1 \# stackFrame.operandStack < stackSize \land \\
+    \t1 lvi < \# stackFrame.localVariables) \implies {} \\
+    \t2 stackFrame'.operandStack = \\
+    \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+    \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+    \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+    \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+    \t2 \lnot wait' \land tr' = tr) \land V{<}\ell{>}S{<}s{>}CI'
+  \end{circus}
+  For the first of these:
+  \begin{argue}
+    \begin{array}{l}
+      \lnot true \land V{<}\ell{>}S{<}s{>}CI \\
+      {} \implies {} \\
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 \lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI'
+    \end{array}\\
+    \equiv & $\lnot true \equiv false$ \\
+    \begin{array}{l}
+      false \land V{<}\ell{>}S{<}s{>}CI \\
+      {} \implies {} \\
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 \lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI'
+    \end{array}\\
+    \equiv & $false \land p \equiv false$ \\
+    \begin{array}{l}
+      false \implies {} \\
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 \lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI'
+    \end{array}\\
+    \equiv & $false \implies p \equiv true$ \\
+    \begin{array}{l}
+      true
+    \end{array}\\
+  \end{argue}
+  For the second:
+  \begin{argue}
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 ((\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \implies {} \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr) \land V{<}\ell{>}S{<}s{>}CI'
+    \end{array}\\
+    = & Insert precondition across implication \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 ((\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \implies {} \\
+      \t2 \# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr) \land V{<}\ell{>}S{<}s{>}CI'
+    \end{array}\\
+    = & Convert implication to disjunction \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr)) \land V{<}\ell{>}S{<}s{>}CI'
+    \end{array}\\
+    = & Distribute conjunction over disjunction \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Duplicate $V{<}\ell{>}S{<}s{>}CI'$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land V{<}\ell{>}S{<}s{>}CI' \land V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Definition of $V{<}\ell{>}S{<}s{>}CI'$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame'.localVariables = {<}\ell{>} \\
+      \t2 stackFrame'.localVariables~1 = var1' \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.localVariables~{<}\ell{>} = var{<}\ell{>}' \\
+      \t2 stackFrame'.stackSize = {<}s{>} \\
+      \t2 \# stackFrame'.operandStack \geq 1 \implies \\
+      \t3 stackFrame'.operandStack~1 = stack1' \\
+      \t3 {} \cdots {} \\
+      \t2 \# stackFrame'.operandStack \geq {<}s{>} \implies \\
+      \t3 stackFrame'.operandStack~{<}s{>} = stack{<}s{>}' \land \\
+      \t3 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & $\# stackFrame'.operandStack = \# stackFrame.operandStack + 1$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame'.localVariables = {<}\ell{>} \\
+      \t2 stackFrame'.localVariables~1 = var1' \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.localVariables~{<}\ell{>} = var{<}\ell{>}' \\
+      \t2 stackFrame'.stackSize = {<}s{>} \\
+      \t2 \# stackFrame'.operandStack \geq 1 \implies \\
+      \t3 stackFrame'.operandStack~1 = stack1' \\
+      \t3 {} \cdots {} \\
+      \t2 \# stackFrame'.operandStack \geq {<}s{>} \implies \\
+      \t3 stackFrame'.operandStack~{<}s{>} = stack{<}s{>}' \land \\
+      \t3 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute value of $\# stackFrame'.operandStack$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame'.localVariables = {<}\ell{>} \\
+      \t2 stackFrame'.localVariables~1 = var1' \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.localVariables~{<}\ell{>} = var{<}\ell{>}' \\
+      \t2 stackFrame'.stackSize = {<}s{>} \\
+      \t2 k+1 \geq 1 \implies stackFrame'.operandStack~1 = stack1' \\
+      \t3 {} \cdots {} \\
+      \t2 k+1 \geq {<}s{>} \implies stackFrame'.operandStack~{<}s{>} = stack{<}s{>}' \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Collapsing implications (the $(k+1)$th case is the highest true one) \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame'.localVariables = {<}\ell{>} \\
+      \t2 stackFrame'.localVariables~1 = var1' \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.localVariables~{<}\ell{>} = var{<}\ell{>}' \\
+      \t2 stackFrame'.stackSize = {<}s{>} \\
+      \t2 stackFrame'.operandStack~1 = stack1' \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~(k+1) = stack{<}k+1{>}' \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    \Leftarrow & Introduce conjunction \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame'.localVariables = {<}\ell{>} \\
+      \t2 stackFrame'.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame'.stackSize = {<}s{>} \land \\
+      \t2 stackFrame'.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~(k+1) = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    \Leftarrow & Introduce conjunction \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame'.localVariables = {<}\ell{>} \\
+      \t2 stackFrame'.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame'.stackSize = {<}s{>} \land \\
+      \t2 stackFrame'.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~(k+1) = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute $stackFrame'.localVariables = stackFrame.localVariables$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle stackFrame.localVariables~(lvi+1) \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame'.stackSize = {<}s{>} \land \\
+      \t2 stackFrame'.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~(k+1) = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute $stackFrame.localVariables~(lvi + 1) = var{<}lvi + 1{>}$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame'.stackSize = {<}s{>} \land \\
+      \t2 stackFrame'.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~(k+1) = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & $stackFrame'.operandStack~(k+1) = var{<}lvi + 1{>}$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame'.stackSize = {<}s{>} \land \\
+      \t2 stackFrame'.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~k = stack{<}k{>}' \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute $stackFrame'.stackSize = stackFrame.stackSize$ \\    
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame.stackSize = {<}s{>} \land \\
+      \t2 stackFrame'.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame'.operandStack~k = stack{<}k{>}' \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute $stackFrame'.operandStack~i = stackFrame.operandStack~i$ for $1 \leq i \leq k$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame.stackSize = {<}s{>} \land \\
+      \t2 stackFrame.operandStack~1 = stack1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.operandStack~k = stack{<}k{>}' \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute $stack{<}i{>}' = stack{<}i{>}$ for $1 \leq i \leq k$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame.stackSize = {<}s{>} \land \\
+      \t2 stackFrame.operandStack~1 = stack1 \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.operandStack~k = stack{<}k{>} \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & $p \equiv k \geq i \implies P$ for $1 \leq i \leq k$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame.stackSize = {<}s{>} \land \\
+      \t2 k \geq 1 \implies stackFrame.operandStack~1 = stack1 \land \\
+      \t3 {} \cdots {} \\
+      \t2 k \geq k \implies stackFrame.operandStack~k = stack{<}k{>} \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & $true \equiv k \geq i \implies P$ for $k+1 \leq i \geq \ell$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame.stackSize = {<}s{>} \land \\
+      \t2 k \geq 1 \implies stackFrame.operandStack~1 = stack1 \land \\
+      \t3 {} \cdots {} \\
+      \t2 k \geq k \implies stackFrame.operandStack~k = stack{<}k{>} \land \\
+      \t2 k \geq (k+1) \implies stackFrame.operandStack~(k+1) = stack{<}k+1{>} \land \\
+      \t3 {} \cdots {} \\
+      \t2 k \geq s \implies stackFrame.operandStack~s = stack{<}s{>} \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & Substitute $\# stackFrame.operandStack = k$ \\
+    \begin{array}{l}
+      \exists stackFrame' : StackFrameEPC @ \\
+      \t1 (\lnot (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables) \land V{<}\ell{>}S{<}s{>}CI') \lor {} \\
+      \t2 (\# stackFrame.operandStack = k \land \\
+      \t2 \# stackFrame.operandStack < stackSize \land \\
+      \t2 lvi < \# stackFrame.localVariables \land \\
+      \t2 \# stackFrame'.operandStack = k+1 \land \\
+      \t2 stackFrame'.operandStack = \\
+      \t3 stackFrame.operandStack \cat \langle var{<}lvi + 1{>} \rangle \land \\
+      \t2 stackFrame'.localVariables = stackFrame.localVariables \land \\
+      \t2 stackFrame'.frameClass = stackFrame.frameClass \land \\
+      \t2 stackFrame'.stackSize = stackFrame.stackSize \land \\
+      \t2 \lnot wait' \land tr' = tr \land \\
+      \t2 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t2 stackFrame.localVariables~1 = var1' \land \\
+      \t3 {} \cdots {} \\
+      \t2 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t2 stackFrame.stackSize = {<}s{>} \land \\
+      \t2 \# stackFrame.operandStack \geq 1 \implies \\
+      \t3 stackFrame.operandStack~1 = stack1 \land \\
+      \t3 {} \cdots {} \\
+      \t2 \# stackFrame.operandStack \geq s \implies \\
+      \t3 stackFrame.operandStack~s = stack{<}s{>} \land \\
+      \t2 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t2 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t2 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t2 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land \\
+      \t2 V{<}\ell{>}S{<}s{>}CI')
+    \end{array}\\
+    = & One point rule \\
+    \begin{array}{l}
+      \lnot (\# stackFrame.operandStack = k \land \\
+      \# stackFrame.operandStack < stackSize \land \\
+      lvi < \# stackFrame.localVariables) \lor {} \\
+      \t1 (\# stackFrame.operandStack = k \land \\
+      \t1 \# stackFrame.operandStack < stackSize \land \\
+      \t1 lvi < \# stackFrame.localVariables \land \\
+      \t1 \lnot wait' \land tr' = tr \land \\
+      \t1 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t1 stackFrame.localVariables~1 = var1' \land \\
+      \t2 {} \cdots {} \\
+      \t1 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t1 stackFrame.stackSize = {<}s{>} \land \\
+      \t1 \# stackFrame.operandStack \geq 1 \implies \\
+      \t2 stackFrame.operandStack~1 = stack1 \land \\
+      \t2 {} \cdots {} \\
+      \t1 \# stackFrame.operandStack \geq s \implies \\
+      \t2 stackFrame.operandStack~s = stack{<}s{>} \land \\
+      \t1 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t1 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t1 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t1 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>})
+    \end{array}\\
+    = & Convert implication back and eliminate preconditions from postcondition \\
+    \begin{array}{l}
+      \lnot (\# stackFrame.operandStack = k \land \\
+      \# stackFrame.operandStack < stackSize \land \\
+      lvi < \# stackFrame.localVariables) \lor {} \\
+      \t1 (\lnot wait' \land tr' = tr \land \\
+      \t1 \# stackFrame.localVariables = {<}\ell{>} \\
+      \t1 stackFrame.localVariables~1 = var1' \land \\
+      \t2 {} \cdots {} \\
+      \t1 stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      \t1 stackFrame.stackSize = {<}s{>} \land \\
+      \t1 \# stackFrame.operandStack \geq 1 \implies \\
+      \t2 stackFrame.operandStack~1 = stack1 \land \\
+      \t2 {} \cdots {} \\
+      \t1 \# stackFrame.operandStack \geq s \implies \\
+      \t2 stackFrame.operandStack~s = stack{<}s{>} \land \\
+      \t1 var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      \t1 var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      \t1 stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      \t1 stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>})
+    \end{array}\\
+    \Leftarrow & Eliminate disjunction \\
+    \begin{array}{l}
+      (\lnot wait' \land tr' = tr \land \\
+      \# stackFrame.localVariables = {<}\ell{>} \\
+      stackFrame.localVariables~1 = var1' \land \\
+      \t1 {} \cdots {} \\
+      stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>}' \land \\
+      stackFrame.stackSize = {<}s{>} \land \\
+      \# stackFrame.operandStack \geq 1 \implies \\
+      stackFrame.operandStack~1 = stack1 \land \\
+      \t1 {} \cdots {} \\
+      \# stackFrame.operandStack \geq s \implies \\
+      \t1 stackFrame.operandStack~s = stack{<}s{>} \land \\
+      var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>})
+    \end{array}\\
+    = & Substitute $var{<}i{>}' = var{<}i{>}$ for all $i$ \\
+    \begin{array}{l}
+      (\lnot wait' \land tr' = tr \land \\
+      \# stackFrame.localVariables = {<}\ell{>} \\
+      stackFrame.localVariables~1 = var1 \land \\
+      \t1 {} \cdots {} \\
+      stackFrame.localVariables~{<}\ell{>} = var{<}\ell{>} \land \\
+      stackFrame.stackSize = {<}s{>} \land \\
+      \# stackFrame.operandStack \geq 1 \implies \\
+      stackFrame.operandStack~1 = stack1 \land \\
+      \t1 {} \cdots {} \\
+      \# stackFrame.operandStack \geq s \implies \\
+      \t1 stackFrame.operandStack~s = stack{<}s{>} \land \\
+      var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>})
+    \end{array}\\
+    = & Definition of $V{<}\ell{>}S{<}s{>}CI$ \\
+    \begin{array}{l}
+      (\lnot wait' \land tr' = tr \land \\
+      V{<}\ell{>}S{<}s{>}CI \land \\
+      var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>})
+    \end{array}\\
+    = & Rearrangement \\
+    \begin{array}{l}
+      (tr' = tr \land \lnot wait' \land var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \land \\
+      stack1' = stack1 \land \cdots \land stack{<}k{>}' = stack{<}k{>} \land \\
+      var{<}lvi + 1{>} = stack{<}k+1{>}' \land \\
+      stack{<}k+2{>}' = stack{<}k+2{>} \land \cdots \land stack{<}s{>}' = stack{<}s{>}) \land \\
+      V{<}\ell{>}S{<}s{>}CI
+    \end{array}\\
+    = & Simplification \\
+    \begin{array}{l}
+      tr' = tr \land \lnot wait' \land var1' = var1 \land \cdots \land var{<}\ell{>}' = var{<}\ell{>} \\
+      \t1 {} \land stack1' = stack1 \land \cdots \land stack{<}k+1{>}' = var{<}lvi+1{>} \\
+      \t1 {} \land \cdots \land stack{<}s{>}' = stack{<}s{>} \land V{<}\ell{>}S{<}s{>}CI
+    \end{array}\\
+  \end{argue}
+\end{crproof}

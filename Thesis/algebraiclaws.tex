@@ -509,6 +509,8 @@ proofs of our compilation rules.
     (\circvar x : T \circspot \lschexpract S \rschexpract)
   \end{circus}
 \end{law}
+
+
   
 % Law[var-seq-ext-left] in Alvaro's thesis (from C.137 in Marcel's thesis)
 \begin{law}[var-seq-extl]
@@ -626,6 +628,16 @@ proofs of our compilation rules.
     \lschexpract [decls | pred] \rschexpract
     =
     \circvar x : T \circspot \lschexpract [decls; x, x' : T | pred] \rschexpract
+  \end{circus}
+\end{law}
+
+% From definition B.40 in Marcel's thesis and law abA in Ana's thesis
+\begin{law}[assump-schema-absorb]
+  \label{assump-schema-absorb-law}
+  \begin{circus}
+    \{ g \} \circseq \lschexpract [decls | pred] \rschexpract
+    =
+    \lschexpract [decls | g \land pred] \rschexpract
   \end{circus}
 \end{law}
 
@@ -750,6 +762,25 @@ proofs of our compilation rules.
 
 % From Definition 4.3 and Theorem 4.1 in Marcel's thesis
 \ForwardsDataRefinementLaw*
+
+% Lemma F.76 in Marcel's extended thesis
+\begin{law}[simulation-decomposition]
+  \label{simulation-decomposition-law}
+  If $CI$ represents a forward simulation between states $v_A$ and
+  $v_C$, $\mathbf{R}$ is the reactive processes healthiness conditions
+  predicate transformer,
+  \begin{circus}
+    \lnot P_C \land CI \implies \exists v'_A \circspot \lnot P_A \land CI',
+  \end{circus}
+  and
+  \begin{circus}
+    Q_C \land CI \implies \exists v'_A \circspot Q_A \land CI',
+  \end{circus}
+  then
+  \begin{circus}
+    \mathbf{R}(P_C \vdash Q_C) \land CI \implies \exists v'_A \circspot \mathbf{R}(P_A \vdash Q_A) \land CI
+   \end{circus}
+\end{law}
 
 % From Definition B.51 in Marcel's Thesis
 \ProcessParamElimLaw*
