@@ -530,7 +530,26 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-
+% Law[alt-var-dist-both] in Alvaro's thesis
+\begin{law}[var-alt-dist]
+  \label{var-alt-dist-law}
+  Provided $x$ is not free in $b_1$ or $b_2$, and $b_1 \lor b_2$ and
+  $b_1 \implies \lnot b_2$ hold,
+  \begin{circus}
+    \begin{array}{l}
+      \circvar x : T \circspot \\
+      \circif b_1 \circthen A \\
+      {} \circelse b_2 \circthen B \\
+      \circfi
+    \end{array}
+    =
+    \begin{array}{l}
+      \circif b_1 \circthen \circvar x : T \circspot A \\
+      {} \circelse b_2 \circthen \circvar x : T \circspot B \\
+      \circfi
+    \end{array}
+  \end{circus}
+\end{law}
   
 % Law[var-seq-ext-left] in Alvaro's thesis (from C.137 in Marcel's thesis)
 \begin{law}[var-seq-extl]
