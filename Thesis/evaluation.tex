@@ -13,6 +13,34 @@ embeds important validation effort, via numerous reviews of the
 standard, and close interaction with the standardisation committee,
 which led to some changes to the standard.
 
+\addchange{Clarified how evaluation relates to things previously
+  presented}
+\added{
+For clarity, we recall what we have presented thus far. 
+We have developed a model of an interpreting SCJVM, covering both the
+SCJVM services and the core execution environment. 
+This model has been written using Community Z Tools (CZT), so that it
+is machine readable, although the nature of the checks that can be
+performed on it are limited by the capabilities of CZT. 
+We discuss this in more detail in
+Section~\ref{mechanisation-of-models-section}. 
+We have also developed a compilation strategy for translating SCJ
+bytecode in the interpreter model to a representation of C code. 
+Since there is not yet a sufficiently powerful automated proof
+assistant for Circus, the rules and their corresponding proofs are
+hand-written, although some of the laws used in the proofs have been
+proved using an automated proof assistant. 
+The proofs of the compilation rules and the sources of the laws used
+in them are discussed in Section~\ref{proofs-of-laws-section}. 
+We also add that we have developed a prototype implementation of the
+compilation strategy that takes in SCJ class files and outputs both C
+code and the Circus models resulting from the compilation strategy. 
+This prototype implementation is discussed in
+Section~\ref{tool-support-section} and then, in
+Section~\ref{examples-section} we evaluate the strategy by applying
+the prototype to some examples.
+}%
+\deleted{
 Next, in Section~\ref{mechanisation-of-models-section}, we consider
 the assurances gained from mechanisation of the models that form the
 starting point of the strategy.
@@ -23,9 +51,9 @@ Afterwards, in Section~\ref{tool-support-section}, we consider
 mechanisation of the strategy and then, in
 Section~\ref{examples-section}, we evaluate the strategy with some
 examples.
+}
 Finally, we conclude in
 Section~\ref{evaluation-final-considerations-section}.
-
 
 \section{Mechanisation of Models}
 \label{mechanisation-of-models-section}
@@ -127,22 +155,69 @@ The overall proof then follows from the transitivity of refinement.
 Thus, every step of the proof is justified formally and this can be
 easily seen from the layout of the proof.
 
-The laws used in the proofs come from various sources.
-Some are existing laws taken from~\cite{oliveira2006}
+\addchange{Added paragraph characterising the compilation rules which
+  have been proved}
+\added{
+Overall, there are 91 compilation rules in our strategy, all of which
+are presented in Appendix~\ref{compilation-rules-appendix}.
+Of these, we have completed hand-written proofs for 46 rules.
+In particular, we have proved all the rules used in
+Algorithms~\ref{expand-bytecode-algorithm},
+\ref{introduce-forward-sequence-algorithm},
+\ref{introduce-loops-and-conditionals-algorithm},
+\ref{refine-main-actions-algorithm},
+and~\ref{localise-stack-frames-algorithm}.
+In Algorithm~\ref{resolve-method-calls-algorithm}, we have proved
+Rule~[\nameref{refine-invokestatic-rule}],
+Rule~[\nameref{refine-invokevirtual-rule}],
+Rule~[\nameref{resolve-special-method-rule}] and
+Rule~[\nameref{resolve-normal-method-rule}], which are among the most
+substantial rules in that algorithm and are similar to other rules
+used there.
+The $frameStack$ assumption distribution rules used in
+Algorithm~\ref{introduce-frameStack-assumptions-algorithm}, referenced
+in Algorithm~\ref{remove-launcher-returns-algorithm} have all been
+proved.
+We have proved Rule~[\nameref{refine-PutfieldSF-rule}], used in
+Algorithm~\ref{introduce-variables-algorithm}, and
+Rule~[\nameref{refine-NewObject-rule}], used in
+Algorithm~\ref{dro-algorithm}.
+We have also proved Rule~[\nameref{HandleAloadSF-simulation-rule}] as
+an example of how one of the rules establishing a simulation can be
+proved.
+The other simulations can be proved using similar reasoning.
+The rules we have not yet written proofs for are similar to those
+already proved, and mainly concern movement of data.
+The more challenging rules that transform control flow, particularly
+the loop and conditional introduction rules which are not applied by
+icecap and so cannot be checked by comparison to icecap's output.
+}
+
+\addchange{Added numbers of laws}
+\added{There are a total of 80 laws used in the proofs of the
+  compilation rules.}
+\deleted{The}\added{These} laws \deleted{used in the proofs} come from various sources.
+\deleted{Some are existing laws taken from~\cite{oliveira2006}
 and~\cite{miyazawa2012}, which have already been proved as part of
-those works, and so can be safely reused.
-We have also used a few ZRC laws from~\cite{cavalcanti1998}, which can
+those works, and so can be safely reused.}
+\added{There are 34 laws that are taken from~\cite{oliveira2006}, and
+  8 laws taken from~\cite{miyazawa2012}.
+  Those laws have already been proved as part of those works, and so
+  can be safely reused.}
+We have also used \added{3}\deleted{a few} ZRC laws from~\cite{cavalcanti1998}, which can
 be applied to \Circus{} since the semantics of ZRC are compatible with
 those of \Circus{}, by Theorem 4.3 from~\cite{oliveira2006}.
 Standard least-fixed-point laws, stated in~\cite{hoare1998} are also
 applied to \Circus{} recursion, since it defined using
-least-fixed-points.
-Some laws follow as a trivial consequence of the definitions given in
+least-fixed-points\added{, and this yields a further 6 laws}.
+Some \added{of the} laws follow as a trivial consequence of the definitions given in
 these sources, such as Law~[\nameref{action-intro-law}], which follows
 from the definition of process refinement, which does not reference
 actions not used in the main action of a process.
+\added{A further 6 laws are obtained from simple combinations of the
+  other laws.}
 
-We have proved other laws using the proof assistant
+We have proved \added{20}\deleted{other} laws using the proof assistant
 Isabelle~\cite{nipkow2002} with its implementation of
 UTP~\cite{foster2015}.
 The constructs supported by that implementation limit the types of
@@ -160,9 +235,51 @@ all program counter values have a corresponding bytecode instruction,
 so we cannot ensure coverage.
 Our work on this has now been integrated into Isabelle/UTP itself.
 
-Some of the algebraic laws are applied directly in our strategy, and
-may be found at the end of Appendix~\ref{compilation-rules-appendix},
-after the compilation rules specific to each stage of the strategy.
+\addchange{Added paragraph describing unproved algebraic laws}
+\added{
+There are two laws for which we do not have a proof.
+The first of these is similar to Law 18.4 from~\cite{morgan1990} and
+states that a branch of a conditional that contains only $\Chaos$ can
+be eliminated if the guards of the conditional are disjoint.
+This follows from the fact that the behaviour of a conditional for
+which no guards are true is $\Chaos$.
+The second unproved law states that if the same variable block occurs
+in each branch of a conditional, it can be extended to cover the whole
+conditional.
+It is similar to Law[alt-var-dist-both] but is generalised to apply
+when coverage and disjointness of guards is not established.
+Proving such generalisations is the motivation behind our
+implementation of conditionals in Isabelle/UTP, but lack of adequate
+support for variable blocks prevents proof of this law in Isabelle/UTP.
+}
+
+\addchange{Added some information on the lengths of proofs}
+\added{
+The number of laws required to prove each compilation rule varies
+between the compilation rules.
+As an example, Rule~[\nameref{refine-invokestatic-rule}], consists of
+a total of 31 applications of 16 distinct laws.
+This may be regarded as a typical proof, but some rules, particularly
+the assumption distribution rules, follow from specialisations of a
+single law, while others, such as
+Rule~[\nameref{HandleInstruction-refinement-rule}], are large proofs
+involving multiple cases.
+Some of the proofs make use of auxiliary lemmas that allow part of the
+proof to be shared between proofs.
+This is particularly the case for elimination of program counter
+rules, where we must unroll the $Running$ loop as part of their
+proofs.
+This reuse of lemmas makes it challenging to count the total number of
+laws used in these proofs, so we do not provide detailed information
+on lengths of proofs here.
+}
+
+\addchange{Added mention of the number of laws used in the strategy}
+\added{There are 9}\deleted{Some of the} algebraic laws \added{that}
+are applied directly in our strategy\added{, in addition to the 91 compilation rules}.
+\added{These}\deleted{, and} may be found at the end of
+Appendix~\ref{compilation-rules-appendix}, after the compilation rules
+specific to each stage of the strategy.
 A full list of the algebraic laws used in this thesis, including both
 those used in our compilation strategy and those used in the proofs of
 the compilation rules, can be found in
@@ -1363,6 +1480,86 @@ The examples we have considered show that the code we generate is
 generally comparable to that generated by icecap.
 The few differences observed between our code and icecap's code arise
 from design choices that enhance the generated code.
+
+\addchange{Added discussion of execution time and complexity of prototype}
+\added{
+While we have used the prototype to check form of the generated code,
+it can also give us an idea of the complexity of the strategy that we
+can use to judge how viable it would be were we to make a full
+implementation of it.
+By packaging the prototype as a \texttt{.jar} file we can execute it
+from a command line and use the \texttt{time} command to measure its
+execution time.
+Averaging wall-clock time across 10 runs of the prototype for each of
+our examples yields 2.50 seconds for \texttt{PersistentSignal}, 2.78
+seconds for \texttt{Barrier} and 2.67 seconds for \texttt{Buffer}.
+From the output of the command indicating which stages of the strategy
+are executing, the bulk of this time appears to be spent in
+introducing sequential composition.
+More detailed tracing of the time taken shows that this is due to the
+fact that the control flow graph is reconstructed after each
+compilation rule is applied.
+The number of reachable nodes is very high at the start of the
+compilation strategy, but reduces by a large amount during sequential
+composition introduction since most of the edges between nodes
+represent sequential composition.
+This time could be reduced by using a more sophisticated strategy to
+perform local updates of the control flow graph, potentially reducing
+the execution time of the prototype by up to 2 seconds.
+With other optimisations, such as more efficient data structures and
+pattern matching strategies, this could give reasonable execution
+time, even for large programs.
+
+It is difficult to produce similar measurements of compilation time
+for icecap, since icecap is designed as an Eclipse plugin and cannot
+be separated from Eclipse to allow measurment of compilation time.
+However, we note that the compilation time for our examples in icecap
+seems to be of the same order of magnitude as for our prototype.
+
+Our implementation is just a prototype and so any measurments of its
+running time are only approximations of the efficiency of our
+compilation strategy.
+It is more helpful to consider the asymptotic complexity of the
+compilation strategy, to determine if it will scale well in an
+optimised implementation.
+Assume an input program consists of $m$ methods containing an average
+of $n$ instructions each, and that the local updates of the
+control flow graph are made to take constant time.
+Then the time complexity of our strategy is at most
+$\mathcal{O}(m^3n)$.
+This is because the loop on line~\ref{algorithm-method-loop} may loop
+once for each of the $m$ methods if only one method is separated in
+each iteration, and within the loop
+Algorithm~\ref{resolve-method-calls-algorithm} checks each method call
+instruction, of which there may be up to $mn$, and for each target of
+the method call, of which there could be as many as there are methods,
+$m$, searches its superclasses for an implementation, of which there
+may be as many as ther are methods, $m$.
+
+None of the other algorithms contributes as much as
+Algorithm~\ref{resolve-method-calls-algorithm} to the time complexity,
+since all the other elimination of program counter algorithms simply
+iterate over each node in at most one loop. 
+Even Algorithm~\ref{introduce-forward-sequence-algorithm}, which has
+two nested loops, is linear in the number of instructions, since any
+additional iteration of the inner loop means a sequential composition
+is introduced so the nodes are merged, thus there is one fewer node
+and one fewer iteration of the outer loop.
+The elimination of frame stack algorithms are generally at most
+$\mathcal{O}(m^2n)$, since they may transform each call of the
+potential $mn$ calls to the $m$ methods.
+The data refinement of objects has a separate complexity, since it is
+determined by the number of classes and fields, but it is unlikely to
+contribute more to complexity than the instructions, since each field
+should be accessed by at least one instruction.
+The overall complexity is thus $\mathcal{O}(m^3n)$, but this is an
+upper bound and in most cases iteration will not be over all methods.
+It may be possible to find iteration strategies to reduce this
+asymptotic complexity by iterating over the methods fewer times.
+This can lead to the strategy being quadratic or linear in $m$, which
+seems an acceptable complexity.
+}
+
 All these considerations serve to validate the correctness of the
 model and strategy, and shows that our strategy is a viable basis for
 a correct-by-construction ahead-of-time SCJ-to-C compiler.
