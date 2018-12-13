@@ -207,6 +207,16 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% Proved in Isabelle
+\begin{law}[assump-guard-dist]
+  \label{assump-guard-dist-law}
+  \begin{circus}
+    \{ g \} \circseq \lcircguard h \rcircguard \circguard P
+    =
+    \{ g \} \circseq \lcircguard h \rcircguard \circguard (\{ g \} \circseq P) 
+  \end{circus}
+\end{law}
+
 % TODO: Needs Isabelle proof (similar to Law 18.4 in Programming from Specifications)
 \begin{law}[alt-branch-elim]
   \label{alt-branch-elim-law}
