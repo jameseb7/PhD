@@ -462,6 +462,28 @@ structured graphs shown in Figure~\ref{structured-cfg-figures}
 Before applying the strategy, it must be ensured that the control flow
 graph for each method is well-structured according to this definition.
 
+\addchange{Moved requirements concerning integer overflow an static
+  synchronised methods later}
+\deleted{
+We also require that integer operations are used only where integer
+overflow cannot occur.
+This is due to the fact that we follow icecap's approach and compile
+addition in Java bytecode to addition in C, making the assumption that
+the addition does not overflow, since overflow is undefined behaviour
+in C.
+The Java code should be written in a style consistent with MISRA-C,
+where behaviours that are undefined in C must not be relied on.
+}
+
+\deleted{
+We do not handle synchronisation of static methods, since
+icecap does not apply synchronisation to static methods.
+No expressive power is lost by forbidding static synchronized methods,
+since a singleton instance of a class with synchronized methods can be
+supplied, rather than relying on static methods to access data owned
+by the instance.
+}
+
 Each method call must have at least one target (as
 determined by the rules given in
 Section~\ref{resolve-method-calls-subsection}), to allow method calls
@@ -489,42 +511,30 @@ dependencies between them.
   MISRA-C and the restrictions that stem from icecap's approach rather
   than the form of the strategy}
 \added{
-Additionally, we note a few points where, while the correct operation
-of the compilation strategy is not affected, the semantics of the
-generated code differs from the usual semantics since we follow the
-approach of icecap.
-It is important that we follow the approach of a practical tool on
-this, to ensure that our strategy can be implemented.
-In particular, we follow icecap's approach in compiling addition in
-Java bytecode to addition in C, making the assumption that the
-addition does not overflow.
-This means that Java code input to the strategy must avoid integer
-overflow in order to be MISRA-C compilant, since signed integer
-overflow is undefined behaviour in C, and behaviours that are
-undefined in C must not be relied on in MISRA-C.
-We believe the structure of the compilation strategy and the
-restrictions described in this section are sufficient to ensure that
-the resultant code is consistent with MISRA-C.
-}
+The requirements discussed above are sufficient to ensure our
+compilation strategy can be applied to produce well-formed C code. 
+If the generated code is additionally required to conform to MISRA-C,
+then integer overflow must be avoided in the input SCJ (Java) code. 
+This is the only extra requirement on the Java code, in addition to
+those stated above, needed to ensure the generated C code conforms to
+MISRA-C. 
+This additional requirement is needed due to the fact that we follow
+icecap's approach and compile addition in Java to addition in C,
+without applying special handling to overflows. 
+The presence of such overflows would prevent the generated C code from
+being MISRA-C compliant, since signed integer overflow is undefined
+behaviour in C. 
+We follow the approach of icecap on this, rather than generating
+checks for overflows in the C code, since it is important to follow
+the approach of a practical tool to ensure our strategy can be
+applied. 
 
-\deleted{
-We also require that integer operations are used only where integer
-overflow cannot occur.
-This is due to the fact that we follow icecap's approach and compile
-addition in Java bytecode to addition in C, making the assumption that
-the addition does not overflow, since overflow is undefined behaviour
-in C.
-The Java code should be written in a style consistent with MISRA-C,
-where behaviours that are undefined in C must not be relied on.
-}
-
-\moved{
-We \added{also} do not handle synchronisation of static methods, since
-icecap does not apply synchronisation to static methods.
-No expressive power is lost by forbidding static synchronized methods,
-since a singleton instance of a class with synchronized methods can be
-supplied, rather than relying on static methods to access data owned
-by the instance.
+We also note that we follow icecap's approach in not applying
+synchronisation to static methods. 
+Static synchronized methods must therefore not be used in code input
+to the strategy in order to ensure correct synchronisation behaviour. 
+Singleton objects with synchronized methods may be used to achieve the
+same functionality as static synchronized methods.
 }
 
 We now proceed to describe each of the stages of the strategy in
