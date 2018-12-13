@@ -2,7 +2,7 @@ This appendix contains algebraic laws that are not specific to our
 compilation strategy but are used in our compilation strategy and the
 proofs of our compilation rules.
 
-% proved in Isabelle
+% 1 - proved in Isabelle (isabelle-proved: 1)
 \begin{law}[alt-intro1]
   \label{alt-intro-law}
   If $x : T$ is a state variable,
@@ -13,7 +13,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% proved in Isabelle
+% 2 - proved in Isabelle (isabelle-proved: 2)
 \begin{law}[alt-intro2]
   \label{alt-intro2-law}
   \begin{circus}
@@ -27,7 +27,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% proved in Isabelle
+% 3 - proved in Isabelle (isabelle-proved: 3)
 \begin{minipage}{\textwidth}
 \begin{restatable}[alt-seq-dist]{law}{AltSeqDistLaw}
   \label{alt-seq-dist-law}
@@ -39,7 +39,7 @@ proofs of our compilation rules.
 \end{restatable}
 \end{minipage}
 
-% proved in Isabelle
+% 4 - proved in Isabelle (isabelle-proved: 4)
 \begin{law}[alt-assump-intro]
   \label{alt-assump-intro-law}
   \begin{circus}
@@ -49,7 +49,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% proved in Isabelle
+% 5 - proved in Isabelle (isabelle-proved: 5)
 \begin{law}[assump-assign-dist]
   \label{assump-assign-dist-law}
   If $g_1 \implies g_2[e/x]$ then,
@@ -60,7 +60,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% proved in Isabelle
+% 6 - proved in Isabelle (isabelle-proved: 6)
 \begin{law}[assump-seq-subst]
   \label{assump-seq-subst-law}
   \begin{circus}
@@ -70,7 +70,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% proved in Isabelle
+% 7 - proved in Isabelle (isabelle-proved: 7)
 \begin{law}[assump-assign-subst]
   \label{assump-assign-subst-law}
   \begin{circus}
@@ -80,7 +80,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle (similar to Law[assign-seq-dist] in Alvaro's thesis)
+% 8 - Proved in Isabelle (similar to Law[assign-seq-dist] in Alvaro's thesis) (isabelle-proved: 8)
 \begin{law}[assign-seq-subst]
   \label{assign-seq-subst-law}
   If $x$ is free in $e$ then,
@@ -91,7 +91,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 9 - Proved in Isabelle (isabelle-proved: 9)
 \begin{law}[assump-alt-guard-replace]
   \label{assump-alt-guard-replace-law}
   If $\forall i @ h \land g1_i \iff h \land g2_i$ then,
@@ -102,7 +102,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle (similar to Law[assump-alt-dist] in Alvaro's thesis)
+% 10 - Proved in Isabelle (similar to Law[assump-alt-dist] in Alvaro's thesis) (isabelle-proved: 10)
 \begin{law}[assump-alt-dist]
   \label{assump-alt-dist-law}
   \begin{circus}
@@ -112,7 +112,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Needs Proving in Isabelle (follows from Law [assump-alt-dist], Law [assump-elim] and Law [seq-unitl])
+% 11 - Needs Proving in Isabelle (follows from Law [assump-alt-dist], Law [assump-elim] and Law [seq-unitl]) (derived: 1)
 \begin{law}[assump-alt-dist-move]
   \label{assump-alt-dist-remove-law}
   \begin{circus}
@@ -122,7 +122,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 12 - Proved in Isabelle (isabelle-proved: 11)
 \begin{law}[assign-assump-intro]
   \label{assign-assump-intro-law}
   If $x$ is free in $e$ then,
@@ -131,7 +131,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 13 - Proved in Isabelle (isabelle-proved: 12)
 \begin{law}[assump-assign-intro]
   \label{assump-assign-intro-law}
   \begin{circus}
@@ -139,7 +139,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 14 - Proved in Isabelle (isabelle-proved: 13)
 \begin{law}[assump-assign-cond-collapse-true]
   \label{assump-assign-cond-collapse-true-law}
   \begin{circus}
@@ -149,7 +149,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 15 - Proved in Isabelle (isabelle-proved: 14)
 \begin{law}[assump-assign-cond-collapse-false]
   \label{assump-assign-cond-collapse-false-law}
   \begin{circus}
@@ -159,7 +159,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 16 - Proved in Isabelle (isabelle-proved: 15)
 \begin{law}[assump-alt-collapse1]
   \label{assump-alt-collapse1-law}
   \begin{circus}
@@ -174,7 +174,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 17 - Proved in Isabelle (isabelle-proved: 16)
 \begin{law}[assump-alt-collapse2]
   \label{assump-alt-collapse2-law}
   If $e \in I$ then,
@@ -189,7 +189,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 18 - Proved in Isabelle (isabelle-proved: 17)
 \begin{law}[assump-alt-intro]
   \label{assump-alt-intro-law}
   \begin{circus}
@@ -197,7 +197,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 19 - Proved in Isabelle (isabelle-proved: 18)
 \begin{law}[schema-pre-assump-intro]
   \label{schema-pre-assump-intro-law}
   \begin{circus}
@@ -205,7 +205,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle (similar to Law C.53 in Marcel's thesis)
+% 20 - Proved in Isabelle (similar to Law C.53 in Marcel's thesis)  (isabelle-proved: 19)
 \begin{law}[assump-schema-dist]
   \label{assump-schema-dist-law}
   If $g \land p \implies h'$
@@ -216,7 +216,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Proved in Isabelle
+% 21 - Proved in Isabelle  (isabelle-proved: 20)
 \begin{law}[assump-guard-dist]
   \label{assump-guard-dist-law}
   \begin{circus}
@@ -226,7 +226,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% TODO: Needs Isabelle proof (similar to Law 18.4 in Programming from Specifications)
+% 22 - TODO: Needs Isabelle proof (similar to Law 18.4 in Programming from Specifications)
 \begin{law}[alt-branch-elim]
   \label{alt-branch-elim-law}
   \begin{circus}
@@ -249,10 +249,10 @@ proofs of our compilation rules.
 \end{law}
 
 
-% Definition B.28 in Marcel's thesis
+% 23 - Definition B.28 in Marcel's thesis (oliveira2006: 1)
 \CopyRuleLaw*
 
-% Definition B.37 in Marcel's thesis
+% 24 - Definition B.37 in Marcel's thesis (oliveira2006: 2)
 \begin{law}[val-def]
   \label{val-def-law}
   If $x$ is free in $e$ then,
@@ -263,7 +263,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Definition B.38 in Marcel's thesis
+% 25 - Definition B.38 in Marcel's thesis (oliveira2006: 3)
 \begin{law}[res-def]
   \label{res-def-law}
   \begin{circus}
@@ -273,7 +273,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.26 in Marcel's thesis
+% 26 - Law C.26 in Marcel's thesis (oliveira2006: 4)
 \begin{law}[assump-conj]
   \label{assump-conj-law}
   \begin{circus}
@@ -281,7 +281,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.27 in Marcel's thesis
+% 27 - Law C.27 in Marcel's thesis (oliveira2006: 5)
 \begin{law}[assump-assump-intro]
   \label{assump-assump-intro-law}
   If $g \implies g_1$ then,
@@ -290,7 +290,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.28 in Marcel's thesis
+% 28 - Law C.28 in Marcel's thesis (oliveira2006: 6)
 \begin{law}[schema-assump-intro]
   \label{schema-assump-intro-law}
   \begin{circus}
@@ -301,7 +301,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.32 in Marcel's thesis
+% 29 - Law C.32 in Marcel's thesis (oliveira2006: 7)
 \begin{law}[assump-guard-elim1]
   \label{assump-guard-elim1-law}
   If $g_1 \implies g_2$ then,
@@ -312,7 +312,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.33 in Marcel's thesis
+% 30 - Law C.33 in Marcel's thesis (oliveira2006: 8)
 \begin{law}[assump-guard-elim2]
   \label{assump-guard-elim2-law}
   If $g_1 \implies \lnot g_2$ then,
@@ -323,10 +323,10 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.35 in Marcel's thesis
+% 31 - Law C.35 in Marcel's thesis (oliveira2006: 9)
 \AssumpElimLaw*
 
-% Law C.36 in Marcel's thesis
+% 32 - Law C.36 in Marcel's thesis (oliveira2006: 10)
 \begin{law}[assump-subst]
   \label{assump-subst-law}
   If $g_1 \implies g_2$ then,
@@ -335,7 +335,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
   
-% Law C.37 in Marcel's thesis
+% 33 - Law C.37 in Marcel's thesis (oliveira2006: 11)
 \begin{law}[assump-extchoice-distr]
   \label{assump-extchoice-distr-law}
   \begin{circus}
@@ -345,7 +345,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.46 in Marcel's thesis
+% 34 - Law C.46 in Marcel's thesis (oliveira2006: 12)
 \begin{law}[assump-output-prefix-dist]
   \label{assump-output-prefix-dist-law}
   \begin{circus}
@@ -353,7 +353,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Law [assump-output-prefix-dist], Law [assump-elim] and Law [seq-unitl]
+% 35 - From Law [assump-output-prefix-dist], Law [assump-elim] and Law [seq-unitl]  (derived: 2)
 \begin{law}[assump-output-prefix-dist-move]
   \label{assump-output-prefix-dist-move-law}
   \begin{circus}
@@ -361,7 +361,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
   
-% Law C.48 in Marcel's thesis
+% 36 - Law C.48 in Marcel's thesis (oliveira2006: 13)
 \begin{law}[assump-input-prefix-dist]
   \label{assump-input-prefix-dist-law}
   If $x$ is not free in $g$ then,
@@ -370,7 +370,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Law [assump-input-prefix-dist], Law [alt-elim] and Law [seq-unitl]
+% 37 - From Law [assump-input-prefix-dist], Law [alt-elim] and Law [seq-unitl] (derived: 3)
 \begin{law}[assump-input-prefix-dist-move]
   \label{assump-input-prefix-dist-move-law}
   If $x$ is not free in $g$ then,
@@ -379,7 +379,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.67 in Marcel's thesis
+% 38 - Law C.67 in Marcel's thesis (oliveira2006: 14)
 \begin{law}[true-guard]
   \label{true-guard-law}
   \begin{circus}
@@ -387,7 +387,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.68 in Marcel's thesis
+% 39 - Law C.68 in Marcel's thesis (oliveira2006: 15)
 \begin{law}[false-guard]
   \label{false-guard-law}
   \begin{circus}
@@ -395,7 +395,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.71 in Marcel's thesis
+% 40 - Law C.71 in Marcel's thesis (oliveira2006: 16)
 \begin{law}[schema-seq-intro]
   \label{schema-seq-intro-law}
   \begin{circus}
@@ -417,7 +417,7 @@ proofs of our compilation rules.
   are the dashed and undashed free variables of a predicated $P$.
 \end{law}
 
-% Law C.75 in Marcel's thesis
+% 41 - Law C.75 in Marcel's thesis (oliveira2006: 17)
 \begin{law}[schema-refinement]
   \label{schema-refinement-law}
   \begin{circus}
@@ -432,7 +432,7 @@ proofs of our compilation rules.
   \end{itemize}
 \end{law}
 
-% From Law C.101 in Marcel's thesis
+% 42 - From Law C.101 in Marcel's thesis (oliveira2006: 18)
 \begin{law}[input-prefix-seq-assoc]
   \label{input-prefix-seq-assoc-law}
   If $v$ is not free in $B$ then,
@@ -441,16 +441,15 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Law C.101 in Marcel's thesis
+% 43 - From Law C.101 in Marcel's thesis (oliveira2006: 19)
 \begin{law}[output-prefix-seq-assoc]
   \label{output-prefix-seq-assoc-law}
-  If $v$ is not free in $B$ then,
   \begin{circus}
     c!v \then (A \circseq B) = (c!v \then A) \circseq B
   \end{circus}
 \end{law}
 
-% Law C.110 in Marcel's thesis
+% 44 - Law C.110 in Marcel's thesis (oliveira2006: 20)
 \begin{law}[extchoice-comm]
   \label{extchoice-comm-law}
   \begin{circus}
@@ -458,7 +457,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Law C.112 in Marcel's thesis
+% 45 - From Law C.112 in Marcel's thesis (oliveira2006: 21)
 \begin{law}[extchoice-seq-distr]
   \label{extchoice-seq-distr-law}
   \begin{circus}
@@ -466,7 +465,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.114 in Marcel's thesis
+% 46 - Law C.114 in Marcel's thesis (oliveira2006: 22)
 \begin{law}[extchoice-unit]
   \label{extchoice-unit-law}
   \begin{circus}
@@ -474,7 +473,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.128 in Marcel's thesis
+% 47 - Law C.128 in Marcel's thesis (oliveira2006: 23)
 \begin{law}[rec-unfold]
   \label{rec-unfold-law}
   \begin{circus}
@@ -482,7 +481,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.129 in Marcel's thesis
+% 48 - Law C.129 in Marcel's thesis (oliveira2006: 24)
 \begin{law}[rec-least-fixed-point]
   \label{rec-least-fixed-point-law}
   If $F(Y) \circrefines_A Y$ then,
@@ -491,10 +490,10 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.132A in Marcel's thesis
+% 49 - Law C.132A in Marcel's thesis (oliveira2006: 25)
 \SeqUnitlLaw*
 
-% Law C.132B in Marcel's thesis
+% 50 - Law C.132B in Marcel's thesis (oliveira2006: 26)
 \begin{law}[seq-unitr]
   \label{seq-unitr-law}
   \begin{circus}
@@ -502,7 +501,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law C.134 in Marcel's thesis
+% 51 - Law C.134 in Marcel's thesis (oliveira2006: 27)
 \begin{law}[seq-zerol]
   \label{seq-zerol-law}
   \begin{circus}
@@ -510,7 +509,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Law C.139 in Marcel's thesis
+% 52 - From Law C.139 in Marcel's thesis (oliveira2006: 28)
 \begin{law}[var-subst]
   If $y$ is not free in $A$
   \label{var-subst-law}
@@ -519,7 +518,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Corollary 3.1 in Marcel's thesis and the definition of hiding
+% 53 - From Corollary 3.1 in Marcel's thesis and the definition of hiding (oliveira2006: 29)
 \begin{law}[schema-hide-var-conv]
   \label{schema-hide-var-conv-law}
   If $x$ and $x'$ have type $T$ in $S$ then,
@@ -530,28 +529,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[alt-var-dist-both] in Alvaro's thesis
-\begin{law}[var-alt-dist]
-  \label{var-alt-dist-law}
-  Provided $x$ is not free in $b_1$ or $b_2$, and $b_1 \lor b_2$ and
-  $b_1 \implies \lnot b_2$ hold,
-  \begin{circus}
-    \begin{array}{l}
-      \circvar x : T \circspot \\
-      \circif b_1 \circthen A \\
-      {} \circelse b_2 \circthen B \\
-      \circfi
-    \end{array}
-    =
-    \begin{array}{l}
-      \circif b_1 \circthen \circvar x : T \circspot A \\
-      {} \circelse b_2 \circthen \circvar x : T \circspot B \\
-      \circfi
-    \end{array}
-  \end{circus}
-\end{law}
-  
-% Law[var-seq-ext-left] in Alvaro's thesis (from C.137 in Marcel's thesis)
+% 55 - Law[var-seq-ext-left] in Alvaro's thesis (from C.137 in Marcel's thesis) (miyazawa2012: 1)
 \begin{law}[var-seq-extl]
   \label{var-seq-extl-law}
   If $x$ is not free in $A_1$ then,
@@ -562,7 +540,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[var-seq-ext-right] in Alvaro's thesis (from C.137 in Marcel's thesis)
+% 56 - Law[var-seq-ext-right] in Alvaro's thesis (from C.137 in Marcel's thesis) (miyazawa2012: 2)
 \begin{law}[var-seq-extr]
   \label{var-seq-extr-law}
   If $x$ is not free in $A_1$ then,
@@ -573,7 +551,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[var-assign-intro] in Alvaro's thesis
+% 57 - Law[var-assign-intro] in Alvaro's thesis (miyazawa2012: 3)
 \begin{law}[var-assign-intro]
   \label{var-assign-intro-law}
   If $x$ is not free in $A$ then,
@@ -584,7 +562,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[var-prefix-ext] in Alvaro's thesis
+% 58 - Law[var-prefix-ext] in Alvaro's thesis (miyazawa2012: 4)
 \begin{law}[input-prefix-var-ext]
   \label{input-prefix-var-ext-law}
   If $x$ and $y$ are distinct then,
@@ -595,7 +573,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[assign-seq-col] in Alvaro's thesis
+% 59 - Law[assign-seq-col] in Alvaro's thesis (miyazawa2012: 5)
 \begin{law}[assign-seq-col]
   \label{assign-seq-col-law}
   \begin{circus}
@@ -603,7 +581,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[assign-schema-conv] in Alvaro's thesis
+% 60 - Law[assign-schema-conv] in Alvaro's thesis (miyazawa2012: 6)
 \begin{law}[assign-schema-conv]
   \label{assign-schema-conv-law}
   \begin{circus}
@@ -622,7 +600,7 @@ proofs of our compilation rules.
   \end{itemize}
 \end{law}
 
-% Law[assign-seq-com] in Alvaro's thesis
+% 61 - Law[assign-seq-com] in Alvaro's thesis (miyazawa2012: 7)
 \begin{law}[assign-seq-dist]
   \label{assign-seq-dist-law}
   If $x$ is not written to by $A$ then,
@@ -633,7 +611,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law[var-rename] in Alvaro's thesis
+% 62 - Law[var-rename] in Alvaro's thesis (miyazawa2012: 8)
 \begin{law}[var-rename]
   \label{var-rename-law}
   If $y$ is not free in $A$ then,
@@ -642,7 +620,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% Law scompC in ZRC paper
+% 63 - Law scompC in ZRC paper (zrc: 1)
 \begin{law}[schema-comp-seq-conv]
   \label{schema-comp-seq-conv-law}
   \begin{circus}
@@ -659,7 +637,7 @@ proofs of our compilation rules.
   \end{itemize}
 \end{law}
 
-% From Definition B.40 in Marcel's thesis and Law vrbI in ZRC paper
+% 64 - From Definition B.40 in Marcel's thesis and Law vrbI in ZRC paper (zrc: 2)
 \begin{law}[schema-var-intro]
   \label{schema-var-intro-law}
   If $x$ is not declared in $decls$ then,
@@ -670,7 +648,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From definition B.40 in Marcel's thesis and law abA in Ana's thesis
+% 65 - From definition B.40 in Marcel's thesis and law abA in Ana's thesis (zrc: 3)
 \begin{law}[assump-schema-absorb]
   \label{assump-schema-absorb-law}
   \begin{circus}
@@ -680,13 +658,13 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From the definition of process refinement (Definition 3.2 in Marcel's thesis)
+% 66 - From the definition of process refinement (Definition 3.2 in Marcel's thesis) (oliveira2006: 30)
 \ActionIntroLaw*
 
-% from application of Law [copy-rule] and Law [action-intro]
+% 67 - from application of Law [copy-rule] and Law [action-intro] (derived: 4)
 \ActionRenameLaw*
 
-% From definition B.40 in Marcel's thesis
+% 68 - From definition B.40 in Marcel's thesis (oliveira2006: 31)
 \begin{law}[schema-action-fixed-var-intro]
   \label{schema-action-fixed-var-intro-law}
   If $x$ and $x'$ are not in the declared variables of $S$ but $x$ is
@@ -696,7 +674,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Exercise 2.6.4(2) in the UTP book with
+% 69 - From Exercise 2.6.4(2) in the UTP book with (utp-book: 1)
 % F(X) = \{g\} \circseq f(X)
 % G(X) = X \circseq \{g\}
 % H(X) = f(X)
@@ -710,7 +688,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From the dual of Exercise 2.6.4 in the UTP book and Theorem 7.15
+% 70 - From the dual of Exercise 2.6.4 in the UTP book and Theorem 7.15 (utp-book: 2)
 % from Simon's reactive contracts paper with
 % F(X) = \{g\} \circseq f(X)
 % G(X) = \{g\} \circseq X 
@@ -731,6 +709,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
+% 71 (utp-book: 3)
 \begin{law}[assump-rec-dist-refine]
   \label{assump-rec-dist-refine-law}
   Given functions on actions $G$ and $H$,
@@ -750,7 +729,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Definition B.36 in Marcel's thesis and Laws 2.9L1 and 2.9L2 in the UTP book
+% 72 - From Definition B.36 in Marcel's thesis and Laws 2.9L1 and 2.9L2 in the UTP book (utp-book: 4)
 \begin{law}[var-var-comm]
   \label{var-var-comm-law}
   \begin{circus}
@@ -758,16 +737,16 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Exercise 2.6.4(2) in the UTP book with
+% 73 - From Exercise 2.6.4(2) in the UTP book with (utp-book: 5)
 % F(X) = A \circseq X
 % G(X) = X \circseq B
 % H(X) = A \circseq X
 \RecActionIntroLaw*
 
-% Exercise 2.6.4(1) in the UTP book
+% 74 - Exercise 2.6.4(1) in the UTP book (utp-book: 6)
 \RecRollingRuleLaw*
 
-% TODO: needs proof (should follow from Definition B.40 in Marcel's
+% 75 - TODO: needs proof (should follow from Definition B.40 in Marcel's  (derived: 5)
 % thesis, and Law vrbI in ZRC or a generalisation of
 % Law[var-assign-intro] in Alvaro's thesis)
 \begin{law}[var-schema-intro]
@@ -779,7 +758,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% TODO: needs proof (similar to Law[alt-var-dist-both] in Alvaro's
+% 76 - TODO: needs proof (similar to Law[alt-var-dist-both] in Alvaro's
 % thesis)
 \begin{law}[alt-var-dist]
   \label{alt-var-dist-law}
@@ -791,7 +770,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% trivial consequence of definition of sequential composition
+% 77 - trivial consequence of definition of sequential composition (derived: 6)
 \begin{law}[assign-elim]
   \label{assign-elim-law}
   \begin{circus}
@@ -799,10 +778,10 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% From Definition 4.3 and Theorem 4.1 in Marcel's thesis
+% 78 - From Definition 4.3 and Theorem 4.1 in Marcel's thesis (oliveira2006: 32)
 \ForwardsDataRefinementLaw*
 
-% Lemma F.76 in Marcel's extended thesis
+% 79 - Lemma F.76 in Marcel's extended thesis (oliveira2006: 33)
 \begin{law}[simulation-decomposition]
   \label{simulation-decomposition-law}
   If $CI$ represents a forward simulation between states $v_A$ and
@@ -821,5 +800,5 @@ proofs of our compilation rules.
    \end{circus}
 \end{law}
 
-% From Definition B.51 in Marcel's Thesis
+% 80 - From Definition B.51 in Marcel's Thesis (oliveira2006: 34)
 \ProcessParamElimLaw*
