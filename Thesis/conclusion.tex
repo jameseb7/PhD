@@ -10,8 +10,12 @@ Section~\ref{future-work-section}.
 \section{Summary of Contributions}
 \label{summary-section}
 
-We have considered the safety-critical variant of Java and the virtual
-machines designed to run programs written in it.
+\addchange{Added references to previous parts of the thesis in
+  Section\protect~\protect\ref{summary-section}}
+We have considered the safety-critical variant of Java\added{, in
+  Section~\ref{scj-section},} and the virtual machines designed to run
+programs written in it\added{, in
+  Section~\ref{virtual-machines-section}}.
 None of the virtual machines is formally verified and that many of
 them precompile programs to native code.
 Given the need for a formally verified virtual machine, we have
@@ -19,16 +23,19 @@ developed a framework within which an SCJVM can be verified.
 
 Having noted that SCJ virtual machines employ compilation, we have
 surveyed some of the work on compiler correctness, particularly those
-related to Java compilation.
+related to Java compilation\added{, in
+  Section~\ref{compiler-correctness-section}}.
 We have established that two approaches to compiler correctness have
 been used:~the commuting-diagram approach and the algebraic approach.
 We have adopted the algebraic approach and chosen \Circus{} as a
 specification language.
 
-To specify an SCJVM we have identified the requirements
-of the virtual machine services to support SCJ programs.
+To specify an SCJVM we have identified the requirements of the virtual
+machine services to support SCJ programs.
 We have also constructed a formal model of those requirements in the
 \Circus{} specification language.
+\added{These virtual machine services requirements and their formal
+  model are discussed in Chapter~\ref{scjvm-services-chapter}.}
 
 Contact with one of the authors of the SCJ specification has allowed
 us to obtain clarifications where the specification was unclear.
@@ -50,14 +57,19 @@ This model has been created by identifying a minimal subset of Java
 bytecode and defining its semantics, and then constructing a \Circus{}
 model of an interpreter for that subset with the necessary
 infrastructure around it.
+\added{We have discussed the core execution environment model in
+  Chapter~\ref{cee-chapter}.}
 
-Finally, we have specified a strategy for compiling SCJ bytecode to C.
+Finally, we have specified a strategy for compiling SCJ bytecode to
+C\added{, presented in Chapter~\ref{strategy-chapter}}.
 This is a strategy to apply individual compilation rules, which are
 stated as algebraic laws, to transform our model of an SCJVM
 interpreter, loaded with an SCJ bytecode program, to a \Circus{}
 respresentation of the equivalent C code.
 Since the compilation rules are stated formally as \Circus{}
 refinement laws, we can, and have, written proofs of them.
+\added{We have discussed these proofs in
+  Section~\ref{proofs-of-laws-section}.}
 This allows us to be sure of their correctness, so that our
 compilation strategy preserves the semantics of the original SCJ
 bytecode.
@@ -93,8 +105,18 @@ compilation~\cite{leroy2009a, leroy2009b, leroy2012, leinenbach2005,
   blazy2006} and, in particular, that the CompCert project provides a
 functioning formally verified C compiler that can be used.
 
+\addchange{Changed concluding sentence of
+  Section\protect~\protect\ref{summary-section} to be more balanced}
+\added{
+So, our work provides the basis for work developing a verified
+compiler, the development of which would provide the final piece
+required for complete verification of SCJ programs down to executable
+code.
+}
+\deleted{
 So our proposed work is the final piece needed for complete
 verification of SCJ programs down to executable code.
+}
 
 \section{Future Work}
 \label{future-work-section}
@@ -116,6 +138,17 @@ This would confirm the correctness of the rules and allow for easier
 reasoning about the strategy as whole.
 Code generation from such a mechanisation could also be used to
 produce an implementation of the strategy.
+
+\addchange{Added paragraph on how our work may be applied to future
+  work on the algebraic approach}
+\added{
+Our strategy also shows how the algebraic approach developed
+in~\cite{sampaio1993} may be adapted to compile from low-level
+languages to higher-level languages.
+Future work could build upon this to develop compilation strategies
+for other low-level languages in a similar way, contributing to wider
+work on the algebraic approach to compilation.
+}
 
 Other possible directions for future work include the full
 verification of an SCJ virtual machine using our framework or even the
