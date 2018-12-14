@@ -117,10 +117,11 @@ line~\ref{algorithm-HandleReturnEPC-stackFrame-introduction-rule}.
   %\setlength{\zedindent}{0pt}
   %\setlength{\zedleftsep}{0pt}
   Given an action name $M$ and $n : \nat$, if $arg1$, \ldots,
-  $arg{<}n{>}$ are not free in $M$\addchange{Added needed provisio to
-  Rule\protect~[\protect\nameref{arguments-introduction-rule}]}\deleted{and are distinct from $c$,
-  $m$ and $args$, then}\added{, are distinct from $c$, $m$ and $args$,
-  and $\# args = n$}, then
+  $arg{<}n{>}$ are not free in $M$\IfFirstOccurrence{\addchange{Added
+      needed provisio to
+      Rule\protect~[\protect\nameref{arguments-introduction-rule}]}}\deleted{and
+    are distinct from $c$, $m$ and $args$, then}\added{, are distinct
+    from $c$, $m$ and $args$, and $\# args = n$}, then
   \begin{circus}
     \begin{array}{l}
       \lschexpract InterpreterNewStackFrame[ \\
