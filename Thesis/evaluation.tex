@@ -188,9 +188,10 @@ proved.
 The other simulations can be proved using similar reasoning.
 The rules we have not yet written proofs for are similar to those
 already proved, and mainly concern movement of data.
-The more challenging rules that transform control flow, particularly
-the loop and conditional introduction rules which are not applied by
-icecap and so cannot be checked by comparison to icecap's output.
+The more challenging rules that transform control flow have been
+proved, particularly the loop and conditional introduction rules,
+which are not applied by icecap and so cannot be checked by comparison
+to icecap's output.
 }
 
 \addchange{Added numbers of laws}
@@ -1493,7 +1494,7 @@ execution time.
 Averaging wall-clock time across 10 runs of the prototype for each of
 our examples yields 2.50 seconds for \texttt{PersistentSignal}, 2.78
 seconds for \texttt{Barrier} and 2.67 seconds for \texttt{Buffer}.
-From the output of the command indicating which stages of the strategy
+From the output of the prototype indicating which stages of the strategy
 are executing, the bulk of this time appears to be spent in
 introducing sequential composition.
 More detailed tracing of the time taken shows that this is due to the
@@ -1522,11 +1523,10 @@ compilation strategy.
 It is more helpful to consider the asymptotic complexity of the
 compilation strategy, to determine if it will scale well in an
 optimised implementation.
-Assume an input program consists of $m$ methods containing an average
-of $n$ instructions each, and that the local updates of the
-control flow graph are made to take constant time.
-Then the time complexity of our strategy is at most
-$\mathcal{O}(m^3n)$.
+Assuming an input program consists of $m$ methods containing an
+average of $n$ instructions each, and that the local updates of the
+control flow graph are made to take constant time, then the time
+complexity of our strategy is at most $\mathcal{O}(m^3n)$.
 This is because the loop on line~\ref{algorithm-method-loop} may loop
 once for each of the $m$ methods if only one method is separated in
 each iteration, and within the loop
