@@ -84,6 +84,14 @@
 %\newcommand{\xindex}[2]{\expandafter\index\expandafter[changes]\expandafter{\pageref{#1}#2}}
 \newcommand{\erasenumber}[1]{}
 \newrobustcmd{\removecomma}[1]{}
+
+\makeatletter
+\newcommand{\IfFirstOccurrence}[1]{%
+  \ifthmt@thisistheone%
+  #1%
+  \fi%
+}
+\makeatother
 \newcommand{\addchange}[1]{%
   \ifShowChanges%
   \refstepcounter{changes}%
@@ -99,6 +107,7 @@
 %  \index[changes]{Comment \textbf{C\expandafter\sortgref#1\sortgref}|BH{\arabic{changes}}}%
   \fi%
 }%
+
 
 \def\sortgref#1\sortgref{%
 	\ignoresort{\ifnum#1<10 00\else\ifnum #1<100 0\fi\fi#1}#1%
