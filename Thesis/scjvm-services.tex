@@ -1100,6 +1100,23 @@ that we have proved in the course of our work, can be found in
 Appendix~E of the extended version of this
 thesis~\cite{baxter2018-extended}.
 
+\addchange{Added paragraph on the use of our SCJVM services model}
+\added{
+Our formal model of the SCJVM services provides a specification that
+supports our specification of the core execution environment described
+in the next chapter, which forms the basis for our compilation
+strategy, descibed in Chapter~\ref{strategy-chapter}.
+The model of the SCJVM services can thus be used to create an SCJVM
+services implementation by refinement from the model, which can be
+translated to executable code.
+This implementation can thus support the output of the compilation
+strategy.
+Properties proved for the specification of the SCJVM services are
+preserved by the refinement and so it can be known that those
+properties also hold for the implementation.
+}
+
+
 \begin{figure}[ht]
   \centering
   \begin{tikzpicture}
