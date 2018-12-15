@@ -868,6 +868,20 @@ as flags for synchronisation or signalling between processes.
 Each process may have state, and is made up of actions that operate on
 that state and communicate over channels.
 
+\addchange{Added paragraph explaining use of \protect\Circus{} for
+  development by refinement}
+\added{
+\Circus{} is a language for refinement. 
+It allows for a program's behaviour to written in as an abstract
+specifications to be written, including invariants and nondeterminism.
+After reasoning using the invariants present in the abstract model to
+ensure it yields the desired behaviour, a refinement can be
+established to a more concrete model from which an executable program
+can be created.
+The provision for refinement in \Circus{} makes it well suited for use
+as a specification language for the algebraic approach to compilation.
+}
+
 We illustrate the concepts of \Circus{} using as an example the
 process for the real-time clock from an early version of our
 specification of an SCJ virtual machine.
