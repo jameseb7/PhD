@@ -95,7 +95,9 @@
 \newcommand{\addchange}[1]{%
   \ifShowChanges%
   \refstepcounter{changes}%
-  [Change \arabic{changes}]%
+  {\normalsize%
+    [Change \arabic{changes}]%
+  }
   \phantomsection%
   \label{change\arabic{changes}}%
   \index[changes]{\expandafter\sortgref\arabic{changes}\sortgref@{%
@@ -125,8 +127,9 @@
 
 \setcounter{secnumdepth}{4}
 
-\title{An Approach to Verification of Ahead-of-time Compilation for Safety-Critical Java}
-\author{James Baxter}
+\title{\protect\addchange{Changed title to not refer to
+    \protect``verification\protect''}\protect\changed{Ahead-of-Time\\Algebraic
+    Compilation for\\Safety-Critical Java}} \author{James Baxter}
 \date{}
 
 \bibliography{literature} 
