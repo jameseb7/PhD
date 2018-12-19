@@ -922,3 +922,101 @@
 \begin{crproof}[\nameref{restricted-assump-assign-dist-rule}]\hfill\\
   This follows directly from Law~[\nameref{assump-assign-dist-law}].
 \end{crproof}
+
+\begin{crproof}[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]
+  \begin{argue}
+    \begin{array}{l}
+      \{\# frameStack = 1\} \circseq HandleAreturnEPC
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and definition of $HandleAreturnEPC$ \\
+    \begin{array}{l}
+      \{\# frameStack = 1\} \circseq (\circvar returnValue : Word \circspot \\
+      \lschexpract InterpreterAreturn \rschexpract \circseq  CheckLauncherReturn(returnValue))
+    \end{array}\\
+    = & Law~[\nameref{var-seq-extl-law}] \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \{\# frameStack = 1\} \circseq \\
+      \lschexpract InterpreterAreturn \rschexpract \circseq  CheckLauncherReturn(returnValue))
+    \end{array}\\
+    = & Definition of $InterpreterAreturn$ \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \{\# frameStack = 1\} \circseq \\
+      \lschexpract InterpreterAreturn1 \lor InterpreterAreturn2 \rschexpract \circseq  CheckLauncherReturn(returnValue))
+    \end{array}\\
+    = & Definition of $InterpreterAreturn2$ and schema calculus \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \{\pre InterpreterAreturn2\} \circseq \\
+      \lschexpract InterpreterAreturn2 \lor InterpreterAreturn1 \rschexpract \circseq  CheckLauncherReturn(returnValue))
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{schema-disj-elim-law}] \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \{\pre InterpreterAreturn2\} \circseq \\
+      \lschexpract InterpreterAreturn2 \rschexpract \circseq  CheckLauncherReturn(returnValue))
+    \end{array}\\
+    \circrefines_A & Definition of $InterpreterAreturn2$, schema calculus and Law~[\nameref{assump-schema-dist-law}] \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn2 \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq CheckLauncherReturn(returnValue))
+    \end{array}\\
+    = & Law~[\nameref{var-rename-law}] \\
+    \begin{array}{l}
+      (\circvar retVal : Word \circspot \lschexpract InterpreterAreturn2[retVal!/returnValue!] \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq CheckLauncherReturn(retVal))
+    \end{array}\\
+    = & Law~[\nameref{copy-rule-law}] and defintion of $CheckLauncherReturn$ \\
+    \begin{array}{l}
+      (\circvar retVal : Word \circspot \lschexpract InterpreterAreturn2[retVal!/returnValue!] \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq (\circval returnValue : Word \circspot \\
+	\t1 \circif frameStack = \emptyset \circthen \\
+	\t2 executeMethodRet!thread!returnValue \then \Skip \\
+	\t1 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+	\t1 \circfi)(returnVal))
+    \end{array}\\
+    = & Law~[\nameref{val-def-law}] \\
+    \begin{array}{l}
+      (\circvar retVal : Word \circspot \lschexpract InterpreterAreturn2[retVal!/returnValue!] \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq (\circvar returnValue : Word \circspot returnValue := retVal \circseq \\
+	\t1 \circif frameStack = \emptyset \circthen \\
+	\t2 executeMethodRet!thread!returnValue \then \Skip \\
+	\t1 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+	\t1 \circfi))
+    \end{array}\\
+    = & Law~[\nameref{assign-seq-subst-law}] \\
+    \begin{array}{l}
+      (\circvar retVal : Word \circspot \lschexpract InterpreterAreturn2[retVal!/returnValue!] \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq (\circvar returnValue : Word \circspot returnValue := retVal \circseq \\
+	\t1 \circif frameStack = \emptyset \circthen \\
+	\t2 executeMethodRet!thread!retVal \then \Skip \\
+	\t1 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+	\t1 \circfi))
+    \end{array}\\
+    = & Law~[\nameref{var-assign-intro-law}] \\
+    \begin{array}{l}
+      (\circvar retVal : Word \circspot \lschexpract InterpreterAreturn2[retVal!/returnValue!] \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq \\
+	\t1 \circif frameStack = \emptyset \circthen \\
+	\t2 executeMethodRet!thread!retVal \then \Skip \\
+	\t1 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+	\t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{var-rename-law}] \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn2 \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq \\
+      \t1 \circif frameStack = \emptyset \circthen \\
+      \t2 executeMethodRet!thread!returnValue \then \Skip \\
+      \t1 {} \circelse frameStack \neq \emptyset \circthen \Skip \\
+      \t1 \circfi)
+    \end{array}\\
+    = & Law~[\nameref{assump-alt-collapse1-law}] \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn2 \rschexpract \circseq \\
+      \{ frameStack = \emptyset \} \circseq executeMethodRet!thread!returnValue \then \Skip)
+    \end{array}\\
+    \circrefines_A & Law~[\nameref{assump-elim-law}] and Law~[\nameref{seq-unitl-law}] \\
+    \begin{array}{l}
+      (\circvar returnValue : Word \circspot \lschexpract InterpreterAreturn2 \rschexpract \circseq \\
+      executeMethodRet!thread!returnValue \then \Skip)
+    \end{array}\\
+  \end{argue}
+\end{crproof}

@@ -395,7 +395,18 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 40 - Law C.71 in Marcel's thesis (oliveira2006: 16)
+% 40 - Law C.70 in Marcel's thesis (oliveira2006: 16)
+\begin{law}[schema-disj-elim]
+  \label{schema-disj-elim-law}
+  \begin{circus}
+    \lcircguard \pre S_1 \rcircguard \circguard \lschexpract S_1 \lor S_2 \rschexpract
+    \circrefines_A
+    \lcircguard \pre S_1 \rcircguard \circguard \lschexpract S_1 \rschexpract
+  \end{circus}
+  
+\end{law}
+
+% 41 - Law C.71 in Marcel's thesis (oliveira2006: 17)
 \begin{law}[schema-seq-intro]
   \label{schema-seq-intro-law}
   \begin{circus}
@@ -417,7 +428,7 @@ proofs of our compilation rules.
   are the dashed and undashed free variables of a predicated $P$.
 \end{law}
 
-% 41 - Law C.75 in Marcel's thesis (oliveira2006: 17)
+% 42 - Law C.75 in Marcel's thesis (oliveira2006: 18)
 \begin{law}[schema-refinement]
   \label{schema-refinement-law}
   \begin{circus}
@@ -432,7 +443,7 @@ proofs of our compilation rules.
   \end{itemize}
 \end{law}
 
-% 42 - From Law C.101 in Marcel's thesis (oliveira2006: 18)
+% 43 - From Law C.101 in Marcel's thesis (oliveira2006: 19)
 \begin{law}[input-prefix-seq-assoc]
   \label{input-prefix-seq-assoc-law}
   If $v$ is not free in $B$ then,
@@ -441,7 +452,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 43 - From Law C.101 in Marcel's thesis (oliveira2006: 19)
+% 44 - From Law C.101 in Marcel's thesis (oliveira2006: 20)
 \begin{law}[output-prefix-seq-assoc]
   \label{output-prefix-seq-assoc-law}
   \begin{circus}
@@ -449,7 +460,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 44 - Law C.110 in Marcel's thesis (oliveira2006: 20)
+% 45 - Law C.110 in Marcel's thesis (oliveira2006: 21)
 \begin{law}[extchoice-comm]
   \label{extchoice-comm-law}
   \begin{circus}
@@ -457,7 +468,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 45 - From Law C.112 in Marcel's thesis (oliveira2006: 21)
+% 46 - From Law C.112 in Marcel's thesis (oliveira2006: 22)
 \begin{law}[extchoice-seq-distr]
   \label{extchoice-seq-distr-law}
   \begin{circus}
@@ -465,7 +476,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 46 - Law C.114 in Marcel's thesis (oliveira2006: 22)
+% 47 - Law C.114 in Marcel's thesis (oliveira2006: 23)
 \begin{law}[extchoice-unit]
   \label{extchoice-unit-law}
   \begin{circus}
@@ -473,7 +484,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 47 - Law C.128 in Marcel's thesis (oliveira2006: 23)
+% 48 - Law C.128 in Marcel's thesis (oliveira2006: 24)
 \begin{law}[rec-unfold]
   \label{rec-unfold-law}
   \begin{circus}
@@ -481,7 +492,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 48 - Law C.129 in Marcel's thesis (oliveira2006: 24)
+% 49 - Law C.129 in Marcel's thesis (oliveira2006: 25)
 \begin{law}[rec-least-fixed-point]
   \label{rec-least-fixed-point-law}
   If $F(Y) \circrefines_A Y$ then,
@@ -490,10 +501,10 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 49 - Law C.132A in Marcel's thesis (oliveira2006: 25)
+% 50 - Law C.132A in Marcel's thesis (oliveira2006: 26)
 \SeqUnitlLaw*
 
-% 50 - Law C.132B in Marcel's thesis (oliveira2006: 26)
+% 51 - Law C.132B in Marcel's thesis (oliveira2006: 27)
 \begin{law}[seq-unitr]
   \label{seq-unitr-law}
   \begin{circus}
@@ -501,7 +512,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 51 - Law C.134 in Marcel's thesis (oliveira2006: 27)
+% 52 - Law C.134 in Marcel's thesis (oliveira2006: 28)
 \begin{law}[seq-zerol]
   \label{seq-zerol-law}
   \begin{circus}
@@ -509,7 +520,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 52 - From Law C.139 in Marcel's thesis (oliveira2006: 28)
+% 53 - From Law C.139 in Marcel's thesis (oliveira2006: 29)
 \begin{law}[var-subst]
   If $y$ is not free in $A$
   \label{var-subst-law}
@@ -518,7 +529,7 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 53 - From Corollary 3.1 in Marcel's thesis and the definition of hiding (oliveira2006: 29)
+% 54 - From Corollary 3.1 in Marcel's thesis and the definition of hiding (oliveira2006: 30)
 \begin{law}[schema-hide-var-conv]
   \label{schema-hide-var-conv-law}
   If $x$ and $x'$ have type $T$ in $S$ then,
@@ -658,13 +669,13 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 66 - From the definition of process refinement (Definition 3.2 in Marcel's thesis) (oliveira2006: 30)
+% 66 - From the definition of process refinement (Definition 3.2 in Marcel's thesis) (oliveira2006: 31)
 \ActionIntroLaw*
 
 % 67 - from application of Law [copy-rule] and Law [action-intro] (derived: 4)
 \ActionRenameLaw*
 
-% 68 - From definition B.40 in Marcel's thesis (oliveira2006: 31)
+% 68 - From definition B.40 in Marcel's thesis (oliveira2006: 32)
 \begin{law}[schema-action-fixed-var-intro]
   \label{schema-action-fixed-var-intro-law}
   If $x$ and $x'$ are not in the declared variables of $S$ but $x$ is
@@ -778,10 +789,10 @@ proofs of our compilation rules.
   \end{circus}
 \end{law}
 
-% 78 - From Definition 4.3 and Theorem 4.1 in Marcel's thesis (oliveira2006: 32)
+% 78 - From Definition 4.3 and Theorem 4.1 in Marcel's thesis (oliveira2006: 33)
 \ForwardsDataRefinementLaw*
 
-% 79 - Lemma F.76 in Marcel's extended thesis (oliveira2006: 33)
+% 79 - Lemma F.76 in Marcel's extended thesis (oliveira2006: 34)
 \begin{law}[simulation-decomposition]
   \label{simulation-decomposition-law}
   If $CI$ represents a forward simulation between states $v_A$ and
@@ -800,5 +811,5 @@ proofs of our compilation rules.
    \end{circus}
 \end{law}
 
-% 80 - From Definition B.51 in Marcel's Thesis (oliveira2006: 34)
+% 80 - From Definition B.51 in Marcel's Thesis (oliveira2006: 35)
 \ProcessParamElimLaw*
