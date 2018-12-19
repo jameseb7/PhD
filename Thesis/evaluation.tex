@@ -27,14 +27,14 @@ Section~\ref{mechanisation-of-models-section}.
 We have also developed a compilation strategy for translating SCJ
 bytecode in the interpreter model to a representation of C code. 
 Since there is not yet a sufficiently powerful automated proof
-assistant for Circus, the rules and their corresponding proofs are
+assistant for \Circus{}, the rules and their corresponding proofs are
 hand-written, although some of the laws used in the proofs have been
 proved using an automated proof assistant. 
 The proofs of the compilation rules and the sources of the laws used
 in them are discussed in Section~\ref{proofs-of-laws-section}. 
 We also add that we have developed a prototype implementation of the
 compilation strategy that takes in SCJ class files and outputs both C
-code and the Circus models resulting from the compilation strategy. 
+code and the \Circus{} models resulting from the compilation strategy. 
 This prototype implementation is discussed in
 Section~\ref{tool-support-section} and then, in
 Section~\ref{examples-section} we evaluate the strategy by applying
@@ -155,8 +155,10 @@ The overall proof then follows from the transitivity of refinement.
 Thus, every step of the proof is justified formally and this can be
 easily seen from the layout of the proof.
 
+
 \addchange{Added paragraph characterising the compilation rules which
   have been proved}
+%TODO: Add mention of the other algorithms
 \added{
 Overall, there are 91 compilation rules in our strategy, all of which
 are presented in Appendix~\ref{compilation-rules-appendix}.
@@ -171,7 +173,7 @@ In Algorithm~\ref{resolve-method-calls-algorithm}, we have proved
 Rule~[\nameref{refine-invokestatic-rule}],
 Rule~[\nameref{refine-invokevirtual-rule}],
 Rule~[\nameref{resolve-special-method-rule}] and
-Rule~[\nameref{resolve-normal-method-rule}], which are among the most
+Rule~[\nameref{resolve-normal-method-rule}], which are the most
 substantial rules in that algorithm and are similar to other rules
 used there.
 The $frameStack$ assumption distribution rules used in
@@ -186,7 +188,7 @@ We have also proved Rule~[\nameref{HandleAloadSF-simulation-rule}] as
 an example of how one of the rules establishing a simulation can be
 proved.
 The other simulations can be proved using similar reasoning.
-The rules we have not yet written proofs for are similar to those
+The rules we have not written proofs for are similar to those
 already proved, and mainly concern movement of data.
 The more challenging rules that transform control flow have been
 proved, particularly the loop and conditional introduction rules,
@@ -237,6 +239,7 @@ so we cannot ensure coverage.
 Our work on this has now been integrated into Isabelle/UTP itself.
 
 \addchange{Added paragraph describing unproved algebraic laws}
+% TODO: rewrite this paragraph
 \added{
 There are two laws for which we do not have a proof.
 The first of these is similar to Law 18.4 from~\cite{morgan1990} and
@@ -663,7 +666,7 @@ The second is \texttt{Buffer}, discussed in
 Section~\ref{buffer-subsection}, which demonstrates SCJ memory
 behaviour.
 Finally, the third example, \texttt{Barrier}, \added{which demonstrates a
-common synchronsation pattern in real-time systems,} is discussed in
+common synchronisation pattern in real-time systems,} is discussed in
 Section~\ref{barrier-subsection}.
 
 We have run the examples through both our prototype and the icecap
@@ -683,11 +686,12 @@ For example binary operation bytecodes can have their semantics
 defined in a similar way to \texttt{iadd}, with compilation rules to
 handle them similar to those for \texttt{iadd} (and their
 corresponding proofs similar).
+\added{These extra rules are implemented in our prototype.}
 Conditional instructions can be handled in a similar way to
 \texttt{if\_icmple} during bytecode expansion, and subsequently
 handled by existing compilation rules.
 Also, while we did not consider \texttt{long} values in our strategy,
-we have implemented handling of operations on \texttt{long} vlaues in
+we have implemented handling of operations on \texttt{long} values in
 our prototype, operating on pairs of variables and stack slots.
 
 Array instructions \deleted{are slightly more challenging to replicate
@@ -783,7 +787,7 @@ variable block with the initialisation of $poppedArgs$.
   \label{program-infrastructure-compilation-figure}
 \end{figure}
 
-\addchange{Changed discusssion of Figure 6.2 to better explain why we
+\addchange{Changed discussion of Figure 6.2 to better explain why we
   consider the program methods but not the API methods in the code
   comparison}
 \added{
@@ -850,7 +854,8 @@ of the comparisons, since the SCJ API is the same for both icecap and
 our implementation; it is only the implementation of the API that
 differs.
 }
-We thus focus on the program code in our evaluation of the examples.
+We thus\added{, as already mentioned,} focus on the program code in
+our evaluation of the examples.
 \deleted{
 After compilation, the code corresponding to the methods of the SCJ
 API is still separate from the code corresponding to the methods of the SCJ
@@ -898,9 +903,6 @@ is outside the scope of this work.
 In what follows, we describe each of the examples and discuss points
 of our translation to C code that are particularly relevant to each
 example.
-While our overall comparison above focusses on the program code, we do
-also make some reference in the following discussion to the SCJ API
-implementation where it better illustrates some of our points.
 In Section~\ref{code-comparison-subsection}, we include a general
 discussion of the similarities and differences observed while
 comparing the code generated by our prototype to that generated by
@@ -914,8 +916,8 @@ Our first example is \texttt{PersistentSignal}.
 It consists of a single mission with two event handlers:~a periodic
 handler, \texttt{Producer}, and an aperiodic handler, \texttt{Worker}.
 These communicate through an instance of a third class,
-\texttt{PersisentSignal}, after which the example is named.
-The \texttt{PersisentSignal} class contains a boolean flag, with
+\texttt{PersistentSignal}, after which the example is named.
+The \texttt{PersistentSignal} class contains a boolean flag, with
 \texttt{synchronized} methods to read, set and clear it.
 \texttt{Producer} releases clear the \texttt{PersistentSignal} flag,
 and then signals for the \texttt{Worker} to release.
@@ -1059,9 +1061,9 @@ the use of the \texttt{executeInOuterArea()} method is represented in
 the code.
 }
 \added{
-We make some consideration related to the how the use of the
-\texttt{executeInOuterArea()} method is represented in the code, since
-it provides a good example of how method calls are translated.
+Of note is how the use of the \texttt{executeInOuterArea()} method is
+represented in the code, since it provides a good example of how
+method calls are translated.
 }
 The call to \texttt{executeInOuterArea()} itself is a simple static
 method call in both the code generated by icecap and the code
@@ -1191,12 +1193,13 @@ Firstly, variables are generated to store the contents of stack slots
 in both, with values being pushed to the stack by assignment to these
 variables, and operations performed upon them.
 Local variables of a method are also represented by C variables, and
-arguments of the method are passed as arguments of the C function in
-both our code and icecap's code.
-There are some differences in the names of variables (we name
+arguments of the method are passed as arguments of the corresponding C
+function in both our code and icecap's code.
+There are some differences in the names of variables; we name
 variables using \texttt{var} and a number while icecap uses the name
-of the variable from Java), and icecap distinguishes stack slots for
-different types, however, the basic approach is the same.
+of the variable from Java. 
+In addition, icecap distinguishes stack slots for different types,
+although the basic approach is the same.
 
 Method calls also display similarities, particularly for non-virtual
 method calls, which are simple C function calls in both our code and
@@ -1215,28 +1218,31 @@ code and in icecap.
 The fields are accessed in our code by casting a variable storing the
 pointer to the object, first to \texttt{uintptr\_t} to ensure it is
 expanded correctly on systems where pointers are wider than 32 bits
-(since a single variable is a 32-bit integer in our code), then
-casting to a pointer to the struct type for the object's class, and
-then accessing the field via a C field access.
+(since a single variable is a 32-bit integer in our code), and then to
+a pointer to the struct type for the object's class, and by finally
+accessing the field via a C field access.
 The icecap code performs the access in the same way, although an
 intermediate variable is used, a custom \texttt{pointer} type is used
 in place of \texttt{uintptr\_t}, a few other pointer casts are applied
 before the final cast to the class struct, and an optional memory
 offset is allowed for.
 The intermediate variable does not affect the semantics of the access,
-nor do the additional pointer casts.
+nor do the additional pointer casts, and it is not clear why they are
+present in the icecap code since they are not necessary. 
 The \texttt{pointer} type is defined to be equivalent to the C99
 \texttt{uintptr\_t} type (although it handles those compilers that may
-not support C99), so that does not affect the semantics.
+not support C99), so there is no difference in the semantics of our
+code and the icecap code on this point.
 For the memory offset, we assume memory addresses used by the memory
 manager are small enough to fit in a 32-bit JVM word.
 Future work could add an offset to handle heaps outside that range if
 necessary.
 
-We also observed various differences between our code and icecap; many
+There are various differences between our code and icecap; many
 of these relate to areas we have explicitly not considered in our
 strategy.
 In other cases, we have chosen to diverge from icecap's approach.
+These differences are discussed next.
 
 Firstly, there are several methods in our code that do not have
 corresponding methods in the code generated by icecap.
@@ -1272,7 +1278,7 @@ predefined stack slots (which are computed during the compilation
 process).
 We do not require this feature in our code, since all our code is
 compiled.
-For the same reason, we also do not generate the code swapping stack
+For the same reason, we also do not generate the code to swap stack
 slot variables to and from this stack.
 There are also some infrastructure methods in icecap that accept their
 arguments using the stack, and a few of the generated functions in the
@@ -1432,7 +1438,7 @@ original Java files, the sizes of which are: 270 lines for
 \texttt{PersistentSignal}, 343 lines for \texttt{Buffer}, and 318
 lines for \texttt{Barrier}.
 The input to icecap also includes an additional 10-line file
-containing a \texttt{main()} method that invokes icecaps launcher
+containing a \texttt{main()} method that invokes the icecap launcher
 infrastructure, and may be taken as part of the $Launcher$ in our
 model.
 The longer size for the C code over the Java code follows from the
@@ -1440,11 +1446,12 @@ fact that each line of Java code may be translated by multiple
 bytecode instructions.
 
 Overall, our code is similar to that of icecap; differences are
-justified in that they are more suited to the particular code we are
-considering.
+justified in that they are more suited to the particular approach we
+adopt:~not interpreting and ensuring MISRA-C compliance of the code.
 This thus provides additional confidence in the validity of the code
 generated by our strategy.
 }
+
 \section{Final Considerations}
 \label{evaluation-final-considerations-section}
 
@@ -1468,7 +1475,7 @@ proof's correctness by formally justifying each step in the proof.
 As we mentioned, the laws we have used come from existing \Circus{}
 laws taken from various sources and laws we have proved in
 Isabelle/UTP.
-This basis of laws known to be correct provides futher assurance of
+This basis of laws known to be correct provides further assurance of
 the correctness of the proofs.
 
 Finally, we have discussed our prototype implementation of the
@@ -1483,26 +1490,27 @@ The few differences observed between our code and icecap's code arise
 from design choices that enhance the generated code.
 
 \addchange{Added discussion of execution time and complexity of prototype}
-\added{
-While we have used the prototype to check form of the generated code,
-it can also give us an idea of the complexity of the strategy that we
-can use to judge how viable it would be were we to make a full
+%\added{
+While we have used the prototype to check the form of the generated
+code, it can also give us an idea of the complexity of the strategy so
+that we can judge how viable it would be were we to make a full
 implementation of it.
 By packaging the prototype as a \texttt{.jar} file we can execute it
 from a command line and use the \texttt{time} command to measure its
 execution time.
 Averaging wall-clock time across 10 runs of the prototype for each of
 our examples yields 2.50 seconds for \texttt{PersistentSignal}, 2.78
-seconds for \texttt{Barrier} and 2.67 seconds for \texttt{Buffer}.
-From the output of the prototype indicating which stages of the strategy
-are executing, the bulk of this time appears to be spent in
+seconds for \texttt{Barrier}, and 2.67 seconds for \texttt{Buffer}.
+
+From the output of the prototype indicating which stages of the
+strategy are executing, the bulk of the time appears to be spent in
 introducing sequential composition.
 More detailed tracing of the time taken shows that this is due to the
 fact that the control flow graph is reconstructed after each
 compilation rule is applied.
 The number of reachable nodes is very high at the start of the
 compilation strategy, but reduces by a large amount during sequential
-composition introduction since most of the edges between nodes
+composition introduction, since most of the edges between nodes
 represent sequential composition.
 This time could be reduced by using a more sophisticated strategy to
 perform local updates of the control flow graph, potentially reducing
@@ -1513,28 +1521,33 @@ time, even for large programs.
 
 It is difficult to produce similar measurements of compilation time
 for icecap, since icecap is designed as an Eclipse plugin and cannot
-be separated from Eclipse to allow measurment of compilation time.
+be separated from Eclipse to allow measurement of compilation time.
 However, we note that the compilation time for our examples in icecap
 seems to be of the same order of magnitude as for our prototype.
 
-Our implementation is just a prototype and so any measurments of its
+Our implementation is just a prototype and so any measurements of its
 running time are only approximations of the efficiency of our
 compilation strategy.
 It is more helpful to consider the asymptotic complexity of the
-compilation strategy, to determine if it will scale well in an
-optimised implementation.
+compilation strategy, to determine if it scales well in an optimised
+implementation.
 Assuming an input program consists of $m$ methods containing an
 average of $n$ instructions each, and that the local updates of the
 control flow graph are made to take constant time, then the time
 complexity of our strategy is at most $\mathcal{O}(m^3n)$.
-This is because the loop on line~\ref{algorithm-method-loop} may loop
-once for each of the $m$ methods if only one method is separated in
-each iteration, and within the loop
-Algorithm~\ref{resolve-method-calls-algorithm} checks each method call
-instruction, of which there may be up to $mn$, and for each target of
-the method call, of which there could be as many as there are methods,
-$m$, searches its superclasses for an implementation, of which there
-may be as many as there are methods, $m$.
+This is because, firstly, the loop on line~\ref{algorithm-method-loop}
+of Algorithm~\ref{epc-algorithm} may loop once for each of the $m$
+methods if only one method is separated in each iteration.
+At least one method will be separated in each iteration and it is
+expected that more than one will be separated in most iterations, so
+$m$ is a conservative upper bound on the number of iterations in the
+loop.
+Within the loop, Algorithm~\ref{resolve-method-calls-algorithm} checks
+each method call instruction, of which there may be up to $mn$, and
+for each target of the method call, of which there could be as many as
+there are methods, $m$, searches its superclasses for an
+implementation, of which there may be as many as there are methods,
+$m$.
 
 None of the other algorithms contributes as much as
 Algorithm~\ref{resolve-method-calls-algorithm} to the time complexity,
@@ -1552,14 +1565,16 @@ The data refinement of objects has a separate complexity, since it is
 determined by the number of classes and fields, but it is unlikely to
 contribute more to complexity than the instructions, since each field
 should be accessed by at least one instruction.
+
 The overall complexity is thus $\mathcal{O}(m^3n)$, but this is an
 upper bound and in most cases iteration will not be over all methods.
 It may be possible to find iteration strategies to reduce this
 asymptotic complexity by iterating over the methods fewer times.
 This can lead to the strategy being quadratic or linear in $m$, which
 seems an acceptable complexity.
-}
+%}
 
 All these considerations serve to validate the correctness of the
-model and strategy, and shows that our strategy is a viable basis for
-a correct-by-construction ahead-of-time SCJ-to-C compiler.
+model and strategy, and shows that our strategy is a viable
+\added{scalable} basis for a correct-by-construction ahead-of-time
+SCJ-to-C compiler.
