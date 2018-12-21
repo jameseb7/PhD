@@ -163,42 +163,52 @@ easily seen from the layout of the proof.
 
 \addchange{Added paragraph characterising the compilation rules which
   have been proved}
-%TODO: Add mention of the other algorithms
 \added{
 Overall, there are 91 compilation rules in our strategy, all of which
-are presented in Appendix~\ref{compilation-rules-appendix}.
-Of these, we have completed hand-written proofs for 46 rules.
+are presented in Appendix A. 
+Of these, we have completed hand-written proofs for 47 rules. 
 In particular, we have proved all the rules used in
 Algorithms~\ref{expand-bytecode-algorithm},
 \ref{introduce-forward-sequence-algorithm},
 \ref{introduce-loops-and-conditionals-algorithm},
 \ref{refine-main-actions-algorithm},
-and~\ref{localise-stack-frames-algorithm}.
+\ref{localise-stack-frames-algorithm}
+and~\ref{introduce-frameStack-assumptions-algorithm}. 
+In the other algorithms, we have proved at least one rule of each
+type. 
+Proofs of other rules of the same type are similar. 
+Note that Algorithms~\ref{epc-algorithm},
+\ref{separate-complete-methods-algorithm},
+\ref{pc-elimination-algorithm}, \ref{efs-algorithm},
+\ref{remove-frameStack-from-state-algorithm},
+\ref{redefine-method-action-excluding-return-action-algorithm},
+\ref{redefine-method-action-to-include-parameters-algorithm} and
+\ref{redefine-method-action-to-exclude-parameters-algorithm} only
+consist of applications of algebraic laws, which we discuss below, and
+references to other algorithms. 
 In Algorithm~\ref{resolve-method-calls-algorithm}, we have proved
 Rule~[\nameref{refine-invokestatic-rule}],
 Rule~[\nameref{refine-invokevirtual-rule}],
 Rule~[\nameref{resolve-special-method-rule}] and
-Rule~[\nameref{resolve-normal-method-rule}], which are the most
-substantial rules in that algorithm and are similar to other rules
-used there.
-The $frameStack$ assumption distribution rules used in
-Algorithm~\ref{introduce-frameStack-assumptions-algorithm}, referenced
-in Algorithm~\ref{remove-launcher-returns-algorithm} have all been
-proved.
-We have proved Rule~[\nameref{refine-PutfieldSF-rule}], used in
-Algorithm~\ref{introduce-variables-algorithm}, and
-Rule~[\nameref{refine-NewObject-rule}], used in
-Algorithm~\ref{dro-algorithm}.
-We have also proved Rule~[\nameref{HandleAloadSF-simulation-rule}] as
-an example of how one of the rules establishing a simulation can be
-proved.
-The other simulations can be proved using similar reasoning.
-The rules we have not written proofs for are similar to those
-already proved, and mainly concern movement of data.
+Rule~[\nameref{resolve-normal-method-rule}]. 
+In Algorithm~\ref{remove-launcher-returns-algorithm} we have proved
+Rule~[\nameref{refine-HandleAreturnEPC-empty-frameStack-rule}]. 
+In Algorithm~\ref{introduce-variables-algorithm}, we have proved
+Rule~[\nameref{refine-PutfieldSF-rule}] and
+Rule~[\nameref{HandleAloadSF-simulation-rule}], and, finally, in
+Algorithm~\ref{dro-algorithm}, we have proved
+Rule~[\nameref{refine-NewObject-rule}]. 
+The rules used in
+Algorithms~\ref{introduce-frameClass-assumptions-algorithm}
+and~\ref{introduce-operandStack-assumptions-algorithm} are assumption
+distribution rules similar to those used in
+Algorithm~\ref{introduce-frameStack-assumptions-algorithm}. 
+Note that the rules we have not written proofs for are similar to
+those already proved, and mainly concern movement of data. 
 The more challenging rules that transform control flow have been
 proved, particularly the loop and conditional introduction rules,
 which are not applied by icecap and so cannot be checked by comparison
-to icecap's output.
+to icecap’s output.
 }
 
 \addchange{Added numbers of laws}
@@ -208,21 +218,23 @@ to icecap's output.
 \deleted{Some are existing laws taken from~\cite{oliveira2006}
 and~\cite{miyazawa2012}, which have already been proved as part of
 those works, and so can be safely reused.}
-\added{There are 34 laws that are taken from~\cite{oliveira2006}, and
+\added{There are 35 laws that are taken from~\cite{oliveira2006}, and
   8 laws taken from~\cite{miyazawa2012}.
   Those laws have already been proved as part of those works, and so
   can be safely reused.}
-We have also used \added{3}\deleted{a few} ZRC laws from~\cite{cavalcanti1998}, which can
-be applied to \Circus{} since the semantics of ZRC are compatible with
-those of \Circus{}, by Theorem 4.3 from~\cite{oliveira2006}.
+We have also used \added{3}\deleted{a few} ZRC laws
+from~\cite{cavalcanti1998}, which can be applied to \Circus{} since
+the semantics of ZRC are compatible with those of \Circus{}, by
+Theorem 4.3 from~\cite{oliveira2006}.
 Standard least-fixed-point laws, stated in~\cite{hoare1998} are also
 applied to \Circus{} recursion, since it defined using
 least-fixed-points\added{, and this yields a further 6 laws}.
-Some \added{of the} laws follow as a trivial consequence of the definitions given in
-these sources, such as Law~[\nameref{action-intro-law}], which follows
-from the definition of process refinement, which does not reference
-actions not used in the main action of a process.
-\added{A further 6 laws are obtained from simple combinations of the
+Some \added{of the} laws follow as a trivial consequence of the
+definitions given in these sources, such as
+Law~[\nameref{action-intro-law}], which follows from the definition of
+process refinement, which does not reference actions not used in the
+main action of a process.
+\added{A further 8 laws are obtained from simple combinations of the
   other laws.}
 
 We have proved \added{20}\deleted{other} laws using the proof assistant
@@ -243,27 +255,10 @@ all program counter values have a corresponding bytecode instruction,
 so we cannot ensure coverage.
 Our work on this has now been integrated into Isabelle/UTP itself.
 
-\addchange{Added paragraph describing unproved algebraic laws}
-% TODO: rewrite this paragraph
-\added{
-There are two laws for which we do not have a proof.
-The first of these is similar to Law 18.4 from~\cite{morgan1990} and
-states that a branch of a conditional that contains only $\Chaos$ can
-be eliminated if the guards of the conditional are disjoint.
-This follows from the fact that the behaviour of a conditional for
-which no guards are true is $\Chaos$.
-The second unproved law states that if the same variable block occurs
-in each branch of a conditional, it can be extended to cover the whole
-conditional.
-It is similar to Law[alt-var-dist-both] but is generalised to apply
-when coverage and disjointness of guards is not established.
-Proving such generalisations is the motivation behind our
-implementation of conditionals in Isabelle/UTP, but lack of adequate
-support for variable blocks prevents proof of this law in Isabelle/UTP.
-}
-
 \addchange{Added some information on the lengths of proofs}
 \added{
+The proofs of the compilation rules occupy a total of approximately
+300 pages.
 The number of laws required to prove each compilation rule varies
 between the compilation rules.
 As an example, Rule~[\nameref{refine-invokestatic-rule}], consists of
