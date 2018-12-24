@@ -167,9 +167,9 @@ developers and verifiers:
 \begin{itemize}
 \item a specification of the requirements of an SCJ virtual machine,
 \item a formal model of the virtual machine specification,
-\item a compilation strategy from Java bytecode to native C code,
+\item a compilation strategy from Java bytecode to native C code\added{, and}
 \item proofs for validation of the formal model and verification of
-  the compilation strategy, and
+  the compilation strategy\deleted{, and}\added{.}
 % \item a mechanisation of the model and proofs.
 \end{itemize}
 
@@ -226,9 +226,10 @@ be used in our work~\cite{bertelsen2000, jones1998, stark2001}.
 
 \subsection{Compilation Strategy}
 
-As many existing virtual machines for SCJ precompile programs to
-native code in order to allow faster execution on embedded systems, it
-seems wise to include that in our approach.
+As many existing\deleted{ virtual machines for} SCJ \added{virtual
+  machines} precompile programs to native code in order to allow
+faster execution on embedded systems, it seems wise to include that in
+our approach.
 We focus on compilation of Java bytecode to C as that is the approach
 adopted by several existing virtual machines for embedded systems,
 including Fiji VM~\cite{pizlo2009} and icecap
@@ -278,10 +279,10 @@ This is beneficial for both the parts of the SCJVM that are involved
 in the compilation and the parts are not.
 
 We have chosen \Circus{}~\cite{oliveira2009} as the specification
-language as it contains a wide variety of
-constructs that allow for specification of both data and behaviour,
-with a inbuilt notion of refinement, which we require for specifying
-the compilation strategy.
+language as it contains a wide variety of constructs that allow for
+specification of both data and behaviour, with \deleted{a}\added{an}
+inbuilt notion of refinement, which we require for specifying the
+compilation strategy.
 \Circus{} has also been used for previous work on the specification of
 SCJ programs~\cite{cavalcanti2011, cavalcanti2013}.
 
@@ -454,15 +455,15 @@ Safety-Critical Java and the techniques used in verifying compilers.
 In Chapter~\ref{scjvm-services-chapter} we present an identification
 of the requirements of SCJ virtual machine services, with a formal
 model of those requirements in the \Circus{} specification language.
-This is followed by a model of the an SCJ virtual machine core
-execution environment in Chapter~\ref{cee-chapter}, which includes the
-interpreter model that forms the starting point of our compilation
-strategy, and the C code embedding that is the target of our
-compilation strategy.
+This is followed by a model of\deleted{ the} an SCJ virtual machine
+core execution environment in Chapter~\ref{cee-chapter}, which
+includes the interpreter model that forms the starting point of our
+compilation strategy, and the C code embedding that is the target of
+our compilation strategy.
 
-Then, in Chapter~\ref{strategy-chapter} we present our strategy for
-transforming SCJ bytecode executing in our interpreter model to our
-shallow embedding of C.
+Then, in Chapter~\ref{strategy-chapter}\added{,} we present our
+strategy for transforming SCJ bytecode executing in our interpreter
+model to our shallow embedding of C.
 This is divided into three stages, each of which is described in its
 own section, and explained using a running example.
 After this, in Chapter~\ref{evaluation-chapter}, we evaluate our model
@@ -485,8 +486,8 @@ implementers to use.
 Appendix~\ref{example-c-code-appendix} contains the Java code of the
 examples discussed in Chapter~\ref{evaluation-chapter} and their
 corresponding C code to aid in understanding the output of the
-compilation strategy and the discussion in Chapter
-6~\ref{evaluation-chapter}.
+compilation strategy and the discussion in
+Chapter~\ref{evaluation-chapter}.
 }
 
 \addchange{Added description of the appendices of the extended thesis}
@@ -519,5 +520,6 @@ proofs of the rules used in the compilation strategy.
 Additionally, we note that the machine-readable sources for the Circus
 models, Z/Eves proofs and Java code produced in the course of writing
 this thesis are available online at
+% TODO: shorten this url
 \url{https://www.cs.york.ac.uk/circus/hijac/code/18-baxter_Thesis_Additional_Files-20181214T172909Z-001.zip}.
 }
