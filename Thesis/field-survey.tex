@@ -5,11 +5,14 @@
 This chapter begins with a discussion of why Java is being used in
 safety-critical systems and the need for a specialised version of Java
 for use in that area.
-Then, in Section~\ref{scj-section} we cover the variant of Java
-developed for safety-critical systems, how it differs from standard
-Java and why a specialised virtual machine is required, before
-discussing some of the existing virtual machines for that variant in
-Section~\ref{virtual-machines-section}.
+\added{Then, in Section~\ref{rtsj-section}, we discuss the variant of
+  Java for real-time systems, and after that,}\deleted{ Then,} in
+Section~\ref{scj-section}\added{,} we cover the variant of Java
+developed for safety-critical systems,\added{ discussing} how\deleted{
+  it}\added{ they} differ\deleted{s} from standard Java and why a
+specialised virtual machine is required, before discussing some of the
+existing virtual machines for\deleted{ that}\added{ the
+  safety-critical} variant in Section~\ref{virtual-machines-section}.
 
 In Section~\ref{compiler-correctness-section} we survey some of the
 literature on compiler correctness, and discuss the two main
@@ -68,15 +71,16 @@ SCJ is a subset of the RTSJ that leaves out the features from standard
 Java that are difficult to certify such as the garbage collector.
 SCJ also provides annotations that allow memory usage to be more
 easily checked.
-\addchange{Added section describing RTSJ}
-\deleted{
-We discuss SCJ in more detail in the next section.
-}
-\added{
+\addchange{Added section describing RTSJ}%
+\deleted{%
+We discuss SCJ in more detail in the next section.%
+}%
+\added{%
 In the next section, we describe RTSJ in more detail, following which
 we discuss SCJ.
 
 \section{The Real-Time Specification for Java}
+\label{rtsj-section}
 
 RTSJ extends the scheduling and memory management models of Java with
 features that permit more predictable execution.
@@ -148,8 +152,8 @@ Section~\ref{virtual-machines-section}.
 
 Since many of the features offered by RTSJ are quite complex, and they
 are offered alongside standard Java alternatives such as
-(non-real-time) Java threads and the garbage-collected, RTSJ programs
-are hard to verify to the level required for safety-critical
+(non-real-time) Java threads and the garbage-collected heap, RTSJ
+programs are hard to verify to the level required for safety-critical
 certifications.
 SCJ thus restricts the features of RTSJ to facilitate such
 certification.
@@ -171,7 +175,7 @@ SCJ defines three compliance levels to which programs and
 implementations may conform.
 Level 0 is the simplest compliance level.
 It is intended for programs following a cyclic executive approach.
-Level 1 lifts several of the restrictions of level 0, allowing
+Level 1 lifts several of the restrictions of Level 0, allowing
 handlers that may trigger in response to external events and preempt
 one another.
 Level 2 is the most complex compliance level, allowing access to
@@ -187,7 +191,7 @@ Figure~\ref{phases-diagram}.
 
 \begin{figure}[ht]
   \includegraphics[width=\textwidth]{phases.pdf}
-  \caption{A diagram showing the phases of SCJ mission execution}
+  \caption{\deleted{A diagram showing }The phases of SCJ mission execution}
   \label{phases-diagram}
 \end{figure}
 
@@ -207,14 +211,14 @@ time, aperiodically, in response to a release request, or once at a
 specific point in time (though handlers that are released once can
 have a new release time set, allowing them to be released again).
 \addchange{Changed discussion of threads in SCJ to account for
-  information already given for RTSJ}
-\deleted{
+  information already given for RTSJ}%
+\deleted{%
 At level 2 real-time threads are also allowed, which run continuously
 from when they start until they finish, unless they are suspended or
-interrupted by another schedulable object.
-}
-\added{
-At level 2 real-time threads are also allowed.
+interrupted by another schedulable object.%
+}%
+\added{%
+At Level 2 real-time threads are also allowed.
 These schedulable objects are scheduled according to a priority
 scheduler as in RTSJ, but SCJ permits only priority ceiling emulation
 as a mechanism for avoiding priority inversion.
@@ -239,6 +243,14 @@ when accessing global synchronised methods are different than they
 would be on a single processor system due to the potential for remote
 blocking~\cite{davis2011}).
 
+\begin{figure}[t]
+  \includegraphics[width=\textwidth]{Stacks-Areas.pdf}
+  \caption{An example of the layout of memory areas for four
+    asynchronous event handlers (ASEHs), showing possible valid and
+    invalid references between them}
+  \label{stacks-areas-diagram}
+\end{figure}
+
 SCJ deals with memory in terms of memory areas, which are Java objects
 that provide an interface to blocks of physical memory called backing
 stores.
@@ -259,18 +271,11 @@ There is also an immortal memory area where objects can be allocated
 if needed for the entire running of the program (they are never
 freed).
 SCJ places restrictions on which objects an object may point to, so as
-to avoid dangling pointers from being created.
+to avoid \added{the creation of }dangling pointers\deleted{ from being
+  created}.
 Some examples of valid and invalid object references for some
 asynchronous event handlers are shown in
 Figure~\ref{stacks-areas-diagram}.
-
-\begin{figure}[ht]
-  \includegraphics[width=\textwidth]{Stacks-Areas.pdf}
-  \caption{An example of the layout of memory areas for four
-    asynchronous event handlers (ASEHs), showing possible valid and
-    invalid references between them}
-  \label{stacks-areas-diagram}
-\end{figure}
 
 \addchange{Changed description of memory areas in SCJ to refer to
   information already given for RTSJ}
@@ -546,8 +551,8 @@ The overall goal of pursuing formal proofs of compiler correctness, as
 proposed by McCarthy and Painter~\cite{mccarthy1967}, is to allow
 machine-checked proofs of program correctness.
 There has been work in that area, the earliest of which was that by
-Milner and Weyhrauch~\cite{milner1972} who showed the correctness of
-an ALGOL-like language.
+Milner and Weyhrauch~\cite{milner1972} who showed the correctness
+of\added{ a compiler for} an ALGOL-like language.
 The proof of correctness was partially mechanised in the LCF theorem
 prover~\cite{milner1972a} and the authors were of the opinion that the
 proof was feasible and could be completed relatively easily.
@@ -687,7 +692,7 @@ The symbol $\circrefines$ represents the refinement relation here.
     &\quad \extchoice P=7  \then M[1], P := A,             8 \\
     &\quad \extchoice P=8  \then A,    P := M[3],          9 \\
     &\quad \extchoice P=9  \then A,    P := A + 1,         10 \\
-    &\quad \extchoice P=10 \then M[3] := A,                11 \\
+    &\quad \extchoice P=10 \then M[3], P := A,                11 \\
     &\circod ; \{ P = 11 \}
   \end{aligned}
 \end{equation}
@@ -978,7 +983,7 @@ The initial time of the clock is read from the hardware clock and then
 the initialisation specified by the Z schema is performed.
 %
 \begin{circusaction}
-  Init \circdef HWtime?initTime \then Init0
+  Init \circdef HWtime?initTime \then \lschexpract Init0 \rschexpract
 \end{circusaction}
 %
 The action that returns the current time simply uses CSP to output the
@@ -1168,3 +1173,23 @@ proved, and has been used for previous work on the specification of
 SCJ programs.
 \Circus{} also has some existing mechanisation and tool support, which
 can help give greater assurance of the correctness of specifications.
+
+\addchange{Added mention that we focus on single-processor Level 1 SCJ
+  programs}
+\added{
+We note that our work in this thesis particularly focusses on SCJ
+Level 1 programs executing on a single-processor SCJVM.
+Consideration of multiprocessor SCJVMs and Level 2 programs is left to
+future work.
+This follows the approach of other works in this area of focussing on
+the core features of SCJ in initial work.
+An example of this approach is in the development of SCJ programs from
+specifications, with Level~1 programs considered
+in~\cite{cavalcanti2011, cavalcanti2013} and the work later extended
+to Level~2 programs in~\cite{luckcuck2016}.
+Similarly, we recall that icecap initially only supported
+single-processor programs, with multiprocessor support added to it
+later.
+}
+ 
+
