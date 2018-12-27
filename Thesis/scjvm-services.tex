@@ -2,13 +2,14 @@
 \label{scjvm-services-chapter}
 
 In order to reason about a Safety-Critical Java virtual machine
-(SCJVM), we first require an identification of the the requirements of
-an SCJVM and a formal model of those requirements.
+(SCJVM), we first require an identification of the requirements of an
+SCJVM and a formal model of those requirements.
 For the purposes of our model, we consider an SCJVM to have the
 components illustrated in Figure~\ref{scjvm-services-fig}.
 An SCJVM is divided into two main parts:~the core execution
-environment, and the SCJVM services, which may make use of the services
-of an underlying operating system or hardware abstraction layer.
+environment, and the SCJVM services, which may make use of the
+services of an underlying operating system or hardware abstraction
+layer.
 
 \begin{figure}[ht]
   \centering
@@ -128,7 +129,7 @@ Appendix~A of the extended version of this thesis~\cite{baxter2018-extended}.
 
 The memory manager model has been subject to proof using Z/Eves.
 The theorems proved about the memory manager, and their Z/Eves proof
-scripts can be found in Appendix~E of the extended version of this
+scripts can be found in Appendix~F of the extended version of this
 thesis~\cite{baxter2018-extended}.
 
 Part of an earlier version of this model was presented at the 13th
@@ -360,7 +361,7 @@ environment (CEE), and so is described in Chapter~\ref{cee-chapter}.
 For example, the backing store operations presented here take a
 backing store as input, since tracking of the current memory area
 (with its underlying backing store) is handled by the CEE. 
-So memory area entering operations are implemented in the CEE.
+So memory area entering operations are also implemented in the CEE.
 Similarly, the memory manager presented here allows for allocating raw
 blocks of memory rather than allocating objects, since the structure
 of objects is defined by the CEE.
@@ -492,10 +493,15 @@ its parent mission, and are destroyed before the parent mission ends.
 Like backing stores, stacks are referred to by unique identifiers that
 may simply be pointers to the space allocated for the stack.
 
-The memory manager must interact with the scheduler to obtain the
-current thread when it needs to operate on the current allocation
-context.
-The next section gives an overview of the scheduler.
+\addchange{Removed mention of interaction between the memory manager
+  and scheduler that is no longer present in the model}
+\deleted{
+The memory manager must interact with the scheduler to obtain
+the current thread when it needs to operate on the current
+allocation context.
+}
+\added{In }the next section\added{ we give}\deleted{ gives} an
+overview of\added{ the second area of SCJVM services,} the scheduler.
 
 \section{Scheduler API}
 \label{scheduler-section}
@@ -680,9 +686,10 @@ has been completely finished.
 A backing store is provided when a thread is started to serve as the
 allocation context of the thread, since the per-release memory of an
 event handler is only created as the handler thread is started.
-The backing store supplied is only used to set the backing store in
-the memory manager and core execution environment when the thread
-starts and is not stored by the scheduler.
+The backing store supplied is only used to set the\added{ allocation
+  context}\deleted{ backing store} in the\deleted{ memory manager and}
+core execution environment when the thread starts and is not stored by
+the scheduler.
 
 The identifier of the currently running thread can be obtained through
 \texttt{get\-Current\-Thread}.
@@ -717,8 +724,8 @@ priority ceiling equal to the default ceiling.
 This should be the highest software priority, but it is possible for
 an SCJVM to have an option to change the default priority ceiling.
 From our perspective it does not matter what the default priority
-ceiling, only that it is a constant value for all threads for a given
-run of an SCJVM.
+ceiling\added{ is}, only that it is a constant value for all threads
+for a given run of an SCJVM.
 The SCJVM scheduler does not require a notion of object in order to
 associate priority ceilings to objects since an object's pointer can
 be used as an opaque identifier.
@@ -926,9 +933,9 @@ global memory manager with a view of all backing stores.
 Allocation and deallocation of space for stacks has also been
 specified, with the stack space treated as a memory block to allow
 memory for stacks to be allocated within it.
-Finally, we lifted the operations to \Circus{} actions, making them
-available over channels, via which the inputs to the operation (if
-any) are provided.
+Finally, we \added{have} lifted the operations to \Circus{} actions,
+making them available over channels, via which the inputs to the
+operation (if any) are provided.
 Outputs from operations with output are provided via a separate return
 channel and all operations also report whether an error occurred via a
 separate error reporting channel.
