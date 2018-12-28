@@ -167,12 +167,14 @@ names.
     
 
     \node[below=1.5cm, right=4.5cm] (MM) {Memory Manager};
+    \added{\node[right=5cm,align=center] (RTC) {Real-time\\Clock};}
     \node[] (S) {Scheduler};
     \draw[-latex] (M) edge (MM);
     \draw (L) edge[-latex] (S);
     \draw (S) edge[-latex, bend left=20] (I);
     \draw (I) edge[-latex, bend left=20] (S);
     \draw (L) edge[-latex] (MM);
+    \added{\draw[] (L) edge[-latex] (RTC);}
 
     \node[below=2.5cm, left=2cm] (In) {Input};
     \node[below=3.5cm, left=2cm] (Out) {Output};
@@ -193,7 +195,10 @@ the corresponding memory areas involves communication with both the
 object (or struct) manager in the CEE and the memory manager of the
 SCJVM services.
 The launcher must also communicate with the scheduler to indicate when
-threads should be started or suspended during mission execution.
+threads should be started or suspended during mission
+execution\addchange{Added mention of the launcher's communication with
+  the real-time clock}\added{, and with the real-time clock to set
+  alarms coordinating event handler execution}.
 
 The interpreter must accept the requests to execute methods on the
 main thread from the launcher, and it must also respond to requests
@@ -220,12 +225,13 @@ channels already described in
 Sections~\ref{memory-manager-model-section}
 and~\ref{scheduler-model-section}.
 The channels used for communication between the CEE processes are
-summarised in Figure~\ref{cee-channel-table}, with the full channel
-declarations shown in Appendix~B of the extended version of this
-thesis~\cite{baxter2018-extended}.
+summarised in \deleted{Figure}\added{Table}~\ref{cee-channel-table},
+with the full channel declarations shown in Appendix~B of the extended
+version of this thesis~\cite{baxter2018-extended}.
 In addition to presenting the name and type for each channel, in the
-first two columns of the table.
-We also indicate which components of the CEE make use of the channel.
+first two columns of the table\deleted{.}\added{,} we also indicate
+which components of the CEE make use of the channel\added{, in the
+  third and fourth columns of the table}.
 % L - launcher
 % I - interpreter
 % OM - object manager.
@@ -286,7 +292,8 @@ in a different way to that of other methods.
       & $executeMethodRet$ & $ThreadID \cross Word$ & I & L  \\
       & $continue$ & $ThreadID$ & L & I \\
       & $endThread$ & $ThreadID$ & L & I \\
-      & $initMainThread$ & $StackID$ & L & I \\ 
+      & $initMainThread$ & $StackID$ & L & I \\
+      & \added{$runThread$} & \added{$ThreadID \cross ObjectID \cross MethodID$} & \added{I} & \added{L} \\
       *\dag & $register$ & $ThreadID \cross ObjectID$ & I & L \\
       *\dag & $enterPrivateMemory$ & $ThreadID \cross \nat$ & I & L \\
       *\dag & $executeInAreaOf$ & $ThreadID \cross ObjectID$ & I & L \\
@@ -374,7 +381,27 @@ $StackID$ for the stack space allocated for the main thread.
 % before commencing execution, so the launcher does not need to wait for
 % the interpreter to finish registering the main thread's stack.
 The stack for non-main threads is supplied from the scheduler using
-the $CEEstartThreadChannel$.
+the $CEEstartThread$\deleted{$Channel$}\added{ channel}.
+
+\addchange{Added $runThread$ channel to discussion in CEE overview}
+\added{%
+When a thread other than the main thread starts running, the
+$Interpreter$ is signalled by the scheduler and begins executing the
+thread. 
+However, the entry points of most threads are handled in the
+$Launcher$, since event handler threads, for example, form part of the
+SCJ infrastructure.
+A channel, $runThread$, is thus used to pass execution from the
+$Interpreter$ to the $Launcher$ after initial setup of the thread has
+been completed.
+This carries the $ThreadID$ of the thread, along with the identifier
+of the object representing the thread (either an event handler or an
+interrupt handler) and the identifier of the method to be executed
+(either \texttt{run()} or \texttt{handle()}).
+The $Launcher$ then handles the execution of the thread, calling back
+to the $Interpreter$ using the $executeMethod$ channel when necessary
+to execute programmer-supplied code in the handler.
+}
 
 As mentioned above, while executing a method, the interpreter may
 signal back to the launcher for handling of special methods.
@@ -416,9 +443,7 @@ or relative start time.
 
 We only consider constructors for the \texttt{AperiodicEventHandler},
 \texttt{PeriodicEventHandler}, and
-\texttt{OneShotEventHandler} classes.% , and
-% we do not include the forms of the constructors that allow for a
-% deadline miss handler to be set.
+\texttt{OneShotEventHandler} classes.
 We also do not consider deadline miss handlers.
 This is because none of these features affect the compilation
 strategy, so they are not needed to evaluate it.
@@ -485,20 +510,21 @@ The other channels used by the interpreter are the channels for
 accessing fields of objects and classes.
 The $getField$ channel is used for obtaining the value stored in a
 given field of a given object.
-It carries the $ObjectID$ of the object whose field is to be accessed
-and the $FieldID$ of the field to be accessed.
+It carries the $ObjectID$ of the object whose field is to be
+accessed\added{, the $ClassID$ of the object's class} and the
+$FieldID$ of the field to be accessed.
 The object manager then returns the $Word$ value stored in the field.
 For putting a value into an object's field, the $putField$ channel is
 used, which carries the $Word$ value to store in the field in addition
-to the $ObjectID$ and $FieldID$ that identify the object and field to
-update.
+to the $ObjectID$\added{, $ClassID$} and $FieldID$ that identify the
+object and field to update.
 As this just updates the field and does not return any information,
 there is no need for a return channel.
 Channels for accessing static fields, $getStatic$ and $putStatic$, are
 also provided.
 These operate similarly to the channels for object fields but use
-$ClassID$ values rather than $ObjectID$ values, since static fields are
-attached to classes rather than objects.
+$ClassID$ values rather than $ObjectID$ values, since static fields
+are attached to classes rather than objects.
 
 The final channels used by the interpreter are the $addThreadMemory$
 and $removeThreadMemory$ channels.
@@ -622,7 +648,8 @@ memories for each thread in the $perReleaseMemories$ map.
 Finally, to make sure that nested private memories can be reused,
 there is a map from backing store identifiers to the identifiers of
 private backing stores they contain, $privateMemoryMap$.
-\begin{schema}{MemoryAreaManager}
+\addchange{Removed elision of $MemoryAreaManager$ invariant}%
+\changed{\begin{schema}{MemoryAreaManager}
   immortalMemory, missionMemory : ObjectID \\
   backingStores : ObjectID \finj BackingStoreID \\
   perReleaseMemories : ThreadID \finj BackingStoreID \\
@@ -637,7 +664,7 @@ private backing stores they contain, $privateMemoryMap$.
   id~BackingStoreID \cap privateMemoryMap\plus = \emptyset \\
   (backingStores\limg \{ immortalMemory, missionMemory \} \rimg \\
   \t1 {} \cup \ran perReleaseMemories) \cap \ran privateMemoryMap = \{\}
-\end{schema}
+\end{schema}}%
 Each of the maps in $MemoryAreaManager$ is injective, since each
 memory-area object has a distinct backing store and memory areas
 cannot share a nested private memory area.
@@ -645,8 +672,8 @@ cannot share a nested private memory area.
   They ensure that each memory-area object has a corresponding backing
   store in $backingStores$, and that areas that are not private do not
   appear in $privateMemoryMap$.
-}
-\added{
+}%
+\added{%
 The invariant of $MemoryAreaManager$ requires that the
 $immortalMemory$ and $missionMemory$, when they are initialised, as
 well as each of the $perReleaseMemories$, must have a corresponding
@@ -686,6 +713,8 @@ and stack sizes required for each schedulable object.
 In addition to these maps, $SchedulableManager$ contains a set
 $registeredObjects$, containing the schedulable objects that have been
 registered as being part of the current mission.
+\addchange{Removed elision of $SchedulableManager$ invariant}%
+\changed{%
 \begin{schema}{SchedulableManager}
   schedulableThreads : ObjectID \finj ThreadID \\
   schedulableTypes : ObjectID \ffun HandlerType \\
@@ -694,8 +723,8 @@ registered as being part of the current mission.
 \where
   \dom schedulableThreads = \dom schedulableTypes = \dom schedulableSizes \\
   registeredObjects \subseteq \dom schedulableThreads
-\end{schema}
-The invariant of $SchedulableManager$ \deleted{is elided above.  
+\end{schema}}
+The invariant of $SchedulableManager$\deleted{ is elided above.  
 It} ensures the maps all have the same domain and that
 $registeredObjects$ is a subset of the map domains.
 
@@ -819,9 +848,9 @@ SCJ API, or implementation-defined API methods required by the
 launcher, are represented by constants in the model.
 Although most of the methods used by the $Launcher$ are executed
 simply by communicating on each of the channels mentioned above in
-turn in $InitializeMission$, the \texttt{initialize()} method of a
-mission requires handling of the \texttt{register()} method for each
-schedulable object.
+turn\added{,} in $InitializeMission$\deleted{,} the
+\texttt{initialize()} method of a mission requires handling of the
+\texttt{register()} method for each schedulable object.
 We must also provide handling for the special methods mentioned in the
 previous section.
 This is done in the $HandleSpecialMethodsMainLoop$ action below, which
@@ -877,7 +906,8 @@ Similarly, it is decremented after handling exit from the memory area
 in $ExitMemory(t)$, which is only offered if the value is already
 greater than zero.
 After handling memory-area entry or exit, or another special method
-(handled in the actions $Register$, $Suspend$, $Resume$, etc.),
+(handled in the actions $Register$,\deleted{ $Suspend$,
+  $Resume$}\added{ $TakeLock$, $ReleaseLock$}, etc.),
 $HandleSpecialMethodsMainLoop$ recurses to allow further special
 methods to be handled.
 The return from the top-level method execution on the $main$ thread is
@@ -930,16 +960,15 @@ $exitMemoryRet$ channel.
   \t1 {} \then exitBackingStore!thread \then exitBackingStoreRet?bsid?isCleared \then {} \\
   \t1 \circif isCleared = \true \circthen \lschexpract ClearPrivateMemory[bsid/toClear?] \rschexpract \\
   \t1 {} \circelse isCleared = \false \circthen \Skip \\
-  \t1 \circfi \circseq
-  \t1 exitMemoryRet \then \Skip
+  \t1 \circfi \circseq exitMemoryRet \then \Skip
 \end{circusaction}
 
 This handling of special methods is used by the interpreter (or C
 program, after compilation), which communicates with the $Launcher$
 when such methods are encountered.
 We describe in detail how this communication is performed in the
-interpreter in Section~\ref{cee-interpreter-subsection}, and in C
-program in Section~\ref{cee-c-program-subsection}.
+interpreter in Section~\ref{cee-interpreter-subsection}, and in\added{
+  the} C program in Section~\ref{cee-c-program-subsection}.
 
 During the execution of a mission in $WaitForExecution$, the release
 of the event handlers of the mission must also be managed by the
@@ -989,9 +1018,9 @@ from the domain of $alarms$ in the data operation $PopAlarm$, and
 returned as a set $threads$.
 Each of the thread's whose identifier is in the $threads$ set are then
 signalled via the $triggerAlarm$ channel.
-The $clockHandler$ thread execution then is then signalled to finish
-via the $endThread$ channel so that the interrupt handler can execute
-again.
+The $clockHandler$ thread execution\deleted{ then} is then signalled
+to finish via the $endThread$ channel so that the interrupt handler
+can execute again.
 \begin{circusaction}
   HandleAlarms \circdef \circvar updateAlarm : \boolean \circspot \\
   \t1 \circblockbegin
@@ -1094,9 +1123,9 @@ If such a backing store does exist, then we enter it and trigger the
 execution of the \texttt{handleAsyncEvent()} method of the object
 $oseh$ using the $executeMethod$ channel.
 After the method returns, the backing store is exited using the
-$exitBackingStore$ and the end of the thread's execution is signalled
-via the $endThread$ channel, since there are no further releases of
-the event handler.
+$exitBackingStore$\added{ channel} and the end of the thread's
+execution is signalled via the $endThread$ channel, since there are no
+further releases of the event handler.
 We do not consider the rescheduling of one-shot event handlers here,
 but it could be handled by having the rescheduling method as a special
 method.
@@ -1115,14 +1144,9 @@ method.
   \t1 \circfi
 \end{circusaction}
 
-% TODO: is all this detail necessary?
-
-
 In the next section, we describe the bytecode interpreter, which,
 along with the $Launcher$, forms the CEE before the application of the
 compilation strategy.
-
-% \input{../../SCJ-VM/James/launcher.zed}
 
 \section{Bytecode Interpreter Model}
 \label{cee-interpreter-section}
@@ -1223,8 +1247,8 @@ described in Section~\ref{cee-interpreter-subsection}.
 We model a subset of Java bytecode sufficient to express a wide
 variety of SCJ programs and illustrate how further features may be
 added\deleted{, but small enough to permit effective reasoning}.
-\addchange{Added text to clarify why a subset has been used}
-\added{
+\addchange{Added text to clarify why a subset has been used}%
+\added{%
 Additional instructions would be similar to those already defined, and
 so would add little value to establishing the scientific basis of our
 work.
@@ -1273,7 +1297,7 @@ Table~\ref{bytecode-subset-table}.
   \bottomcaption{The instructions in our bytecode subset}
   \label{bytecode-subset-table}
   
-  \begin{supertabular}{llp{7.5cm}}
+  \begin{supertabular}{llp{7.2cm}}
     \texttt{aconst\_null} & (none) & Pushes a null object reference
     onto the operand stack.
     \\
@@ -1299,8 +1323,8 @@ Table~\ref{bytecode-subset-table}.
     static field specified by the field and class identifiers at the
     given constant pool index, and pushes it onto the operand stack.
     \\
-    \texttt{goto} & program address & Unconditionally branches to the
-    given program address.
+    \texttt{goto} & program address\added{ offset} & Unconditionally branches
+    to the given program address.
     \\
     \texttt{iadd} & (none) & Pops two integer values from the operand
     stack, adds them, and pushes the result onto the operand stack.
@@ -1308,7 +1332,7 @@ Table~\ref{bytecode-subset-table}.
     \texttt{iconst} & integer value & Pushes the given integer value
     onto the operand stack of the current method.
     \\
-    \texttt{if\_icmple} & program address & Pops two integer values
+    \texttt{if\_icmple} & program address\added{ offset} & Pops two integer values
     from the operand stack, and branches to the given program address
     if the second value popped is less than or equal to the first
     value.
@@ -1334,7 +1358,7 @@ Table~\ref{bytecode-subset-table}.
     class identifier at the given constant pool index, pops the
     arguments of the specified method, including a \texttt{this}
     object reference, from the operand stack, and invokes the
-    specified method of the class of referenced object.
+    specified method of the class of\added{ the} referenced object.
     \\
     \texttt{new} & constant pool index & Allocates a new object of the
     class specified by the identifier at the given constant pool index
@@ -1479,14 +1503,13 @@ As a simplifying assumption, we consider that all values consist of
 only a single virtual machine word.
 This means that \texttt{long} and \texttt{double} values are not
 handled.
-
 \addchange{Remove statement about how \texttt{long} values in SCJ API
   methods are handled, since they are handled normally in the
-  prototype}
-\deleted{
+  prototype}%
+\deleted{%
 Any SCJ API methods that take \texttt{long} or \texttt{double}
 arguments are viewed as taking \texttt{int} or \texttt{float} instead.
-}
+}%
 The reason for this assumption is that handling of two word values
 makes little difference at the level of the formal model and our
 approach can be easily extended to deal with more types.
@@ -1521,8 +1544,8 @@ The requirement for all classes to be loaded at startup greatly
 simplifies the semantics of several instructions, since dynamic class
 loading does not need to be considered.
 \addchange{Added more explanation of the simplifications that are
-  permitted since dynamic class loading is not allowed}
-\added{
+  permitted since dynamic class loading is not allowed}%
+\added{%
 It also means that many run-time errors pertaining to method and field
 resolution can checked ahead-of-time to make sure they are not thrown.
 This means checks to make sure methods and fields exist, and that they
@@ -1587,7 +1610,7 @@ sequence of events is the same as for the model with atomic
 instructions.
 This means that instructions requiring communication with other
 components of the SCJVM, such as \texttt{new}, which communicates with
-the memory manager, must be atomic since that they affect shared
+the memory manager, must be atomic since\deleted{ that} they affect shared
 state.
 
 Having described our bytecode subset and the assumptions we are
@@ -1644,8 +1667,8 @@ implemented by the current class.
 %   % a method's local variables must at least include space for its arguments
 %   \forall m : \dom methodLocals @ methodArguments~m \leq methodLocals~m
 % \end{schema}
-The entries of $constantPool$ are indexed by a elements of a type
-$CPIndex$.
+The entries of $constantPool$ are indexed by\deleted{ a} elements of a
+type $CPIndex$.
 In the JVM, the $CPIndex$ values are positive integers, but no
 arithmetic or comparison is performed on constant pool indices in our
 model, so we do not represent that fact.
@@ -1800,7 +1823,7 @@ to $subclassRel$ in each of the processes that uses it.
 In order for the CEE to execute the program, this $cs$ parameter must
 represent a valid SCJ program, with all the necessary classes present.
 If this holds, then $subclassRel$ represents the usual notion of when
-a object of a Java class is assignable to a variable of a given class.
+a\added{n} object of a Java class is assignable to a variable of a given class.
 
 We next describe the object manager process, $ObjMan$, which uses the
 $Class$ type and the $cs$ map.
@@ -1929,8 +1952,8 @@ class in $cs$.
 
 These three parts are conjoined together to form the schema
 $ObjManState$, shown below, which is the state for $ObjMan$.
-This has an additional invariant, relating the parts together.
-The first conjunct of the invariant requires that the domain of
+This has an additional invariant, relating the parts together\deleted{.
+The first conjunct of the invariant}\added{, which} requires that the domain of
 $objects$ is partitioned by the $ObjectID$ sets given by
 $backingStoreMap$, so that every object is allocated in exactly one
 backing store.
@@ -2158,20 +2181,25 @@ instructions themselves.
 \subsection{Interpreter}
 \label{cee-interpreter-subsection}
 
+\addchange{Removed elision of part of the definition of $Bytecode$}%
 The $Interpreter$ process is the final component of pre-compilation
 $CEE$ that we present. 
 It handles the execution of bytecode instructions:~those in the subset
 described in Section~\ref{cee-bytecode-subset-subsection}, represented
-by the free type $Bytecode$, sketched below.
+by the free type $Bytecode$,\deleted{ sketched}\added{ shown} below.
 $Bytecode$ has a constructor for each bytecode instruction, with any
 parameter to the instruction represented as a parameter of the
 constructor.
-The full definitions omitted here are in Appendix~B of the extended
-version of this thesis~\cite{baxter2018-extended}.
+\deleted{The full definitions omitted here are in Appendix~B of the extended
+version of this thesis~\cite{baxter2018-extended}.}%
+\changed{\setlength{\zedindent}{0.5\zedindent}%
 \begin{zed}
   Bytecode ::= aconst\_null | dup | areturn | return | iadd | ineg \\
-  \t1 | new \ldata CPIndex \rdata | iconst \ldata \nat \rdata | aload \ldata \nat \rdata | astore \ldata \nat \rdata | \dots
-\end{zed}
+  \t1 | new \ldata CPIndex \rdata | iconst \ldata \nat \rdata | aload \ldata \nat \rdata | astore \ldata \nat \rdata \\
+  \t1 | getfield \ldata CPIndex \rdata | putfield \ldata CPIndex \rdata | getstatic \ldata CPIndex \rdata | putstatic \ldata CPIndex \rdata \\
+  \t1 | invokespecial \ldata CPIndex \rdata | invokevirtual \ldata CPIndex \rdata | invokestatic \ldata CPIndex \rdata \\
+  \t1 | if\_icmple \ldata \num \rdata | goto \ldata \num \rdata
+\end{zed}}%
 The bytecode instructions are arranged in a map, $bc$, from
 $ProgramAddress$ values (which are modeled by natural numbers) to
 $Bytecode$ values.
@@ -2238,8 +2266,8 @@ $operandStack$ for the thread.
 \where
   \# operandStack \leq stackSize
 \end{schema}
-The invariant of $StackFrame$ just requires the $operandStack$ to not
-be larger than $stackSize$.
+The invariant of $StackFrame$ just requires the $operandStack$ to\deleted{ not}
+be\added{ no} larger than $stackSize$.
 
 The state of the $Thr$ process is given by the schema
 $InterpreterState$, below.
@@ -2472,12 +2500,14 @@ The final action in the choice allows a request to terminate the
 thread to be accepted on the $endThread$ channel.
 When the termination of the thread is requested, the thread's memory
 is removed using the $removeThreadMemory$ channel and the scheduler is
-signalled on the $SendThread$ channel.
+signalled on the $SendThread$ channel\addchange{Added an error report
+  communication to the \protect\texttt{endThread} scheduler
+  operation}\added{, with a report of $Sokay$ expected in response}.
 This causes the scheduler to switch to a different thread, so a thread
 switch is accepted on the $CEEswitchThread$ channel.
 After that, the process again behaves as $NotStarted$, allowing the
 thread to be restarted.
-{\setlength{\zedtab}{0.4cm}
+\changed{\setlength{\zedtab}{0.4cm}
 \begin{circusaction}
   Started \circdef \\
   \t1 \circblockbegin
@@ -2491,7 +2521,7 @@ thread to be restarted.
   {} \extchoice {} \\
   endThread?t \prefixcolon (t = thread) \then \Skip
   \circblockend \circseq \\
-  \t1 removeThreadMemory!thread \then SendThread \\
+  \t1 removeThreadMemory!thread \then SendThread \then Sreport?r \prefixcolon (r = Sokay) \\
   \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
 \end{circusaction}}
 
@@ -2539,7 +2569,7 @@ $HandleAload$ for the \texttt{aload} instruction).
 \end{circusaction}}
 
 The $Handle$ actions define the semantics for the instructions and, as
-such are involved in the compilation strategy.
+such\added{,} are involved in the compilation strategy.
 Many of these actions for handling bytecode instructions have a
 similar form.
 
@@ -2684,9 +2714,10 @@ For the instructions that create objects and access their fields
 $ObjMan$ is needed.
 This can be seen in the definition of $HandleGetfield$, shown below,
 where the object identifier, $oid$, is popped from the $operandStack$
-of the current $StackFrame$ using the data operation $IntepreterPop$,
-and the class identifier, $cid$, and the field identifier, $fid$ are
-extracted from the parameter to the bytecode instruction.
+of the current $StackFrame$ using the data operation\deleted{
+  $IntepreterPop$}\added{ $InterpreterPop$}, and the class identifier,
+$cid$, and the field identifier, $fid$ are extracted from the
+parameter to the bytecode instruction.
 Note that $pc$ and $pc'$ are hidden in $InterpreterPop$, so that it
 does not change the value of $pc$, which is updated by
 $InterpreterPush$. 
@@ -2731,8 +2762,8 @@ method into $poppedArgs$.
 The number of arguments popped, $argsToPop?$, is the $methodArguments$
 value for $mid$, plus one for the \texttt{this} identifier passed to
 the method.
-The $cid$ and $mid$ identifiers are the passed into $Invoke$ along
-with $poppedArgs$.
+The $cid$ and $mid$ identifiers are the\added{n} passed into $Invoke$
+along with $poppedArgs$.
 \begin{circusaction}
   HandleInvokespecial \circdef \\
   \t1 \lcircguard pc \in \dom bc \land bc~pc \in \ran invokespecial \rcircguard \circguard \\
@@ -2819,7 +2850,7 @@ which accepts the input on the $input$ channel and pushes it onto the
 stack as the return value for the method.
 \begin{circusaction}
   InvokeRead \circdef \\
-  \t1 \circval classID : ClassID; \circval method : MethodID; \circval methodArgs : \seq Word \circspot \\
+  \t1 \circval classID : ClassID; \circval method : MethodID : \seq Word \circspot \\
   \t1 \lcircguard (classID,readClass) \in subclassRel~cs \land method = readID \rcircguard \circguard {} \\
   \t1 input?value \then \lschexpract InterpreterPush \hide (pc,pc') \rschexpract
 \end{circusaction}
@@ -2923,7 +2954,7 @@ instructions, $bc$, and the class information, $cs$.
 This process has a similar structure to that of $Interpreter$:~a
 parallel composition of $CThr_{bc,cs}(t)$ processes representing C
 threads, one for each thread identifier $t$ except the $idle$ thread,
-as shown in the definiton of $CProg_{bc,cs}$ below.
+as shown in the definit\added{i}on of $CProg_{bc,cs}$ below.
 \begin{circus}
   \circprocess CProg_{bc,cs} \circdef \Parallel t : ThreadID \setminus \{ idle \} \lpar ThrChans(t) \rpar \circspot CThr_{bc,cs}(t)
 \end{circus}
@@ -2950,7 +2981,7 @@ After method execution has finished, the return value, $retVal$, is
 obtained from $ExecuteMethod$ and communicated on the
 $executeMethodRet$ channel.
 \begin{circusaction}
-  MainThread \circdef initMainThread?stack \then stackID := Initialised~stack \circseq \circmu X \circspot \\
+  MainThread \circdef initMainThread?stack \then \circmu X \circspot \\
   \t1 \circblockbegin
   \circvar retVal : Word \circspot executeMethod?t \prefixcolon (t = thread) ?cid?mid?args \then {} \\
   \t1 ExecuteMethod(cid,mid,args,retVal) \circseq \\
@@ -2998,8 +3029,8 @@ of \Circus{}.
 The representation of these constructs is summarised in
 Table~\ref{embedding-table}.
 \addchange{Added mention of how the \Circus{} code can be converted to
-  C, and cross-referenced to section on the prototype}
-\added{
+  C, and cross-referenced to section on the prototype}%
+\added{%
 The \Circus{} code resulting from our compilation strategy can be
 converted to C by matching the patterns shown in
 Table~\ref{embedding-table} over the \Circus{} syntax tree, and indeed we
@@ -3310,8 +3341,8 @@ parameter of the \Circus{} action, usually named $retVal$, with an
 assignment to that parameter at the end of the action representing
 return statements.
 \addchange{Added text to explain changes to C code based on work on
-  the prototype}
-\added{
+  the prototype}%
+\added{%
 In the C code resulting from our strategy, we represent these result
 parameters using pointers passed into the function, rather than C
 return values.
@@ -3527,9 +3558,9 @@ is handled in $AllocateObject$.
 Finally, $GetClassIDOf$ is changed to extract the class identifier
 from an $ObjectStruct$ value using the $classIDOf$ function.
 This represents a C cast to a struct type representing the
-\texttt{Object} class, which is always vaild since every class extends
-\texttt{Object}, and an access of the $class$ field of that struct
-type.
+\texttt{Object} class, which is always va\deleted{i}l\added{i}d since
+every class extends \texttt{Object}, and an access of the $class$
+field of that struct type.
 
 This concludes our explanation of the model for the C code. 
 In the next section we discuss how the models of the core execution
@@ -3543,8 +3574,8 @@ the semantics of an SCJVM.
 In creating this model we have carefully read the SCJ specification
 and the JVM specification, to extract the requirements for an SCJVM.
 During this process, we have had contact with the expert group
-developing the SCJ specification, who has been able to clarify several
-points about SCJ.
+developing the SCJ specification, who\deleted{ has}\added{ have} been
+able to clarify several points about SCJ.
 This has resulted in several changes to the SCJ specification.
 This is the first piece of evidence that our model not only reflects
 the SCJ standard, but in some cases the standard has been changed to
@@ -3567,9 +3598,9 @@ have now been clarified in the SCJ specification to indicate the
 amount of backing store space each requires.
 
 We also found that it was not clear in the SCJ specification that the
-instance class implementing \texttt{Safelet} requires initialisation,
-although the JVM specification states that every object must be
-initialised.
+instance\added{ of the} class implementing \texttt{Safelet} requires
+initialisation, although the JVM specification states that every
+object must be initialised.
 This has now been clarified in the SCJ specification, and led to
 discussion about how command-line arguments are passed to an SCJ
 program. 
@@ -3618,7 +3649,7 @@ Finally, the compilation strategy presented in the next chapter
 provides further validation of our model, since we can check if the
 expected C code is produced by our strategy.
 \addchange{Added a more detailed description of how the compilation
-  strategy validates the model}
+  strategy validates the model}%
 \deleted{
 There can be no proof of refinement between the C code and the
 interpreter model if one of them is incorrect.
@@ -3626,8 +3657,8 @@ The examples of SCJ programs discussed in
 Chapter~\ref{evaluation-chapter} also validate our model since we
 check that they perform correctly in the interpreter model and their
 corresponding C code performs the same when evaluated.
-}
-\added{
+}%
+\added{%
 Our compilation strategy consists of individual compilation rules,
 which are proved from laws whose corrctness has been previously
 established, as explained in Section~\ref{proofs-of-laws-section}.
@@ -3732,8 +3763,9 @@ The bytecode instructions which have effects visible outside the
 $Interpreter$, which are the \texttt{new} instruction, the field
 access instructions, and instructions that invoke the special methods
 mentioned above, interact with shared memory.
-Thread switches must not occur in the middle of these instrcutions to
-avoid leaving shared memory in an erroneous state.
+Thread switches must not occur in the middle of these
+instr\added{u}c\deleted{u}tions to avoid leaving shared memory in an
+erroneous state.
 Only an implementation that ensures such operations are not
 interrupted, usually by employing synchronisation, is a correct
 implementation of our model.
