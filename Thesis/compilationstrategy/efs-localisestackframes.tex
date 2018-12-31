@@ -104,7 +104,7 @@ method.
 The number of arguments is determined from the name of the method
 (since the arguments of a method are encoded in its identifier) and we
 add an extra argument for \texttt{this} if the method is not static,
-as indicated by if statement on
+as indicated by\added{ the} if statement on
 lines~\ref{algorithm-static-args-check-start}
 to~\ref{algorithm-static-args-check-end}.
 We apply this rule everywhere it applies on
@@ -248,9 +248,9 @@ the body of the method is replaced with a reference to $stackFrame$.
 Replacing the references to $last~frameStack$ requires that the size
 of $frameStack$ does not change during the method.
 However, this requirement is met since method calls are the only
-operation that changes the size of $frameStack$ and we replace
-references to the $frameStack$ in nested methods first, by the
-definition of $iterationOrder$.
+operation\added{s} that change\deleted{s} the size of $frameStack$ and
+we replace references to the $frameStack$ in nested methods first, by
+the definition of $iterationOrder$.
 
 Iterating over methods beginning with the greatest call depth ensures
 that the requirements of
@@ -282,7 +282,7 @@ introduce a result parameter for the method in addition to the value
 parameters representing the method's arguments.
 The new method action then has to match the different method
 parameters.
-We also require a rule similar
+We also require a rule similar\added{ to}
 Rule~[\nameref{HandleReturnEPC-stackFrame-introduction-rule}] to
 handle the slightly different ending of the method action that the
 return handling creates.
@@ -320,7 +320,6 @@ Similarly, we define an $InvokeSF$ operation that performs the
 operation of $InterpreterStackFrameInvoke$ over $stackFrame$ instead
 of $last~frameStack$.
 
-% TODO: fix this for algorithm changes
 \begin{figure}[tp!]
   \centering
   \setlength{\zedtab}{0.4cm}
@@ -330,60 +329,53 @@ of $last~frameStack$.
   \setlength{\belowdisplayskip}{0pt}
   \setlength{\abovedisplayshortskip}{0pt}
   \setlength{\belowdisplayshortskip}{0pt}
+  \addchange{Removed elision in
+    Figure\protect~\protect\ref{efs-localise-stack-frames-example-figure}}
+  \changed{
   \begin{circusaction}
     TPK\_f \circdef \\
     \t1 \circval arg1 : Word \circspot \\
     \t1 \circvar stackFrame : StackFrameEPC \circspot \\
     \t1 \lschexpract InitTPK\_handleAsyncEventSF \rschexpract \circseq \\
-    \t1 Poll \circseq HandleNewSF(27) \circseq Poll \circseq HandleDupSF \circseq Poll \circseq  HandleAconst\_nullSF \circseq Poll \circseq \\
-    \t1 (\circvar poppedArgs : \seq Word \circspot \\
-    \t2 \lschexpract \exists argsToPop? == 2 @ InvokeSF \rschexpract \circseq \\
-    \t2 ConsoleConnection\_CCinit(poppedArgs~1, poppedArgs~2)) \circseq Poll \circseq \\
-    \t1 HandleAstoreSF(1) \circseq Poll \circseq HandleAloadSF(1) \circseq \\
-    \t1 {} \cdots {} \\
-    % \t1 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
-    % \t2 ConsoleConnection/class?, openInputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-    % \t1 Poll \circseq ConsoleConnection\_openInputStream \circseq Poll \circseq  HandleAstoreEPC(2) \circseq Poll \circseq \\
-    % \t1 HandleAloadEPC(1) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
-    % \t1 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    % \t1 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[\\
-    % \t2 ConsoleConnection/class?, openOutputStream/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-    % \t1 Poll \circseq ConsoleConnection\_openOutputStream \circseq Poll \circseq HandleAstoreEPC(3) \circseq \\
-    %\t1 {} \cdots {} \\
-    \t1 Poll \circseq HandleIconstSF(0) \circseq Poll \circseq HandleAstoreSF(4) \circseq Poll \circseq Poll \circseq \circmu Y \circspot \\
-    \t2 HandleAloadSF(4) \circseq Poll \circseq HandleIconstSF(10) \circseq Poll \circseq \\
-    \t2 \circvar value1, value2 : Word \circspot \\
-    \t3 \lschexpract InterpreterPop2[stackFrame/last~frameStack,stackFrame'/last~frameStack'] \rschexpract \circseq \\
-    \t2 \circif value1 \leq value2 \circthen {} \\
-    \t3 {} \cdots {}  \\
-    % Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
-    % \t3 (\circvar poppedArgs : \seq Word \circspot \\
-    % \t4 \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
-    % \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract) \circseq \\
-    % \t3 Poll \circseq ConsoleInput\_read \circseq Poll \circseq \\
-    % \t3 (\circvar poppedArgs : \seq Word \circspot \\
-    % \t4 \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq \\
-    % \t4 TPK\_f()) \circseq \lschexpract InterpreterAreturn1 \rschexpract \circseq Poll \circseq \\
-    % \t3 HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
-    % \t3 {} \cdots {} \\
-    % \t3 Poll \circseq HandleIconstEPC(400) \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
-    % \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleAloadEPC(5) \circseq Poll \circseq \\
-    % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
-    % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
-    % \t4 Poll \circseq ConsoleOutput\_write \\
-    % \t3 {} \circelse value1 > value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq \\
-    % \t4 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == m + 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    % \t4 getClassIDOf!(head~poppedArgs)?cid \then \lschexpract InterpreterNewStackFrame[ \\
-    % \t5 ConsoleOutput/class?, write/methodID?, poppedArgs/methodArgs?] \rschexpract)) \circseq \\
-    % \t4 Poll \circseq ConsoleOutput\_write \\
-    % \t3 \circfi \circseq Poll \circseq HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(1) \circseq Poll \circseq HandleIaddEPC \circseq \\
-    \t3 Poll \circseq HandleAstoreSF(4) \circseq Poll \circseq Y \\
+    \t1 Poll \circseq HandleNewSF(27) \circseq Poll \circseq HandleDupSF \circseq Poll \circseq HandleAconst\_nullSF \circseq \\
+    \t1 Poll \circseq (\circvar poppedArgs : Word \circspot  \lschexpract \exists argsToPop? == 2 @ InvokeSF \rschexpract \circseq \\
+    \t1 ConsoleConnection\_CCinit(poppedArgs~1, poppedArgs~2)) \circseq Poll \circseq \\
+    \t1 HandleAstoreSF(1) \circseq Poll \circseq HandleAloadSF(1) \circseq Poll \circseq (\circvar poppedArgs : Word \circspot \\
+    \t1 \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq getClassIDOf!head~poppedArgs?cid \then {} \\
+    \t1 \circif cid = ConsoleConnectionID \circthen ConsoleConnection\_openInputStream(poppedArgs~1) \\
+    \t1 \circfi) \circseq Poll \circseq HandleAstoreSF(2) \circseq Poll \circseq  HandleAloadSF(1) \circseq Poll \circseq \\
+    \t1 (\circvar poppedArgs : Word \circspot \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq \\
+    \t1 getClassIDOf!head~poppedArgs?cid \then \circif cid = ConsoleConnectionID \circthen {} \\
+    \t2 ConsoleConnection\_openOutputStream(poppedArgs~1) \\
+    \t1 \circfi) \circseq Poll \circseq HandleAstoreSF(3) \circseq Poll \circseq HandleIconstSF(0) \circseq Poll \circseq \\
+    \t1 HandleAstoreSF(4) \circseq Poll \circseq Poll \circseq (\circmu Y \circspot \\
+    \t2 HandleAloadSF(4) \circseq Poll \circseq HandleIconstSF(10) \circseq Poll \circseq (\circvar value1, value2 : Word \circspot \\
+    \t2 \lschexpract InterpreterPopSF[value2!/value!] \rschexpract \circseq \lschexpract InterpreterPopSF[value1!/value!] \rschexpract \\
+    \t2 \circif value1 \leq value2 \circthen Poll \circseq HandleAloadSF(2) \circseq Poll \circseq \\
+    \t3 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 1 @ InvokeSF \rschexpract \circseq \\
+    \t3 getClassIDOf!(head~poppedArgs)?cid \then \circif cid = ConsoleInputClassID \circthen {} \\
+    \t4 ConsoleInput\_read(poppedArgs~1) \\
+    \t3 \circfi) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InvokeSF \rschexpract \circseq \\
+    \t3 TPK\_f(poppedArgs~1)) \circseq \\
+    \t3 Poll \circseq HandleAstoreSF(5) \circseq Poll \circseq HandleAloadSF(5) \circseq HandleIconstSF(400) \circseq \\
+    \t3 Poll \circseq (\circvar value1, value2 : Word \circspot \lschexpract InterpreterPopSF[value2!/value!] \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterPopSF[value1!/value!] \rschexpract \circseq \\
+    \t3 \circif value1 \leq value2 \circthen HandleAloadSF(3) \circseq Poll \circseq HandleAloadSF(5) \circseq \\
+    \t4 Poll \circseq (\circvar poppedArgs : Word \circspot \lschexpract \exists argsToPop? == 2 @ InvokeSF \rschexpract \circseq \\
+    \t4 getClassIDOf!head~poppedArgs?cid \then \circif cid = ConsoleOutputID \circthen {} \\
+    \t5 ConsoleOutput\_write(poppedArgs~1, poppedArgs~2) \\
+    \t4 \circfi) \\
+    \t3 {} \circelse value1 > value2 \circthen HandleAloadSF(3) \circseq Poll \circseq HandleIconstSF(0) \circseq \\
+    \t4 Poll \circseq (\circvar poppedArgs : Word \circspot \lschexpract \exists argsToPop? == 2 @ InvokeSF \rschexpract \circseq \\
+    \t4 getClassIDOf!head~poppedArgs?cid \then \circif cid = ConsoleOutputID \circthen {} \\
+    \t5 ConsoleOutput\_write(poppedArgs~1, poppedArgs~2) \\
+    \t4 \circfi) \circseq Poll \\
+    \t3 \circfi) \circseq Poll \circseq HandleAloadSF(4) \circseq Poll \circseq HandleIconstSF(1) \circseq Poll \circseq \\
+    \t3 HandleIaddSF \circseq Poll \circseq HandleAstoreSF(4) \circseq Poll \circseq Y \\
     \t2 {} \circelse value1 > value2 \circthen \Skip \\
-    \t2 \circfi \circseq Poll
+    \t2 \circfi)) \circseq Poll
   \end{circusaction}
+  }
   \caption{$TPK\_handleAsyncEvent$ after its $stackFrame$ variable is
     introduced}
   \label{efs-localise-stack-frames-example-figure}

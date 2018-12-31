@@ -93,7 +93,7 @@ created by the procedure
 \Call{MakeMethodControlFlowGraph}{$methodEntry$}.
 This is similar to the \Call{MakeControlFlowGraph}{} procedure used in
 the previous section, but it just constructs the graph for a single
-method, starting at the $methodEntry$.
+method, starting at\deleted{ the}\added{ its} $methodEntry$.
 
 The graph for the \texttt{handleAsyncEvent()} method in our example
 (beginning at $pc=7$, its entry point) is shown in
@@ -179,7 +179,7 @@ Figure~\ref{structured-cfg-figures}), we can identify each of these
 structures in the graph and introduce them into the program,
 collapsing the graph in the process.
 
-We iterate over the nodes in the methods control flow graph,
+We iterate over the nodes in the method\added{'}s control flow graph,
 identifying the control flow structures at each node.
 This is specified by the loop beginning on
 line~\ref{algorithm-node-checking-loop} of
@@ -210,7 +210,7 @@ sequence, the successors of that node (ignoring loops) occur earlier.
 This means that the sequence begins with an end node (ignoring loops).
 The order, $iterationOrder$, is constructed on
 line~\ref{algorithm-compute-iteration-order} of the algorithm and used
-for the range of the for loop on
+for the range of the for loop\added{ starting} on
 line~\ref{algorithm-node-checking-loop}.
 
 In our example, we may consider the $pc=42$ and $pc=35$ nodes first,
@@ -227,23 +227,35 @@ Some of the structures (Figure~\ref{if-figure},
 \subref{do-while-figure}) are followed by further instructions.
 In these cases, a sequential composition must be introduced with the
 instructions following the structure.
-However, in programs with graphs such as the one shown below, the
-sequential composition can only be introduced after the outer
-conditional has been introduced.
+\addchange{Changed explanation of why sequential composition
+  introduction is separated out for loops and conditionals}%
+
+However, in programs with graphs such as the one shown\added{ on the
+  left} below, the sequential composition\deleted{ can only be
+  introduced after the outer conditional has been introduced}\added{
+  cannot be introduced after the inner conditionals have been
+  introduced}.
+\added{Introducing the inner conditionals yields the graph shown on
+  the right below, which has the form of an \texttt{if-else}
+  conditional.
+  This graph would be broken up by the introduction of a sequential
+  composition to the final node, since it is part of the outer
+  conditional.}
 Thus, the introduction of the sequential composition cannot be made
-part of the rule for introducing the conditional.
+part of the rule for introducing the\added{ inner} conditional.
+\added{We instead perform sequential compositions for such structures
+  separately, rather than as part of the loop and conditional
+  introduction rules.}
 \begin{center}
   \begin{tikzpicture}
     \node (1) at (0.0, 0.0) {$\bullet$};
     \node (2) at (1.5, 0.5) {$\bullet$};
     \node (3) at (1.5,-0.5) {$\bullet$};
-    \node (4) at (3.0, 1.0) {$\bullet$};
-    \node (5) at (3.0,-1.0) {$\bullet$};
-    \node (6) at (3.0, 0.2) {$\bullet$};
-    \node (7) at (3.0,-0.2) {$\bullet$};
-    \node (8) at (4.0, 0.5) {$\bullet$};
-    \node (9) at (4.0,-0.5) {$\bullet$};
-    \node (0) at (5.0, 0.0) {$\bullet$};
+    \node (4) at (2.7, 1.0) {$\bullet$};
+    \node (5) at (2.7,-1.0) {$\bullet$};
+    \node (6) at (2.7, 0.2) {$\bullet$};
+    \node (7) at (2.7,-0.2) {$\bullet$};
+    \node (8) at (4.0, 0.0) {$\bullet$};
     
     \draw[-latex] (-1,0) to (1);
     
@@ -254,11 +266,23 @@ part of the rule for introducing the conditional.
     \draw[-latex] (2) to (6);
     \draw[-latex] (3) to (7);
     \draw[-latex] (4) to (8);
-    \draw[-latex] (5) to (9);
+    \draw[-latex] (5) to (8);
     \draw[-latex] (6) to (8);
-    \draw[-latex] (7) to (9);
-    \draw[-latex] (8) to (0);
-    \draw[-latex] (9) to (0);
+    \draw[-latex] (7) to (8);
+
+    \node at (5.5, 0.0) {$\implies$};
+
+    \node (A) at (8.0, 0.0) {$\bullet$};
+    \node (B) at (9.5, 0.5) {$\bullet$};
+    \node (C) at (9.5,-0.5) {$\bullet$};
+    \node (D) at (12.0, 0.0) {$\bullet$};
+    
+    \draw[-latex] (7,0) to (A);
+    
+    \draw[-latex] (A) to (B);
+    \draw[-latex] (A) to (C);
+    \draw[-latex] (B) to (D);
+    \draw[-latex] (C) to (D);
   \end{tikzpicture}
 \end{center}
 
@@ -283,6 +307,7 @@ $pc = x$ branch cannot be the body of the conditional) since the
 conditional branches come from Java's branching instructions, which
 branch to the specified address if the condition is true and go to the
 next instruction if it is false.
+
 \begin{figure}[thp]
 \begin{restatable}[\texttt{if}-conditional-intro]{crule}{IfConditionalIntroductionRule}
   \label{if-introduction-rule}
@@ -341,7 +366,7 @@ The conditional is introduced with the true branch empty (represented
 by $\Skip$) and the false branch containing the instructions in the
 body of the conditional.
 The assignment $pc := j$ is moved outside the conditional from both
-the true amd false branches.
+the true a\deleted{m}\added{n}d false branches.
 
 As in Rule~[\nameref{sequence-introduction-rule}], the sequence of
 actions for the node must not affect the nonemptiness of the
@@ -456,10 +481,10 @@ conditional, representing a loop.
 \end{figure}
 
 As a \texttt{while} loop may occur with the loop at the end of either
-condition branch (since the loop may be created by a \texttt{goto}
-instruction in the Java bytecode), we also provide a similar rule,
-Rule~[\nameref{while-introduction-rule2}], which introduces the loop
-in the true branch of the conditional.
+condition\added{al} branch (since the loop may be created by a
+\texttt{goto} instruction in the Java bytecode), we also provide a
+similar rule, Rule~[\nameref{while-introduction-rule2}], which
+introduces the loop in the true branch of the conditional.
 These two rules are applied on lines~\ref{algorithm-introduce-while1}
 and~\ref{algorithm-introduce-while2} of the algorithm.
 Rule~[\nameref{while-introduction-rule2}] is presented in
@@ -594,7 +619,8 @@ absorbing the $pc=28$ and $pc=32$ nodes.
 The sequential composition from the $pc=21$ node to the $pc=35$ node
 can then be introduced immediately as it is now a simple sequential
 composition (because it is not at the end of an outer conditional).
-We then introduce a \texttt{while} loop at the $pc=39$ loop (using
+We then introduce a \texttt{while} loop at the $pc=39$\deleted{
+  loop}\added{ node} (using
 Rule~[\nameref{while-introduction-rule2}]), and the sequential
 composition with the $pc=42$ node is introduced afterwards.
 Finally, a sequential composition from the $pc=7$ to the $pc=39$ node

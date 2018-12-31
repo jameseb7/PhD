@@ -65,7 +65,9 @@ with the \Circus{} action representing the method, in
 line~\ref{algorithm-resolve-method-calls}.
 
 This is repeated until all methods have been separated out, as
-indicated by the while loop in line~\ref{algorithm-method-loop}.
+indicated by the while loop in
+line\added{s}~\ref{algorithm-method-loop}\added{
+  to~\ref{algorithm-method-loop-end}}.
 The $MainThread$ and $NotStarted$ actions are then refined in
 line~\ref{algorithm-refine-main-actions} to provide a choice over
 method identifiers, rather than $pc$ values, thus removing all uses of
@@ -81,7 +83,7 @@ line~\ref{algorithm-remove-pc-from-state} of the algorithm.
     \State \Call{IntroduceLoopsAndConditionals}{} \label{algorithm-introduce-loops-and-conditionals}
     \State \Call{SeparateCompleteMethods}{} \label{algorithm-separate-complete-methods}
     \State \Call{ResolveMethodCalls}{} \label{algorithm-resolve-method-calls}
-    \EndWhile
+    \EndWhile \label{algorithm-method-loop-end}
     \State \Call{RefineMainActions}{} \label{algorithm-refine-main-actions}
     \State \Call{RemovePCFromState}{} \label{algorithm-remove-pc-from-state}
   \end{algorithmic}

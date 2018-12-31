@@ -8,7 +8,7 @@ must be removed from every action in $Thr$ simultaneously.
   \begin{algorithmic}[1]
     \State \ApplyFor{Law~[\nameref{forwards-data-refinement-law}]}{$InterpreterStateEPC$, $CI$}
     \label{algorithm-pc-data-refinement}
-    \State \Apply{Law~[\nameref{seq-unitl-law}]}
+    \State \ExhaustivelyApply{Law~[\nameref{seq-unitl-law}]}
     \label{algorithm-eliminate-Skips}
     \State \ApplyFor{Law~[\nameref{process-param-elim-law}]}{$bc$}
     \label{algorithm-eliminate-bc-parameter}
@@ -105,8 +105,8 @@ However, $InterpreterStackFrameInvoke$ no longer stores the current
 $pc$ value in the $storedPC$ component of the topmost stack frame, and
 $InterpreterNewStackFrame$ does not set the $pc$ value.
 Additionally, the method return operations $InterpreterAreturn$ and
-$IntepreterReturn$ do not set set the value of $pc$ using the
-$storedPC$ value of the previous stack frame.
+$IntepreterReturn$ do not set\deleted{ set} the value of $pc$ using
+the $storedPC$ value of the previous stack frame.
 
 The $pc$ assignments introduced between bytecode instructions during
 the strategy are also affected by the data refinement.

@@ -390,7 +390,8 @@ and adds 5 to it.
   \begin{circus}
     \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \\
     \t2 {} \circelse pc = 27 \circthen \circvar value1, value2 : Word \circspot \\
-    \t3 InterpreterPop2 \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq \\
     \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     \t2 {} \circelse pc = 28 \circthen HandleAloadEPC(3) \circseq pc := 29 \\
     \t2 {} \circelse pc = 29 \circthen HandleIconstEPC(0) \circseq pc := 30 \\
@@ -408,7 +409,8 @@ and adds 5 to it.
     \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \\
     \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \\
     \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot \\
-    \t3 InterpreterPop2 \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq \\
     \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     \t2 {} \circelse pc = 42 \circthen HandleReturnEPC \\
     \t2 {} \circelse pc = 43 \circthen HandleAloadEPC(0) \circseq pc := 44 \\
@@ -449,7 +451,8 @@ The Java code must be run through a Java compiler to generate the
 corresponding bytecode, which then defines the $bc$ and $cs$ constants
 of our model.
 Their values for our example are shown in
-Figure~\ref{example-model-figure}, along with $TPK$ class information.
+Figure~\ref{example-model-figure}, along with\added{ the} $TPK$ class
+information.
 While most of the compilation of the methods of \texttt{TPK} depends
 only on the data in the $TPK$ class information, the object data for
 instances of \texttt{TPK} includes fields from its superclasses.
@@ -457,7 +460,11 @@ In particular, the fields for \texttt{TPK} are contributed by the
 \texttt{AperiodicEventHandler} and \texttt{ManagedEventHandler}
 classes (the superclasses of \texttt{ManagedEventHandler} do not
 contribute any fields), whose $Class$ data structures are presented in
-Figure~\ref{example-superclasses-model-figure}.
+Figure~\ref{example-superclasses-model-figure}\addchange{Clarified
+  elision in
+  Figure\protect~\protect\ref{example-superclasses-model-figure}}\added{
+  (we omit the information not involved determining the fields of
+  those classes)}.
 The generation of object structures from this field information is
 discussed in more detail in
 Section~\ref{data-refinement-of-objects-section}.
@@ -514,7 +521,8 @@ Section~\ref{data-refinement-of-objects-section}.
     \t2 {} \cdots {} \\
     \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \\
     \t2 {} \circelse pc = 24 \circthen HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq Poll \circseq \\
-    \t3 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t3 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot \\
+    \t3 \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq \\
     \t3 pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     % \t2 {} \circelse pc = 25 \circthen HandleAloadEPC(5) \circseq pc := 26 \\
     % \t2 {} \circelse pc = 26 \circthen HandleIconstEPC(400) \circseq pc := 27 \\
@@ -538,7 +546,8 @@ Section~\ref{data-refinement-of-objects-section}.
     % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \\
     % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \\
     \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq  pc := 41 \circseq Poll \circseq \\
-    \t3 \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    \t3 \circvar value1, value2 : Word \circspot \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \\
     % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
@@ -592,7 +601,7 @@ This makes stating compilation laws simpler, and is described in more
 detail in Section~\ref{expand-bytecode-subsection}, where we define
 the \Call{ExpandBytecode}{} procedure.
 
-On line~\ref{algorithm-introduce-forward-sequence} of the
+On line~\ref{algorithm-introduce-forward-sequence} of\deleted{ the}
 Algorithm~\ref{epc-algorithm}, sequential composition is introduced
 for instructions that do not affect the sequential flow of the
 program.
@@ -610,16 +619,14 @@ Figure~\ref{forward-sequence-introduction-example-figure}, where the
 choice over $pc$ has sequences of instructions collected together at
 the point where they start, up to the point at which a more complex
 control flow (such as a method call, conditional or a loop) occurs.
-\addchange{Clarified why some branches in figures are not shown}
-\added{
-In this figure, and the other figures in this chapter, we omit the
-branches of the choice in $Running$ that cannot be reached from the
-start of a method, since the instructions in those branches are
-collected into other branches.
-}
-The introduction of sequential composition is described in more detail
-in Section~\ref{introduce-forward-sequence-subsection}, where we
-define the \Call{IntroduceSequentialComposition}{} procedure.
+\addchange{Clarified why some branches in figures are not shown}%
+\added{In this figure, and the other figures in this chapter, we omit
+  the branches of the choice in $Running$ that cannot be reached from
+  the start of a method, since the instructions in those branches are
+  collected into other branches.}
+The introduction of sequential composition is described in more
+detail in Section~\ref{introduce-forward-sequence-subsection}, where
+we define the \Call{IntroduceSequentialComposition}{} procedure.
 
 Handling the remaining constructs requires consideration of
 dependencies between methods to ensure method calls can be resolved
@@ -660,7 +667,7 @@ performed on methods that have no unresolved method calls.
     \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
     \t2 {} \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq \\
     \t3 HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq \\
-    \t3 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 6 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t3 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 6 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t3 \lschexpract InterpreterNewStackFrame[AperiodicEventHandler/class?, APEHinit/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
     \t3 Poll \circseq AperiodicEventHandler\_APEHinit) \circseq pc := 6 \circseq Poll \circseq HandleReturnEPC \\
     \t2 {} \cdots {} \\
@@ -681,16 +688,17 @@ performed on methods that have no unresolved method calls.
     \t3 \circfi) \circseq pc := 17 \circseq Poll \circseq HandleAstoreEPC(3) \circseq pc := 18 \circseq Poll \circseq HandleIconstEPC(0) \circseq pc := 19 \circseq Poll \circseq \\
     \t3 HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq (\circmu Y \circspot \\
     \t4 HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq  pc := 41 \circseq Poll \circseq \\
-    \t4 (\circvar value1, value2 : Word \circspot InterpreterPop2EPC \\
+    \t4 (\circvar value1, value2 : Word \circspot \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq \\
     \t4 \circif value1 \leq value2 \circthen pc := 21 \circseq Poll \circseq HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq \\
-    \t5 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t5 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 1 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t5 getClassIDOf!(head~poppedArgs)?cid \then \circif cid = ConsoleInputClassID \circthen {} \\
     \t6 \lschexpract InterpreterNewStackFrame[ ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
     \t6 Poll \circseq ConsoleInput\_read \\
-    \t5 \circfi) \circseq pc := 23 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t5 \circfi) \circseq pc := 23 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t5 \lschexpract InterpreterNewStackFrame[TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq Poll \circseq TPK\_f) \circseq \\
     \t5 pc := 24 \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq \\
-    \t5 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq (\circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t5 HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq (\circvar value1, value2 : Word \circspot \\
+    \t5 \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq \\
     \t5 \circif value1 \leq value2 \circthen pc := 32 \circseq HandleAloadEPC(3) \circseq pc := 33 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 34 \circseq \\
     \t6 Poll \circseq (\circvar poppedArgs : Word \circspot \lschexpract \exists argsToPop? == 2 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t6 getClassIDOf!head~poppedArgs?cid \then \circif cid = ConsoleOutputID \circthen {} \\
@@ -725,8 +733,9 @@ For this reason, we perform method call resolution, and loop and
 conditional introduction repeatedly until all method calls are
 resolved and the resulting complete methods have all been separated
 out.
-This is expressed in Algorithm~\ref{epc-algorithm} by the while loop
-on line~\ref{algorithm-method-loop}.
+This is expressed in Algorithm~\ref{epc-algorithm} by the while
+loop\deleted{ on}\added{ in} lines~\ref{algorithm-method-loop}\added{
+  to~\ref{algorithm-method-loop-end}}.
 
 Introduction of loops and conditionals to the body of a method with no
 unresolved method calls occurs on
@@ -752,8 +761,8 @@ where we define the \Call{IntroduceLoopsAndConditionals}{} procedure.
 
 After loops and conditionals have been introduced, methods that are
 then complete can be copied into separate actions.
-This occurs in line~\ref{algorithm-separate-complete-methods} of this
-algorithm.
+This occurs in line~\ref{algorithm-separate-complete-methods}
+of\deleted{ this algorithm}\added{ Algorithm~\ref{epc-algorithm}}.
 It is done with a simple application of the copy rule, replacing the
 actions at the entry points of the split methods with references to
 newly created method actions.
@@ -762,7 +771,7 @@ where the $TPK\_f$ action has been created by copying the sequence of
 actions for the \texttt{f()} method of \texttt{TPK} from the $pc = 43$
 case of Figure~\ref{forward-sequence-introduction-example-figure}.
 \addchange{Added mention of reference to $TPK\protect\_f$ shown earlier in
-  Figure\protect~\protect\ref{loop-and-conditional-introduction-example-figure}}
+  Figure\protect~\protect\ref{loop-and-conditional-introduction-example-figure}}%
 \added{The $pc = 43$ branch itself is replaced with a reference to this
 $TPK\_f$ action, as can be seen in
 Figure~\ref{loop-and-conditional-introduction-example-figure}.}
@@ -807,7 +816,7 @@ section.
     \t1 {} \circelse frameStack \neq \emptyset \circthen {} \\
     \t2 {} \circif pc = 0 \circthen HandleAloadEPC(0) \circseq pc := 1 \circseq Poll \circseq HandleAloadEPC(1) \circseq pc := 2 \circseq Poll \circseq \\
     \t3 HandleAloadEPC(2) \circseq pc := 3 \circseq Poll \circseq HandleAloadEPC(3) \circseq pc := 4 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 5 \circseq \\
-    \t3 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 6 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t3 Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 6 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t3 \lschexpract InterpreterNewStackFrame[AperiodicEventHandler/class?, APEHinit/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
     \t3 Poll \circseq AperiodicEventHandler\_APEHinit) \circseq pc := 6 \circseq Poll \circseq HandleReturnEPC \\
     \t2 {} \cdots {} \\
@@ -900,14 +909,15 @@ section.
     % \t2 {} \circelse pc = 19 \circthen HandleAstoreEPC(4) \circseq pc := 20 \circseq Poll \circseq pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     % \t2 {} \circelse pc = 20 \circthen pc := 39 \circseq Poll \circseq HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq pc := 41 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     \t2 {} \circelse pc = 21 \circthen HandleAloadEPC(2) \circseq pc := 22 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \\
-    \t3 \lschexpract \exists argsToPop?  == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq getClassIDOf!(head~poppedArgs)?cid \then {} \\
+    \t3 \lschexpract \exists argsToPop?  == 1 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq getClassIDOf!(head~poppedArgs)?cid \then {} \\
     \t3 \circif cid = ConsoleInputClassID \circthen {} \\
     \t4 \lschexpract InterpreterNewStackFrame[ ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
     \t4 Poll \circseq ConsoleInput\_read \\
-    \t3 \circfi) \circseq pc := 23 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t3 \circfi) \circseq pc := 23 \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t3 \lschexpract InterpreterNewStackFrame[TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq Poll \circseq TPK\_f) \circseq pc := 24 \circseq \\
     \t3 Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq \\
-    \t3 pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2EPC \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
+    \t3 pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     % \t2 {} \cdots {} \\
     % \t2 {} \circelse pc = 22 \circthen HandleInvokevirtualEPC(40) \circseq Poll \circseq Read \circseq Poll \circseq HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
     % \t2 {} \circelse pc = 23 \circthen HandleInvokestaticEPC(46) \circseq Poll \circseq F \circseq Poll \circseq HandleAstoreEPC(5) \circseq pc := 25 \circseq Poll \circseq HandleAloadEPC(5) \circseq pc := 26 \circseq HandleIconstEPC(400) \circseq pc := 27 \circseq Poll \circseq \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq pc := \IF value1 \leq value2 \THEN 32 \ELSE 28 \\
@@ -937,7 +947,8 @@ section.
     % \t2 {} \circelse pc = 37 \circthen HandleIaddEPC \circseq pc := 38 \\
     % \t2 {} \circelse pc = 38 \circthen HandleAstoreEPC(4) \circseq pc := 39 \\
     \t2 {} \circelse pc = 39 \circthen HandleAloadEPC(4) \circseq pc := 40 \circseq Poll \circseq HandleIconstEPC(10) \circseq  pc := 41 \circseq Poll \circseq \\
-    \t3 \circvar value1, value2 : Word \circspot InterpreterPop2EPC \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
+    \t3 \circvar value1, value2 : Word \circspot \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
     % \t2 \t2 {} \circelse pc = 40 \circthen HandleIconstEPC(10) \circseq pc := 41 \\
     % \t2 {} \circelse pc = 41 \circthen \circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
     % \t3 pc := \IF value1 \leq value2 \THEN 21 \ELSE 42 \\
@@ -965,7 +976,7 @@ sequencing the method invocation instruction with a call to the
 \Circus{} action representing its body and the instructions following
 the method call. 
 This occurs on line~\ref{algorithm-resolve-method-calls} of the
-algorithm, and can be seen in
+algorithm, and\added{ its result} can be seen in
 Figure~\ref{method-call-resolution-example-figure}, which shows our
 example after method call resolution has been applied.
 
@@ -1075,7 +1086,7 @@ procedures.
 %   \label{method-separation-handleAsyncEvent-example-figure}
 % \end{figure}
 
-\begin{figure}[t!]
+\begin{figure}[tp!]
   \setlength{\zedindent}{0cm}
   \setlength{\zedtab}{0.3cm}
   \setlength{\zedleftsep}{0cm}
@@ -1099,7 +1110,7 @@ procedures.
   \label{final-method-separation-example-figure}
 \end{figure}
 
-\begin{figure}[t!]
+\begin{figure}[tp!]
   \setlength{\zedindent}{0cm}
   \setlength{\abovedisplayskip}{0cm}
   \setlength{\belowdisplayskip}{0cm}
@@ -1139,7 +1150,7 @@ procedures.
     {} \extchoice {} \\
     endThread?t \prefixcolon (t = thread) \then \Skip
     \circblockend \circseq \\
-    \t1 removeThreadMemory!thread \then CEEremoveThread!thread \\
+    \t1 removeThreadMemory!thread \then SendThread \then Sreport?r \prefixcolon (r = Sokay) \\
     \t1 {} \then CEEswitchThread?from?to \prefixcolon (from = thread) \then NotStarted
   \end{circusaction}
   \caption{The $ExecuteMethod$, $MainThread$, and $Started$ actions
@@ -1158,7 +1169,6 @@ separated out in this way.
 This always terminates, since we do not allow recursion, and so there
 are no loops in the dependencies between methods.
 
-
 The $Running$ action of our example at the end of the loop in
 Algorithm~\ref{epc-algorithm}, when all loops and conditionals have
 been introduced, all the methods have been separated out, and all
@@ -1166,14 +1176,16 @@ method calls have been resolved, is shown in
 Figure~\ref{final-method-separation-example-figure}.
 \addchange{Changed explanation of
   Figure\protect~\protect\ref{final-method-separation-example-figure}
-  to reflect changes}
-\added{
+  to reflect changes}%
+\added{%
 At this point, the actions at $pc = 0$ have been separated into a
 $TPK\_APEHinit$ action, and the actions at $pc = 7$ have been
 separated into a $TPK\_handleAsyncEvent$ action.
 We omit the definitions of these actions, since they are just the
 contents of the $pc = 0$ and $pc = 7$ branches in
 Figure~\ref{loop-and-conditional-introduction-example-figure}.
+The $pc$ values for the other branches are now redundant, since their
+instructions have been folded into the method actions.
 }
 \deleted{
 At this point, the choice over the $pc$ value maps entry points of
@@ -1182,7 +1194,7 @@ $pc$ values now redundant.
 }
 
 
-\begin{figure}[t!]
+\begin{figure}[tp!]
   \setlength{\zedtab}{0.4cm}
   \setlength{\zedindent}{0pt}
   \setlength{\zedleftsep}{0pt}
@@ -1213,17 +1225,17 @@ $pc$ values now redundant.
     \t1 \circfi) \circseq Poll \circseq HandleAstoreEPC(3) \circseq Poll \circseq HandleIconstEPC(0) \circseq Poll \circseq \\
     \t1 HandleAstoreEPC(4) \circseq Poll \circseq Poll \circseq (\circmu Y \circspot \\
     \t2 HandleAloadEPC(4) \circseq Poll \circseq HandleIconstEPC(10) \circseq Poll \circseq \\
-    \t2 (\circvar value1, value2 : Word \circspot InterpreterPop2EPC \\
+    \t2 (\circvar value1, value2 : Word \circspot \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \\
     \t2 \circif value1 \leq value2 \circthen Poll \circseq HandleAloadEPC(2) \circseq Poll \circseq \\
-    \t3 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
+    \t3 (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop?  == 1 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t3 getClassIDOf!(head~poppedArgs)?cid \then \circif cid = ConsoleInputClassID \circthen {} \\
     \t4 \lschexpract InterpreterNewStackFrame[ \\
     \t5 ConsoleInput/class?, read/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
     \t4 Poll \circseq ConsoleInput\_read \\
-    \t3 \circfi) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvoke \rschexpract \circseq \\
-    \t3 \lschexpract InterpreterNewStackFrame[TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq \\
-    \t3 Poll \circseq TPK\_f) \circseq Poll \circseq HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
-    \t3 HandleIconstEPC(400) \circseq Poll \circseq (\circvar value1, value2 : Word \circspot InterpreterPop2 \circseq \\
+    \t3 \circfi) \circseq Poll \circseq (\circvar poppedArgs : \seq Word \circspot \lschexpract \exists argsToPop? == 1 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
+    \t3 \lschexpract InterpreterNewStackFrame[TPK/class?, f/methodID?, poppedArgs/methodArgs?] \rschexpract \circseq Poll \circseq TPK\_f) \circseq \\
+    \t3 Poll \circseq HandleAstoreEPC(5) \circseq Poll \circseq HandleAloadEPC(5) \circseq HandleIconstEPC(400) \circseq Poll \circseq \\
+    \t3 (\circvar value1, value2 : Word \circspot \lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq \lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq \\
     \t3 \circif value1 \leq value2 \circthen HandleAloadEPC(3) \circseq Poll \circseq HandleAloadEPC(5) \circseq \\
     \t4 Poll \circseq (\circvar poppedArgs : Word \circspot \lschexpract \exists argsToPop? == 2 @ InterpreterStackFrameInvokeEPC \rschexpract \circseq \\
     \t4 getClassIDOf!head~poppedArgs?cid \then \circif cid = ConsoleOutputID \circthen {} \\
@@ -1246,17 +1258,18 @@ $pc$ values now redundant.
   \label{pc-elimination-HandleAsyncEvent-example-figure}
 \end{figure}
 
-The next step is then to eliminate these redundant paths and remove
-the dependency on $pc$ to select the method action.
+The next step is then to eliminate the\deleted{se} redundant paths and
+remove the dependency on $pc$ to select the method action.
 %TODO: make sure "at line" is used consistently
 This occurs at line~\ref{algorithm-refine-main-actions} of
 Algorithm~\ref{epc-algorithm}, in which the $Started$ and $MainThread$
 actions are refined to replace the $Running$ action with an
 $ExecuteMethod$ action that contains a choice of method action based
 on the method and class identifiers of the method.
-This can be seen in Figure~\ref{refine-main-actions-example-figure},
-which shows the $ExecuteMethod$ action corresponding to our example,
-and the refined $MainThread$ and $Started$ actions that reference it.
+\deleted{This can be seen in
+}Figure~\ref{refine-main-actions-example-figure}\deleted{, which}
+shows the $ExecuteMethod$ action corresponding to our example, and the
+refined $MainThread$ and $Started$ actions that reference it.
 We describe this refinement in more detail in
 Section~\ref{refine-main-actions-subsection}, where we define the
 \Call{RefineMainActions}{} procedure.

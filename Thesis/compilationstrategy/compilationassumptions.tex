@@ -277,8 +277,8 @@ In our example, node $2$ of graph $G$ is replaced with graph $H$.
 There is an edge from the predecessor of node $2$, which is node $1$
 in this case, to the root node of $H$ (node $a$).
 There is another edge from the end node of $H$ (node $c$), which is
-required to be unique, to the successor of node $3$, which is node $4$
-in this case.
+required to be unique, to the successor of node\deleted{ $3$}\added{
+  $2$}, which is node $4$ in this case.
 
 The final case, an example of which is shown in
 Figure~\ref{branch-end-replacement-figure}, is where control flow
@@ -392,34 +392,45 @@ Figure~\ref{branch-end-replacement-figure}.
   \label{node-replacement-example-figures}
 \end{figure}
 
+\addchange{Adjusted definition of node replacement to reduce overlap
+  in cases}
 In general, we define node replacement using the formal definition
 below.
 This covers each of the four cases shown above.
+\added{Note that the root node is the only node that may have no
+  predecessors, since every node must be reachable from the root node,
+  but there are some graphs, such as Figure~\ref{while-figure}, where
+  the root node does have a predecessor.
+  The root node cannot be replaced in such graphs.
+}
 \begin{defn}[Node Replacement]
   Given two rooted directed graphs $G$ and $H$, we say $G'$ is the
   graph formed by \emph{replacing} a node $n$ of $G$ with $H$ if one
   of the following cases holds:
   \begin{itemize}
-  \item $n$ has no predecessors in $G$, $H$ has only one end node, and
+  \item $n$ has no predecessors in $G$,\added{ either} $H$ has only
+    one end node\added{ or $n$ has no successors in $G$}, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ and the edges of $H$ except
-      those going to or from $n$,
+    \item $G'$ contains the edges of $G$\added{ and the edges of $H$}
+      except those going to or from $n$,
     \item $G'$ contains edges from the end node of $H$ to the
-      successors of $n$ in $G$, and
+      successors of $n$ in $G$ (if any), and
     \item the root node of $G'$ is the root node of $H$;
     \end{itemize}
-  \item $n$ has no successors in $G$, $n$ is not the root node of $G$, and
+  \item $n$ has no successors in $G$\added{, $n$ is not the root node
+      of $G$}, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
-    \item $G'$ contains the edges of $G$ and the edges of $H$ except
-      those going to or from $n$,
-    \item $G'$ contains edges from the predecessors $n$ in $G$ to the
-      root node of $H$, and
-    \item the root node of $G'$ is the root node of $G$;
+    \item $G'$ contains the edges of $G$\added{ and the edges of $H$}
+      except those going to or from $n$,
+    \item $G'$ contains edges from the predecessors\added{ of} $n$ in
+      $G$ to the root node of $H$, and
+    \item the root node of $G'$ is the root node of $G$\deleted{, or,
+        if $n$ is the root node of $G$, the root node of $H$};
     \end{itemize}
-  \item $H$ has a single end node, $n$ is not the root node or an end
-    node of $G$, and
+  \item $H$ has a single end node\added{, $n$ is not the root node or
+      an end node of $G$,} and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$,
     \item $G'$ contains the edges of $G$ and the edges of $H$ except
@@ -428,27 +439,31 @@ This covers each of the four cases shown above.
       the root node of $H$,
     \item $G'$ contains edges from the end node of $H$ to the
       successors of $n$ in $G$, and
-    \item the root node of $G'$ is the root node of $G$;
+    \item the root node of $G'$ is the root node of $G$\deleted{, or,
+        if $n$ is the root node of $G$, the root node of $H$};
     \end{itemize}
-  \item $n$ has a single successor in $G$, $n$ is not the root node of
-    $G$, $H$ has a single end node, and
+  \item $n$ has a single successor in $G$\added{, $n$ is not the root
+      node of $G$}, $H$ has a single end node, and
     \begin{itemize}
     \item $G'$ contains all the nodes of $H$ and $G$, except $n$ and
       the end node of $H$,
-    \item $G'$ contains the edges of $G$ and the edges of $H$ except
-      those going to or from $n$ or the end node of $H$,
+    \item $G'$ contains the edges of $G$\added{ and the edges of $H$}
+      except those going to or from $n$\added{ or the end node of
+        $H$},
     \item $G'$ contains edges from the predecessors of the end node of
       $H$ to the successor of $n$ in $G$
     \item $G'$ contains edges from the predecessors of $n$ in $G$ to
       the root node of $H$, and
-    \item the root node of $G'$ is the root node of $G$.
+    \item the root node of $G'$ is the root node of $G$\deleted{, or,
+        if $n$ is the root node of $G$, the root node of $H$}.
     \end{itemize}
   \end{itemize}
 \end{defn}
 
 With node replacement defined, we can now finally define what we mean
-by a structure control flow graph in terms of node replacement and the
-structured graphs shown in Figure~\ref{structured-cfg-figures}
+by a structure\added{d} control flow graph in terms of node
+replacement and the structured graphs shown in
+Figure~\ref{structured-cfg-figures}
 
 \begin{defn}[Structured Control Flow Graph]
   If $G$ is a rooted directed graph, we say $G$ is a \emph{structured
