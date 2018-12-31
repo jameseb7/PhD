@@ -9,7 +9,7 @@ Algorithm~\ref{separate-complete-methods-algorithm}.
     \label{algorithm-get-method-entries-and-names}
     \For{$(methodEntry, methodName) \gets methods$} \label{algorithm-method-separation-loop}
     \If{\Call{MethodIsComplete}{$methodEntry$}} \label{algorithm-check-method-completeness}
-    \MatchIn{$\circif {} \cdots {} {} \circelse pc = methodEntry \circthen A {} \cdots {} \circfi$}{\Call{ActionBody}{$Running$}}
+    \MatchIn{$(\circif {} \cdots {} {} \circelse pc = methodEntry \circthen A {} \cdots {} \circfi)$}{\Call{ActionBody}{$Running$}}
     \label{algorithm-method-separation-match}
     \State \ApplyFor{Law~[\nameref{action-intro-law}]}{$methodName$, $A$} \label{algorithm-introduce-method-action}
     \State \ApplyReverseFor{Law~[\nameref{copy-rule-law}]}{$methodName$} \label{algorithm-copy-method-action}
@@ -65,17 +65,17 @@ instructions ending with $HandleAreturnEPC$, which represents the
 \texttt{areturn} instruction.
 The sequence of instructions at $pc = 43$ is copied into the action
 $TPK\_f$, which can be seen in
-Figure~\ref{method-call-resolution-example-figure}.
+Figure~\ref{TPK_f-separation-example-figure}.
 The $pc = 43$ branch is replaced with a call to $TPK\_f$.
 
 After all the complete methods have been copied into separate actions,
 calls to those methods are resolved.
 This is performed as described by
 Algorithm~\ref{resolve-method-calls-algorithm}.
-In this algorithm, while we indicate the parameters supplied to a rule
-with the word \textbf{for}, as in previous algorithms, we use the word
-\textbf{to} to indicate which part of the $Running$ action the rule is
-applied to.
+In this algorithm, while we indicate the parameters supplied to a
+rule\deleted{ with the word \textbf{for}}\added{ in brackets after the
+  rule name}, as in previous algorithms, we use the word \textbf{to}
+to indicate which part of the $Running$ action the rule is applied to.
 In all previous algorithms, the laws are applied to the whole
 $Running$ action, and so we omit the \textbf{to} clause.
 \begin{algorithm}[th]
@@ -107,6 +107,7 @@ $Running$ action, and so we omit the \textbf{to} clause.
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-rule}]}{$methodCallAddress$}
     \EndTry
     \Try
+    \label{algorithm-CheckSynchronizedInvoke-elimination-try-begin}
     \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]}{$target$}
     \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]}{$target$}
     \EndTry
@@ -117,7 +118,6 @@ $Running$ action, and so we omit the \textbf{to} clause.
     %\State \ApplyToFor{Rule~[\nameref{resolve-special-method-branch-rule}]}{$methodCall$}{$target$}
     \State \ApplyFor{Rule~[\nameref{resolve-normal-method-branch-rule}]}{$methodCall$, $target$}
     \Try
-    \label{algorithm-CheckSynchronizedInvoke-elimination-try-begin}
     \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-synchronized-refinement-rule}]}{$target$}
     \State \ApplyTo{Rule~[\nameref{CheckSynchronizedInvoke-nonsynchronized-refinement-rule}]}{$target$}
     \EndTry
@@ -150,15 +150,17 @@ be followed by a $pc$ assignment and possibly other actions if it had
 been resolved.
 An example of an unresolved method call can be seen in the $pc = 14$
 branch of Figure~\ref{forward-sequence-introduction-example-figure},
-reproduced in part below.
+reproduced\deleted{ in part} below.
+\changed{%
 \begin{circusaction}
   \t2 {} \cdots {} \\
-  \t2 {} \circelse pc = 14 \circthen \cdots \circseq pc := 16 \circseq Poll \circseq \{ pc = 16 \} \circseq HandleInvokevirtualEPC(36) \\
+  \t2 {} \circelse pc = 14 \circthen HandleAstoreEPC(2) \circseq pc := 15 \circseq Poll \circseq HandleAloadEPC(1) \circseq \\
+  \t3 pc := 16 \circseq Poll \circseq \{ pc = 16 \} \circseq HandleInvokevirtualEPC(36) \\
   \t2 {} \cdots {}
-\end{circusaction}
-This ends with the action $HandleInvokeVirtualEPC(36)$, which handles
-the \texttt{invokevirtual} instruction for the constant pool index
-$36$.
+\end{circusaction}}%
+This ends with the action \changed{$HandleInvokevirtualEPC(36)$},
+which handles the \texttt{invokevirtual} instruction for the constant
+pool index $36$.
 It is unresolved because it does not have any $pc$ assignment or other
 actions following it.
 
@@ -210,7 +212,8 @@ They produce slightly different sequences of actions due to the
 differences in the semantics of the method invocation instructions,
 described in Section~\ref{cee-interpreter-subsection}.
 They are applied in the try block beginning on
-line~\ref{algorithm-try-block-begin}.
+line~\ref{algorithm-try-block-begin}\added{ of
+  Algorithm~\ref{resolve-method-calls-algorithm}}.
 
 In Figure~\ref{refine-invokestatic-rule-figure} we show
 Rule~[\nameref{refine-invokestatic-rule}], which handles
@@ -261,7 +264,7 @@ expansion (Section~\ref{expand-bytecode-subsection}).
 \label{refine-invokestatic-rule-figure}
 \end{figure}
 Rule~[\nameref{refine-invokestatic-rule}] refines
-$HandleInvokeStaticEPC(cpi)$ to an action that pops the method's
+\changed{$HandleInvokestaticEPC(cpi)$} to an action that pops the method's
 arguments from the stack using the $InterpreterStackFrameInvoke$
 operation and then behaves as the $Invoke$ action described in
 Section~\ref{cee-interpreter-section}.
@@ -269,8 +272,8 @@ Section~\ref{cee-interpreter-section}.
 The method handled by $Invoke$ is identified by a class identifier,
 $c$, and a method identifier, $m$.
 These identifiers are determined from the $cpi$ parameter passed to
-$HandleInvokeStaticEPC$, which is an index into the $constantPool$ of
-the current class information.
+\changed{$HandleInvokestaticEPC$}, which is an index into the
+$constantPool$ of the current class information.
 To determine the identifiers, we first determine the current class
 information, $c_0$, which is the class in $cs$ that contains a method,
 $m_0$, whose bytecode spans over the current $pc$ value, $i$.
@@ -283,7 +286,8 @@ stack, $poppedArgs$.
 Rule~[\nameref{refine-invokespecial-rule}] is similar to
 Rule~[\nameref{refine-invokestatic-rule}].
 It provides for popping an additional \texttt{this} argument from the
-stack.
+stack\added{, and enforces the rules given in the $CheckSuperclass$
+  schema for selecting the class identifier}.
 
 % For method calls with multiple targets, we introduce the choice over
 % those targets by using
@@ -291,11 +295,11 @@ Rule~[\nameref{refine-invokevirtual-rule}]
 (Figure~\ref{refine-invokevirtual-multi-rule-figure}) refines an
 \texttt{invokevirtual} method call, introducing a choice over all the
 possible targets of the call.
-It replaces the action $HandleInvokeVirtualEPC$ with an action that
-pops the arguments of the function from the stack using the data
-operation $InterpreterStackFrameInvoke$, and then makes a choice of
-which method to invoke using the class of the \texttt{this} argument
-for the method.
+It replaces the action \changed{$HandleInvokevirtualEPC$} with an
+action that pops the arguments of the function from the stack using
+the data operation $InterpreterStackFrameInvoke$, and then makes a
+choice of which method to invoke using the class of the \texttt{this}
+argument for the method.
 The set of possible targets classes for the choice are those that are
 both subclasses of the class referenced by the \texttt{invokevirtual}
 instruction and in the $instCS$ set of instantiated classes.
@@ -342,7 +346,7 @@ for each branch.
     \t1 \exists c : ClassID @ c_0.constantPool~cpi = MethodRef~(c,m) \land \\
     \t1 \{ x : ClassID | (x,c) \in subclassRel~cs \land x \in instCS \} = \{c_1, \ldots , c_n\}
   \end{displaymath}
-  and provided $n > 1$.
+  \deleted{and provided $n > 1$.}
 \end{restatable}
 \caption{Rule~[\nameref{refine-invokevirtual-rule}]}
 \label{refine-invokevirtual-multi-rule-figure}
@@ -359,9 +363,10 @@ class of the method to be invoked is determined from the class of the
 Since Java bytecode verification ensures that the class is assignable
 to $c$, we need only consider the identifiers of subclasses of $c$,
 and these are further constrained by $instCS$, the classes that are
-actually instantiated in the program, to obtain the list of targets:~$c_1, \ldots , c_n$.
-We require that $n$ be greater than $1$, since this rule handles cases
-with multiple targets.
+actually instantiated in the program, to obtain the list of
+targets:~$c_1, \ldots , c_n$.
+\deleted{We require that $n$ be greater than $1$, since this rule
+  handles cases with multiple targets.}
 
 After one of the above rules is applied, the method invocation is
 resolved by transforming the $Invoke$ action to the behaviour of the
@@ -409,17 +414,17 @@ method identifiers passed to $Invoke$.
   \setlength{\zedindent}{0.25cm} \setlength{\zedtab}{0.5cm}
   \begin{circus}
     \begin{array}{l}
-      \{ pc = i \} \circseq \circvar poppedArgs : \seq Word \circspot \\
+      \{ pc = i \} \circseq (\circvar poppedArgs : \seq Word \circspot \\
       \lschexpract \exists argsToPop? == e @ \\
       \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      Invoke(c, m, poppedArgs)
+      Invoke(c, m, poppedArgs))
     \end{array}
     \circrefines_A
     \begin{array}{l}
-      \circvar poppedArgs : \seq Word \circspot \\
+      (\circvar poppedArgs : \seq Word \circspot \\
       \lschexpract \exists argsToPop? == e @ \\
       \t1 InterpreterStackFrameInvoke \rschexpract \circseq \\
-      specialMethodAction(c, m) \circseq \\
+      specialMethodAction(c, m)) \circseq \\
       pc := i + 1
     \end{array}
   \end{circus}
@@ -453,6 +458,15 @@ method identifiers passed to $Invoke$.
                      setPriorityCeiling!(methodArgs~1)!(methodArgs~2) \\
                      \t1 {} \then setPriorityCeilingRet \then \Skip
                    \end{circus}\\
+    \added{\begin{circus}
+      (c,aperiodicEventHandlerClass) \\
+      \t1 {} \in subclassRel~cs \\
+      {} \land m = releaseAperiodicID
+    \end{circus}} &
+                   \added{\begin{circus}
+                     releaseAperiodic!(methodArgs~1) \\
+                     \then releaseAperiodicRet \then \Skip
+                   \end{circus}}\\
     % \begin{circus}
     %   (c,resumeThreadClass) \in subclassRel~cs \\
     %   \land m = resumeThreadID
@@ -756,7 +770,7 @@ ending with an \texttt{areturn} instruction.
 Thus, it has already been sequenced together when method resolution
 occurs for the first time, and separated into a method action
 $TPK\_f$, which can be seen in
-Figure~\ref{method-call-resolution-example-figure}.
+Figure~\ref{TPK_f-separation-example-figure}.
 This method call can thus be resolved.
 
 The $HandleInvokestatic(46)$ action is refined using
@@ -766,7 +780,7 @@ $pc = 23$ has the following form.
 \begin{circusaction}
   \t2 {} \cdots {} \\
   \t2 {} \circelse pc = 23 \circthen \{ pc = 23 \} \circseq \circvar poppedArgs : \seq Word \circspot \\
-  \t3 \lschexpract \exists argsToPop? == methodArguments~m @ \\
+  \t3 \lschexpract \exists argsToPop? == methodArguments~f @ \\
   \t4 InterpreterStackFrameInvoke \rschexpract \circseq \\
   \t3 Invoke(TPKClassID, f, poppedArgs) \\
   \t2 {} \cdots {}

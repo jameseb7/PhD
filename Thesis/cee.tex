@@ -294,6 +294,7 @@ in a different way to that of other methods.
       & $initMainThread$ & $StackID$ & L & I \\
       & \added{$runThread$} & \added{$ThreadID \cross ObjectID \cross MethodID$} & \added{I} & \added{L} \\
       *\dag & $register$ & $ThreadID \cross ObjectID$ & I & L \\
+      \added{*\dag} & \added{$releaseAperiodic$} & \added{$ObjectID$} & \added{I} & \added{L} \\
       *\dag & $enterPrivateMemory$ & $ThreadID \cross \nat$ & I & L \\
       *\dag & $executeInAreaOf$ & $ThreadID \cross ObjectID$ & I & L \\
       *\dag & $executeInOuterArea$ & $ThreadID$ & I & L \\
@@ -2430,8 +2431,9 @@ $Running$ is the main focus.
   \circblockend
 \end{circusaction}
 
-The $StartIntepreter$ action, used by $MainThread$, handles requests
-to execute a method from the $Launcher$.
+The\deleted{ $StartIntepreter$}\added{ $StartInterpreter$} action,
+used by $MainThread$, handles requests to execute a method from the
+$Launcher$.
 Its definition is shown below.
 It accepts communication on the $executeMethod$ channel, requiring the
 $ThreadID$ communicated to be the same as that of the current thread,
@@ -2600,7 +2602,7 @@ instructions presented in Table~\ref{bytecode-subset-table}.
     \texttt{areturn} & $HandleAreturn$ & $InterpreterAreturn$ \\
     \texttt{astore} & $HandleAstore$ & $InterpreterAstore$ \\
     \texttt{dup} & $HandleDup$ & $InterpreterDup$ \\
-    \texttt{getfield} & $HandleGetfield$  & $InterpreterPush$ \\
+    \texttt{getfield} & $HandleGetfield$  & \added{$InterpreterPop$, }$InterpreterPush$ \\
     \texttt{getstatic} & $HandleGetstatic$ & $InterpreterPush$ \\
     \texttt{goto} & $HandleGoto$ & $InterpreterGoto$ \\
     \texttt{iadd} & $HandleIadd$ & $InterpreterIadd$ \\
@@ -2796,6 +2798,7 @@ each of the actions in the external choice.
   Invoke \circdef \circval classID : ClassID; \circval method : MethodID; \circval args : \seq Word \circspot \\
   \t1 InvokeSetPriorityCeiling(classID, method, args) \\
   \t1 {} \extchoice InvokeRegister(classID, method, args) \\
+  \t1 {} \extchoice InvokeReleaseAperiodic(classID, method, args) \\
   \t1 {} \extchoice InvokeEnterPrivateMemory(classID, method, args) \\
   \t1 {} \extchoice InvokeExecuteInAreaOf(classID, method, args) \\
   \t1 {} \extchoice InvokeExecuteInOuterArea(classID, method, args) \\
@@ -2877,6 +2880,9 @@ A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
 
   \t2 {} \land ((classID,managedSchedulableClass) \notin subclassRel~cs \\
   \t3 {} \lor methodID \neq registerID) \\
+
+  \t2 {} \land ((classID,aperiodicEventHandlerClass) \notin subclassRel~cs \\
+  \t3 {} \lor methodID = releaseAperiodicID) \\
 
   \t2 {} \land ((classID,managedMemoryClass) \notin subclassRel~cs \\
   \t3 {} \lor methodID \notin   \{enterPrivateMemoryHelperID, executeInAreaOfHelperID, \\

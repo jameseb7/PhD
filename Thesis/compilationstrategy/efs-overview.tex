@@ -1,9 +1,9 @@
 The second stage of the compilation strategy eliminates the
 $frameStack$ from the state of each thread's process,
 $ThrCF_{bc,cs}(cs,t)$. 
-The information stored in the stack frames on $frameStack$ are
-transferred into variables representing the local variables and
-operand stack slots for each method.
+The information stored in the stack frames on $frameStack$\deleted{
+  are}\added{ is} transferred into variables representing the local
+variables and operand stack slots for each method.
 The operations representing the bytecode instructions are refined to
 operations over these variables.
 This refines $ThrCF_{bc,cs}(cs,t)$ to the $CThr_{bc,cs}(t)$ process
@@ -37,16 +37,17 @@ those actions to introduce variables and eliminate the $frameStack$.
   \caption{Elimination of Frame Stack}
   \label{efs-algorithm}
 \end{algorithm}
-It begins on line~\ref{algorithm-remove-launcher-returns}, by refining
-the return instructions that occur at the end of each method action to
-remove the $CheckLauncherReturn$ actions that occur in those
-instructions, resolving the check of whether $frameStack$ is empty.
+It begins on line~\ref{algorithm-remove-launcher-returns}\deleted{,}
+by refining the return instructions that occur at the end of each
+method action to remove the $CheckLauncherReturn$ actions that occur
+in those instructions, resolving the check of whether $frameStack$ is
+empty.
 This removes the only remaining use of $frameStack$ as a whole,
 enabling us to consider the stack frames for each method individually.
-We introduce a variable in each method that contains its stack frame
-on line~\ref{algorithm-localise-stack-frames} of the algorithm, and
-convert the operations of the method to operate over the new variable
-rather than the global $frameStack$.
+We introduce a variable in each method that contains its stack
+frame\added{,} on line~\ref{algorithm-localise-stack-frames} of the
+algorithm, and convert the operations of the method to operate over
+the new variable rather than the global $frameStack$.
 Afterwards, on line~\ref{algorithm-introduce-variables}, we perform
 local data refinements to convert the stack frame for each method into
 variables representing the local variables and operand stack slots of

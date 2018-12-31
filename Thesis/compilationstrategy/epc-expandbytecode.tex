@@ -1,6 +1,9 @@
 Before the control flow can be introduced, the bytecode instructions
 provided in the $bc$ parameter to $Thr$ must be expanded to allow
 consideration of their semantics.
+\added{This is performed as specified in
+  Algorithm~\ref{expand-bytecode-algorithm}, which defines the
+  \Call{ExpandBytecode}{} procedure.}
 \begin{algorithm}[thp]
   \begin{algorithmic}[1]
     \State \ApplyFor{Rule~[\nameref{pc-expansion-rule}]}{$bc$}
@@ -85,7 +88,7 @@ which is defined by Table~\ref{handle-action-table}.
 \caption{Rule~[\nameref{HandleInstruction-refinement-rule}]}
 \label{HandleInstruction-refinement-rule-figure}
 \end{figure}
-\begin{table}
+\begin{table}[th]
   \centering
   \begin{tabular}{lp{8.5cm}}
     \hline
@@ -100,8 +103,8 @@ which is defined by Table~\ref{handle-action-table}.
     $ineg$ & $HandleInegEPC \circseq pc := i+1$ \\
     $goto~ofst$ & $pc := i+ofst$ \\
     $if\_icmple~ofst$ & $\circvar value1, value2 : Word \circspot$ \endgraf
-                        \t1 $\lschexpract InterpreterPopEPC \rschexpract \circseq$ \endgraf
-                        \t1 $\lschexpract InterpreterPopEPC \rschexpract \circseq$ \endgraf
+                        \t1 $\lschexpract InterpreterPopEPC[value2!/value!] \rschexpract \circseq$ \endgraf
+                        \t1 $\lschexpract InterpreterPopEPC[value1!/value!] \rschexpract \circseq$ \endgraf
                          \t1 $pc := \IF value1 \leq value2 \THEN i+ofst \ELSE i+1$ \\
     $areturn$ & $CheckSynchronizedReturn \circseq HandleAreturnEPC$ \\
     $return$ & $CheckSynchronizedReturn \circseq HandleReturnEPC$ \\
@@ -127,12 +130,12 @@ $Handle*$ actions.
 We name the new actions used by $handleAction$ by appending $EPC$ to
 the names of the $Handle*$ actions they are based on, and we refer to
 them as $Handle{*}EPC$ actions.
-The $Handle{*}EPC$ actions are introduced in the for loop on
-line~\ref{algorithm-introduce-handleEPC-actions-loop} of
-Algorithm~\ref{expand-bytecode-algorithm}, before the application of
-Rule~[\nameref{HandleInstruction-refinement-rule}], by application of
-Law~[\nameref{action-intro-law}], which introduces unused actions to
-processes.
+The $Handle{*}EPC$ actions are introduced in the for loop\added{
+  starting} on line~\ref{algorithm-introduce-handleEPC-actions-loop}
+of Algorithm~\ref{expand-bytecode-algorithm}, before the application
+of Rule~[\nameref{HandleInstruction-refinement-rule}], by application
+of Law~[\nameref{action-intro-law}], which introduces unused actions
+to processes.
 These are actions of a fixed form, described below, so we can
 introduce them directly.
 
@@ -250,7 +253,7 @@ and eliminates $CheckSynchronizedReturn$.
       \exists c : Class; m : MethodID | \\
       \t1 c \in \ran cs \land m \in \dom c.methodEntry @ \\
       \t1 i \in c.methodEntry~m \upto c.methodEnd~m \land \\
-      \t1 m \in c.synchronisedMethods \land m \notin c.staticMethods
+      \t1 m \in c.synchronizedMethods \land m \notin c.staticMethods
   \end{displaymath}
   \end{restatable}
   \caption{Rule~[\nameref{CheckSynchronizedReturn-synchronized-refinement-rule}]}

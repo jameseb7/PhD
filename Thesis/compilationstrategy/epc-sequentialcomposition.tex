@@ -85,7 +85,7 @@ defined in Section~\ref{compilation-assumptions-section}.
 \end{figure}
 
 After the control flow graph is constructed, we consider each node in
-turn, as specified by the for loop on
+turn, as specified by the for loop\added{ starting} on
 line~\ref{algorithm-sequence-cfg-loop}.
 As mentioned earlier, we require a node to have only a single outgoing
 edge and its target to have only a single incoming edge in order for
@@ -97,7 +97,7 @@ which represent the start of conditionals.
 Likewise, nodes with multiple incoming edges represent points at which
 a more complex control flows occur.
 For our example, such nodes include $39$, which is the start of a
-loop, and $35$, which is the end oxf a conditional.
+loop, and $35$, which is the end o\deleted{x}f a conditional.
 These prevent introduction of sequential composition for the $pc$
 values $20$, $31$, $34$, and $38$, since the targets of those nodes
 are nodes $35$ and $39$.
@@ -173,7 +173,7 @@ together, we can continue to introduce sequential composition at a
 node after the first application of
 Rule~[\nameref{sequence-introduction-rule}], until that node no longer
 satisfies the conditions for introducing sequential composition.
-This is specified by the while loop at
+This is specified by the while loop\added{ starting} at
 line~\ref{algorithm-forward-sequence-condition} of the algorithm.
 The control flow graph is updated as
 Rule~[\nameref{sequence-introduction-rule}] is applied, to take into

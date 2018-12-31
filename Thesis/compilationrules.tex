@@ -59,7 +59,7 @@ of this appendix.
     \exists c : Class; m : MethodID | \\
     \t1 c \in \ran cs \land m \in \dom c.methodEntry @ \\
     \t1 i \in c.methodEntry~m \upto c.methodEnd~m \land \\
-    \t1 m \notin c.synchronisedMethods \lor m \in c.staticMethods
+    \t1 m \notin c.synchronizedMethods \lor m \in c.staticMethods
   \end{displaymath}
 \end{restatable}
 \end{minipage}
@@ -357,9 +357,13 @@ of this appendix.
     \exists c_0 : Class; m_0 : MethodID | c_0 \in \ran cs \land m_0 \in \dom c_0.methodEntry @ \\
     \t1 cpi \in methodRefIndices~c_0 \land \\
     \t1 (\exists c_1 : ClassID | c_0.constantPool~cpi = MethodRef~(c_1,m) @ \\
-    \t2 (((thisClassID~c_0,c_1) \in subclassRel~cs \land c_1 \neq thisClassID~c_0) \\
+    \t2 (((thisClassID~c_0,c_1) \in subclassRel~cs \\
+    \t2 {} \land c_1 \neq thisClassID~c_0 \\
+    \t2 {} \land m \notin initialisationMethodIDs) \\
     \t3 {} \implies c = superClassID~c_0) \land \\
-    \t2 (((thisClassID~c_0,c_1) \notin subclassRel~cs \lor c_1 = thisClassID~c_0) \\
+    \t2 (((thisClassID~c_0,c_1) \notin subclassRel~cs \\
+    \t2 {} \lor c_1 = thisClassID~c_0 \\
+    \t2 {} \lor m \in initialisationMethodIDs) \\
     \t3 {} \implies c = c_1)) \land \\
     \t1 i \in c_0.methodEntry~m_0 \upto c_0.methodEnd~m_0.
   \end{displaymath}
