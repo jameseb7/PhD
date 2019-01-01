@@ -11,13 +11,13 @@ Section~\ref{future-work-section}.
 \label{summary-section}
 
 \addchange{Added references to previous parts of the thesis in
-  Section\protect~\protect\ref{summary-section}}
-We have considered the safety-critical variant of Java\added{, in
+  Section\protect~\protect\ref{summary-section}} We have considered
+the safety-critical variant of Java\added{, in
   Section~\ref{scj-section},} and the virtual machines designed to run
 programs written in it\added{, in
   Section~\ref{virtual-machines-section}}.
-None of the virtual machines is formally verified and that many of
-them precompile programs to native code.
+None of the virtual machines is formally verified and\deleted{ that}
+many of them precompile programs to native code.
 Given the need for a formally verified virtual machine, we have
 developed a framework within which an SCJVM can be verified.
 
@@ -27,8 +27,8 @@ related to Java compilation\added{, in
   Section~\ref{compiler-correctness-section}}.
 We have established that two approaches to compiler correctness have
 been used:~the commuting-diagram approach and the algebraic approach.
-We have adopted the algebraic approach and chosen \Circus{} as a
-specification language.
+We have adopted the algebraic approach and chosen \Circus{}\added{, described
+in Section~\ref{circus-section},} as a specification language.
 
 To specify an SCJVM we have identified the requirements of the virtual
 machine services to support SCJ programs.
@@ -44,8 +44,8 @@ of the areas that require clarification.
 It may be noted that the interface we have defined is not the only one
 that can support SCJ, but its overall functionality must be present in
 all SCJ virtual machines in some way.
-The SCJ specification has been changed to reflect of many of these
-clarifications.
+The SCJ specification has been changed to reflect\deleted{ of} many of
+these clarifications.
 In particular, the current thread during an interrupt, the backing
 store space required during mission setup, and the initialisation of
 the \texttt{Safelet} have all been clarified as a result of our
