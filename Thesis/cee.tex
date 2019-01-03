@@ -198,7 +198,7 @@ The launcher must also communicate with the scheduler to indicate when
 threads should be started or suspended during mission
 execution\addchange{Added mention of the launcher's communication with
   the real-time clock}\added{, and with the real-time clock to set
-  alarms coordinating event handler execution}.
+  alarms coordinating event-handler execution}.
 
 The interpreter must accept the requests to execute methods on the
 main thread from the launcher, and it must also respond to requests
@@ -389,7 +389,7 @@ When a thread other than the main thread starts running, the
 $Interpreter$ is signalled by the scheduler and begins executing the
 thread. 
 However, the entry points of most threads are handled in the
-$Launcher$, since event handler threads, for example, form part of the
+$Launcher$, since event-handler threads, for example, form part of the
 SCJ infrastructure.
 A channel, $runThread$, is thus used to pass execution from the
 $Interpreter$ to the $Launcher$ after initial setup of the thread has
@@ -1059,7 +1059,7 @@ If the alarm could not be set due to the alarm time having already
 passed, then the alarm is triggered immediately, as in the case of the
 $clockHandler$ thread executing, and $updateAlarm$ is checked again.
 If the alarm is successfully set in the real-time clock or there is no
-alarm to set, then $HandleAlarm$ recurses to offer the choice of
+alarm to set, then $HandleAlarms$ recurses to offer the choice of
 actions again.
 
 The $HandleThread$ action, which is executed for each object in
@@ -2158,7 +2158,7 @@ The backing store used is the last backing store in
 $backingStoreStacks$ for $thread$ and the size required for the object is
 computed from the $class$ information returned by
 $GetObjectClassInfo$, via the $sizeOfObject$ function.
-The idenitifier of the new object is stored in $objectID$.
+The identifier of the new object is stored in $objectID$.
 After a successful allocation, the object is added to the $objects$
 map with its fields initialised to $null$, in $ObjManObjectInit$, and
 the object's identifier is returned via $newObjectRet$.
@@ -2868,7 +2868,7 @@ We take the lock of the object pointed to by the first argument in
 $methodArguments$ if the invoked method is synchronized.
 This is handled by an action $CheckSynchronizedInvoke$, which is
 similar to $CheckSynchronizedReturn$, but takes the class information,
-method idenifier and method arguments as inputs, and performs its
+method identifier and method arguments as inputs, and performs its
 communication on the $takeLock$ channel. 
 A new $StackFrame$ is then created with $IntepreterNewStackFrame$.
 \changed{
@@ -2920,7 +2920,7 @@ for the output of the compilation strategy.
 
 As mentioned previously, the CEE after compilation to C has a similar
 structure to the CEE before compilation, but the object manager is
-replaced with a struct manager and the intepreter is replaced with the
+replaced with a struct manager and the interpreter is replaced with the
 C program.
 The struct manager is represented by a process $StructMan_{cs}$, and
 the C program by a process $CProg_{bc,cs}$.
@@ -3648,18 +3648,18 @@ corresponding C code performs the same when evaluated.
 }%
 \added{%
 Our compilation strategy consists of individual compilation rules,
-which are proved from laws whose corrctness has been previously
+which are proved from laws whose correctness has been previously
 established, as explained in Section~\ref{proofs-of-laws-section}.
 We can thus have confidence that the semantics of the C code that
 results from the strategy has the same semantics as the bytecode input
 to our interpreter model.
 In addition, since we also produce a prototype implementation of this
 compilation strategy, described in Section~\ref{tool-support-section},
-we can easily produce the ouput of the strategy and compare it to the
+we can easily produce the output of the strategy and compare it to the
 corresponding code produced by icecap; indeed we do so for some
 examples in Section~\ref{examples-section}.
 Since the generated C code corresponds to the semantics of the
-bytecode in the intepreter model, this validates the semantics in our
+bytecode in the interpreter model, this validates the semantics in our
 interpreter model.
 }
 % explain that the transformations of the strategy are provably
