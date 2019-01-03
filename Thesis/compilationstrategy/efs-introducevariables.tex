@@ -268,8 +268,9 @@ does not define a function, since there are multiple possible states
 for the operand stack slots that correspond to a non-full
 $operandStack$.
 This means that we cannot directly compute the actions resulting from
-the refinement (since there are multiple possibilities). 
-So we must specify how each of the data operations is refined.
+the refinement (since there are multiple possibilities)\deleted{. 
+  So we}\added{, and} must specify how each of the data operations is
+refined.
 \addchange{Clarified how many simulation rules are defined}%
 We, therefore, state\added{ 12} compilation rules in terms of
 \Circus{} simulations between actions.

@@ -360,7 +360,7 @@ While the data operations differ depending on whether a value is
 returned from the method or not, the variable block and
 $executeMethodRet$ communication are the same for each method.
 We thus distribute them outside $ExecuteMethod$, to avoid their
-unecessary duplication in each of the branches of $ExecuteMethod$.
+unnecessary duplication in each of the branches of $ExecuteMethod$.
 This is performed by first replacing $ExecuteMethod$ with its
 definition, via an application of Law~[\nameref{copy-rule-law}] on
 lines~\ref{algorithm-copy-ExecuteMethod-in-MainThread}
