@@ -6,6 +6,24 @@ strategy described in Chapter~\ref{strategy-chapter}.
 We present the compilation rules in sections corresponding to the
 sections of Chapter~\ref{strategy-chapter} in which they are first
 used.
+The rules for Section~\ref{expand-bytecode-subsection} are presented
+in Section~\ref{expand-bytecode-rules-subsection}, the rules for
+Section~\ref{introduce-forward-sequence-subsection} in
+Section~\ref{sequential-composition-rules-subsection}, the rules for
+Section~\ref{introduce-loops-and-conditionals-subsection} in
+Section~\ref{loops-and-conditionals-rules-subsection}, the rules for
+Section~\ref{resolve-method-calls-subsection} in
+Section~\ref{method-calls-rules-subsection}, the rules for
+Section~\ref{refine-main-actions-subsection} in
+Section~\ref{main-actions-rules-subsection}, the rules for
+Section~\ref{remove-launcher-returns-subsection} in
+Section~\ref{remove-launcher-returns-appendix-subsection}, the rules
+for Section~\ref{localise-stack-frames-subsection} in
+Section~\ref{localise-stack-frames-appendix-subsection}, the rules for
+Section~\ref{introduce-variables-subsection} in
+Section~\ref{introduce-variables-appendix-subsection}, and the rules
+for Section~\ref{data-refinement-of-objects-section} in
+Section~\ref{data-refinement-of-objects-appendix-section}. 
 We also include in this appendix additional algorithms referenced in
 the compilation strategy but not included in the main body in the
 thesis, which are included in the sections of this appendix
@@ -20,6 +38,7 @@ of this appendix.
 \section{Elimination of Program Counter}
 
 \subsection{Expand Bytecode}
+\label{expand-bytecode-rules-subsection}
 
 \begin{minipage}{\textwidth}
   \PCExpansionRule*
@@ -65,12 +84,14 @@ of this appendix.
 \end{minipage}
 
 \subsection{Introduce Sequential Composition}
+\label{sequential-composition-rules-subsection}
 
 \begin{minipage}{\textwidth}
 \SequenceIntroductionRule*
 \end{minipage}
 
 \subsection{Introduce Loops and Conditionals}
+\label{loops-and-conditionals-rules-subsection}
 
 \begin{minipage}{\textwidth}
   \IfConditionalIntroductionRule*
@@ -334,6 +355,7 @@ of this appendix.
 \end{minipage}
 
 \subsection{Resolve Method Calls}
+\label{method-calls-rules-subsection}
 
 \begin{minipage}{\textwidth}
 \begin{restatable}[refine-invokespecial]{crule}{RefineInvokespecialRule}
@@ -571,6 +593,7 @@ of this appendix.
 \end{minipage}
 
 \subsection{Refine Main Actions}
+\label{main-actions-rules-subsection}
 
 \begin{minipage}{\textwidth}
   \RunningRefinementRule*
