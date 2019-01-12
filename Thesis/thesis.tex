@@ -32,6 +32,8 @@
 \usepackage{titling}
 \usepackage{lscape}
 \usepackage{pdflscape}
+\usepackage{needspace}
+\usepackage[explicit]{titlesec}
 
 \makeatletter
 \renewcommand{\boolean}{\zordop{\csym@boolean}}
@@ -43,6 +45,8 @@
 \definecolor{ZedBoxColor}{rgb}{0,0,0}
 \definecolor{AnnotationColor}{rgb}{0,0,0}
 \definecolor{ZedColor}{rgb}{0,0,0}
+
+\definecolor{headcol}{rgb}{0,0,0} 
 
 \newcommand{\resetZColors}{%
   \colorlet{ZedBoxColor}{black}%
@@ -65,7 +69,7 @@
 \usepackage[]{imakeidx}
 
 \newif\ifShowChanges
-\ShowChangestrue
+\ShowChangesfalse
 
 \makeindex[title=Index of Changes, name=changes, columns=1]
 \newlistof{changes}{s}{\listchangename}

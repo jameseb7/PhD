@@ -1,6 +1,11 @@
 % undo some CZT meddling with the hash symbol
 \renewcommand\#{\char"0023}
 
+\titleformat{\section}{\needspace{10\baselineskip}\color{headcol}\large\rmfamily\bfseries}{\thesection}{1em}{#1}[]
+\titleformat{\subsection}{\needspace{7\baselineskip}\color{headcol}\large\rmfamily\bfseries}{\thesubsection}{1em}{#1}[]
+\titleformat{\subsubsection}{\needspace{5\baselineskip}\normalsize\rmfamily\bfseries}{\thesubsubsection}{1em}{#1}[]
+\titleformat{\paragraph}{\needspace{4\baselineskip}\normalsize\rmfamily\bfseries}{\theparagraph}{1em}{#1}[]
+
 \lstset{basicstyle=\ttfamily\footnotesize,language=C,
   numbers=left, numberstyle=\tiny, stepnumber=1, numbersep=2pt,
   escapeinside={(*@}{@*)}, linewidth=\linewidth, breaklines=true,
@@ -40,7 +45,7 @@ It can be found among the online resources that accompany this thesis
 (see Section~\ref{document-structure-section} for link).
 
 Due to the length of some of the identifiers in the code, we have
-shortened the the identifiers by omitting type signatures in method
+shortened the identifiers by omitting type signatures in method
 and field identifiers, since there are no places in the code where
 that would cause ambiguity.
 This brings the identifiers closer to those used in the corresponding
@@ -54,36 +59,58 @@ and are not given a separate line number.
 \begin{landscape}
 \begin{multicols}{2}
 
+% \Needspace{3\baselineskip}
 \section{\texorpdfstring{\texttt{PersistentSignal}}{PersistentSignal}}
+% \nobreak
 \label{PersistentSignal-code-section}
 
+% \Needspace{3\baselineskip}
 \subsection{Java Code}
+% \nobreak
 \label{PersistentSignal-java-code-subsection}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MainMission.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelPersistentSignal/src/main/MainMission.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MainSequence.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelPersistentSignal/src/main/MainSequence.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MySafelet.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelPersistentSignal/src/main/MySafelet.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{PersistentSignal.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelPersistentSignal/src/main/PersistentSignal.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Producer.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelPersistentSignal/src/main/Producer.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Worker.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelPersistentSignal/src/main/Worker.java}
 
+% \Needspace{3\baselineskip}
 \subsection{Comparison of program code}
 \label{PersistentSignal-code-comparison-subsection}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_globalBackingStoreSize}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=257]
 void main_MySafelet_globalBackingStoreSize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
 	int32_t stack1, stack2;
@@ -94,12 +121,17 @@ void main_MySafelet_globalBackingStoreSize(int32_t var1, int32_t * retVal_msb, i
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill\\
+% \nobreak
 There is no corresponding icecap code for this method.
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer\_init}}
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=281]
 void main_Producer_init(int32_t var1, int32_t var2, int32_t var3, int32_t var4, int32_t var5, int32_t var6, int32_t var7) {
 	int32_t stack1, stack2, stack3, stack4, stack5, stack6, stack7, stack8, stack9, stack10, stack11, stack12, stack13;
@@ -158,7 +190,9 @@ void main_Producer_init(int32_t var1, int32_t var2, int32_t var3, int32_t var4, 
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54747]
 int16 main_Producer_init_(int32 *fp, int32 this, int32 signal, int32 worker, int32 period_ms, int32 lv_4, int32 offset_ms, int32 lv_6)
 {
@@ -494,9 +528,13 @@ int16 main_Producer_init_(int32 *fp, int32 this, int32 signal, int32 worker, int
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_PersistentSignal\_reset}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=514]
 void main_PersistentSignal_reset(int32_t var1) {
 	int32_t stack1, stack2;
@@ -507,7 +545,9 @@ void main_PersistentSignal_reset(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54641]
 int16 main_PersistentSignal_reset(int32 *fp, int32 this)
 {
@@ -529,21 +569,31 @@ int16 main_PersistentSignal_reset(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_cleanUp}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=646]
 void main_MySafelet_cleanUp(int32_t var1) {
 	
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill\\
+% \nobreak
 There is no corresponding icecap code for this method.
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_PersistentSignal\_isSet}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=814]
 void main_PersistentSignal_isSet(int32_t var1, int32_t * retVal) {
 	int32_t stack1;
@@ -554,7 +604,9 @@ void main_PersistentSignal_isSet(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54620]
 int16 main_PersistentSignal_isSet(int32 *fp, int32 this)
 {
@@ -572,9 +624,13 @@ int16 main_PersistentSignal_isSet(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_handleStartupError}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1177]
 void main_MySafelet_handleStartupError(int32_t var1, int32_t var2, int32_t var3, int32_t var4, int32_t * retVal) {
 	int32_t stack1;
@@ -583,12 +639,18 @@ void main_MySafelet_handleStartupError(int32_t var1, int32_t var2, int32_t var3,
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill\\
+% \nobreak
 There is no corresponding icecap code for this method.
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_missionMemorySize}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1256]
 void main_MainMission_missionMemorySize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
 	int32_t stack1, stack2;
@@ -599,12 +661,18 @@ void main_MainMission_missionMemorySize(int32_t var1, int32_t * retVal_msb, int3
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill\\
+% \nobreak
 There is no corresponding icecap code for this method.
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainSequence\_init}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1271]
 void main_MainSequence_init(int32_t var1) {
 	int32_t stack1, stack2, stack3, stack4, stack5, stack6, stack7, stack8, stack9, stack10, stack11, stack12;
@@ -642,7 +710,9 @@ void main_MainSequence_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54130]
 int16 main_MainSequence_init_(int32 *fp) {
 	int32* sp;
@@ -890,9 +960,13 @@ int16 main_MainSequence_init_(int32 *fp) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer\_handleAsyncEvent}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1525]
 void main_Producer_handleAsyncEvent(int32_t var1) {
 	int32_t var2;
@@ -944,7 +1018,9 @@ void main_Producer_handleAsyncEvent(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=55086]
 int16 main_Producer_handleAsyncEvent(int32 *fp, int32 this)
 {
@@ -1146,9 +1222,13 @@ int16 main_Producer_handleAsyncEvent(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Worker\_init}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1574]
 void main_Worker_init(int32_t var1, int32_t var2) {
 	int32_t stack1, stack2, stack3, stack4, stack5, stack6, stack7, stack8, stack9, stack10, stack11, stack12, stack13;
@@ -1195,7 +1275,9 @@ void main_Worker_init(int32_t var1, int32_t var2) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=55301]
 int16 main_Worker_init_(int32 *fp, int32 this, int32 event)
 {
@@ -1475,9 +1557,13 @@ int16 main_Worker_init_(int32 *fp, int32 this, int32 event)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_getSequencer}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1618]
 void main_MySafelet_getSequencer(int32_t var1, int32_t * retVal) {
 	int32_t stack1, stack2;
@@ -1488,7 +1574,9 @@ void main_MySafelet_getSequencer(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54461]
 int16 main_MySafelet_getSequencer(int32 *fp, int32 this)
 {
@@ -1524,9 +1612,13 @@ int16 main_MySafelet_getSequencer(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_PersistentSignal\_init}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1657]
 void main_PersistentSignal_init(int32_t var1) {
 	int32_t stack1, stack2;
@@ -1545,7 +1637,9 @@ void main_PersistentSignal_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54512]
 int16 main_PersistentSignal_init_(int32 *fp) {
 	int32* sp;
@@ -1650,9 +1744,13 @@ int16 main_PersistentSignal_init_(int32 *fp) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_init}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1749]
 void main_MainMission_init(int32_t var1) {
 	int32_t stack1;
@@ -1662,7 +1760,9 @@ void main_MainMission_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=53957]
 int16 main_MainMission_init_(int32 *fp) {
 	int32* sp;
@@ -1690,9 +1790,13 @@ int16 main_MainMission_init_(int32 *fp) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_PersistentSignal\_set}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1811]
 void main_PersistentSignal_set(int32_t var1) {
 	int32_t stack1, stack2;
@@ -1703,7 +1807,9 @@ void main_PersistentSignal_set(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54666]
 int16 main_PersistentSignal_set(int32 *fp, int32 this)
 {
@@ -1725,9 +1831,13 @@ int16 main_PersistentSignal_set(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainSequence\_getNextMission}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1869]
 void main_MainSequence_getNextMission(int32_t var1, int32_t * retVal) {
 	int32_t stack1, stack2;
@@ -1738,7 +1848,9 @@ void main_MainSequence_getNextMission(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54381]
 int16 main_MainSequence_getNextMission(int32 *fp, int32 this)
 {
@@ -1774,9 +1886,13 @@ int16 main_MainSequence_getNextMission(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_init}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=1970]
 void main_MySafelet_init(int32_t var1) {
 	int32_t stack1;
@@ -1786,7 +1902,9 @@ void main_MySafelet_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54430]
 int16 main_MySafelet_init_(int32 *fp) {
 	int32* sp;
@@ -1814,16 +1932,22 @@ int16 main_MySafelet_init_(int32 *fp) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_initializeApplication}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=2184]
 void main_MySafelet_initializeApplication(int32_t var1) {
 	
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=54500]
 int16 main_MySafelet_initializeApplication(int32 *fp, int32 this)
 {
@@ -1832,9 +1956,13 @@ int16 main_MySafelet_initializeApplication(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Worker\_handleAsyncEvent}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=2230]
 void main_Worker_handleAsyncEvent(int32_t var1) {
 	int32_t stack1, stack2, stack3;
@@ -1859,7 +1987,9 @@ void main_Worker_handleAsyncEvent(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=55584]
 int16 main_Worker_handleAsyncEvent(int32 *fp, int32 this)
 {
@@ -1967,9 +2097,13 @@ int16 main_Worker_handleAsyncEvent(int32 *fp, int32 this)
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_immortalMemorySize}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=2301]
 void main_MySafelet_immortalMemorySize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
 	int32_t stack1, stack2;
@@ -1980,12 +2114,18 @@ void main_MySafelet_immortalMemorySize(int32_t var1, int32_t * retVal_msb, int32
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill\\
+% \nobreak
 There is no corresponding icecap code for this method.
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_initialize}}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \paragraph{Our code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=2329]
 void main_MainMission_initialize(int32_t var1) {
 	int32_t var2, var3;
@@ -2019,7 +2159,9 @@ void main_MainMission_initialize(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \paragraph{Corresponding icecap code}\hfill
+% \nobreak
 \begin{lstlisting}[firstnumber=53988]
 int16 main_MainMission_initialize(int32 *fp, int32 this)
 {
@@ -2160,37 +2302,59 @@ int16 main_MainMission_initialize(int32 *fp, int32 this)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% \Needspace{3\baselineskip}
 \section{\texorpdfstring{\texttt{Buffer}}{Buffer}}
 \label{Buffer-code-section}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \subsection{Java Code}
 \label{Buffer-java-code-subsection}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{BoundedBuffer.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/BoundedBuffer.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Buffer.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/Buffer.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Consumer.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/Consumer.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MainMission.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/MainMission.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MainSequence.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/MainSequence.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MySafelet.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/MySafelet.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Producer.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBuffer/src/main/Producer.java}
 
+% \Needspace{3\baselineskip}
 \subsection{Code generated by our prototype}
+% \nobreak
 \label{Buffer-code-our-subsection}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=224]
 void main_Producer_init(int32_t var1, int32_t var2, int32_t var3) {
@@ -2259,7 +2423,9 @@ void main_Producer_init(int32_t var1, int32_t var2, int32_t var3) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_globalBackingStoreSize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=327]
 void main_MySafelet_globalBackingStoreSize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
@@ -2271,7 +2437,9 @@ void main_MySafelet_globalBackingStoreSize(int32_t var1, int32_t * retVal_msb, i
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer1\_run}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=369]
 void main_Producer1_run(int32_t var1) {
@@ -2286,7 +2454,9 @@ void main_Producer1_run(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Consumer\_handleAsyncEvent}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=380]
 void main_Consumer_handleAsyncEvent(int32_t var1) {
@@ -2366,7 +2536,9 @@ void main_Consumer_handleAsyncEvent(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer\_access0}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=603]
 void main_Producer_access0(int32_t var1, int32_t var2) {
@@ -2378,7 +2550,9 @@ void main_Producer_access0(int32_t var1, int32_t var2) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_cleanUp}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=749]
 void main_MySafelet_cleanUp__V(int32_t var1) {
@@ -2386,7 +2560,9 @@ void main_MySafelet_cleanUp__V(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_BoundedBuffer\_put}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=888]
 void main_BoundedBuffer_put(int32_t var1, int32_t var2) {
@@ -2434,7 +2610,9 @@ void main_BoundedBuffer_put(int32_t var1, int32_t var2) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer1\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1318]
 void main_Producer1_init(int32_t var1, int32_t var2) {
@@ -2448,7 +2626,9 @@ void main_Producer1_init(int32_t var1, int32_t var2) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_handleStartupError}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1328]
 void main_MySafelet_handleStartupError(int32_t var1, int32_t var2, int32_t var3, int32_t var4, int32_t * retVal) {
@@ -2458,7 +2638,9 @@ void main_MySafelet_handleStartupError(int32_t var1, int32_t var2, int32_t var3,
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_missionMemorySize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1407]
 void main_MainMission_missionMemorySize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
@@ -2470,7 +2652,9 @@ void main_MainMission_missionMemorySize(int32_t var1, int32_t * retVal_msb, int3
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainSequence\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1422]
 void main_MainSequence_init(int32_t var1) {
@@ -2509,7 +2693,9 @@ void main_MainSequence_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Producer\_handleAsyncEvent}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1676]
 void main_Producer_handleAsyncEvent(int32_t var1) {
@@ -2547,7 +2733,9 @@ void main_Producer_handleAsyncEvent(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_getSequencer}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1710]
 void main_MySafelet_getSequencer(int32_t var1, int32_t * retVal) {
@@ -2559,7 +2747,9 @@ void main_MySafelet_getSequencer(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_BoundedBuffer\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1763]
 void main_BoundedBuffer_init(int32_t var1) {
@@ -2593,7 +2783,9 @@ void main_BoundedBuffer_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_BoundedBuffer\_isFull}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1820]
 void main_BoundedBuffer_isFull(int32_t var1, int32_t * retVal) {
@@ -2613,9 +2805,10 @@ void main_BoundedBuffer_isFull(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_init}}
+% \nobreak
 
-\paragraph{Our code}\hfill
 \begin{lstlisting}[firstnumber=1871]
 void main_MainMission_init(int32_t var1) {
 	int32_t stack1;
@@ -2625,7 +2818,9 @@ void main_MainMission_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainSequence\_getNextMission}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1983]
 void main_MainSequence_getNextMission(int32_t var1, int32_t * retVal) {
@@ -2637,7 +2832,9 @@ void main_MainSequence_getNextMission(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2084]
 void main_MySafelet_init(int32_t var1) {
@@ -2648,7 +2845,9 @@ void main_MySafelet_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_BoundedBuffer\_get}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2180]
 void main_BoundedBuffer_get(int32_t var1, int32_t * retVal) {
@@ -2695,7 +2894,9 @@ void main_BoundedBuffer_get(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_initializeApplication}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2341]
 void main_MySafelet_initializeApplication(int32_t var1) {
@@ -2703,7 +2904,9 @@ void main_MySafelet_initializeApplication(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Consumer\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2426]
 void main_Consumer_init(int32_t var1, int32_t var2) {
@@ -2748,7 +2951,9 @@ void main_Consumer_init(int32_t var1, int32_t var2) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_immortalMemorySize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2477]
 void main_MySafelet_immortalMemorySize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
@@ -2760,7 +2965,9 @@ void main_MySafelet_immortalMemorySize(int32_t var1, int32_t * retVal_msb, int32
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_initialize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2505]
 void main_MainMission_initialize(int32_t var1) {
@@ -2791,37 +2998,59 @@ void main_MainMission_initialize(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \section{\texorpdfstring{\texttt{Barrier}}{Barrier}}
 \label{Barrier-code-section}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \subsection{Java Code}
 \label{Barrier-java-code-subsection}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Barrier.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/Barrier.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{Button.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/Barrier.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{FireHandler.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/FireHandler.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{LaunchHandler.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/LaunchHandler.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MainMission.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/MainMission.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MainSequence.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/MainSequence.java}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{MySafelet.java}}
+% \nobreak
 \lstinputlisting{../../workspace2/ModelBarrier/src/main/MySafelet.java}
 
+% \Needspace{3\baselineskip}
 \subsection{Code generated by our prototype}
 \label{Barrier-code-our-subsection}
+% \nobreak
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_globalBackingStoreSize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=262]
 void main_MySafelet_globalBackingStoreSize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
@@ -2833,7 +3062,9 @@ void main_MySafelet_globalBackingStoreSize(int32_t var1, int32_t * retVal_msb, i
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_LaunchHandler\_handleAsyncEvent}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=465]
 void main_LaunchHandler_handleAsyncEvent(int32_t var1) {
@@ -2844,7 +3075,9 @@ void main_LaunchHandler_handleAsyncEvent(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Barrier\_isOkToFire}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=472]
 void main_Barrier_isOkToFire(int32_t var1, int32_t * retVal) {
@@ -2910,7 +3143,9 @@ void main_Barrier_isOkToFire(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_cleanUp}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=658]
 void main_MySafelet_cleanUp(int32_t var1) {
@@ -2918,7 +3153,9 @@ void main_MySafelet_cleanUp(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_handleStartupError}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1183]
 void main_MySafelet_handleStartupError(int32_t var1, int32_t var2, int32_t var3, int32_t var4, int32_t * retVal) {
@@ -2928,7 +3165,9 @@ void main_MySafelet_handleStartupError(int32_t var1, int32_t var2, int32_t var3,
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_missionMemorySize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1262]
 void main_MainMission_missionMemorySize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
@@ -2940,7 +3179,9 @@ void main_MainMission_missionMemorySize(int32_t var1, int32_t * retVal_msb, int3
 }  
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Barrier\_isAlreadyTriggered}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1270]
 void main_Barrier_isAlreadyTriggered(int32_t var1, int32_t var2, int32_t * retVal) {
@@ -2964,7 +3205,9 @@ void main_Barrier_isAlreadyTriggered(int32_t var1, int32_t var2, int32_t * retVa
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainSequence\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1297]
 void main_MainSequence_init(int32_t var1) {
@@ -3003,7 +3246,9 @@ void main_MainSequence_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_getSequencer}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1551]
 void main_MySafelet_getSequencer(int32_t var1, int32_t * retVal) {
@@ -3015,7 +3260,9 @@ void main_MySafelet_getSequencer(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1666]
 void main_MainMission_init(int32_t var1) {
@@ -3026,7 +3273,9 @@ void main_MainMission_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Barrier\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1728]
 void main_Barrier_init(int32_t var1, int32_t var2, int32_t var3) {
@@ -3050,7 +3299,9 @@ void main_Barrier_init(int32_t var1, int32_t var2, int32_t var3) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Button\_handleAsyncEvent}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1765]
 void main_Button_handleAsyncEvent(int32_t var1) {
@@ -3066,7 +3317,9 @@ void main_Button_handleAsyncEvent(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Barrier\_trigger}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1803]
 void main_Barrier_trigger(int32_t var1, int32_t var2) {
@@ -3107,8 +3360,9 @@ void main_Barrier_trigger(int32_t var1, int32_t var2) {
 }
 \end{lstlisting}
 
-
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainSequence\_getNextMission}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1847]
 void main_MainSequence_getNextMission(int32_t var1, int32_t * retVal) {
@@ -3120,7 +3374,9 @@ void main_MainSequence_getNextMission(int32_t var1, int32_t * retVal) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=1948]
 void main_MySafelet_init(int32_t var1) {
@@ -3131,7 +3387,9 @@ void main_MySafelet_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_initializeApplication}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2162]
 void main_MySafelet_initializeApplication(int32_t var1) {
@@ -3139,7 +3397,9 @@ void main_MySafelet_initializeApplication(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Button\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2208]
 void main_Button_init(int32_t var1, int32_t var2, int32_t var3, int32_t var4, int32_t var5, int32_t var6) {
@@ -3196,7 +3456,9 @@ void main_Button_init(int32_t var1, int32_t var2, int32_t var3, int32_t var4, in
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_FireHandler\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2261]
 void main_FireHandler_init(int32_t var1, int32_t var2, int32_t var3) {
@@ -3244,7 +3506,9 @@ void main_FireHandler_init(int32_t var1, int32_t var2, int32_t var3) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MySafelet\_immortalMemorySize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2354]
 void main_MySafelet_immortalMemorySize(int32_t var1, int32_t * retVal_msb, int32_t * retVal_lsb) {
@@ -3256,7 +3520,9 @@ void main_MySafelet_immortalMemorySize(int32_t var1, int32_t * retVal_msb, int32
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_Barrier\_reset}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2362]
 void main_Barrier_reset(int32_t var1) {
@@ -3315,7 +3581,9 @@ void main_Barrier_reset(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_MainMission\_initialize}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2437]
 void main_MainMission_initialize(int32_t var1) {
@@ -3387,7 +3655,9 @@ void main_MainMission_initialize(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_LaunchHandler\_init}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2612]
 void main_LaunchHandler_init(int32_t var1) {
@@ -3429,7 +3699,9 @@ void main_LaunchHandler_init(int32_t var1) {
 }
 \end{lstlisting}
 
+% \Needspace{3\baselineskip}
 \subsubsection{\texttt{main\_FireHandler\_handleAsyncEvent}}
+% \nobreak
 
 \begin{lstlisting}[firstnumber=2759]
 void main_FireHandler_handleAsyncEvent(int32_t var1) {
