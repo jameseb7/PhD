@@ -309,7 +309,6 @@ prefoothook={\qedsymbol\relax}
 
 \null
 \thispagestyle{empty}%
-\addtocounter{page}{-1}%
 \newpage
 
 \clearpage
@@ -317,6 +316,7 @@ prefoothook={\qedsymbol\relax}
 \addcontentsline{toc}{chapter}{Abstract}
 \begin{abstract}
   \thispagestyle{plain}
+  \addtocounter{page}{2}%
   In recent years Java has been increasingly considered as a language
   for safety-critical embedded systems.
   However, some features of Java are unsuitable for such systems.
@@ -490,7 +490,9 @@ applied. We discuss it here.
 
 \input{examplecode.tex}
 
-{\raggedright \printbibliography[resetnumbers=true]}
+%\phantomsection
+%\addcontentsline{toc}{chapter}{Bibliography}
+{\raggedright \printbibliography[resetnumbers=true, heading=bibintoc]}
 \end{refsection}
 
 \ifShowChanges
