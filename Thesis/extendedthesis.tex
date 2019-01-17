@@ -217,10 +217,38 @@ prefoothook={\qedsymbol\relax}
 
   
 \begin{document}
-\maketitle
 
+\begin{titlepage}
+  \centering{}
+  \hfill
+  \vfill
+  \vfill
+  \vfill
+  {\Huge\bf \thetitle\\(Extended Version)}
+  \vfill
+  \vfill
+  {\huge \theauthor}
+  \vfill
+  \vfill
+  {\LARGE PhD}
+  \vfill
+  {\LARGE University of York}
+  \vfill
+  {\LARGE Computer Science}
+  \vfill
+  {\LARGE July 2018}
+\end{titlepage}
 
+\null
+\thispagestyle{empty}%
+\newpage
+
+\clearpage
+\phantomsection
+\addcontentsline{toc}{chapter}{Abstract}
 \begin{abstract}
+  \thispagestyle{plain}
+  \addtocounter{page}{2}%
   In recent years Java has been increasingly considered as a language
   for safety-critical embedded systems.
   However, some features of Java are unsuitable for such systems.
@@ -508,7 +536,9 @@ applied. We discuss it here.
 \label{compilation-rules-proofs-appendix}
 \input{compilationrules_proofs.tex}
 
-{\raggedright \printbibliography[resetnumbers=true]}
+%\phantomsection
+%\addcontentsline{toc}{chapter}{Bibliography}
+{\raggedright \printbibliography[resetnumbers=true, heading=bibintoc]}
 \end{refsection}
 
 \end{document}
