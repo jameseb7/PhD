@@ -55,12 +55,21 @@
 \definecolor{AnnotationColor}{rgb}{0,0,0}
 \definecolor{ZedColor}{rgb}{0,0,0}
 
+\definecolor{headcol}{rgb}{0,0,0} 
+
 % definitions for compatibility with the change tracking mechanism
 \newcommand{\added}[1]{#1}
 \newcommand{\changed}[1]{#1}
 \newcommand{\deleted}[1]{}
 \newcommand{\moved}[1]{#1}
 \newcommand{\addchange}[1]{}
+\makeatletter
+\newcommand{\IfFirstOccurrence}[1]{%
+  \ifthmt@thisistheone%
+  #1%
+  \fi%
+}
+\makeatother
 
 \title{\protect\addchange{Changed title to not refer to
     \protect``verification\protect''}\protect\changed{Ahead-of-Time\\Algebraic
